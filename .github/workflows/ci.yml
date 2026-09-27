@@ -19,13 +19,15 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x' # Hoặc phiên bản .NET bạn đang sử dụng
+          dotnet-version: |
+            9.0.x
+            10.0.x
 
       - name: Restore Dependencies
-        run: dotnet restore HuyetMach175.sln
+        run: dotnet restore
 
       - name: Build Backend Solution
-        run: dotnet build HuyetMach175.sln --no-restore --configuration Release
+        run: dotnet build --no-restore --configuration Release
 
   # JOB 2: KIỂM TRA BIÊN DỊCH FRONTEND REACT
   frontend-check:
