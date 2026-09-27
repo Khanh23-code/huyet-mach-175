@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/HuyetMach175.Api/HuyetMach175.Api.csproj" />
+    <Project Path="src/HuyetMach175.Modules.Audit/HuyetMach175.Modules.Audit.csproj" />
+    <Project Path="src/HuyetMach175.Modules.Auth/HuyetMach175.Modules.Auth.csproj" />
+    <Project Path="src/HuyetMach175.Modules.Clinical/HuyetMach175.Modules.Clinical.csproj" />
+    <Project Path="src/HuyetMach175.Modules.Donation/HuyetMach175.Modules.Donation.csproj" />
+    <Project Path="src/HuyetMach175.Modules.Inventory/HuyetMach175.Modules.Inventory.csproj" />
+    <Project Path="src/HuyetMach175.SharedKernel/HuyetMach175.SharedKernel.csproj" />
+  </Folder>
+</Solution>

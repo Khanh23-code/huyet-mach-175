@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: huyetmach175_db_container
+    restart: always
+    environment:
+      POSTGRES_DB: huyetmach175_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/scripts/init-schema.sql:/docker-entrypoint-initdb.d/init-schema.sql
+    networks:
+      - huyetmach175_net
+
+volumes:
+  pgdata:
+
+networks:
+  huyetmach175_net:
+    driver: bridge

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HuyetMach175.Modules.Auth\HuyetMach175.Modules.Auth.csproj" />
+    <ProjectReference Include="..\HuyetMach175.Modules.Donation\HuyetMach175.Modules.Donation.csproj" />
+    <ProjectReference Include="..\HuyetMach175.Modules.Inventory\HuyetMach175.Modules.Inventory.csproj" />
+    <ProjectReference Include="..\HuyetMach175.Modules.Clinical\HuyetMach175.Modules.Clinical.csproj" />
+    <ProjectReference Include="..\HuyetMach175.Modules.Audit\HuyetMach175.Modules.Audit.csproj" />
+  </ItemGroup>
+
+</Project>

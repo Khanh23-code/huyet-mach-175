@@ -1,0 +1,24 @@
+## .NET / C#
+bin/
+obj/
+*.user
+*.suo
+.vs/
+appsettings.Production.json
+
+## Node / React
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+## Database & OS
+*.backup
+pgdata/
+.DS_Store
+Thumbs.db
