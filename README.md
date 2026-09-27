@@ -12,13 +12,13 @@
 
 ## 1. Tổng quan hệ thống (Overview)
 
-**Huyết Mạch 175** là giải pháp phần mềm quản trị toàn diện chu trình lưu thông máu tại Bệnh viện Quân y 175, bao gồm các phân hệ: tiếp nhận người hiến máu, điều chế - lưu trữ chế phẩm, xét nghiệm sàng lọc túi máu và tiếp nhận y lệnh cấp phát lâm sàng khẩn cấp/thường quy[cite: 1, 4].
+**Huyết Mạch 175** là giải pháp phần mềm quản trị toàn diện chu trình lưu thông máu tại Bệnh viện Quân y 175, bao gồm các phân hệ: tiếp nhận người hiến máu, điều chế - lưu trữ chế phẩm, xét nghiệm sàng lọc túi máu và tiếp nhận y lệnh cấp phát lâm sàng khẩn cấp/thường quy.
 
 Hệ thống được tổ chức theo mô hình **Monorepo** với kiến trúc **Modular Monolith** kết hợp nguyên lý **Domain-Driven Design (DDD)** và **Clean Architecture**:
 
 - **Backend:** .NET Web API, Entity Framework Core (PostgreSQL Provider), MediatR (CQRS), FluentValidation, SignalR, JWT Authentication.
 - **Frontend:** React, TypeScript, Vite, Ant Design (AntD), TanStack Query, Zustand, React Hook Form, Zod.
-- **Database & Hạ tầng:** PostgreSQL 16+ (Dockerized container) tận dụng cấu trúc JSONB và Partial Unique Indexes để bảo toàn dữ liệu[cite: 4, 6].
+- **Database & Hạ tầng:** PostgreSQL 16+ (Dockerized container) tận dụng cấu trúc JSONB và Partial Unique Indexes để bảo toàn dữ liệu.
 
 ---
 
@@ -54,11 +54,11 @@ huyet-mach-175/
 
 ## 3. Khởi chạy Database bằng Docker Compose
 
-Hệ thống cung cấp sẵn container PostgreSQL chạy ngầm và tự động nạp toàn bộ cấu trúc bảng từ script `init-schema.sql` ngay trong lần chạy đầu tiên[cite: 4, 6].
+Hệ thống cung cấp sẵn container PostgreSQL chạy ngầm và tự động nạp toàn bộ cấu trúc bảng từ script `init-schema.sql` ngay trong lần chạy đầu tiên.
 
 ### Yêu cầu tiên quyết
-- Cài đặt **Docker Desktop** và đảm bảo Docker engine đang hoạt động[cite: 6].
-- **Lưu ý xung đột cổng:** Nếu máy bạn đã cài sẵn dịch vụ PostgreSQL (cổng 5432 trên Windows), hãy dừng dịch vụ này trước khi chạy Docker (`Stop-Service postgresql*` hoặc dừng trong tab *Services* của Task Manager)[cite: 2, 6].
+- Cài đặt **Docker Desktop** và đảm bảo Docker engine đang hoạt động.
+- **Lưu ý xung đột cổng:** Nếu máy bạn đã cài sẵn dịch vụ PostgreSQL (cổng 5432 trên Windows), hãy dừng dịch vụ này trước khi chạy Docker (`Stop-Service postgresql*` hoặc dừng trong tab *Services* của Task Manager).
 
 ### Lệnh khởi chạy
 Tại thư mục gốc `huyet-mach-175`:
@@ -73,7 +73,7 @@ docker ps
 
 ### Thông số kết nối mặc định (Local Development)
 - **Host:** `localhost`
-- **Port:** `5432`[cite: 6]
+- **Port:** `5432`
 - **Database Name:** `huyetmach175_db`
 - **Username:** `postgres`
 - **Password:** `admin123`
@@ -116,12 +116,35 @@ npm install
 npm run dev
 ```
 
-- Truy cập ứng dụng tại đường dẫn: `http://localhost:5173`[cite: 5].
+- Truy cập ứng dụng tại đường dẫn: `http://localhost:5173`.
 
 ---
 
-## 6. Các quy tắc kỹ thuật cốt lõi (Important Architectural Notes)
+## 6. Quy chuẩn cộng tác & Kiểm soát nhánh (Git Workflow & Rulesets)
 
-- **Chống cấp phát trùng (No Double-Booking):** CSDL áp dụng chỉ mục duy nhất có điều kiện `uq_active_allocation_per_bag` (`WHERE status IN ('RESERVED', 'ISSUED')`), đảm bảo một túi máu không bao giờ bị gán đồng thời cho hai y lệnh cấp phát khác nhau[cite: 4].
-- **Bảo toàn dữ liệu y tế (Medical Immutability):** Áp dụng quy tắc `ON DELETE RESTRICT` cho hồ sơ người hiến, kết quả xét nghiệm và túi máu[cite: 1, 4]. Bảng `audit_logs` tuân thủ nguyên tắc Append-Only, ghi lại toàn bộ trạng thái cũ/mới dạng `JSONB` mà không cho phép sửa/xóa[cite: 4].
-- **Định tuyến nghiệp vụ (No Slug Policy):** Ứng dụng là cổng thông tin nội viện khép kín, không phục vụ mục đích SEO. Toàn bộ định tuyến (Routing) sử dụng định danh kỹ thuật (`bag_id`, `session_id`) hoặc mã nghiệp vụ duy nhất (Mã vạch chuẩn ISBT 128 `barcode`, Mã phiếu yêu cầu `request_code`)[cite: 4].
+Dự án áp dụng chặt chẽ quy chuẩn **Git Branch Protection Rulesets** nhằm bảo đảm tính ổn định tuyệt đối cho các nhánh trọng yếu (`main`, `dev`):
+
+* **Cấm đẩy mã nguồn trực tiếp (No Direct Push):** Thành viên không được phép sử dụng `git push` thẳng vào nhánh `dev` hoặc `main`. Mọi sự thay đổi bắt buộc phải tách nhánh tính năng/sửa lỗi (`feat/*`, `fix/*`) và đưa vào qua **Pull Request (PR)**.
+* **Quy tắc duyệt bắt buộc (Mandatory Code Review):** Mỗi Pull Request gửi vào `dev` hoặc `main` phải có tối thiểu **1 chấp thuận (Approve)** từ trưởng nhóm (Git Lead/Reviewer) mới đủ điều kiện sáp nhập mã nguồn.
+* **Tự động hủy phê duyệt khi cập nhật (Dismiss Stale Approvals):** Khi có bất kỳ commit mới nào được đẩy thêm vào PR đang chờ duyệt, các lượt approve trước đó sẽ tự động bị vô hiệu hóa để phục vụ việc đánh giá lại từ đầu.
+* **Chặn ghi đè lịch sử (Block Force Pushes) & Xóa nhánh:** Vô hiệu hóa hoàn toàn cờ `--force` (`git push -f`) và quyền xóa đối với các nhánh được bảo vệ nhằm ngăn chặn nguy cơ mất mát lịch sử commit.
+
+---
+
+## 7. Tự động hóa tích hợp liên tục (CI/CD Pipeline)
+
+Dự án tích hợp hệ thống kiểm thử và đóng gói tự động hóa thông qua **GitHub Actions** (`.github/workflows/ci.yml`). Pipeline sẽ được kích hoạt tự động mỗi khi có sự kiện `push` hoặc tạo `pull_request` nhắm vào các nhánh `dev` và `main`.
+
+### Luồng kiểm tra chất lượng (Verification Jobs)
+1. **Kiểm tra Backend (`Build & Check Backend (.NET)`):**
+   * Tự động khởi tạo máy ảo Ubuntu, nạp bộ công cụ .NET SDK tương ứng.
+   * Chạy lệnh `dotnet restore` và biên dịch toàn bộ cấu trúc dự án `HuyetMach175.slnx` ở cấu hình `Release`.
+   * Phát hiện sớm mọi lỗi sai cú pháp, xung đột thư viện hay lỗi phụ thuộc tầng (Layer Dependency) giữa 5 Bounded Contexts.
+2. **Kiểm tra Frontend (`Build & Check Frontend (React Vite)`):**
+   * Khởi tạo môi trường Node.js 20 LTS và tối ưu bộ nhớ đệm phụ thuộc qua tệp khóa `package-lock.json`.
+   * Cài đặt môi trường sạch bằng `npm ci`.
+   * Chạy tiến trình đóng gói kiểm thử `npm run build` để xác thực toàn bộ tính an toàn kiểu dữ liệu (TypeScript Type Checking) và tính hợp lệ của cây giao diện Ant Design.
+
+### Cơ chế khóa gộp tự động (Required Status Checks)
+* Cả 2 job kiểm tra trên được đặt làm điều kiện tiên quyết (**Status Checks Must Pass**).
+* Nếu có bất kỳ lỗi biên dịch nào ở phía Frontend hoặc Backend, GitHub Actions sẽ đánh dấu trạng thái thất bại (`Failure`) và **tự động vô hiệu hóa nút Merge Pull Request**, ngăn chặn toàn bộ mã nguồn lỗi lọt vào nhánh phát triển chung.
