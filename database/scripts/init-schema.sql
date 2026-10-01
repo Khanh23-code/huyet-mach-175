@@ -1,9 +1,3 @@
--- =============================================================================
--- HỆ THỐNG QUẢN TRỊ NGÂN HÀNG MÁU "HUYẾT MẠCH 175"
--- DDL SCHEMA GENERATION SCRIPT (POSTGRESQL DIALECT)
--- =============================================================================
-
--- 0. DỌN DẸP NẾU ĐÃ TỒN TẠI (DROP THEO THỨ TỰ TỬ NGOẠI ĐẾN NỘI TẠI)
 DROP TABLE IF EXISTS audit_logs CASCADE;
 DROP TABLE IF EXISTS blood_returns CASCADE;
 DROP TABLE IF EXISTS blood_allocations CASCADE;
@@ -70,6 +64,27 @@ CREATE TABLE user_roles (
 );
 
 CREATE INDEX idx_user_roles_role_id ON user_roles(role_id);
+
+CREATE TABLE permissions (
+    permission_id SERIAL PRIMARY KEY,
+    permission_code VARCHAR(50) UNIQUE NOT NULL,
+    permission_name VARCHAR(100) NOT NULL,
+    module VARCHAR(30) NOT NULL,
+    description VARCHAR(255)
+);
+
+CREATE TABLE role_permissions (
+    role_id INT NOT NULL,
+    permission_id INT NOT NULL,
+    granted_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_role_permissions PRIMARY KEY (role_id, permission_id),
+    CONSTRAINT fk_role_permissions_role FOREIGN KEY (role_id) 
+        REFERENCES roles(role_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_role_permissions_permission FOREIGN KEY (permission_id) 
+        REFERENCES permissions(permission_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE INDEX idx_role_permissions_role ON role_permissions(role_id);
 
 -- =============================================================================
 -- NHÓM B: NGƯỜI HIẾN MÁU & PHIÊN TIẾP NHẬN (DONATION DOMAIN)
@@ -309,6 +324,35 @@ CREATE TABLE audit_logs (
     CONSTRAINT fk_audit_user FOREIGN KEY (performed_by) 
         REFERENCES users(user_id) ON DELETE SET NULL
 );
+
+CREATE TABLE notifications (
+    notification_id BIGSERIAL PRIMARY KEY,
+    recipient_user_id INT,
+    target_role_id INT,
+    target_department_id INT,
+    title VARCHAR(150) NOT NULL,
+    message TEXT NOT NULL,
+    type VARCHAR(30) NOT NULL DEFAULT 'INFO',
+    reference_type VARCHAR(50),
+    reference_id INT,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    read_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_notifications_user FOREIGN KEY (recipient_user_id) 
+        REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_notifications_role FOREIGN KEY (target_role_id) 
+        REFERENCES roles(role_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_notifications_department FOREIGN KEY (target_department_id) 
+        REFERENCES departments(department_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE INDEX idx_notifications_recipient_unread 
+ON notifications(recipient_user_id, is_read) 
+WHERE is_read = FALSE;
+
+CREATE INDEX idx_notifications_target_role 
+ON notifications(target_role_id) 
+WHERE target_role_id IS NOT NULL;
 
 -- =============================================================================
 -- BỘ CHỈ MỤC (INDEXES) TỐI ƯU HÓA HIỆU NĂNG & RÀNG BUỘC ĐẶC BIỆT
