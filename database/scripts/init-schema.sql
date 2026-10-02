@@ -90,6 +90,32 @@ CREATE INDEX idx_role_permissions_role ON role_permissions(role_id);
 -- NHÓM B: NGƯỜI HIẾN MÁU & PHIÊN TIẾP NHẬN (DONATION DOMAIN)
 -- =============================================================================
 
+CREATE TABLE donation_campaigns (
+    campaign_id SERIAL PRIMARY KEY,
+    campaign_name VARCHAR(150) NOT NULL,
+    location_name VARCHAR(255) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    target_donations INT NOT NULL DEFAULT 100,
+    status VARCHAR(30) NOT NULL DEFAULT 'DRAFT' 
+        CHECK (status IN ('DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
+    created_by INT NOT NULL,
+    approved_by INT,
+    rejection_reason VARCHAR(255),
+    approved_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_campaigns_created_by FOREIGN KEY (created_by) 
+        REFERENCES users(user_id) ON DELETE RESTRICT,
+    CONSTRAINT fk_campaigns_approved_by FOREIGN KEY (approved_by) 
+        REFERENCES users(user_id) ON DELETE RESTRICT,
+    CONSTRAINT chk_campaign_dates CHECK (end_date >= start_date)
+);
+
+CREATE INDEX idx_campaigns_status ON donation_campaigns(status);
+
+ALTER TABLE donation_appointments 
+ADD COLUMN campaign_id INT REFERENCES donation_campaigns(campaign_id) ON DELETE RESTRICT;
+
 CREATE TABLE donors (
     donor_id SERIAL PRIMARY KEY,
     citizen_id VARCHAR(12) UNIQUE NOT NULL,
@@ -243,7 +269,7 @@ CREATE TABLE blood_requests (
     urgency_level VARCHAR(20) NOT NULL CHECK (urgency_level IN ('ROUTINE', 'URGENT')),
     diagnosis VARCHAR(255),
     status VARCHAR(30) NOT NULL DEFAULT 'PENDING'
-        CHECK (status IN ('PENDING', 'REJECTED', 'READY_FOR_PICKUP', 'IN_TRANSIT', 'COMPLETED', 'RETURNED')),
+        CHECK (status IN ('PENDING', 'REJECTED', 'READY_FOR_PICKUP', 'IN_TRANSIT', 'COMPLETED')),
     rejection_reason VARCHAR(255),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_requests_department FOREIGN KEY (department_id) 
