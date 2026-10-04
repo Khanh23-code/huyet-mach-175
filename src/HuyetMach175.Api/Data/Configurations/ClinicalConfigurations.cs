@@ -10,8 +10,10 @@ public class BloodRequestConfiguration : IEntityTypeConfiguration<BloodRequest>
     {
         builder.HasIndex(br => br.RequestCode).IsUnique();
 
-        builder.HasIndex(br => new { br.DepartmentId, br.Status })
-            .HasDatabaseName("idx_blood_requests_dept_status");
+        builder.Property(br => br.PatientBloodType).HasConversion<string>();
+        builder.Property(br => br.PatientRh).HasConversion<string>();
+        builder.Property(br => br.UrgencyLevel).HasConversion<string>();
+        builder.Property(br => br.Status).HasConversion<string>();
 
         builder.HasOne(br => br.Doctor)
             .WithMany(u => u.DoctorRequests)
@@ -24,6 +26,8 @@ public class BloodAllocationConfiguration : IEntityTypeConfiguration<BloodAlloca
 {
     public void Configure(EntityTypeBuilder<BloodAllocation> builder)
     {
+        builder.Property(ba => ba.Status).HasConversion<string>();
+
         builder.HasIndex(ba => ba.BagId)
             .HasDatabaseName("uq_active_allocation_per_bag")
             .HasFilter("status IN ('RESERVED', 'ISSUED')")
@@ -50,6 +54,8 @@ public class BloodReturnConfiguration : IEntityTypeConfiguration<BloodReturn>
 {
     public void Configure(EntityTypeBuilder<BloodReturn> builder)
     {
+        builder.Property(br => br.FinalAction).HasConversion<string>();
+
         builder.HasOne(br => br.ReturnedByUser)
             .WithMany(u => u.ReturnedReturns)
             .HasForeignKey(br => br.ReturnedBy)

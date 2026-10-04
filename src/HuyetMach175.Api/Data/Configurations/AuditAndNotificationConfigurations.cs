@@ -8,6 +8,8 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
 {
     public void Configure(EntityTypeBuilder<AuditLog> builder)
     {
+        builder.Property(al => al.ActionType).HasConversion<string>();
+
         builder.HasIndex(al => new { al.TableName, al.RecordId, al.CreatedAt })
             .HasDatabaseName("idx_audit_logs_record");
 
@@ -22,6 +24,9 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
 {
     public void Configure(EntityTypeBuilder<Notification> builder)
     {
+        builder.Property(n => n.Type).HasConversion<string>();
+        builder.Property(n => n.ReferenceType).HasConversion<string>();
+
         builder.HasIndex(n => new { n.RecipientUserId, n.IsRead })
             .HasDatabaseName("idx_notifications_recipient_unread")
             .HasFilter("is_read = FALSE");

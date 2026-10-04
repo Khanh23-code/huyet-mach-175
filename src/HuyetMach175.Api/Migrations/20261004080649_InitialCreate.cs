@@ -18,10 +18,10 @@ namespace HuyetMach175.Api.Migrations
                 {
                     component_type_id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    type_code = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    type_code = table.Column<string>(type: "text", nullable: false),
                     type_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    default_shelf_life_days = table.Column<int>(type: "integer", nullable: false),
-                    storage_temperature_range = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    life_days = table.Column<int>(type: "integer", nullable: false),
+                    storage_temperature = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     description = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
@@ -37,7 +37,6 @@ namespace HuyetMach175.Api.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     department_code = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     department_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    is_blood_bank = table.Column<bool>(type: "boolean", nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -57,11 +56,10 @@ namespace HuyetMach175.Api.Migrations
                     gender = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
                     phone_number = table.Column<string>(type: "character varying(15)", maxLength: 15, nullable: false),
                     email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    blood_type = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: true),
-                    rh_factor = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: true),
+                    blood_type = table.Column<string>(type: "text", nullable: true),
+                    rh_factor = table.Column<string>(type: "text", nullable: true),
                     total_donations = table.Column<int>(type: "integer", nullable: false),
-                    last_donation_date = table.Column<DateOnly>(type: "date", nullable: true),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    last_donation_date = table.Column<DateOnly>(type: "date", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -76,7 +74,6 @@ namespace HuyetMach175.Api.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     permission_code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     permission_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    module = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     description = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
@@ -90,7 +87,7 @@ namespace HuyetMach175.Api.Migrations
                 {
                     role_id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    role_code = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    role_code = table.Column<string>(type: "text", nullable: false),
                     role_name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     description = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true)
                 },
@@ -105,7 +102,6 @@ namespace HuyetMach175.Api.Migrations
                 {
                     location_id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    storage_code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     refrigerator_name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     shelf_number = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     target_temperature = table.Column<decimal>(type: "numeric", nullable: false),
@@ -150,7 +146,7 @@ namespace HuyetMach175.Api.Migrations
                 {
                     role_id = table.Column<int>(type: "integer", nullable: false),
                     permission_id = table.Column<int>(type: "integer", nullable: false),
-                    granted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -177,12 +173,11 @@ namespace HuyetMach175.Api.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     table_name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     record_id = table.Column<int>(type: "integer", nullable: false),
-                    action_type = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    action_type = table.Column<string>(type: "text", nullable: false),
                     old_state = table.Column<string>(type: "jsonb", nullable: true),
                     new_state = table.Column<string>(type: "jsonb", nullable: false),
                     performed_by = table.Column<int>(type: "integer", nullable: true),
                     ip_address = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: true),
-                    user_agent = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     change_reason = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -204,27 +199,20 @@ namespace HuyetMach175.Api.Migrations
                     request_id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     request_code = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    department_id = table.Column<int>(type: "integer", nullable: false),
-                    doctor_id = table.Column<int>(type: "integer", nullable: false),
+                    doctor_id = table.Column<int>(type: "integer", nullable: true),
                     patient_code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     patient_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    patient_blood_type = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
-                    patient_rh = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
-                    urgency_level = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    patient_blood_type = table.Column<string>(type: "text", nullable: false),
+                    patient_rh = table.Column<string>(type: "text", nullable: false),
+                    urgency_level = table.Column<string>(type: "text", nullable: false),
                     diagnosis = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
                     rejection_reason = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_blood_requests", x => x.request_id);
-                    table.ForeignKey(
-                        name: "FK_blood_requests_departments_department_id",
-                        column: x => x.department_id,
-                        principalTable: "departments",
-                        principalColumn: "department_id",
-                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_blood_requests_users_doctor_id",
                         column: x => x.doctor_id,
@@ -244,7 +232,7 @@ namespace HuyetMach175.Api.Migrations
                     start_date = table.Column<DateOnly>(type: "date", nullable: false),
                     end_date = table.Column<DateOnly>(type: "date", nullable: false),
                     target_donations = table.Column<int>(type: "integer", nullable: false),
-                    status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
                     created_by = table.Column<int>(type: "integer", nullable: false),
                     approved_by = table.Column<int>(type: "integer", nullable: true),
                     rejection_reason = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
@@ -269,7 +257,7 @@ namespace HuyetMach175.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "notifications",
+                name: "notification",
                 columns: table => new
                 {
                     notification_id = table.Column<long>(type: "bigint", nullable: false)
@@ -279,8 +267,8 @@ namespace HuyetMach175.Api.Migrations
                     target_department_id = table.Column<int>(type: "integer", nullable: true),
                     title = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
                     message = table.Column<string>(type: "text", nullable: false),
-                    type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    reference_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    type = table.Column<string>(type: "text", nullable: false),
+                    reference_type = table.Column<string>(type: "text", nullable: true),
                     reference_id = table.Column<int>(type: "integer", nullable: true),
                     is_read = table.Column<bool>(type: "boolean", nullable: false),
                     read_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -288,19 +276,19 @@ namespace HuyetMach175.Api.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_notifications", x => x.notification_id);
+                    table.PrimaryKey("PK_notification", x => x.notification_id);
                     table.ForeignKey(
-                        name: "FK_notifications_departments_target_department_id",
+                        name: "FK_notification_departments_target_department_id",
                         column: x => x.target_department_id,
                         principalTable: "departments",
                         principalColumn: "department_id");
                     table.ForeignKey(
-                        name: "FK_notifications_roles_target_role_id",
+                        name: "FK_notification_roles_target_role_id",
                         column: x => x.target_role_id,
                         principalTable: "roles",
                         principalColumn: "role_id");
                     table.ForeignKey(
-                        name: "FK_notifications_users_recipient_user_id",
+                        name: "FK_notification_users_recipient_user_id",
                         column: x => x.recipient_user_id,
                         principalTable: "users",
                         principalColumn: "user_id");
@@ -312,7 +300,7 @@ namespace HuyetMach175.Api.Migrations
                 {
                     user_id = table.Column<int>(type: "integer", nullable: false),
                     role_id = table.Column<int>(type: "integer", nullable: false),
-                    assigned_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -370,7 +358,7 @@ namespace HuyetMach175.Api.Migrations
                     appointment_date = table.Column<DateOnly>(type: "date", nullable: false),
                     time_slot = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     qr_code_token = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
                     is_walk_in = table.Column<bool>(type: "boolean", nullable: false),
                     checked_in_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
@@ -403,13 +391,12 @@ namespace HuyetMach175.Api.Migrations
                     weight_kg = table.Column<decimal>(type: "numeric", nullable: false),
                     blood_pressure = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     hemoglobin_level = table.Column<decimal>(type: "numeric", nullable: true),
-                    screening_status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    screening_status = table.Column<string>(type: "text", nullable: false),
                     deferral_reason = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    next_eligible_date = table.Column<DateOnly>(type: "date", nullable: true),
-                    target_volume_ml = table.Column<int>(type: "integer", nullable: true),
+                    target_volume_ml = table.Column<string>(type: "text", nullable: true),
                     actual_volume_ml = table.Column<int>(type: "integer", nullable: true),
                     collection_incident = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
                     completed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
@@ -445,7 +432,6 @@ namespace HuyetMach175.Api.Migrations
                     survey_answers = table.Column<string>(type: "jsonb", nullable: false),
                     risk_score = table.Column<int>(type: "integer", nullable: false),
                     has_risk = table.Column<bool>(type: "boolean", nullable: false),
-                    confirmed_by_donor = table.Column<bool>(type: "boolean", nullable: false),
                     submitted_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -470,12 +456,12 @@ namespace HuyetMach175.Api.Migrations
                     session_id = table.Column<int>(type: "integer", nullable: true),
                     component_type_id = table.Column<int>(type: "integer", nullable: false),
                     location_id = table.Column<int>(type: "integer", nullable: true),
-                    blood_type = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
-                    rh_factor = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
+                    blood_type = table.Column<string>(type: "text", nullable: false),
+                    rh_factor = table.Column<string>(type: "text", nullable: false),
                     volume_ml = table.Column<int>(type: "integer", nullable: false),
                     collected_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     expired_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
                     discard_reason = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -520,7 +506,7 @@ namespace HuyetMach175.Api.Migrations
                     issued_by = table.Column<int>(type: "integer", nullable: true),
                     received_by = table.Column<int>(type: "integer", nullable: true),
                     issued_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false)
+                    status = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -565,14 +551,14 @@ namespace HuyetMach175.Api.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     bag_id = table.Column<int>(type: "integer", nullable: false),
                     technician_id = table.Column<int>(type: "integer", nullable: false),
-                    hiv_result = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    hbv_result = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    hcv_result = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    syphilis_result = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    irregular_antibody = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    confirmed_blood_type = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
-                    confirmed_rh = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: false),
-                    overall_conclusion = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    hiv_result = table.Column<string>(type: "text", nullable: false),
+                    hbv_result = table.Column<string>(type: "text", nullable: false),
+                    hcv_result = table.Column<string>(type: "text", nullable: false),
+                    syphilis_result = table.Column<string>(type: "text", nullable: false),
+                    irregular_antibody = table.Column<string>(type: "text", nullable: false),
+                    confirmed_blood_type = table.Column<string>(type: "text", nullable: false),
+                    confirmed_rh = table.Column<string>(type: "text", nullable: false),
+                    overall_conclusion = table.Column<string>(type: "text", nullable: false),
                     tested_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -602,8 +588,8 @@ namespace HuyetMach175.Api.Migrations
                     returned_by = table.Column<int>(type: "integer", nullable: false),
                     received_by = table.Column<int>(type: "integer", nullable: false),
                     return_reason = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    cold_chain_qualified = table.Column<bool>(type: "boolean", nullable: false),
-                    final_action = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    qualified = table.Column<bool>(type: "boolean", nullable: false),
+                    final_action = table.Column<string>(type: "text", nullable: false),
                     processed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -714,11 +700,6 @@ namespace HuyetMach175.Api.Migrations
                 column: "request_id");
 
             migrationBuilder.CreateIndex(
-                name: "idx_blood_requests_dept_status",
-                table: "blood_requests",
-                columns: new[] { "department_id", "status" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_blood_requests_doctor_id",
                 table: "blood_requests",
                 column: "doctor_id");
@@ -819,19 +800,19 @@ namespace HuyetMach175.Api.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "idx_notifications_recipient_unread",
-                table: "notifications",
+                table: "notification",
                 columns: new[] { "recipient_user_id", "is_read" },
                 filter: "is_read = FALSE");
 
             migrationBuilder.CreateIndex(
                 name: "idx_notifications_target_role",
-                table: "notifications",
+                table: "notification",
                 column: "target_role_id",
                 filter: "target_role_id IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_notifications_target_department_id",
-                table: "notifications",
+                name: "IX_notification_target_department_id",
+                table: "notification",
                 column: "target_department_id");
 
             migrationBuilder.CreateIndex(
@@ -855,12 +836,6 @@ namespace HuyetMach175.Api.Migrations
                 name: "IX_roles_role_code",
                 table: "roles",
                 column: "role_code",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_storage_locations_storage_code",
-                table: "storage_locations",
-                column: "storage_code",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -896,7 +871,7 @@ namespace HuyetMach175.Api.Migrations
                 name: "blood_test_results");
 
             migrationBuilder.DropTable(
-                name: "notifications");
+                name: "notification");
 
             migrationBuilder.DropTable(
                 name: "pre_screening_surveys");

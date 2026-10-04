@@ -10,6 +10,12 @@ public class DonorConfiguration : IEntityTypeConfiguration<Donor>
     {
         builder.HasIndex(d => d.CitizenId).IsUnique();
         builder.HasIndex(d => d.PhoneNumber).IsUnique();
+
+        builder.Property(d => d.BloodType)
+            .HasConversion<string>();
+
+        builder.Property(d => d.RhFactor)
+            .HasConversion<string>();
     }
 }
 
@@ -18,6 +24,9 @@ public class DonationAppointmentConfiguration : IEntityTypeConfiguration<Donatio
     public void Configure(EntityTypeBuilder<DonationAppointment> builder)
     {
         builder.HasIndex(da => da.QrCodeToken).IsUnique();
+
+        builder.Property(da => da.Status)
+            .HasConversion<string>();
 
         builder.HasIndex(da => new { da.DonorId, da.AppointmentDate })
             .HasDatabaseName("uq_active_appointment_per_day")
@@ -30,6 +39,9 @@ public class DonationCampaignConfiguration : IEntityTypeConfiguration<DonationCa
 {
     public void Configure(EntityTypeBuilder<DonationCampaign> builder)
     {
+        builder.Property(c => c.Status)
+            .HasConversion<string>();
+
         builder.HasOne(c => c.CreatedByUser)
             .WithMany(u => u.CreatedCampaigns)
             .HasForeignKey(c => c.CreatedBy)
@@ -46,6 +58,15 @@ public class DonationSessionConfiguration : IEntityTypeConfiguration<DonationSes
 {
     public void Configure(EntityTypeBuilder<DonationSession> builder)
     {
+        builder.Property(s => s.ScreeningStatus)
+            .HasConversion<string>();
+
+        builder.Property(s => s.TargetVolumeMl)
+            .HasConversion<string>();
+
+        builder.Property(s => s.Status)
+            .HasConversion<string>();
+
         builder.HasOne(s => s.Doctor)
             .WithMany(u => u.DoctorSessions)
             .HasForeignKey(s => s.DoctorId)

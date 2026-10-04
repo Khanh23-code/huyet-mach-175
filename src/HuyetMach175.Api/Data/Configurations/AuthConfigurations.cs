@@ -17,6 +17,9 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
     public void Configure(EntityTypeBuilder<Role> builder)
     {
         builder.HasIndex(r => r.RoleCode).IsUnique();
+
+        builder.Property(r => r.RoleCode)
+            .HasConversion<string>();
     }
 }
 

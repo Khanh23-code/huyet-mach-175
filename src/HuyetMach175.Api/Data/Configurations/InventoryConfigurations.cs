@@ -9,6 +9,9 @@ public class BloodComponentTypeConfiguration : IEntityTypeConfiguration<BloodCom
     public void Configure(EntityTypeBuilder<BloodComponentType> builder)
     {
         builder.HasIndex(bct => bct.TypeCode).IsUnique();
+
+        builder.Property(bct => bct.TypeCode)
+            .HasConversion<string>();
     }
 }
 
@@ -16,7 +19,6 @@ public class StorageLocationConfiguration : IEntityTypeConfiguration<StorageLoca
 {
     public void Configure(EntityTypeBuilder<StorageLocation> builder)
     {
-        builder.HasIndex(sl => sl.StorageCode).IsUnique();
     }
 }
 
@@ -25,6 +27,15 @@ public class BloodBagConfiguration : IEntityTypeConfiguration<BloodBag>
     public void Configure(EntityTypeBuilder<BloodBag> builder)
     {
         builder.HasIndex(bb => bb.Barcode).IsUnique();
+
+        builder.Property(bb => bb.BloodType)
+            .HasConversion<string>();
+
+        builder.Property(bb => bb.RhFactor)
+            .HasConversion<string>();
+
+        builder.Property(bb => bb.Status)
+            .HasConversion<string>();
 
         builder.HasIndex(bb => new { bb.BloodType, bb.RhFactor, bb.ComponentTypeId, bb.Status, bb.ExpiredAt })
             .HasDatabaseName("idx_blood_bags_lookup");
@@ -45,6 +56,15 @@ public class BloodTestResultConfiguration : IEntityTypeConfiguration<BloodTestRe
 {
     public void Configure(EntityTypeBuilder<BloodTestResult> builder)
     {
+        builder.Property(tr => tr.HivResult).HasConversion<string>();
+        builder.Property(tr => tr.HbvResult).HasConversion<string>();
+        builder.Property(tr => tr.HcvResult).HasConversion<string>();
+        builder.Property(tr => tr.SyphilisResult).HasConversion<string>();
+        builder.Property(tr => tr.IrregularAntibody).HasConversion<string>();
+        builder.Property(tr => tr.ConfirmedBloodType).HasConversion<string>();
+        builder.Property(tr => tr.ConfirmedRh).HasConversion<string>();
+        builder.Property(tr => tr.OverallConclusion).HasConversion<string>();
+
         builder.HasOne(tr => tr.Technician)
             .WithMany(u => u.TestResults)
             .HasForeignKey(tr => tr.TechnicianId)
