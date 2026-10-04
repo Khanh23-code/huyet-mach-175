@@ -4,13 +4,20 @@ obj/
 *.user
 *.suo
 .vs/
+
+## Sensitive Configs (Keep secret credentials off Git)
+appsettings.Development.json
+appsettings.Local.json
 appsettings.Production.json
+appsettings.*.json
+!appsettings.json
 
 ## Node / React
 node_modules/
 dist/
 dist-ssr/
 *.local
+.env
 .env.local
 .env.*.local
 npm-debug.log*
