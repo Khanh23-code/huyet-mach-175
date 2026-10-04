@@ -9,9 +9,6 @@ services:
       POSTGRES_PASSWORD: admin123
     ports:
       - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./database/scripts/init-schema.sql:/docker-entrypoint-initdb.d/init-schema.sql
     networks:
       - huyetmach175_net
 
