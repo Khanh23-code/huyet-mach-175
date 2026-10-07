@@ -26,7 +26,6 @@ public class PreScreeningSurvey
     [Column("submitted_at")]
     public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation properties
     [ForeignKey(nameof(AppointmentId))]
     public DonationAppointment? Appointment { get; set; }
 }

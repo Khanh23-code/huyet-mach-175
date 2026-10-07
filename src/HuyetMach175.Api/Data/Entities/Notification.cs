@@ -47,7 +47,6 @@ public class Notification
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation properties
     [ForeignKey(nameof(RecipientUserId))]
     public User? RecipientUser { get; set; }
 

@@ -54,7 +54,6 @@ public class DonationSession
     [Column("completed_at")]
     public DateTime? CompletedAt { get; set; }
 
-    // Navigation properties
     [ForeignKey(nameof(AppointmentId))]
     public DonationAppointment? Appointment { get; set; }
 

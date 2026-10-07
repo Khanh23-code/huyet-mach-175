@@ -35,7 +35,6 @@ public class BloodAllocation
     [Column("status")]
     public AllocationStatus Status { get; set; } = AllocationStatus.RESERVED;
 
-    // Navigation properties
     [ForeignKey(nameof(RequestId))]
     public BloodRequest? Request { get; set; }
 

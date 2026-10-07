@@ -52,7 +52,6 @@ public class BloodRequest
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation properties
     [ForeignKey(nameof(DoctorId))]
     public User? Doctor { get; set; }
 

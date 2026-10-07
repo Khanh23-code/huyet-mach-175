@@ -24,6 +24,5 @@ public class Permission
     [Column("description")]
     public string? Description { get; set; }
 
-    // Navigation properties
     public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
 }

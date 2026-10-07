@@ -44,7 +44,6 @@ public class BloodTestResult
     [Column("tested_at")]
     public DateTime TestedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation properties
     [ForeignKey(nameof(BagId))]
     public BloodBag? Bag { get; set; }
 

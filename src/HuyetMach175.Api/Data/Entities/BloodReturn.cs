@@ -34,7 +34,6 @@ public class BloodReturn
     [Column("processed_at")]
     public DateTime ProcessedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation properties
     [ForeignKey(nameof(AllocationId))]
     public BloodAllocation? Allocation { get; set; }
 
