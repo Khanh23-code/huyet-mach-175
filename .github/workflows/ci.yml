@@ -8,7 +8,7 @@ on:
 
 jobs:
   backend-check:
-    name: Build Backend (.NET)
+    name: Build & Check Backend (.NET)
     runs-on: ubuntu-latest
 
     steps:
@@ -27,7 +27,7 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
   frontend-check:
-    name: Build Frontend (React Vite)
+    name: Build & Check Frontend (React Vite)
     runs-on: ubuntu-latest
 
     defaults:
