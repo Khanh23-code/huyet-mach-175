@@ -2,12 +2,15 @@ using Microsoft.EntityFrameworkCore;
 using HuyetMach175.Api.Data;
 using HuyetMach175.SharedKernel.Services;
 
+using HuyetMach175.Modules.Auth;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
+builder.Services.AddAuthModule(builder.Configuration);
 
 builder.Services.AddCors(options =>
 {
