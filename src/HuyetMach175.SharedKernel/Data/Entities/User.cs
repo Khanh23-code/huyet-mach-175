@@ -62,4 +62,5 @@ public class User
     public ICollection<BloodReturn> ReceivedReturns { get; set; } = new List<BloodReturn>();
     public ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
     public ICollection<Notification> ReceivedNotifications { get; set; } = new List<Notification>();
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }

@@ -961,6 +961,47 @@ namespace HuyetMach175.Api.Migrations
                     b.ToTable("pre_screening_surveys");
                 });
 
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.RefreshToken", b =>
+                {
+                    b.Property<int>("TokenId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("token_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TokenId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_revoked");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("token");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("TokenId");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("refresh_tokens");
+                });
+
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.Role", b =>
                 {
                     b.Property<int>("RoleId")
@@ -1387,6 +1428,17 @@ namespace HuyetMach175.Api.Migrations
                     b.Navigation("Appointment");
                 });
 
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("HuyetMach175.Api.Data.Entities.User", "User")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.RolePermission", b =>
                 {
                     b.HasOne("HuyetMach175.Api.Data.Entities.Permission", "Permission")
@@ -1533,6 +1585,8 @@ namespace HuyetMach175.Api.Migrations
                     b.Navigation("ReceivedNotifications");
 
                     b.Navigation("ReceivedReturns");
+
+                    b.Navigation("RefreshTokens");
 
                     b.Navigation("ReservedAllocations");
 

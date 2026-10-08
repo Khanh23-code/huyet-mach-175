@@ -16,6 +16,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     public DbSet<DonationCampaign> DonationCampaigns => Set<DonationCampaign>();
     public DbSet<Donor> Donors => Set<Donor>();
