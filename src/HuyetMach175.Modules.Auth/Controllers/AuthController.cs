@@ -32,20 +32,37 @@ namespace HuyetMach175.Modules.Auth.Controllers
         }
 
         [HttpGet("me")]
+        [Authorize]
         public async Task<IActionResult> GetCurrentUser()
         {
             try
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                {
-                    return Unauthorized(new { message = "Unauthorized user." });
-                }
+                //var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                //if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                //{
+                //    return Unauthorized(new { message = "Unauthorized user." });
+                //}
 
                 var userInfo = await _authService.GetUserInfoAsync(userId);
 
                 return Ok(userInfo);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+        {
+            try
+            {
+                var respone = await _authService.RefreshTokenAsync(request);
+                return Ok(respone);
             }
             catch (Exception ex)
             {

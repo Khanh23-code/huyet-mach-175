@@ -1,4 +1,5 @@
-using HuyetMach175.Api.Data; 
+using HuyetMach175.Api.Data;
+using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Modules.Auth.DTOs;
 using HuyetMach175.SharedKernel.Services;
 using Microsoft.EntityFrameworkCore;
@@ -62,6 +63,16 @@ public class AuthService : IAuthService
 
         string refreshToken = _refreshTokenGenerator.GenerateRefreshToken();
 
+        _context.RefreshTokens.Add(new RefreshToken
+        {
+            Token = refreshToken,
+            UserId = user.UserId,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            IsRevoked = false,
+            CreatedAt = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
+
         return new LoginResponse
         {
             AccessToken = accessToken,
@@ -84,7 +95,7 @@ public class AuthService : IAuthService
         }
 
         var roleCodes = user.UserRoles
-            .Select(ur => ur.Role!.UserRoles.ToString()).ToList();
+            .Select(ur => ur.Role!.RoleCode.ToString()).ToList();
 
         return new UserInfoDto
         {
@@ -95,6 +106,68 @@ public class AuthService : IAuthService
             PhoneNumber = user.PhoneNumber,
             DepartmentId = user.DepartmentId,
             Roles = roleCodes
+        };
+    }
+
+    public async Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest request)
+    {
+        if (request == null)
+        {
+            throw new Exception("Refresh Token must not be empty.");
+        }
+
+        var tokenEntity = await _context.RefreshTokens
+            .Include(t => t.User)
+            .ThenInclude(u => u!.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(t => t.Token == request.RefreshToken);
+
+        if (tokenEntity == null || tokenEntity.IsRevoked || tokenEntity.ExpiresAt < DateTime.UtcNow)
+        {
+            throw new Exception("Refresh Token is invalid or expired.");
+        }
+
+        var user = tokenEntity.User;
+
+        if (user == null)
+        {
+            throw new Exception("This account is not exist.");
+        }
+
+        if (!user.IsActive)
+        {
+            throw new Exception("This user had been blocked.");
+        }
+
+        var roleCodes = user.UserRoles
+            .Select(ur => ur.Role!.RoleCode.ToString()).ToList();
+
+        tokenEntity.IsRevoked = true;
+        var (newAccesToken, newExpiredAt) = _jwtTokenGenerator.GenerateToken(
+            tokenEntity.UserId,
+            user.Username,
+            user.FullName,
+            user.DepartmentId,
+            roleCodes);
+
+        var newRefreshToken = _refreshTokenGenerator.GenerateRefreshToken();
+
+        _context.RefreshTokens.Add(new RefreshToken
+        {
+            Token = newRefreshToken,
+            UserId = user.UserId,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            IsRevoked = false,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await _context.SaveChangesAsync();
+
+        return new RefreshTokenResponse
+        {
+            NewAccessToken = newAccesToken,
+            NewRefreshToken = newRefreshToken,
+            NewExpiredAt = newExpiredAt,
         };
     }
 }
