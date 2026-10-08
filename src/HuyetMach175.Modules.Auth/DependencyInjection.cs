@@ -16,7 +16,8 @@ public static class DependencyInjection
         configuration.GetSection(JwtOptions.SectionName).Bind(jwtOptions);
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
-        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddSingleton<IRefreshTokenGenerator, RefreshTokenGenerator>();
 
         services.AddAuthentication(options =>
         {
