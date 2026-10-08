@@ -100,6 +100,7 @@ public class AuthService : IAuthService
         return new UserInfoDto
         {
             UserId = user.UserId,
+            StaffCode = user.StaffCode,
             Username = user.Username,
             FullName = user.FullName,
             Email = user.Email,
