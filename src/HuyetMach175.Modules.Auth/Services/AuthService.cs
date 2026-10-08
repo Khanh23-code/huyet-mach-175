@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HuyetMach175.Modules.Auth.Services;
 
-public class AuthService : IAuthServices
+public class AuthService : IAuthService
 {
     private readonly ApplicationDbContext _context;
     private readonly IPasswordHasher _passwordHasher;

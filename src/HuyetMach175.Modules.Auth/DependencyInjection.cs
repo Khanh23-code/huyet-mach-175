@@ -18,7 +18,11 @@ public static class DependencyInjection
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddSingleton<IRefreshTokenGenerator, RefreshTokenGenerator>();
+        services.AddScoped<IAuthService, AuthService>();
 
+        services.AddControllers()
+            .AddApplicationPart(typeof(DependencyInjection).Assembly);
+            
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
