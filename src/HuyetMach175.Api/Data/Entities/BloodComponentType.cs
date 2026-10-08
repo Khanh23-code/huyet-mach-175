@@ -31,7 +31,6 @@ public class BloodComponentType
     [Column("description")]
     public string? Description { get; set; }
 
-    // Navigation properties
     public ICollection<BloodBag> BloodBags { get; set; } = new List<BloodBag>();
     public ICollection<BloodRequestItem> RequestItems { get; set; } = new List<BloodRequestItem>();
 }

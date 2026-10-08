@@ -53,7 +53,6 @@ public class BloodBag
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation properties
     [ForeignKey(nameof(ParentBagId))]
     public BloodBag? ParentBag { get; set; }
 

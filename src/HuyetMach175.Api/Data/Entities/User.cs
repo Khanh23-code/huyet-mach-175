@@ -45,7 +45,6 @@ public class User
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation properties
     [ForeignKey(nameof(DepartmentId))]
     public Department? Department { get; set; }
 

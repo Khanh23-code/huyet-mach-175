@@ -3,7 +3,6 @@ namespace HuyetMach175.Api.Data.Enums;
 public enum RoleCode
 {
     DON,
-    REC,
     BBNK,
     CLIN,
     MGT,

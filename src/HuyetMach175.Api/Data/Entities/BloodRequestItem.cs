@@ -22,7 +22,6 @@ public class BloodRequestItem
     [Column("allocated_units")]
     public int AllocatedUnits { get; set; } = 0;
 
-    // Navigation properties
     [ForeignKey(nameof(RequestId))]
     public BloodRequest? Request { get; set; }
 

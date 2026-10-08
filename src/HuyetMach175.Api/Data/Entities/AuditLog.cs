@@ -43,7 +43,6 @@ public class AuditLog
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation properties
     [ForeignKey(nameof(PerformedBy))]
     public User? PerformedByUser { get; set; }
 }

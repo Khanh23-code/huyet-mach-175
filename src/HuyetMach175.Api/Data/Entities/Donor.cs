@@ -50,6 +50,5 @@ public class Donor
     [Column("last_donation_date")]
     public DateOnly? LastDonationDate { get; set; }
 
-    // Navigation properties
     public ICollection<DonationAppointment> Appointments { get; set; } = new List<DonationAppointment>();
 }

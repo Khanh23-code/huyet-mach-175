@@ -14,7 +14,6 @@ public class RolePermission
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation properties
     [ForeignKey(nameof(RoleId))]
     public Role? Role { get; set; }
 

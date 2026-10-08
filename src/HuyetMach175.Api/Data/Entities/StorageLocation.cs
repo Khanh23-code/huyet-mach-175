@@ -29,6 +29,5 @@ public class StorageLocation
     [Column("is_active")]
     public bool IsActive { get; set; } = true;
 
-    // Navigation properties
     public ICollection<BloodBag> BloodBags { get; set; } = new List<BloodBag>();
 }
