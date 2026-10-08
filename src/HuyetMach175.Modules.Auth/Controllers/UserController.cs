@@ -33,5 +33,20 @@ namespace HuyetMach175.Modules.Auth.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpPost]
+        [Authorize(Roles = "SYS,MGT")]
+        public async Task<IActionResult> CreateUserAsync([FromBody] CreateUserRequest request)
+        {
+            try
+            {
+                var user = await _authService.CreateUserAsync(request);
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

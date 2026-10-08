@@ -218,13 +218,13 @@ public class AuthService : IAuthService
             {
                 UserId = u.UserId,
                 StaffCode = u.StaffCode,
-                UserName = u.Username,
+                Username = u.Username,
                 FullName = u.FullName,
                 Email = u.Email,
                 PhoneNumber = u.PhoneNumber,
                 IsActive = u.IsActive,
                 DepartmentId = u.DepartmentId,
-                DepartmentName = u.Department.DepartmentName,
+                DepartmentName = u.Department != null ? u.Department.DepartmentName : string.Empty,
                 Roles = u.UserRoles.Select(ur => ur.Role!.RoleCode.ToString()).ToList()
             })
             .ToListAsync();
@@ -235,6 +235,75 @@ public class AuthService : IAuthService
             TotalCount = totalCount,
             PageNumber = filter.PageNumber,
             PageSize = filter.PageSize
+        };
+    }
+
+    public async Task<UserListItemDto> CreateUserAsync(CreateUserRequest request)
+    {
+        if (request == null || _context.Users.Any(u => u.Username == request.Username || u.StaffCode == request.StaffCode))
+        {
+            throw new Exception("This user had been exist.");
+        }
+
+        if (!_context.Departments.Any(d => d.DepartmentId == request.DepartmentId))
+        {
+            throw new Exception("Invalid department.");
+        }
+
+        foreach (var roleId in request.RoleIds)
+        {
+            if (!_context.Roles.Any(r => r.RoleId == roleId))
+            {
+                throw new Exception("Invalid roles.");
+            }
+        }
+
+        var hashedPassword = _passwordHasher.HashPassword(request.Password);
+
+        var user = new User
+        {
+            DepartmentId = request.DepartmentId,
+            Username = request.Username,
+            StaffCode = request.StaffCode,
+            FullName = request.FullName,
+            PasswordHash = hashedPassword,
+            Email = request.Email,
+            PhoneNumber = request.PhoneNumber,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        foreach (var roleId in request.RoleIds)
+        {
+            _context.UserRoles.Add(new UserRole
+            {
+                RoleId = roleId,
+                UserId = user.UserId,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+        await _context.SaveChangesAsync();
+
+        var createdUser = await _context.Users
+            .Include(u => u.Department)
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .FirstAsync(u => u.UserId == user.UserId);
+
+        return new UserListItemDto
+        {
+            UserId = createdUser.UserId,
+            Username = createdUser.Username,
+            StaffCode = createdUser.StaffCode,
+            FullName = createdUser.FullName,
+            DepartmentId = createdUser.DepartmentId,
+            Roles = createdUser.UserRoles.Select(ur => ur.Role!.RoleCode.ToString()).ToList(),
+            IsActive = createdUser.IsActive,
+            DepartmentName = createdUser.Department != null ? createdUser.Department.DepartmentName : string.Empty,
+            Email = createdUser.Email,
+            PhoneNumber = createdUser.PhoneNumber
         };
     }
 }
