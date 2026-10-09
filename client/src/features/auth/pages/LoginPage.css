@@ -1,0 +1,106 @@
+﻿.login {
+    display: flex;
+    min-height: 100vh;
+    font-family: 'Be Vietnam Pro', 'Segoe UI', sans-serif;
+}
+
+/* ---------- Trái ---------- */
+.login__left {
+    position: relative;
+    flex: 0 0 50%;
+    background: #1b7a3a;
+    color: #fff;
+    padding: 56px 96px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+}
+.login__circle {
+    position: absolute;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.login__circle--top { width: 760px; height: 760px; top: -420px; right: -380px; }
+.login__circle--bottom { width: 520px; height: 520px; bottom: -280px; left: -260px; }
+
+.login__brand { display: flex; align-items: center; gap: 16px; position: relative; }
+.login__logo {
+    width: 64px; height: 64px; border-radius: 14px; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+}
+.login__hospital { font-size: 13px; letter-spacing: 2px; font-weight: 600; opacity: 0.8; }
+.login__app { font-size: 26px; font-weight: 500; }
+
+.login__hero { position: relative; }
+.login__tag {
+    display: inline-block; padding: 8px 14px; border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    font-size: 13px; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 32px;
+}
+.login__hero h1 { font-size: 64px; line-height: 1.1; font-weight: 400; margin: 0 0 32px; }
+.login__hero p { font-size: 18px; line-height: 1.7; opacity: 0.85; max-width: 600px; }
+
+.login__status { display: flex; align-items: center; gap: 12px; font-weight: 500; position: relative; }
+.login__dot { width: 12px; height: 12px; border-radius: 50%; background: #d7f5df; }
+
+/* ---------- Phải ---------- */
+.login__right {
+    flex: 1;
+    background: #f3f6f3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+}
+.login__card {
+    width: 100%;
+    max-width: 500px;
+    background: #fff;
+    border: 1px solid #e3e8e3;
+    border-radius: 20px;
+    padding: 40px;
+}
+.login__eyebrow { color: #1b7a3a; font-weight: 700; letter-spacing: 1.5px; font-size: 14px; }
+.login__card h2 { font-size: 34px; font-weight: 500; margin: 12px 0 8px; }
+.login__sub { color: #5c6b5f; margin-bottom: 28px; }
+.login__label { display: block; font-weight: 600; margin: 16px 0 8px; }
+.login__error { color: #e5484d; font-size: 13px; margin-top: 4px; }
+
+/* Ghi nhớ đăng nhập và quên mật khẩu */
+.login__options {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 12px;
+   margin-top: 20px;
+}
+
+.login__forgotLink {
+    color: #1b7a3a;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.login__forgotLink:hover {
+    color: #145c2b;
+    text-decoration: underline;
+}
+
+.login__info {
+    background: #e8f0fe; color: #1d4ed8; border-radius: 10px;
+    padding: 14px 16px; margin-top: 16px; font-size: 14px;
+}
+.login__help { text-align: center; font-size: 12px; color: #6b7a6e; margin-top: 20px; }
+
+/* ---------- Màn hình nhỏ ---------- */
+@media (max-width: 1000px) {
+    .login__left { display: none; }
+}
+@media (max-width: 1400px) {
+    .login__left { padding: 40px 48px; }
+    .login__hero h1 { font-size: 44px; }
+}
