@@ -48,5 +48,20 @@ namespace HuyetMach175.Modules.Auth.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpPut("{id}/status")]
+        [Authorize(Roles = "SYS,MGT")]
+        public async Task<IActionResult> UpdateUserStatusAsync([FromRoute] int id, [FromBody] UpdateUserStatusRequest request)
+        {
+            try
+            {
+                var user = await _authService.UpdateUserStatusAsync(id, request);
+                return Ok(user);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

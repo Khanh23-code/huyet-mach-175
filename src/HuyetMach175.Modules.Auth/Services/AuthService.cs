@@ -306,4 +306,45 @@ public class AuthService : IAuthService
             PhoneNumber = createdUser.PhoneNumber
         };
     }
+
+    public async Task<UserListItemDto> UpdateUserStatusAsync(int userId, UpdateUserStatusRequest request)
+    {
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.UserId == userId);
+
+        if (user == null)
+        {
+            throw new Exception("This user ID is not exist.");
+        }
+
+        user.IsActive = request.IsActive;
+
+        if (request.IsActive == false)
+        {
+            var activeTokens = await _context.RefreshTokens
+                .Where(rt => rt.IsRevoked == true && rt.UserId == userId)
+                .ToListAsync();
+
+            foreach (var token in activeTokens)
+            {
+                token.IsRevoked = false;
+            }
+        }
+
+        await _context.SaveChangesAsync();
+
+        return new UserListItemDto
+        {
+            UserId = user.UserId,
+            Username = user.Username,
+            StaffCode = user.StaffCode,
+            FullName = user.FullName,
+            DepartmentId = user.DepartmentId,
+            Roles = user.UserRoles.Select(ur => ur.Role!.RoleCode.ToString()).ToList(),
+            IsActive = user.IsActive,
+            DepartmentName = user.Department != null ? user.Department.DepartmentName : string.Empty,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber
+        };
+    }
 }
