@@ -1,6 +1,7 @@
 using HuyetMach175.Api.Data;
 using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Modules.Auth.DTOs;
+using HuyetMach175.SharedKernel.Exceptions;
 using HuyetMach175.SharedKernel.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -35,19 +36,19 @@ public class AuthService : IAuthService
 
         if (user == null)
         {
-            throw new Exception("Username or password was not correct.");
+            throw new HttpException(400, "Username or password was not correct.");
         }
 
         if (!user.IsActive)
         {
-            throw new Exception("Your account had been blocked.");
+            throw new HttpException(403, "Your account had been blocked.");
         }
 
         bool isPasswordValid = _passwordHasher.VerifyPassword(request.Password, user.PasswordHash);
 
         if (!isPasswordValid)
         {
-            throw new Exception("Username or password was not correct.");
+            throw new HttpException(400, "Username or password was not correct.");
         }
 
         user.LastLoginAt = DateTime.UtcNow;
@@ -92,7 +93,7 @@ public class AuthService : IAuthService
 
         if (user == null || !user.IsActive)
         {
-            throw new Exception("Cannot find user information.");
+            throw new HttpException(404, "Cannot find user information.");
         }
 
         var roleCodes = user.UserRoles
@@ -115,7 +116,7 @@ public class AuthService : IAuthService
     {
         if (request == null)
         {
-            throw new Exception("Refresh Token must not be empty.");
+            throw new HttpException(400, "Refresh Token must not be empty.");
         }
 
         var tokenEntity = await _context.RefreshTokens
@@ -126,19 +127,19 @@ public class AuthService : IAuthService
 
         if (tokenEntity == null || tokenEntity.IsRevoked || tokenEntity.ExpiresAt < DateTime.UtcNow)
         {
-            throw new Exception("Refresh Token is invalid or expired.");
+            throw new HttpException(401, "Refresh Token is invalid or expired.");
         }
 
         var user = tokenEntity.User;
 
         if (user == null)
         {
-            throw new Exception("This account is not exist.");
+            throw new HttpException(404, "This account is not exist.");
         }
 
         if (!user.IsActive)
         {
-            throw new Exception("This user had been blocked.");
+            throw new HttpException(403, "This user had been blocked.");
         }
 
         var roleCodes = user.UserRoles
@@ -242,19 +243,19 @@ public class AuthService : IAuthService
     {
         if (request == null || _context.Users.Any(u => u.Username == request.Username || u.StaffCode == request.StaffCode))
         {
-            throw new Exception("This user had been exist.");
+            throw new HttpException(409, "This user had been exist.");
         }
 
         if (!_context.Departments.Any(d => d.DepartmentId == request.DepartmentId))
         {
-            throw new Exception("Invalid department.");
+            throw new HttpException(400, "Invalid department.");
         }
 
         foreach (var roleId in request.RoleIds)
         {
             if (!_context.Roles.Any(r => r.RoleId == roleId))
             {
-                throw new Exception("Invalid roles.");
+                throw new HttpException(400, "Invalid roles.");
             }
         }
 
@@ -314,7 +315,7 @@ public class AuthService : IAuthService
 
         if (user == null)
         {
-            throw new Exception("This user ID is not exist.");
+            throw new HttpException(404, "This user ID is not exist.");
         }
 
         user.IsActive = request.IsActive;
@@ -322,29 +323,35 @@ public class AuthService : IAuthService
         if (request.IsActive == false)
         {
             var activeTokens = await _context.RefreshTokens
-                .Where(rt => rt.IsRevoked == true && rt.UserId == userId)
+                .Where(rt => !rt.IsRevoked && rt.UserId == userId)
                 .ToListAsync();
 
             foreach (var token in activeTokens)
             {
-                token.IsRevoked = false;
+                token.IsRevoked = true;
             }
         }
 
         await _context.SaveChangesAsync();
 
+        var updatedUser = await _context.Users
+            .Include(u => u.Department)
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .FirstAsync(u => u.UserId == userId);
+
         return new UserListItemDto
         {
-            UserId = user.UserId,
-            Username = user.Username,
-            StaffCode = user.StaffCode,
-            FullName = user.FullName,
-            DepartmentId = user.DepartmentId,
-            Roles = user.UserRoles.Select(ur => ur.Role!.RoleCode.ToString()).ToList(),
-            IsActive = user.IsActive,
-            DepartmentName = user.Department != null ? user.Department.DepartmentName : string.Empty,
-            Email = user.Email,
-            PhoneNumber = user.PhoneNumber
+            UserId = updatedUser.UserId,
+            Username = updatedUser.Username,
+            StaffCode = updatedUser.StaffCode,
+            FullName = updatedUser.FullName,
+            DepartmentId = updatedUser.DepartmentId,
+            Roles = updatedUser.UserRoles.Select(ur => ur.Role!.RoleCode.ToString()).ToList(),
+            IsActive = updatedUser.IsActive,
+            DepartmentName = updatedUser.Department != null ? updatedUser.Department.DepartmentName : string.Empty,
+            Email = updatedUser.Email,
+            PhoneNumber = updatedUser.PhoneNumber
         };
     }
 }
