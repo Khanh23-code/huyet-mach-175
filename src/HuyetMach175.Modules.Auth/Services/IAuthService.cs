@@ -9,4 +9,5 @@ public interface IAuthService
     Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest request);
     Task<PagedResult<UserListItemDto>> GetUsersAsync(UserFilterDto filter);
     Task<UserListItemDto> CreateUserAsync(CreateUserRequest request);
+    Task<UserListItemDto> UpdateUserStatusAsync(int userId, UpdateUserStatusRequest request);
 }

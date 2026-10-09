@@ -47,8 +47,12 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
+builder.Services.AddExceptionHandler<HuyetMach175.SharedKernel.Middlewares.GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
