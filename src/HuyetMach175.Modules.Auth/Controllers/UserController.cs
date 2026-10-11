@@ -69,5 +69,13 @@ namespace HuyetMach175.Modules.Auth.Controllers
             var user = await _authService.UpdateUserStatusAsync(id, request);
             return Ok(user);
         }
+
+        [HttpPut("{id}/roles")]
+        [Authorize(Roles = "SYS,MGT")]
+        public async Task<IActionResult> UpdateUserRolesAsync([FromRoute] int id, [FromBody] UpdateUserRolesRequest request)
+        {
+            var updatedUser = await _authService.UpdateUserRolesAsync(id, request);
+            return Ok(updatedUser);
+        }
     }
 }

@@ -401,4 +401,45 @@ public class AuthService : IAuthService
 
         return await GetUserByIdAsync(updatedUser.UserId);
     }
+
+    public async Task<UserListItemDto> UpdateUserRolesAsync(int userId, UpdateUserRolesRequest request)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+
+        if (user == null)
+        {
+            throw new HttpException(404, "This user was not found in the system.");
+        }
+
+        if (request.UserRoles == null || request.UserRoles.Count == 0)
+        {
+            throw new HttpException(400, "A user must have at least one role.");
+        }
+
+        var extinctRoles = await _context.Roles.Select(r => r.RoleId).ToListAsync();
+        foreach (var newRole in request.UserRoles.Distinct().ToList())
+        {
+            if (!extinctRoles.Contains(newRole))
+            {
+                throw new HttpException(400, "There is at least one invalid role");
+            }
+        }
+
+        var currentRoles = await _context.UserRoles.Where(ur => ur.UserId == userId).ToListAsync();
+        _context.UserRoles.RemoveRange(currentRoles);
+
+        foreach (var role in request.UserRoles)
+        {
+            _context.UserRoles.Add(new UserRole
+            {
+                UserId = userId,
+                RoleId = role,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        await _context.SaveChangesAsync();
+
+        return await GetUserByIdAsync(userId);
+    }
 }
