@@ -1,7 +1,9 @@
 using HuyetMach175.Api.Data;
 using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
-using HuyetMach175.Modules.Auth.DTOs;
+using HuyetMach175.Modules.Auth.DTOs.Auth;
+using HuyetMach175.Modules.Auth.DTOs.Common;
+using HuyetMach175.Modules.Auth.DTOs.Users;
 using HuyetMach175.SharedKernel.Exceptions;
 using HuyetMach175.SharedKernel.Services;
 using Microsoft.AspNetCore.Identity;
@@ -81,71 +83,29 @@ public class AuthService : IAuthService
             AccessToken = accessToken,
             RefreshToken = refreshToken,
             ExpireAt = expireAt,
-            UserInfo = await GetUserInfoAsync(user.UserId)
+            UserInfo = await GetCurrentUserAsync(user.UserId)
         };
     }
 
-    public async Task<UserInfoDto> GetUserInfoAsync(int userId)
+    public async Task<bool> LogoutAsync(LogoutRequest request)
     {
-        var user = await _context.Users
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.UserId == userId);
-
-        if (user == null || !user.IsActive)
+        if (request == null)
         {
-            throw new HttpException(404, "Cannot find user information.");
+            throw new HttpException(400, "Refresh Token must not be empty.");
         }
 
-        var roleCodes = user.UserRoles
-            .Select(ur => ur.Role!.RoleCode.ToString()).ToList();
+        var tokenEntity = await _context.RefreshTokens.FirstOrDefaultAsync(t => t.Token == request.RefreshToken);
 
-        return new UserInfoDto
+        if (tokenEntity != null && !tokenEntity.IsRevoked)
         {
-            UserId = user.UserId,
-            StaffCode = user.StaffCode,
-            Username = user.Username,
-            FullName = user.FullName,
-            Email = user.Email,
-            PhoneNumber = user.PhoneNumber,
-            DepartmentId = user.DepartmentId,
-            Roles = roleCodes
-        };
-    }
-
-    public async Task<UserListItemDto> GetUserByIdAsync(int userid)
-    {
-        var user = await _context.Users
-            .AsNoTracking()
-            .Include(u => u.Department)
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.UserId == userid);
-
-        if (user == null)
-        {
-            throw new HttpException(404, "This user was not found in the system.");
+            tokenEntity.IsRevoked = true;
+            await _context.SaveChangesAsync();
         }
 
-        var roleCodes = user.UserRoles
-            .Select(ur => ur.Role!.RoleCode.ToString()).ToList();
-
-        return new UserListItemDto
-        {
-            UserId = user.UserId,
-            StaffCode = user.StaffCode,
-            Username = user.Username,
-            FullName = user.FullName,
-            Email = user.Email,
-            PhoneNumber = user.PhoneNumber,
-            DepartmentId = user.DepartmentId,
-            DepartmentName = user.Department != null ? user.Department.DepartmentName : string.Empty,
-            Roles = roleCodes,
-            IsActive = user.IsActive
-        };
+        return true;
     }
 
-    public async Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest request)
+    public async Task<RefreshTokenResponse> RefreshTokenAsync(LogoutRequest request)
     {
         if (request == null)
         {
@@ -207,184 +167,48 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<PagedResult<UserListItemDto>> GetUsersAsync(UserFilterDto filter)
-    {
-        var query = _context.Users
-            .Include(u => u.Department)
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .AsNoTracking()
-            .AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(filter.KeyWord))
-        {
-            var kw = filter.KeyWord.Trim().ToLower();
-            query = query.Where(u =>
-                u.Username.ToLower().Contains(kw) ||
-                u.FullName.ToLower().Contains(kw) ||
-                u.StaffCode.ToLower().Contains(kw) ||
-                (u.Email != null && u.Email.ToLower().Contains(kw)) ||
-                (u.PhoneNumber != null && u.PhoneNumber.Contains(kw)));
-        }
-
-        if (filter.DepartmentId.HasValue)
-        {
-            query = query.Where(u => u.DepartmentId ==  filter.DepartmentId.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(filter.RoleCode))
-        {
-            query = query.Where(u => u.UserRoles.Any(ur => ur.Role!.RoleCode.ToString() == filter.RoleCode));
-        }
-
-        if (filter.IsActive.HasValue)
-        {
-            query = query.Where(u => u.IsActive);
-        }
-
-        var totalCount = await query.CountAsync();
-
-        var users = await query
-            .OrderBy(u => u.StaffCode)
-            .Skip((filter.PageNumber - 1) * filter.PageSize)
-            .Take(filter.PageSize)
-            .Select(u => new UserListItemDto
-            {
-                UserId = u.UserId,
-                StaffCode = u.StaffCode,
-                Username = u.Username,
-                FullName = u.FullName,
-                Email = u.Email,
-                PhoneNumber = u.PhoneNumber,
-                IsActive = u.IsActive,
-                DepartmentId = u.DepartmentId,
-                DepartmentName = u.Department != null ? u.Department.DepartmentName : string.Empty,
-                Roles = u.UserRoles.Select(ur => ur.Role!.RoleCode.ToString()).ToList()
-            })
-            .ToListAsync();
-
-        return new PagedResult<UserListItemDto>
-        {
-            Items = users,
-            TotalCount = totalCount,
-            PageNumber = filter.PageNumber,
-            PageSize = filter.PageSize
-        };
-    }
-
-    public async Task<UserListItemDto> CreateUserAsync(CreateUserRequest request)
-    {
-        if (request == null || _context.Users.Any(u => u.Username == request.Username || u.StaffCode == request.StaffCode))
-        {
-            throw new HttpException(409, "This user had been exist.");
-        }
-
-        if (!_context.Departments.Any(d => d.DepartmentId == request.DepartmentId))
-        {
-            throw new HttpException(400, "Invalid department.");
-        }
-
-        foreach (var roleId in request.RoleIds)
-        {
-            if (!_context.Roles.Any(r => r.RoleId == roleId))
-            {
-                throw new HttpException(400, "Invalid roles.");
-            }
-        }
-
-        var hashedPassword = _passwordHasher.HashPassword(request.Password);
-
-        var user = new User
-        {
-            DepartmentId = request.DepartmentId,
-            Username = request.Username,
-            StaffCode = request.StaffCode,
-            FullName = request.FullName,
-            PasswordHash = hashedPassword,
-            Email = request.Email,
-            PhoneNumber = request.PhoneNumber,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        foreach (var roleId in request.RoleIds)
-        {
-            _context.UserRoles.Add(new UserRole
-            {
-                RoleId = roleId,
-                UserId = user.UserId,
-                CreatedAt = DateTime.UtcNow
-            });
-        }
-        await _context.SaveChangesAsync();
-
-        var createdUser = await _context.Users
-            .Include(u => u.Department)
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .FirstAsync(u => u.UserId == user.UserId);
-
-        return new UserListItemDto
-        {
-            UserId = createdUser.UserId,
-            Username = createdUser.Username,
-            StaffCode = createdUser.StaffCode,
-            FullName = createdUser.FullName,
-            DepartmentId = createdUser.DepartmentId,
-            Roles = createdUser.UserRoles.Select(ur => ur.Role!.RoleCode.ToString()).ToList(),
-            IsActive = createdUser.IsActive,
-            DepartmentName = createdUser.Department != null ? createdUser.Department.DepartmentName : string.Empty,
-            Email = createdUser.Email,
-            PhoneNumber = createdUser.PhoneNumber
-        };
-    }
-
-    public async Task<UserListItemDto> UpdateUserStatusAsync(int userId, UpdateUserStatusRequest request)
+    public async Task<UserInfoDto> GetCurrentUserAsync(int userId)
     {
         var user = await _context.Users
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.UserId == userId);
+
+        if (user == null || !user.IsActive)
+        {
+            throw new HttpException(404, "Cannot find user information.");
+        }
+
+        var roleCodes = user.UserRoles
+            .Select(ur => ur.Role!.RoleCode.ToString()).ToList();
+
+        return new UserInfoDto
+        {
+            UserId = user.UserId,
+            StaffCode = user.StaffCode,
+            Username = user.Username,
+            FullName = user.FullName,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber,
+            DepartmentId = user.DepartmentId,
+            Roles = roleCodes
+        };
+    }
+
+    public async Task<UserInfoDto> UpdateCurrentUserProfileAsync(int userId, UpdateProfileRequest request)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
 
         if (user == null)
         {
-            throw new HttpException(404, "This user ID is not exist.");
+            throw new HttpException(404, "This user was not found in the system.");
         }
 
-        user.IsActive = request.IsActive;
-
-        if (request.IsActive == false)
-        {
-            var activeTokens = await _context.RefreshTokens
-                .Where(rt => !rt.IsRevoked && rt.UserId == userId)
-                .ToListAsync();
-
-            foreach (var token in activeTokens)
-            {
-                token.IsRevoked = true;
-            }
-        }
-
+        user.FullName = request.FullName;
+        user.Email = request.Email;
+        user.PhoneNumber = request.PhoneNumber;
         await _context.SaveChangesAsync();
 
-        var updatedUser = await _context.Users
-            .Include(u => u.Department)
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .FirstAsync(u => u.UserId == userId);
-
-        return new UserListItemDto
-        {
-            UserId = updatedUser.UserId,
-            Username = updatedUser.Username,
-            StaffCode = updatedUser.StaffCode,
-            FullName = updatedUser.FullName,
-            DepartmentId = updatedUser.DepartmentId,
-            Roles = updatedUser.UserRoles.Select(ur => ur.Role!.RoleCode.ToString()).ToList(),
-            IsActive = updatedUser.IsActive,
-            DepartmentName = updatedUser.Department != null ? updatedUser.Department.DepartmentName : string.Empty,
-            Email = updatedUser.Email,
-            PhoneNumber = updatedUser.PhoneNumber
-        };
+        return await GetCurrentUserAsync(userId);
     }
 }
