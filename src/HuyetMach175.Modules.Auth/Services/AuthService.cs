@@ -81,11 +81,11 @@ public class AuthService : IAuthService
             AccessToken = accessToken,
             RefreshToken = refreshToken,
             ExpireAt = expireAt,
-            UserInfo = await GetUserInfoAsync(user.UserId)
+            UserInfo = await GetCurrentUserAsync(user.UserId)
         };
     }
 
-    public async Task<UserInfoDto> GetUserInfoAsync(int userId)
+    public async Task<UserInfoDto> GetCurrentUserAsync(int userId)
     {
         var user = await _context.Users
             .Include(u => u.UserRoles)
@@ -113,14 +113,79 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<UserListItemDto> GetUserByIdAsync(int userid)
+    public async Task<PagedResult<UserListItemDto>> GetUsersAsync(UserFilterDto filter)
+    {
+        var query = _context.Users
+            .Include(u => u.Department)
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(filter.KeyWord))
+        {
+            var kw = filter.KeyWord.Trim().ToLower();
+            query = query.Where(u =>
+                u.Username.ToLower().Contains(kw) ||
+                u.FullName.ToLower().Contains(kw) ||
+                u.StaffCode.ToLower().Contains(kw) ||
+                (u.Email != null && u.Email.ToLower().Contains(kw)) ||
+                (u.PhoneNumber != null && u.PhoneNumber.Contains(kw)));
+        }
+
+        if (filter.DepartmentId.HasValue)
+        {
+            query = query.Where(u => u.DepartmentId == filter.DepartmentId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.RoleCode))
+        {
+            query = query.Where(u => u.UserRoles.Any(ur => ur.Role!.RoleCode.ToString() == filter.RoleCode));
+        }
+
+        if (filter.IsActive.HasValue)
+        {
+            query = query.Where(u => u.IsActive);
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var users = await query
+            .OrderBy(u => u.StaffCode)
+            .Skip((filter.PageNumber - 1) * filter.PageSize)
+            .Take(filter.PageSize)
+            .Select(u => new UserListItemDto
+            {
+                UserId = u.UserId,
+                StaffCode = u.StaffCode,
+                Username = u.Username,
+                FullName = u.FullName,
+                Email = u.Email,
+                PhoneNumber = u.PhoneNumber,
+                IsActive = u.IsActive,
+                DepartmentId = u.DepartmentId,
+                DepartmentName = u.Department != null ? u.Department.DepartmentName : string.Empty,
+                Roles = u.UserRoles.Select(ur => ur.Role!.RoleCode.ToString()).ToList()
+            })
+            .ToListAsync();
+
+        return new PagedResult<UserListItemDto>
+        {
+            Items = users,
+            TotalCount = totalCount,
+            PageNumber = filter.PageNumber,
+            PageSize = filter.PageSize
+        };
+    }
+
+    public async Task<UserListItemDto> GetUserByIdAsync(int userId)
     {
         var user = await _context.Users
             .AsNoTracking()
             .Include(u => u.Department)
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.UserId == userid);
+            .FirstOrDefaultAsync(u => u.UserId == userId);
 
         if (user == null)
         {
@@ -143,6 +208,27 @@ public class AuthService : IAuthService
             Roles = roleCodes,
             IsActive = user.IsActive
         };
+    }
+
+    public async Task<UserListItemDto> UpdateUserAsync(int userId, UpdateUserRequest request)
+    {
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.UserId == userId);
+
+        if (user == null)
+        {
+            throw new HttpException(404, "This user was not found in the system.");
+        }
+
+        _ = _context.Departments.Any(d => d.DepartmentId == request.DepartmentId) ? "" : throw new HttpException(400, "The department does not exist.");
+
+        user.FullName = request.FullName;
+        user.Email = request.Email;
+        user.PhoneNumber = request.PhoneNumber;
+        user.DepartmentId = request.DepartmentId;
+        await _context.SaveChangesAsync();
+
+        return await GetUserByIdAsync(userId);
     }
 
     public async Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest request)
@@ -207,71 +293,6 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<PagedResult<UserListItemDto>> GetUsersAsync(UserFilterDto filter)
-    {
-        var query = _context.Users
-            .Include(u => u.Department)
-            .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .AsNoTracking()
-            .AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(filter.KeyWord))
-        {
-            var kw = filter.KeyWord.Trim().ToLower();
-            query = query.Where(u =>
-                u.Username.ToLower().Contains(kw) ||
-                u.FullName.ToLower().Contains(kw) ||
-                u.StaffCode.ToLower().Contains(kw) ||
-                (u.Email != null && u.Email.ToLower().Contains(kw)) ||
-                (u.PhoneNumber != null && u.PhoneNumber.Contains(kw)));
-        }
-
-        if (filter.DepartmentId.HasValue)
-        {
-            query = query.Where(u => u.DepartmentId ==  filter.DepartmentId.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(filter.RoleCode))
-        {
-            query = query.Where(u => u.UserRoles.Any(ur => ur.Role!.RoleCode.ToString() == filter.RoleCode));
-        }
-
-        if (filter.IsActive.HasValue)
-        {
-            query = query.Where(u => u.IsActive);
-        }
-
-        var totalCount = await query.CountAsync();
-
-        var users = await query
-            .OrderBy(u => u.StaffCode)
-            .Skip((filter.PageNumber - 1) * filter.PageSize)
-            .Take(filter.PageSize)
-            .Select(u => new UserListItemDto
-            {
-                UserId = u.UserId,
-                StaffCode = u.StaffCode,
-                Username = u.Username,
-                FullName = u.FullName,
-                Email = u.Email,
-                PhoneNumber = u.PhoneNumber,
-                IsActive = u.IsActive,
-                DepartmentId = u.DepartmentId,
-                DepartmentName = u.Department != null ? u.Department.DepartmentName : string.Empty,
-                Roles = u.UserRoles.Select(ur => ur.Role!.RoleCode.ToString()).ToList()
-            })
-            .ToListAsync();
-
-        return new PagedResult<UserListItemDto>
-        {
-            Items = users,
-            TotalCount = totalCount,
-            PageNumber = filter.PageNumber,
-            PageSize = filter.PageSize
-        };
-    }
-
     public async Task<UserListItemDto> CreateUserAsync(CreateUserRequest request)
     {
         if (request == null || _context.Users.Any(u => u.Username == request.Username || u.StaffCode == request.StaffCode))
@@ -326,19 +347,7 @@ public class AuthService : IAuthService
             .ThenInclude(ur => ur.Role)
             .FirstAsync(u => u.UserId == user.UserId);
 
-        return new UserListItemDto
-        {
-            UserId = createdUser.UserId,
-            Username = createdUser.Username,
-            StaffCode = createdUser.StaffCode,
-            FullName = createdUser.FullName,
-            DepartmentId = createdUser.DepartmentId,
-            Roles = createdUser.UserRoles.Select(ur => ur.Role!.RoleCode.ToString()).ToList(),
-            IsActive = createdUser.IsActive,
-            DepartmentName = createdUser.Department != null ? createdUser.Department.DepartmentName : string.Empty,
-            Email = createdUser.Email,
-            PhoneNumber = createdUser.PhoneNumber
-        };
+        return await GetUserByIdAsync(createdUser.UserId);
     }
 
     public async Task<UserListItemDto> UpdateUserStatusAsync(int userId, UpdateUserStatusRequest request)
@@ -373,18 +382,6 @@ public class AuthService : IAuthService
             .ThenInclude(ur => ur.Role)
             .FirstAsync(u => u.UserId == userId);
 
-        return new UserListItemDto
-        {
-            UserId = updatedUser.UserId,
-            Username = updatedUser.Username,
-            StaffCode = updatedUser.StaffCode,
-            FullName = updatedUser.FullName,
-            DepartmentId = updatedUser.DepartmentId,
-            Roles = updatedUser.UserRoles.Select(ur => ur.Role!.RoleCode.ToString()).ToList(),
-            IsActive = updatedUser.IsActive,
-            DepartmentName = updatedUser.Department != null ? updatedUser.Department.DepartmentName : string.Empty,
-            Email = updatedUser.Email,
-            PhoneNumber = updatedUser.PhoneNumber
-        };
+        return await GetUserByIdAsync(updatedUser.UserId);
     }
 }

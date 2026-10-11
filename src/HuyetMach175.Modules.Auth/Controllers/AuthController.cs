@@ -29,7 +29,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
         public async Task<IActionResult> GetCurrentUser()
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var userInfo = await _authService.GetUserInfoAsync(userId);
+            var userInfo = await _authService.GetCurrentUserAsync(userId);
             return Ok(userInfo);
         }
 
