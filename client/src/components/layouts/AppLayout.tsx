@@ -3,15 +3,19 @@ import { Outlet } from 'react-router-dom'
 import Header from './Header'
 import Sidebar from './Sidebar'
 
+const { Content } = Layout
+
 export default function AppLayout() {
     return (
-        <Layout style={{ minHeight: '100vh' }}>
-            <Sidebar />
-            <Layout>
-                <Header />
-                <Layout.Content style={{ padding: 24 }}>
+        <Layout className="app-layout" style={{ minHeight: '100vh' }}>
+            <Header />
+
+            <Layout className="app-layout__body">
+                <Sidebar />
+
+                <Content className="app-layout__content">
                     <Outlet />
-                </Layout.Content>
+                </Content>
             </Layout>
         </Layout>
     )
