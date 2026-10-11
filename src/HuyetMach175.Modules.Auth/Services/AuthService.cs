@@ -428,7 +428,7 @@ public class AuthService : IAuthService
         var currentRoles = await _context.UserRoles.Where(ur => ur.UserId == userId).ToListAsync();
         _context.UserRoles.RemoveRange(currentRoles);
 
-        foreach (var role in request.UserRoles)
+        foreach (var role in request.UserRoles.Distinct())
         {
             _context.UserRoles.Add(new UserRole
             {
@@ -441,5 +441,28 @@ public class AuthService : IAuthService
         await _context.SaveChangesAsync();
 
         return await GetUserByIdAsync(userId);
+    }
+
+    public async Task<bool> ResetPasswordAsync(int userId)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+
+        if (user == null)
+        {
+            throw new HttpException(404, "This user was not found in the system.");
+        }
+
+        var activeToken = await _context.RefreshTokens.Where(rt => rt.UserId == userId && rt.IsRevoked == false).ToListAsync();
+
+        foreach (var token in activeToken)
+        {
+            token.IsRevoked = true;
+        }
+
+        user.PasswordHash = _passwordHasher.HashPassword("password123");
+
+        await _context.SaveChangesAsync();
+
+        return true;
     }
 }

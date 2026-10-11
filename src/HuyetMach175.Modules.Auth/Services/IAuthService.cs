@@ -14,4 +14,5 @@ public interface IAuthService
     Task<UserListItemDto> UpdateUserAsync(int userId, UpdateUserRequest request);
     Task<UserListItemDto> UpdateUserStatusAsync(int userId, UpdateUserStatusRequest request);
     Task<UserListItemDto> UpdateUserRolesAsync(int userId, UpdateUserRolesRequest request);
+    Task<bool> ResetPasswordAsync(int userId);
 }

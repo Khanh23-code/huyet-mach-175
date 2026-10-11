@@ -1,4 +1,4 @@
-using HuyetMach175.Modules.Auth.DTOs;
+﻿using HuyetMach175.Modules.Auth.DTOs;
 using HuyetMach175.Modules.Auth.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -76,6 +76,13 @@ namespace HuyetMach175.Modules.Auth.Controllers
         {
             var updatedUser = await _authService.UpdateUserRolesAsync(id, request);
             return Ok(updatedUser);
+        }
+
+        [HttpPost("{id}/reset-password")]
+        public async Task<IActionResult> ResetPasswordAsync([FromRoute] int id)
+        {
+            await _authService.ResetPasswordAsync(id);
+            return Ok(new { message = "Reset this user's password successfully." });
         }
     }
 }
