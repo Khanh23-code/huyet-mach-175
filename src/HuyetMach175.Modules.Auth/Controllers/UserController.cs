@@ -27,6 +27,14 @@ namespace HuyetMach175.Modules.Auth.Controllers
             return Ok(result);
         }
 
+        [HttpGet("{id}")]
+        [Authorize(Roles = "SYS,MGT")]
+        public async Task<IActionResult> GetUserByIdAsync([FromRoute] int id)
+        {
+            var user = await _authService.GetUserByIdAsync(id);
+            return Ok(user);
+        }
+
         [HttpPost]
         [Authorize(Roles = "SYS,MGT")]
         public async Task<IActionResult> CreateUserAsync([FromBody] CreateUserRequest request)
@@ -35,7 +43,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
             return Ok(user);
         }
 
-        [HttpPut("{id}/status")]
+        [HttpPatch("{id}/status")]
         [Authorize(Roles = "SYS,MGT")]
         public async Task<IActionResult> UpdateUserStatusAsync([FromRoute] int id, [FromBody] UpdateUserStatusRequest request)
         {

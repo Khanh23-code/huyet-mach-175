@@ -1,5 +1,6 @@
 using HuyetMach175.Api.Data;
 using HuyetMach175.Api.Data.Entities;
+using HuyetMach175.Api.Data.Enums;
 using HuyetMach175.Modules.Auth.DTOs;
 using HuyetMach175.SharedKernel.Exceptions;
 using HuyetMach175.SharedKernel.Services;
@@ -109,6 +110,38 @@ public class AuthService : IAuthService
             PhoneNumber = user.PhoneNumber,
             DepartmentId = user.DepartmentId,
             Roles = roleCodes
+        };
+    }
+
+    public async Task<UserListItemDto> GetUserByIdAsync(int userid)
+    {
+        var user = await _context.Users
+            .AsNoTracking()
+            .Include(u => u.Department)
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.UserId == userid);
+
+        if (user == null)
+        {
+            throw new HttpException(404, "This user was not found in the system.");
+        }
+
+        var roleCodes = user.UserRoles
+            .Select(ur => ur.Role!.RoleCode.ToString()).ToList();
+
+        return new UserListItemDto
+        {
+            UserId = user.UserId,
+            StaffCode = user.StaffCode,
+            Username = user.Username,
+            FullName = user.FullName,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber,
+            DepartmentId = user.DepartmentId,
+            DepartmentName = user.Department != null ? user.Department.DepartmentName : string.Empty,
+            Roles = roleCodes,
+            IsActive = user.IsActive
         };
     }
 
