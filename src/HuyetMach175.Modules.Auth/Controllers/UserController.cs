@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Text;
 
 namespace HuyetMach175.Modules.Auth.Controllers
@@ -35,19 +36,29 @@ namespace HuyetMach175.Modules.Auth.Controllers
             return Ok(user);
         }
 
-        [HttpPut("{id}")]
-        [Authorize(Roles = "SYS,MGT")]
-        public async Task<IActionResult> UpdateUserAsync([FromRoute] int id, [FromBody] UpdateUserRequest request)
-        {
-            var user = await _authService.UpdateUserAsync(id, request);
-            return Ok(user);
-        }
-
         [HttpPost]
         [Authorize(Roles = "SYS,MGT")]
         public async Task<IActionResult> CreateUserAsync([FromBody] CreateUserRequest request)
         {
             var user = await _authService.CreateUserAsync(request);
+            return Ok(user);
+        }
+
+        [HttpPut("me")]
+        [Authorize]
+        public async Task<IActionResult> UpdateCurrentUserProfileAsync([FromBody] UpdateProfileRequest request)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var updatedProfile = await _authService.UpdateCurrentUserProfileAsync(userId, request);
+
+            return Ok(updatedProfile);
+        }
+
+        [HttpPut("{id}")]
+        [Authorize(Roles = "SYS,MGT")]
+        public async Task<IActionResult> UpdateUserAsync([FromRoute] int id, [FromBody] UpdateUserRequest request)
+        {
+            var user = await _authService.UpdateUserAsync(id, request);
             return Ok(user);
         }
 

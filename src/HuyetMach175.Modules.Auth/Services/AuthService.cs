@@ -85,6 +85,68 @@ public class AuthService : IAuthService
         };
     }
 
+    public async Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest request)
+    {
+        if (request == null)
+        {
+            throw new HttpException(400, "Refresh Token must not be empty.");
+        }
+
+        var tokenEntity = await _context.RefreshTokens
+            .Include(t => t.User)
+            .ThenInclude(u => u!.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(t => t.Token == request.RefreshToken);
+
+        if (tokenEntity == null || tokenEntity.IsRevoked || tokenEntity.ExpiresAt < DateTime.UtcNow)
+        {
+            throw new HttpException(401, "Refresh Token is invalid or expired.");
+        }
+
+        var user = tokenEntity.User;
+
+        if (user == null)
+        {
+            throw new HttpException(404, "This account is not exist.");
+        }
+
+        if (!user.IsActive)
+        {
+            throw new HttpException(403, "This user had been blocked.");
+        }
+
+        var roleCodes = user.UserRoles
+            .Select(ur => ur.Role!.RoleCode.ToString()).ToList();
+
+        tokenEntity.IsRevoked = true;
+        var (newAccesToken, newExpiredAt) = _jwtTokenGenerator.GenerateToken(
+            tokenEntity.UserId,
+            user.Username,
+            user.FullName,
+            user.DepartmentId,
+            roleCodes);
+
+        var newRefreshToken = _refreshTokenGenerator.GenerateRefreshToken();
+
+        _context.RefreshTokens.Add(new RefreshToken
+        {
+            Token = newRefreshToken,
+            UserId = user.UserId,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            IsRevoked = false,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        await _context.SaveChangesAsync();
+
+        return new RefreshTokenResponse
+        {
+            NewAccessToken = newAccesToken,
+            NewRefreshToken = newRefreshToken,
+            NewExpiredAt = newExpiredAt,
+        };
+    }
+
     public async Task<UserInfoDto> GetCurrentUserAsync(int userId)
     {
         var user = await _context.Users
@@ -210,89 +272,6 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<UserListItemDto> UpdateUserAsync(int userId, UpdateUserRequest request)
-    {
-        var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.UserId == userId);
-
-        if (user == null)
-        {
-            throw new HttpException(404, "This user was not found in the system.");
-        }
-
-        _ = _context.Departments.Any(d => d.DepartmentId == request.DepartmentId) ? "" : throw new HttpException(400, "The department does not exist.");
-
-        user.FullName = request.FullName;
-        user.Email = request.Email;
-        user.PhoneNumber = request.PhoneNumber;
-        user.DepartmentId = request.DepartmentId;
-        await _context.SaveChangesAsync();
-
-        return await GetUserByIdAsync(userId);
-    }
-
-    public async Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest request)
-    {
-        if (request == null)
-        {
-            throw new HttpException(400, "Refresh Token must not be empty.");
-        }
-
-        var tokenEntity = await _context.RefreshTokens
-            .Include(t => t.User)
-            .ThenInclude(u => u!.UserRoles)
-            .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(t => t.Token == request.RefreshToken);
-
-        if (tokenEntity == null || tokenEntity.IsRevoked || tokenEntity.ExpiresAt < DateTime.UtcNow)
-        {
-            throw new HttpException(401, "Refresh Token is invalid or expired.");
-        }
-
-        var user = tokenEntity.User;
-
-        if (user == null)
-        {
-            throw new HttpException(404, "This account is not exist.");
-        }
-
-        if (!user.IsActive)
-        {
-            throw new HttpException(403, "This user had been blocked.");
-        }
-
-        var roleCodes = user.UserRoles
-            .Select(ur => ur.Role!.RoleCode.ToString()).ToList();
-
-        tokenEntity.IsRevoked = true;
-        var (newAccesToken, newExpiredAt) = _jwtTokenGenerator.GenerateToken(
-            tokenEntity.UserId,
-            user.Username,
-            user.FullName,
-            user.DepartmentId,
-            roleCodes);
-
-        var newRefreshToken = _refreshTokenGenerator.GenerateRefreshToken();
-
-        _context.RefreshTokens.Add(new RefreshToken
-        {
-            Token = newRefreshToken,
-            UserId = user.UserId,
-            ExpiresAt = DateTime.UtcNow.AddDays(7),
-            IsRevoked = false,
-            CreatedAt = DateTime.UtcNow
-        });
-
-        await _context.SaveChangesAsync();
-
-        return new RefreshTokenResponse
-        {
-            NewAccessToken = newAccesToken,
-            NewRefreshToken = newRefreshToken,
-            NewExpiredAt = newExpiredAt,
-        };
-    }
-
     public async Task<UserListItemDto> CreateUserAsync(CreateUserRequest request)
     {
         if (request == null || _context.Users.Any(u => u.Username == request.Username || u.StaffCode == request.StaffCode))
@@ -348,6 +327,44 @@ public class AuthService : IAuthService
             .FirstAsync(u => u.UserId == user.UserId);
 
         return await GetUserByIdAsync(createdUser.UserId);
+    }
+
+    public async Task<UserInfoDto> UpdateCurrentUserProfileAsync(int userId, UpdateProfileRequest request)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+
+        if (user == null)
+        {
+            throw new HttpException(404, "This user was not found in the system.");
+        }
+
+        user.FullName = request.FullName;
+        user.Email = request.Email;
+        user.PhoneNumber = request.PhoneNumber;
+        await _context.SaveChangesAsync();
+
+        return await GetCurrentUserAsync(userId);
+    }
+
+    public async Task<UserListItemDto> UpdateUserAsync(int userId, UpdateUserRequest request)
+    {
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.UserId == userId);
+
+        if (user == null)
+        {
+            throw new HttpException(404, "This user was not found in the system.");
+        }
+
+        _ = _context.Departments.Any(d => d.DepartmentId == request.DepartmentId) ? "" : throw new HttpException(400, "The department does not exist.");
+
+        user.FullName = request.FullName;
+        user.Email = request.Email;
+        user.PhoneNumber = request.PhoneNumber;
+        user.DepartmentId = request.DepartmentId;
+        await _context.SaveChangesAsync();
+
+        return await GetUserByIdAsync(userId);
     }
 
     public async Task<UserListItemDto> UpdateUserStatusAsync(int userId, UpdateUserStatusRequest request)
