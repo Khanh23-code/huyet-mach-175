@@ -1,8 +1,9 @@
-using System.Security.Claims;
-using HuyetMach175.Modules.Auth.DTOs;
+using HuyetMach175.Modules.Auth.DTOs.Auth;
+using HuyetMach175.Modules.Auth.DTOs.Users;
 using HuyetMach175.Modules.Auth.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace HuyetMach175.Modules.Auth.Controllers
 {
@@ -32,6 +33,13 @@ namespace HuyetMach175.Modules.Auth.Controllers
             return Ok(new { message = "Logout successfully." });
         }
 
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] LogoutRequest request)
+        {
+            var response = await _authService.RefreshTokenAsync(request);
+            return Ok(response);
+        }
+
         [HttpGet("me")]
         [Authorize]
         public async Task<IActionResult> GetCurrentUser()
@@ -41,11 +49,14 @@ namespace HuyetMach175.Modules.Auth.Controllers
             return Ok(userInfo);
         }
 
-        [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken([FromBody] LogoutRequest request)
+        [HttpPut("me")]
+        [Authorize]
+        public async Task<IActionResult> UpdateCurrentUserProfileAsync([FromBody] UpdateProfileRequest request)
         {
-            var response = await _authService.RefreshTokenAsync(request);
-            return Ok(response);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var updatedProfile = await _authService.UpdateCurrentUserProfileAsync(userId, request);
+
+            return Ok(updatedProfile);
         }
     }
 }

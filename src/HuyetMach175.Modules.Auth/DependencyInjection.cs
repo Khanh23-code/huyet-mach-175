@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddSingleton<IRefreshTokenGenerator, RefreshTokenGenerator>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IUsersService, UsersService>();
 
         services.AddControllers()
             .AddApplicationPart(typeof(DependencyInjection).Assembly);

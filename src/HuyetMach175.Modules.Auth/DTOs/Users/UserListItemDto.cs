@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace HuyetMach175.Modules.Auth.DTOs
+namespace HuyetMach175.Modules.Auth.DTOs.Users
 {
     public class UserListItemDto
     {
