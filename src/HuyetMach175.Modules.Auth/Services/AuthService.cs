@@ -85,7 +85,25 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest request)
+    public async Task<bool> LogoutAsync(LogoutRequest request)
+    {
+        if (request == null)
+        {
+            throw new HttpException(400, "Refresh Token must not be empty.");
+        }
+
+        var tokenEntity = await _context.RefreshTokens.FirstOrDefaultAsync(t => t.Token == request.RefreshToken);
+
+        if (tokenEntity != null && !tokenEntity.IsRevoked)
+        {
+            tokenEntity.IsRevoked = true;
+            await _context.SaveChangesAsync();
+        }
+
+        return true;
+    }
+
+    public async Task<RefreshTokenResponse> RefreshTokenAsync(LogoutRequest request)
     {
         if (request == null)
         {

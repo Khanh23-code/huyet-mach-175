@@ -5,7 +5,8 @@ namespace HuyetMach175.Modules.Auth.Services;
 public interface IAuthService
 {
     Task<LoginResponse> LoginAsync(LoginRequest request);
-    Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest request);
+    Task<bool> LogoutAsync(LogoutRequest request);
+    Task<RefreshTokenResponse> RefreshTokenAsync(LogoutRequest request);
     Task<UserInfoDto> GetCurrentUserAsync(int userId);
     Task<PagedResult<UserListItemDto>> GetUsersAsync(UserFilterDto filter);
     Task<UserListItemDto> GetUserByIdAsync(int userId);

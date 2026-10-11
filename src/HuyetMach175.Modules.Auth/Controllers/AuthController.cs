@@ -24,6 +24,14 @@ namespace HuyetMach175.Modules.Auth.Controllers
             return Ok(response);
         }
 
+        [HttpPost("logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
+        {
+            await _authService.LogoutAsync(request);
+            return Ok(new { message = "Logout successfully." });
+        }
+
         [HttpGet("me")]
         [Authorize]
         public async Task<IActionResult> GetCurrentUser()
@@ -34,7 +42,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
         }
 
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+        public async Task<IActionResult> RefreshToken([FromBody] LogoutRequest request)
         {
             var response = await _authService.RefreshTokenAsync(request);
             return Ok(response);
