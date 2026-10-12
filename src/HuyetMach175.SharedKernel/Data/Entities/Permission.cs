@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using HuyetMach175.Api.Data.Enums;
 
 namespace HuyetMach175.Api.Data.Entities;
 
