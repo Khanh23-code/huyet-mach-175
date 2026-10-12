@@ -46,45 +46,138 @@ public static class DbInitializer
         {
             new Role
             {
-                RoleCode = RoleCode.SYS,
+                RoleCode = "SYS",
                 RoleName = "Quản trị hệ thống",
-                Description = "Quyền cao nhất toàn bộ hệ thống"
+                Description = "Quyền cao nhất toàn bộ hệ thống",
+                IsActive = true
             },
             new Role
             {
-                RoleCode = RoleCode.MGT,
+                RoleCode = "MGT",
                 RoleName = "Ban Giám đốc / Quản lý",
-                Description = "Xem báo cáo và phê duyệt chiến dịch"
+                Description = "Xem báo cáo và phê duyệt chiến dịch",
+                IsActive = true
             },
             new Role
             {
-                RoleCode = RoleCode.CLIN,
+                RoleCode = "CLIN",
                 RoleName = "Bác sĩ / Nhân viên Lâm sàng",
-                Description = "Tạo y lệnh và yêu cầu truyền máu"
+                Description = "Tạo y lệnh và yêu cầu truyền máu",
+                IsActive = true
             },
             new Role
             {
-                RoleCode = RoleCode.BBNK,
+                RoleCode = "BBNK",
                 RoleName = "Nhân viên Ngân hàng máu",
-                Description = "Quản lý kho máu, xét nghiệm và cấp phát"
+                Description = "Quản lý kho máu, xét nghiệm và cấp phát",
+                IsActive = true
             },
             new Role
             {
-                RoleCode = RoleCode.DON,
+                RoleCode = "DON",
                 RoleName = "Nhân viên Tiếp nhận & Lấy máu",
-                Description = "Tiếp nhận tình nguyện viên, hướng dẫn và thực hiện lấy máu"
+                Description = "Tiếp nhận tình nguyện viên, hướng dẫn và thực hiện lấy máu",
+                IsActive = true
             }
         };
 
         foreach (var role in defaultRoles)
         {
-            var exists = await context.Roles.AnyAsync(r => r.RoleCode == role.RoleCode);
-            if (!exists)
+            var existingRole = await context.Roles.FirstOrDefaultAsync(r => r.RoleCode == role.RoleCode);
+            if (existingRole == null)
             {
                 context.Roles.Add(role);
             }
+            else
+            {
+                existingRole.RoleName = role.RoleName;
+                existingRole.Description = role.Description;
+            }
         }
         await context.SaveChangesAsync();
+
+        var defaultPermissions = new List<Permission>
+        {
+            // W1 - Tiếp đón & Sàng lọc
+            new Permission { PermissionCode = "W1_VIEW", PermissionName = "Xem Tiếp đón & Sàng lọc", ModuleCode = "W1", ModuleName = "Tiếp đón & Sàng lọc", ActionType = PermissionAction.VIEW, Description = "Quản lý hàng chờ, khám sàng lọc, phiên lấy máu" },
+            new Permission { PermissionCode = "W1_EDIT", PermissionName = "Thao tác Tiếp đón & Sàng lọc", ModuleCode = "W1", ModuleName = "Tiếp đón & Sàng lọc", ActionType = PermissionAction.EDIT, Description = "Quản lý hàng chờ, khám sàng lọc, phiên lấy máu" },
+            new Permission { PermissionCode = "W1_APPROVE", PermissionName = "Duyệt Tiếp đón & Sàng lọc", ModuleCode = "W1", ModuleName = "Tiếp đón & Sàng lọc", ActionType = PermissionAction.APPROVE, Description = "Quản lý hàng chờ, khám sàng lọc, phiên lấy máu" },
+            new Permission { PermissionCode = "W1_CANCEL", PermissionName = "Hủy / Xóa Tiếp đón & Sàng lọc", ModuleCode = "W1", ModuleName = "Tiếp đón & Sàng lọc", ActionType = PermissionAction.CANCEL, Description = "Quản lý hàng chờ, khám sàng lọc, phiên lấy máu" },
+
+            // W2 - Túi máu & Kho
+            new Permission { PermissionCode = "W2_VIEW", PermissionName = "Xem Túi máu & Kho", ModuleCode = "W2", ModuleName = "Túi máu & Kho", ActionType = PermissionAction.VIEW, Description = "Khởi tạo, theo dõi vòng đời, kiểm kê và xử lý túi máu" },
+            new Permission { PermissionCode = "W2_EDIT", PermissionName = "Thao tác Túi máu & Kho", ModuleCode = "W2", ModuleName = "Túi máu & Kho", ActionType = PermissionAction.EDIT, Description = "Khởi tạo, theo dõi vòng đời, kiểm kê và xử lý túi máu" },
+            new Permission { PermissionCode = "W2_APPROVE", PermissionName = "Duyệt Túi máu & Kho", ModuleCode = "W2", ModuleName = "Túi máu & Kho", ActionType = PermissionAction.APPROVE, Description = "Khởi tạo, theo dõi vòng đời, kiểm kê và xử lý túi máu" },
+            new Permission { PermissionCode = "W2_CANCEL", PermissionName = "Hủy / Xóa Túi máu & Kho", ModuleCode = "W2", ModuleName = "Túi máu & Kho", ActionType = PermissionAction.CANCEL, Description = "Khởi tạo, theo dõi vòng đời, kiểm kê và xử lý túi máu" },
+
+            // W3 - Yêu cầu máu Lâm sàng
+            new Permission { PermissionCode = "W3_VIEW", PermissionName = "Xem Yêu cầu máu Lâm sàng", ModuleCode = "W3", ModuleName = "Yêu cầu máu Lâm sàng", ActionType = PermissionAction.VIEW, Description = "Lập phiếu, theo dõi và nhận bàn giao túi máu" },
+            new Permission { PermissionCode = "W3_EDIT", PermissionName = "Thao tác Yêu cầu máu Lâm sàng", ModuleCode = "W3", ModuleName = "Yêu cầu máu Lâm sàng", ActionType = PermissionAction.EDIT, Description = "Lập phiếu, theo dõi và nhận bàn giao túi máu" },
+            new Permission { PermissionCode = "W3_APPROVE", PermissionName = "Duyệt Yêu cầu máu Lâm sàng", ModuleCode = "W3", ModuleName = "Yêu cầu máu Lâm sàng", ActionType = PermissionAction.APPROVE, Description = "Lập phiếu, theo dõi và nhận bàn giao túi máu" },
+            new Permission { PermissionCode = "W3_CANCEL", PermissionName = "Hủy / Xóa Yêu cầu máu Lâm sàng", ModuleCode = "W3", ModuleName = "Yêu cầu máu Lâm sàng", ActionType = PermissionAction.CANCEL, Description = "Lập phiếu, theo dõi và nhận bàn giao túi máu" },
+
+            // W4 - Điều phối Kho máu
+            new Permission { PermissionCode = "W4_VIEW", PermissionName = "Xem Điều phối Kho máu", ModuleCode = "W4", ModuleName = "Điều phối Kho máu", ActionType = PermissionAction.VIEW, Description = "Cung cầu, hàng đợi yêu cầu và cấp phát máu" },
+            new Permission { PermissionCode = "W4_EDIT", PermissionName = "Thao tác Điều phối Kho máu", ModuleCode = "W4", ModuleName = "Điều phối Kho máu", ActionType = PermissionAction.EDIT, Description = "Cung cầu, hàng đợi yêu cầu và cấp phát máu" },
+            new Permission { PermissionCode = "W4_APPROVE", PermissionName = "Duyệt Điều phối Kho máu", ModuleCode = "W4", ModuleName = "Điều phối Kho máu", ActionType = PermissionAction.APPROVE, Description = "Cung cầu, hàng đợi yêu cầu và cấp phát máu" },
+            new Permission { PermissionCode = "W4_CANCEL", PermissionName = "Hủy / Xóa Điều phối Kho máu", ModuleCode = "W4", ModuleName = "Điều phối Kho máu", ActionType = PermissionAction.CANCEL, Description = "Cung cầu, hàng đợi yêu cầu và cấp phát máu" },
+
+            // W5 - Phê duyệt & Giám sát
+            new Permission { PermissionCode = "W5_VIEW", PermissionName = "Xem Phê duyệt & Giám sát", ModuleCode = "W5", ModuleName = "Phê duyệt & Giám sát", ActionType = PermissionAction.VIEW, Description = "Phê duyệt hủy, báo cáo và giám sát vận hành" },
+            new Permission { PermissionCode = "W5_EDIT", PermissionName = "Thao tác Phê duyệt & Giám sát", ModuleCode = "W5", ModuleName = "Phê duyệt & Giám sát", ActionType = PermissionAction.EDIT, Description = "Phê duyệt hủy, báo cáo và giám sát vận hành" },
+            new Permission { PermissionCode = "W5_APPROVE", PermissionName = "Duyệt Phê duyệt & Giám sát", ModuleCode = "W5", ModuleName = "Phê duyệt & Giám sát", ActionType = PermissionAction.APPROVE, Description = "Phê duyệt hủy, báo cáo và giám sát vận hành" },
+            new Permission { PermissionCode = "W5_CANCEL", PermissionName = "Hủy / Xóa Phê duyệt & Giám sát", ModuleCode = "W5", ModuleName = "Phê duyệt & Giám sát", ActionType = PermissionAction.CANCEL, Description = "Phê duyệt hủy, báo cáo và giám sát vận hành" },
+
+            // W6 - Quản trị hệ thống
+            new Permission { PermissionCode = "W6_VIEW", PermissionName = "Xem Quản trị hệ thống", ModuleCode = "W6", ModuleName = "Quản trị hệ thống", ActionType = PermissionAction.VIEW, Description = "Người dùng, phân quyền, danh mục, tích hợp và audit log" },
+            new Permission { PermissionCode = "W6_EDIT", PermissionName = "Thao tác Quản trị hệ thống", ModuleCode = "W6", ModuleName = "Quản trị hệ thống", ActionType = PermissionAction.EDIT, Description = "Người dùng, phân quyền, danh mục, tích hợp và audit log" },
+            new Permission { PermissionCode = "W6_APPROVE", PermissionName = "Duyệt Quản trị hệ thống", ModuleCode = "W6", ModuleName = "Quản trị hệ thống", ActionType = PermissionAction.APPROVE, Description = "Người dùng, phân quyền, danh mục, tích hợp và audit log" },
+            new Permission { PermissionCode = "W6_CANCEL", PermissionName = "Hủy / Xóa Quản trị hệ thống", ModuleCode = "W6", ModuleName = "Quản trị hệ thống", ActionType = PermissionAction.CANCEL, Description = "Người dùng, phân quyền, danh mục, tích hợp và audit log" },
+        };
+
+        foreach (var p in defaultPermissions)
+        {
+            var existingPermission = await context.Permissions
+                .FirstOrDefaultAsync(item => item.PermissionCode == p.PermissionCode);
+
+            if (existingPermission == null)
+            {
+                context.Permissions.Add(p);
+            }
+            else
+            {
+                existingPermission.PermissionName = p.PermissionName;
+                existingPermission.ModuleCode = p.ModuleCode;
+                existingPermission.ModuleName = p.ModuleName;
+                existingPermission.ActionType = p.ActionType;
+                existingPermission.Description = p.Description;
+            }
+        }
+        await context.SaveChangesAsync();
+
+        var sysRole = await context.Roles.FirstOrDefaultAsync(r => r.RoleCode == "SYS");
+        if (sysRole != null)
+        {
+            var allPermissions = await context.Permissions.ToListAsync();
+            var assignedPermissionIds = await context.RolePermissions
+                .Where(rp => rp.RoleId == sysRole.RoleId)
+                .Select(rp => rp.PermissionId)
+                .ToListAsync();
+
+            foreach (var perm in allPermissions)
+            {
+                if (!assignedPermissionIds.Contains(perm.PermissionId))
+                {
+                    context.RolePermissions.Add(new RolePermission
+                    {
+                        RoleId = sysRole.RoleId,
+                        PermissionId = perm.PermissionId,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+            await context.SaveChangesAsync();
+        }
 
         var defaultPasswordHash = passwordHasher.HashPassword("password123");
         var adminPasswordHash = passwordHasher.HashPassword("admin123");
@@ -100,7 +193,7 @@ public static class DbInitializer
                 Email = "admin@huyetmach175.vn",
                 PhoneNumber = "0900000001",
                 DepartmentCode = "DEP_ADMIN",
-                RoleCode = RoleCode.SYS
+                RoleCode = "SYS"
             },
             new
             {
@@ -111,7 +204,7 @@ public static class DbInitializer
                 Email = "manager@huyetmach175.vn",
                 PhoneNumber = "0900000002",
                 DepartmentCode = "DEP_MGT",
-                RoleCode = RoleCode.MGT
+                RoleCode = "MGT"
             },
             new
             {
@@ -122,7 +215,7 @@ public static class DbInitializer
                 Email = "doctor@huyetmach175.vn",
                 PhoneNumber = "0900000003",
                 DepartmentCode = "DEP_CLIN",
-                RoleCode = RoleCode.CLIN
+                RoleCode = "CLIN"
             },
             new
             {
@@ -133,7 +226,7 @@ public static class DbInitializer
                 Email = "bloodbank@huyetmach175.vn",
                 PhoneNumber = "0900000004",
                 DepartmentCode = "DEP_BBNK",
-                RoleCode = RoleCode.BBNK
+                RoleCode = "BBNK"
             },
             new
             {
@@ -144,7 +237,7 @@ public static class DbInitializer
                 Email = "donorstaff@huyetmach175.vn",
                 PhoneNumber = "0900000005",
                 DepartmentCode = "DEP_DON",
-                RoleCode = RoleCode.DON
+                RoleCode = "DON"
             }
         };
 

@@ -1,14 +1,5 @@
 namespace HuyetMach175.Api.Data.Enums;
 
-public enum RoleCode
-{
-    DON,
-    BBNK,
-    CLIN,
-    MGT,
-    SYS
-}
-
 public enum CampaignStatus
 {
     DRAFT,
@@ -147,4 +138,12 @@ public enum NotificationReferenceType
     BLOOD_REQUEST,
     BLOOD_BAG,
     DONATION_SESSION
+}
+
+public enum PermissionAction
+{
+    VIEW,
+    EDIT,
+    APPROVE,
+    CANCEL
 }

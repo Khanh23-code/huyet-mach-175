@@ -11,6 +11,10 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
         builder.HasIndex(r => r.RoleCode).IsUnique();
 
         builder.Property(r => r.RoleCode)
-            .HasConversion<string>();
+            .HasMaxLength(50)
+            .IsRequired();
+
+        builder.Property(r => r.IsActive)
+            .HasDefaultValue(true);
     }
 }
