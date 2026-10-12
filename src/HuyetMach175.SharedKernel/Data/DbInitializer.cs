@@ -46,45 +46,129 @@ public static class DbInitializer
         {
             new Role
             {
-                RoleCode = RoleCode.SYS,
+                RoleCode = "SYS",
                 RoleName = "Quản trị hệ thống",
-                Description = "Quyền cao nhất toàn bộ hệ thống"
+                Description = "Quyền cao nhất toàn bộ hệ thống",
+                IsActive = true
             },
             new Role
             {
-                RoleCode = RoleCode.MGT,
+                RoleCode = "MGT",
                 RoleName = "Ban Giám đốc / Quản lý",
-                Description = "Xem báo cáo và phê duyệt chiến dịch"
+                Description = "Xem báo cáo và phê duyệt chiến dịch",
+                IsActive = true
             },
             new Role
             {
-                RoleCode = RoleCode.CLIN,
+                RoleCode = "CLIN",
                 RoleName = "Bác sĩ / Nhân viên Lâm sàng",
-                Description = "Tạo y lệnh và yêu cầu truyền máu"
+                Description = "Tạo y lệnh và yêu cầu truyền máu",
+                IsActive = true
             },
             new Role
             {
-                RoleCode = RoleCode.BBNK,
+                RoleCode = "BBNK",
                 RoleName = "Nhân viên Ngân hàng máu",
-                Description = "Quản lý kho máu, xét nghiệm và cấp phát"
+                Description = "Quản lý kho máu, xét nghiệm và cấp phát",
+                IsActive = true
             },
             new Role
             {
-                RoleCode = RoleCode.DON,
+                RoleCode = "DON",
                 RoleName = "Nhân viên Tiếp nhận & Lấy máu",
-                Description = "Tiếp nhận tình nguyện viên, hướng dẫn và thực hiện lấy máu"
+                Description = "Tiếp nhận tình nguyện viên, hướng dẫn và thực hiện lấy máu",
+                IsActive = true
             }
         };
 
         foreach (var role in defaultRoles)
         {
-            var exists = await context.Roles.AnyAsync(r => r.RoleCode == role.RoleCode);
-            if (!exists)
+            var existingRole = await context.Roles.FirstOrDefaultAsync(r => r.RoleCode == role.RoleCode);
+            if (existingRole == null)
             {
                 context.Roles.Add(role);
             }
+            else
+            {
+                existingRole.RoleName = role.RoleName;
+                existingRole.Description = role.Description;
+            }
         }
         await context.SaveChangesAsync();
+
+        var defaultPermissions = new List<Permission>
+        {
+            new Permission { PermissionCode = "W1_VIEW", PermissionName = "Xem tiếp nhận & sàng lọc", Description = "Tra cứu, xem danh sách và hồ sơ người hiến máu, phiên tiếp nhận" },
+            new Permission { PermissionCode = "W1_EDIT", PermissionName = "Cập nhật tiếp nhận & sàng lọc", Description = "Tạo mới, chỉnh sửa thông tin người hiến máu và kết quả khám sàng lọc" },
+            new Permission { PermissionCode = "W1_APPROVE", PermissionName = "Phê duyệt tiếp nhận hiến máu", Description = "Phê duyệt điều kiện lấy máu và hoàn thành phiên tiếp nhận" },
+            new Permission { PermissionCode = "W1_CANCEL", PermissionName = "Hủy bỏ tiếp nhận hiến máu", Description = "Hủy phiên lấy máu hoặc đánh dấu hoãn/không đạt" },
+
+            new Permission { PermissionCode = "W2_VIEW", PermissionName = "Xem xét nghiệm túi máu", Description = "Tra cứu, xem kết quả xét nghiệm sàng lọc túi máu và nhóm máu" },
+            new Permission { PermissionCode = "W2_EDIT", PermissionName = "Nhập kết quả xét nghiệm", Description = "Nhập, chỉnh sửa thông số xét nghiệm huyết thanh và virus" },
+            new Permission { PermissionCode = "W2_APPROVE", PermissionName = "Phê duyệt kết quả xét nghiệm", Description = "Xác nhận và duyệt kết luận an toàn túi máu" },
+            new Permission { PermissionCode = "W2_CANCEL", PermissionName = "Hủy kết quả xét nghiệm", Description = "Hủy bỏ hoặc từ chối kết quả xét nghiệm nghi ngờ" },
+
+            new Permission { PermissionCode = "W3_VIEW", PermissionName = "Xem kho & chế phẩm máu", Description = "Tra cứu danh mục kho, tồn kho các chế phẩm máu" },
+            new Permission { PermissionCode = "W3_EDIT", PermissionName = "Cập nhật điều chế & kho máu", Description = "Thực hiện phân tách chế phẩm, chuyển kho, gắn nhãn" },
+            new Permission { PermissionCode = "W3_APPROVE", PermissionName = "Phê duyệt nhập/xuất kho máu", Description = "Phê duyệt nhập kho thành phẩm hoặc chuyển đổi trạng thái túi máu" },
+            new Permission { PermissionCode = "W3_CANCEL", PermissionName = "Hủy túi máu / Hủy điều chế", Description = "Hủy bỏ túi máu quá hạn, lỗi hoặc hủy mẻ điều chế" },
+
+            new Permission { PermissionCode = "W4_VIEW", PermissionName = "Xem y lệnh & dự trù máu", Description = "Tra cứu danh sách y lệnh truyền máu và phiếu dự trù từ khoa lâm sàng" },
+            new Permission { PermissionCode = "W4_EDIT", PermissionName = "Tạo/Sửa y lệnh truyền máu", Description = "Tạo mới, chỉnh sửa phiếu dự trù và yêu cầu máu bệnh nhân" },
+            new Permission { PermissionCode = "W4_APPROVE", PermissionName = "Phê duyệt y lệnh truyền máu", Description = "Bác sĩ trưởng khoa duyệt y lệnh truyền máu khẩn cấp/thường quy" },
+            new Permission { PermissionCode = "W4_CANCEL", PermissionName = "Hủy y lệnh truyền máu", Description = "Hủy bỏ y lệnh truyền máu khi bệnh nhân đổi chỉ định" },
+
+            new Permission { PermissionCode = "W5_VIEW", PermissionName = "Xem cấp phát & truyền máu", Description = "Tra cứu lịch sử cấp phát túi máu và giám sát truyền máu" },
+            new Permission { PermissionCode = "W5_EDIT", PermissionName = "Cập nhật cấp phát & truyền máu", Description = "Ghi nhận phản ứng chéo, bàn giao túi máu và diễn tiến truyền máu" },
+            new Permission { PermissionCode = "W5_APPROVE", PermissionName = "Phê duyệt cấp phát túi máu", Description = "Duyệt xuất kho cấp phát túi máu cho khoa lâm sàng" },
+            new Permission { PermissionCode = "W5_CANCEL", PermissionName = "Thu hồi / Hoàn trả túi máu", Description = "Xử lý trả máu chưa sử dụng về ngân hàng máu" },
+
+            new Permission { PermissionCode = "W6_VIEW", PermissionName = "Xem cấu hình hệ thống", Description = "Xem danh sách người dùng, vai trò, nhật ký audit log" },
+            new Permission { PermissionCode = "W6_EDIT", PermissionName = "Quản trị người dùng & vai trò", Description = "Thêm/sửa người dùng, phân quyền vai trò, đổi tham số hệ thống" },
+            new Permission { PermissionCode = "W6_APPROVE", PermissionName = "Phê duyệt cấu hình hệ thống", Description = "Duyệt thay đổi cấu hình bảo mật và kích hoạt tính năng" },
+            new Permission { PermissionCode = "W6_CANCEL", PermissionName = "Khóa / Thu hồi truy cập", Description = "Khóa tài khoản, vô hiệu hóa vai trò hoặc cấu hình hệ thống" },
+        };
+
+        foreach (var p in defaultPermissions)
+        {
+            var existingPermission = await context.Permissions
+                .FirstOrDefaultAsync(item => item.PermissionCode == p.PermissionCode);
+
+            if (existingPermission == null)
+            {
+                context.Permissions.Add(p);
+            }
+            else
+            {
+                existingPermission.PermissionName = p.PermissionName;
+                existingPermission.Description = p.Description;
+            }
+        }
+        await context.SaveChangesAsync();
+
+        var sysRole = await context.Roles.FirstOrDefaultAsync(r => r.RoleCode == "SYS");
+        if (sysRole != null)
+        {
+            var allPermissions = await context.Permissions.ToListAsync();
+            var assignedPermissionIds = await context.RolePermissions
+                .Where(rp => rp.RoleId == sysRole.RoleId)
+                .Select(rp => rp.PermissionId)
+                .ToListAsync();
+
+            foreach (var perm in allPermissions)
+            {
+                if (!assignedPermissionIds.Contains(perm.PermissionId))
+                {
+                    context.RolePermissions.Add(new RolePermission
+                    {
+                        RoleId = sysRole.RoleId,
+                        PermissionId = perm.PermissionId,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+            await context.SaveChangesAsync();
+        }
 
         var defaultPasswordHash = passwordHasher.HashPassword("password123");
         var adminPasswordHash = passwordHasher.HashPassword("admin123");
@@ -100,7 +184,7 @@ public static class DbInitializer
                 Email = "admin@huyetmach175.vn",
                 PhoneNumber = "0900000001",
                 DepartmentCode = "DEP_ADMIN",
-                RoleCode = RoleCode.SYS
+                RoleCode = "SYS"
             },
             new
             {
@@ -111,7 +195,7 @@ public static class DbInitializer
                 Email = "manager@huyetmach175.vn",
                 PhoneNumber = "0900000002",
                 DepartmentCode = "DEP_MGT",
-                RoleCode = RoleCode.MGT
+                RoleCode = "MGT"
             },
             new
             {
@@ -122,7 +206,7 @@ public static class DbInitializer
                 Email = "doctor@huyetmach175.vn",
                 PhoneNumber = "0900000003",
                 DepartmentCode = "DEP_CLIN",
-                RoleCode = RoleCode.CLIN
+                RoleCode = "CLIN"
             },
             new
             {
@@ -133,7 +217,7 @@ public static class DbInitializer
                 Email = "bloodbank@huyetmach175.vn",
                 PhoneNumber = "0900000004",
                 DepartmentCode = "DEP_BBNK",
-                RoleCode = RoleCode.BBNK
+                RoleCode = "BBNK"
             },
             new
             {
@@ -144,7 +228,7 @@ public static class DbInitializer
                 Email = "donorstaff@huyetmach175.vn",
                 PhoneNumber = "0900000005",
                 DepartmentCode = "DEP_DON",
-                RoleCode = RoleCode.DON
+                RoleCode = "DON"
             }
         };
 

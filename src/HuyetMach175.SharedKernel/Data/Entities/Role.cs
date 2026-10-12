@@ -11,8 +11,10 @@ public class Role
     [Column("role_id")]
     public int RoleId { get; set; }
 
+    [Required]
+    [MaxLength(50)]
     [Column("role_code")]
-    public RoleCode RoleCode { get; set; }
+    public string RoleCode { get; set; } = string.Empty;
 
     [Required]
     [MaxLength(50)]
@@ -22,6 +24,10 @@ public class Role
     [MaxLength(255)]
     [Column("description")]
     public string? Description { get; set; }
+
+    [Column("is_active")]
+    public bool IsActive { get; set; } = true;
+
 
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();

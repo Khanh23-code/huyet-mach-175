@@ -1,14 +1,5 @@
 namespace HuyetMach175.Api.Data.Enums;
 
-public enum RoleCode
-{
-    DON,
-    BBNK,
-    CLIN,
-    MGT,
-    SYS
-}
-
 public enum CampaignStatus
 {
     DRAFT,
