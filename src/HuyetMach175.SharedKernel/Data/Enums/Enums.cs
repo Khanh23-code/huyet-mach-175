@@ -139,3 +139,11 @@ public enum NotificationReferenceType
     BLOOD_BAG,
     DONATION_SESSION
 }
+
+public enum PermissionAction
+{
+    VIEW,
+    EDIT,
+    APPROVE,
+    CANCEL
+}

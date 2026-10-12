@@ -11,11 +11,11 @@ namespace HuyetMach175.Modules.Auth.Controllers
 {
     [ApiController]
     [Route("api/users")]
-    public class UserController : ControllerBase
+    public class UsersController : ControllerBase
     {
         private readonly IUsersService _usersService;
 
-        public UserController(IUsersService usersService)
+        public UsersController(IUsersService usersService)
         {
             _usersService = usersService;
         }

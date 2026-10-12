@@ -20,6 +20,21 @@ public class Permission
     [Column("permission_name")]
     public string PermissionName { get; set; } = string.Empty;
 
+
+    [Required]
+    [MaxLength(20)]
+    [Column("module_code")]
+    public string ModuleCode { get; set; } = string.Empty;
+    [Required]
+    [MaxLength(100)]
+    [Column("module_name")]
+    public string ModuleName { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(20)]
+    [Column("action_type")]
+    public PermissionAction ActionType { get; set; }
+
     [MaxLength(255)]
     [Column("description")]
     public string? Description { get; set; }
