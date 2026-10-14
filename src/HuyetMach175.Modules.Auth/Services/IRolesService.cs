@@ -12,5 +12,6 @@ namespace HuyetMach175.Modules.Auth.Services
         Task<RoleDto> GetRoleByIdAsync(int roleId);
         Task<RoleDto> CreateRoleAsync(CreateRoleRequest request);
         Task<RoleDto> UpdateRoleAsync(int roleId, UpdateRoleRequest request);
+        Task<RoleDto> UpdateRoleStatusAsync(int roleId, UpdateRoleStatusRequest? request = null, bool force = false);
     }
 }

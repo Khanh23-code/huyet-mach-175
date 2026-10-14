@@ -113,5 +113,58 @@ namespace HuyetMach175.Modules.Auth.Services
 
             return await GetRoleByIdAsync(roleId);
         }
+
+        public async Task<RoleDto> UpdateRoleStatusAsync(int roleId, UpdateRoleStatusRequest? request = null, bool force = false)
+        {
+            var role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == roleId);
+
+            if (role == null)
+            {
+                throw new HttpException(404, "This role was not found in the system.");
+            }
+
+            bool targetStatus = request?.IsActive ?? !role.IsActive;
+
+            if (role.IsActive == targetStatus)
+            {
+                return await GetRoleByIdAsync(roleId);
+            }
+
+            if (!targetStatus)
+            {
+                if (string.Equals(role.RoleCode, "SYS", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new HttpException(400, "Cannot deactivate the system administrator role (SYS).");
+                }
+
+                var userIds = await _context.UserRoles
+                    .Where(ur => ur.RoleId == roleId)
+                    .Select(ur => ur.UserId)
+                    .Distinct()
+                    .ToListAsync();
+
+                if (userIds.Count > 0)
+                {
+                    if (!force)
+                    {
+                        throw new HttpException(400, $"This role currently has {userIds.Count} user(s) assigned. Please confirm with force=true to proceed.");
+                    }
+
+                    var activeTokens = await _context.RefreshTokens
+                        .Where(rt => !rt.IsRevoked && userIds.Contains(rt.UserId))
+                        .ToListAsync();
+
+                    foreach (var token in activeTokens)
+                    {
+                        token.IsRevoked = true;
+                    }
+                }
+            }
+
+            role.IsActive = targetStatus;
+            await _context.SaveChangesAsync();
+
+            return await GetRoleByIdAsync(roleId);
+        }
     }
 }

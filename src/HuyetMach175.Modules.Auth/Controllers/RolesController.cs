@@ -48,5 +48,15 @@ namespace HuyetMach175.Modules.Auth.Controllers
             var updatedRole = await _rolesService.UpdateRoleAsync(roleId, request);
             return Ok(updatedRole);
         }
+
+        [HttpPatch("{roleId}/status")]
+        public async Task<IActionResult> UpdateRoleStatusAsync(
+            [FromRoute] int roleId,
+            [FromBody(EmptyBodyBehavior = Microsoft.AspNetCore.Mvc.ModelBinding.EmptyBodyBehavior.Allow)] UpdateRoleStatusRequest? request = null,
+            [FromQuery] bool force = false)
+        {
+            var updatedRole = await _rolesService.UpdateRoleStatusAsync(roleId, request, force);
+            return Ok(updatedRole);
+        }
     }
 }
