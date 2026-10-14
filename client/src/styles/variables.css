@@ -1,0 +1,56 @@
+/*
+ *
+ * Font: thêm vào index.html
+ * <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet" />
+ */
+:root {
+    --sider-w: 240px;
+    --header-h: 64px;
+
+    --font-sans: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+    --c-primary: #1a7335;
+    --c-primary-hover: #16612d;
+    --c-primary-soft: #e6f2ea;
+    --c-on-primary: #ffffff;
+
+    --c-bg: #F3F7F4;
+    --c-surface: #ffffff;
+    --c-border: #e3eae4;
+
+    --c-text: #14211a;
+    --c-text-muted: #5d6c63;
+
+    --c-danger: #d62d20;
+    --c-danger-soft: #fdecea;
+    --c-warning-soft: #fdf1dc;
+    --c-warning: #a65f00;
+
+    --radius-md: 12px;
+    --radius-pill: 999px;
+}
+
+:root[data-theme='dark'] {
+    --c-primary: #3fae62;
+    --c-primary-hover: #4cc072;
+    --c-primary-soft: rgba(63, 174, 98, 0.16);
+    --c-on-primary: #06140b;
+
+    --c-bg: #0e1511;
+    --c-surface: #141d18;
+    --c-border: #24312a;
+
+    --c-text: #e7efe9;
+    --c-text-muted: #94a69b;
+
+    --c-danger: #ff6b5e;
+    --c-danger-soft: rgba(255, 107, 94, 0.14);
+    --c-warning-soft: rgba(255, 183, 77, 0.14);
+    --c-warning: #ffb74d;
+}
+
+body {
+    font-family: var(--font-sans);
+    color: var(--c-text);
+    background: var(--c-bg);
+}
