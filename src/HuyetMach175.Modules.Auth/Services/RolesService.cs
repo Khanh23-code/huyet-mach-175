@@ -1,13 +1,9 @@
-﻿using HuyetMach175.Api.Data;
+using HuyetMach175.Api.Data;
 using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Modules.Auth.DTOs;
 using HuyetMach175.Modules.Auth.DTOs.Roles;
 using HuyetMach175.SharedKernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Net.WebSockets;
 using System.Text;
 
 namespace HuyetMach175.Modules.Auth.Services
@@ -45,6 +41,15 @@ namespace HuyetMach175.Modules.Auth.Services
             var role = await _context.Roles
                 .AsNoTracking()
                 .Where(r => r.RoleId == roleId)
+                .Select(r => new RoleDto
+                {
+                    RoleId = r.RoleId,
+                    RoleCode = r.RoleCode,
+                    RoleName = r.RoleName,
+                    Description = r.Description,
+                    IsActive = r.IsActive,
+                    UsersCount = r.UserRoles.Count()
+                })
                 .FirstOrDefaultAsync();
 
             if (role == null)
@@ -52,15 +57,7 @@ namespace HuyetMach175.Modules.Auth.Services
                 throw new HttpException(404, "This role was not found in the system.");
             }
 
-            return new RoleDto
-            {
-                RoleId = role.RoleId,
-                RoleCode = role.RoleCode,
-                RoleName = role.RoleName,
-                Description = role.Description,
-                IsActive = role.IsActive,
-                UsersCount = role.UserRoles.Count()
-            };
+            return role;
         }
 
         public async Task<RoleDto> CreateRoleAsync(CreateRoleRequest request)
@@ -92,6 +89,29 @@ namespace HuyetMach175.Modules.Auth.Services
                 IsActive = newRole.IsActive,
                 UsersCount = 0
             };
+        }
+
+        public async Task<RoleDto> UpdateRoleAsync(int roleId, UpdateRoleRequest request)
+        {
+            var role = await _context.Roles.FindAsync(roleId);
+
+            if (role == null)
+            {
+                throw new HttpException(404, "This role was not found in the system.");
+            }
+
+            if (!string.IsNullOrEmpty(role.RoleName))
+            {
+                role.RoleName = request.RoleName.Trim();
+            }
+            if (!string.IsNullOrEmpty(request.Description))
+            {
+                role.Description = request.Description?.Trim();
+            }
+
+            await _context.SaveChangesAsync();
+
+            return await GetRoleByIdAsync(roleId);
         }
     }
 }

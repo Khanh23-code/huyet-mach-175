@@ -1,4 +1,5 @@
-﻿using HuyetMach175.Modules.Auth.DTOs;
+using HuyetMach175.Modules.Auth.DTOs;
+using HuyetMach175.Modules.Auth.DTOs.Roles;
 using HuyetMach175.Modules.Auth.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,6 +40,13 @@ namespace HuyetMach175.Modules.Auth.Controllers
         {
             var newRole = await _rolesService.CreateRoleAsync(request);
             return Ok(newRole);
+        }
+
+        [HttpPut("{roleId}")]
+        public async Task<IActionResult> UpdateRoleAsync([FromRoute] int roleId, [FromBody] UpdateRoleRequest request)
+        {
+            var updatedRole = await _rolesService.UpdateRoleAsync(roleId, request);
+            return Ok(updatedRole);
         }
     }
 }
