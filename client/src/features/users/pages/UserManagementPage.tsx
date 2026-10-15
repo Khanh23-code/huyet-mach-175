@@ -19,7 +19,7 @@ export default function UserManagementPage() {
 
             <div className="um-title">
                 <div>
-                    <h1>Người dùng &amp; Phân quyền RBAC</h1>
+                    <h1>Người dùng &amp; Phân quyền</h1>
                     <p>Quản lý tài khoản nhân viên và phạm vi truy cập theo vai trò.</p>
                 </div>
                 {tab === 'users' && (

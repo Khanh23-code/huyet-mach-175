@@ -19,8 +19,6 @@ export interface NavChild {
 
 export interface NavGroup {
     key: string
-    /** Mã phân hệ hiển thị nhỏ bên trái (W0, W1, W6...) */
-    code: string
     label: string
     icon: ReactNode
     children: NavChild[]
@@ -55,7 +53,6 @@ export function resolveRole( roles: string[] | undefined, ): RoleCode | undefine
 
 export const ACCOUNT_GROUP: NavGroup = {
     key: 'account',
-    code: 'W0',
     label: 'Tài khoản',
     icon: <TeamOutlined />,
     children: [
@@ -74,7 +71,6 @@ const ROLE_NAV: Partial<Record<RoleCode, RoleNav>> = {
         groups: [
             {
                 key: 'system',
-                code: 'W6',
                 label: 'Quản trị hệ thống',
                 icon: <SettingOutlined />,
                 children: [
@@ -93,7 +89,6 @@ const ROLE_NAV: Partial<Record<RoleCode, RoleNav>> = {
         groups: [
             {
                 key: 'reception',
-                code: 'W1',
                 label: 'Tiếp nhận & Sàng lọc',
                 icon: <HeartOutlined />,
                 children: [
