@@ -98,41 +98,35 @@ public static class DbInitializer
 
         var defaultPermissions = new List<Permission>
         {
-            // W1 - Tiếp đón & Sàng lọc
-            new Permission { PermissionCode = "W1_VIEW", PermissionName = "Xem Tiếp đón & Sàng lọc", ModuleCode = "W1", ModuleName = "Tiếp đón & Sàng lọc", ActionType = PermissionAction.VIEW, Description = "Quản lý hàng chờ, khám sàng lọc, phiên lấy máu" },
-            new Permission { PermissionCode = "W1_EDIT", PermissionName = "Thao tác Tiếp đón & Sàng lọc", ModuleCode = "W1", ModuleName = "Tiếp đón & Sàng lọc", ActionType = PermissionAction.EDIT, Description = "Quản lý hàng chờ, khám sàng lọc, phiên lấy máu" },
-            new Permission { PermissionCode = "W1_APPROVE", PermissionName = "Duyệt Tiếp đón & Sàng lọc", ModuleCode = "W1", ModuleName = "Tiếp đón & Sàng lọc", ActionType = PermissionAction.APPROVE, Description = "Quản lý hàng chờ, khám sàng lọc, phiên lấy máu" },
-            new Permission { PermissionCode = "W1_CANCEL", PermissionName = "Hủy / Xóa Tiếp đón & Sàng lọc", ModuleCode = "W1", ModuleName = "Tiếp đón & Sàng lọc", ActionType = PermissionAction.CANCEL, Description = "Quản lý hàng chờ, khám sàng lọc, phiên lấy máu" },
+            // CAMPAIGN
+            new Permission { PermissionCode = "CAMPAIGN_VIEW", PermissionName = "Xem Đợt hiến máu", ModuleCode = "CAMPAIGN", ModuleName = "Đợt hiến máu", ActionType = PermissionAction.VIEW, Description = "Quản lý Đợt hiến máu" },
+            new Permission { PermissionCode = "CAMPAIGN_EDIT", PermissionName = "Tạo đơn Đề xuất & Sửa Đợt hiến máu", ModuleCode = "CAMPAIGN", ModuleName = "Đợt hiến máu", ActionType = PermissionAction.EDIT, Description = "Quản lý Đợt hiến máu" },
+            new Permission { PermissionCode = "CAMPAIGN_APPROVE", PermissionName = "Duyệt đơn Đề xuất Đợt hiến máu", ModuleCode = "CAMPAIGN", ModuleName = "Đợt hiến máu", ActionType = PermissionAction.APPROVE, Description = "Quản lý Đợt hiến máu" },
+            new Permission { PermissionCode = "CAMPAIGN_CANCEL", PermissionName = "Từ chối đơn Đề xuất Đợt hiến máu", ModuleCode = "CAMPAIGN", ModuleName = "Đợt hiến máu", ActionType = PermissionAction.CANCEL, Description = "Quản lý Đợt hiến máu" },
 
-            // W2 - Túi máu & Kho
-            new Permission { PermissionCode = "W2_VIEW", PermissionName = "Xem Túi máu & Kho", ModuleCode = "W2", ModuleName = "Túi máu & Kho", ActionType = PermissionAction.VIEW, Description = "Khởi tạo, theo dõi vòng đời, kiểm kê và xử lý túi máu" },
-            new Permission { PermissionCode = "W2_EDIT", PermissionName = "Thao tác Túi máu & Kho", ModuleCode = "W2", ModuleName = "Túi máu & Kho", ActionType = PermissionAction.EDIT, Description = "Khởi tạo, theo dõi vòng đời, kiểm kê và xử lý túi máu" },
-            new Permission { PermissionCode = "W2_APPROVE", PermissionName = "Duyệt Túi máu & Kho", ModuleCode = "W2", ModuleName = "Túi máu & Kho", ActionType = PermissionAction.APPROVE, Description = "Khởi tạo, theo dõi vòng đời, kiểm kê và xử lý túi máu" },
-            new Permission { PermissionCode = "W2_CANCEL", PermissionName = "Hủy / Xóa Túi máu & Kho", ModuleCode = "W2", ModuleName = "Túi máu & Kho", ActionType = PermissionAction.CANCEL, Description = "Khởi tạo, theo dõi vòng đời, kiểm kê và xử lý túi máu" },
+            // DONORS
+            new Permission { PermissionCode = "DONORS_VIEW", PermissionName = "Xem thông tin Người hiến máu", ModuleCode = "DONORS", ModuleName = "Người hiến máu", ActionType = PermissionAction.VIEW, Description = "Quản lý thông tin người hiến máu" },
+            new Permission { PermissionCode = "DONORS_EDIT", PermissionName = "Tạo mới / Sửa thông tin Người hiến máu", ModuleCode = "DONORS", ModuleName = "Người hiến máu", ActionType = PermissionAction.EDIT, Description = "Quản lý thông tin người hiến máu" },
+            // new Permission { PermissionCode = "DONORS_APPROVE", PermissionName = "Duyệt Người hiến máu", ModuleCode = "DONORS", ModuleName = "Người hiến máu", ActionType = PermissionAction.APPROVE, Description = "Quản lý thông tin người hiến máu" },
+            // new Permission { PermissionCode = "DONORS_CANCEL", PermissionName = "Hủy / Xóa Người hiến máu", ModuleCode = "DONORS", ModuleName = "Người hiến máu", ActionType = PermissionAction.CANCEL, Description = "Quản lý thông tin người hiến máu" },
 
-            // W3 - Yêu cầu máu Lâm sàng
-            new Permission { PermissionCode = "W3_VIEW", PermissionName = "Xem Yêu cầu máu Lâm sàng", ModuleCode = "W3", ModuleName = "Yêu cầu máu Lâm sàng", ActionType = PermissionAction.VIEW, Description = "Lập phiếu, theo dõi và nhận bàn giao túi máu" },
-            new Permission { PermissionCode = "W3_EDIT", PermissionName = "Thao tác Yêu cầu máu Lâm sàng", ModuleCode = "W3", ModuleName = "Yêu cầu máu Lâm sàng", ActionType = PermissionAction.EDIT, Description = "Lập phiếu, theo dõi và nhận bàn giao túi máu" },
-            new Permission { PermissionCode = "W3_APPROVE", PermissionName = "Duyệt Yêu cầu máu Lâm sàng", ModuleCode = "W3", ModuleName = "Yêu cầu máu Lâm sàng", ActionType = PermissionAction.APPROVE, Description = "Lập phiếu, theo dõi và nhận bàn giao túi máu" },
-            new Permission { PermissionCode = "W3_CANCEL", PermissionName = "Hủy / Xóa Yêu cầu máu Lâm sàng", ModuleCode = "W3", ModuleName = "Yêu cầu máu Lâm sàng", ActionType = PermissionAction.CANCEL, Description = "Lập phiếu, theo dõi và nhận bàn giao túi máu" },
+            // APPOINTMENTS
+            new Permission { PermissionCode = "APPOINTMENTS_VIEW", PermissionName = "Xem danh sách Lịch hẹn", ModuleCode = "APPOINTMENTS", ModuleName = "Lịch hẹn", ActionType = PermissionAction.VIEW, Description = "Quản lý lịch hẹn" },
+            new Permission { PermissionCode = "APPOINTMENTS_EDIT", PermissionName = "Tạo mới / Check-in cho Lịch hẹn", ModuleCode = "APPOINTMENTS", ModuleName = "Lịch hẹn", ActionType = PermissionAction.EDIT, Description = "Quản lý lịch hẹn" },
+            // new Permission { PermissionCode = "APPOINTMENTS_APPROVE", PermissionName = "Duyệt Lịch hẹn", ModuleCode = "APPOINTMENTS", ModuleName = "Lịch hẹn", ActionType = PermissionAction.APPROVE, Description = "Quản lý lịch hẹn" },
+            new Permission { PermissionCode = "APPOINTMENTS_CANCEL", PermissionName = "Hủy Lịch hẹn khi người hiến máu không đến", ModuleCode = "APPOINTMENTS", ModuleName = "Lịch hẹn", ActionType = PermissionAction.CANCEL, Description = "Quản lý lịch hẹn" },
 
-            // W4 - Điều phối Kho máu
-            new Permission { PermissionCode = "W4_VIEW", PermissionName = "Xem Điều phối Kho máu", ModuleCode = "W4", ModuleName = "Điều phối Kho máu", ActionType = PermissionAction.VIEW, Description = "Cung cầu, hàng đợi yêu cầu và cấp phát máu" },
-            new Permission { PermissionCode = "W4_EDIT", PermissionName = "Thao tác Điều phối Kho máu", ModuleCode = "W4", ModuleName = "Điều phối Kho máu", ActionType = PermissionAction.EDIT, Description = "Cung cầu, hàng đợi yêu cầu và cấp phát máu" },
-            new Permission { PermissionCode = "W4_APPROVE", PermissionName = "Duyệt Điều phối Kho máu", ModuleCode = "W4", ModuleName = "Điều phối Kho máu", ActionType = PermissionAction.APPROVE, Description = "Cung cầu, hàng đợi yêu cầu và cấp phát máu" },
-            new Permission { PermissionCode = "W4_CANCEL", PermissionName = "Hủy / Xóa Điều phối Kho máu", ModuleCode = "W4", ModuleName = "Điều phối Kho máu", ActionType = PermissionAction.CANCEL, Description = "Cung cầu, hàng đợi yêu cầu và cấp phát máu" },
+            // SURVEY
+            new Permission { PermissionCode = "SURVEY_VIEW", PermissionName = "Xem Bảng hỏi Online của Người hiến máu", ModuleCode = "SURVEY", ModuleName = "Khảo sát", ActionType = PermissionAction.VIEW, Description = "Quản lý khảo sát" },
+            new Permission { PermissionCode = "SURVEY_EDIT", PermissionName = "Duyệt kết quả Bảng hỏi", ModuleCode = "SURVEY", ModuleName = "Khảo sát", ActionType = PermissionAction.EDIT, Description = "Quản lý khảo sát" },
+            // new Permission { PermissionCode = "SURVEY_APPROVE", PermissionName = "Duyệt Khảo sát", ModuleCode = "SURVEY", ModuleName = "Khảo sát", ActionType = PermissionAction.APPROVE, Description = "Quản lý khảo sát" },
+            // new Permission { PermissionCode = "SURVEY_CANCEL", PermissionName = "Hủy / Xóa Khảo sát", ModuleCode = "SURVEY", ModuleName = "Khảo sát", ActionType = PermissionAction.CANCEL, Description = "Quản lý khảo sát" },
 
-            // W5 - Phê duyệt & Giám sát
-            new Permission { PermissionCode = "W5_VIEW", PermissionName = "Xem Phê duyệt & Giám sát", ModuleCode = "W5", ModuleName = "Phê duyệt & Giám sát", ActionType = PermissionAction.VIEW, Description = "Phê duyệt hủy, báo cáo và giám sát vận hành" },
-            new Permission { PermissionCode = "W5_EDIT", PermissionName = "Thao tác Phê duyệt & Giám sát", ModuleCode = "W5", ModuleName = "Phê duyệt & Giám sát", ActionType = PermissionAction.EDIT, Description = "Phê duyệt hủy, báo cáo và giám sát vận hành" },
-            new Permission { PermissionCode = "W5_APPROVE", PermissionName = "Duyệt Phê duyệt & Giám sát", ModuleCode = "W5", ModuleName = "Phê duyệt & Giám sát", ActionType = PermissionAction.APPROVE, Description = "Phê duyệt hủy, báo cáo và giám sát vận hành" },
-            new Permission { PermissionCode = "W5_CANCEL", PermissionName = "Hủy / Xóa Phê duyệt & Giám sát", ModuleCode = "W5", ModuleName = "Phê duyệt & Giám sát", ActionType = PermissionAction.CANCEL, Description = "Phê duyệt hủy, báo cáo và giám sát vận hành" },
-
-            // W6 - Quản trị hệ thống
-            new Permission { PermissionCode = "W6_VIEW", PermissionName = "Xem Quản trị hệ thống", ModuleCode = "W6", ModuleName = "Quản trị hệ thống", ActionType = PermissionAction.VIEW, Description = "Người dùng, phân quyền, danh mục, tích hợp và audit log" },
-            new Permission { PermissionCode = "W6_EDIT", PermissionName = "Thao tác Quản trị hệ thống", ModuleCode = "W6", ModuleName = "Quản trị hệ thống", ActionType = PermissionAction.EDIT, Description = "Người dùng, phân quyền, danh mục, tích hợp và audit log" },
-            new Permission { PermissionCode = "W6_APPROVE", PermissionName = "Duyệt Quản trị hệ thống", ModuleCode = "W6", ModuleName = "Quản trị hệ thống", ActionType = PermissionAction.APPROVE, Description = "Người dùng, phân quyền, danh mục, tích hợp và audit log" },
-            new Permission { PermissionCode = "W6_CANCEL", PermissionName = "Hủy / Xóa Quản trị hệ thống", ModuleCode = "W6", ModuleName = "Quản trị hệ thống", ActionType = PermissionAction.CANCEL, Description = "Người dùng, phân quyền, danh mục, tích hợp và audit log" },
+            // SCREENING
+            new Permission { PermissionCode = "SCREENING_VIEW", PermissionName = "Xem Danh sách chờ Khám lâm sàng / Phiếu khám chi tiết", ModuleCode = "SCREENING", ModuleName = "Phê duyệt & Giám sát", ActionType = PermissionAction.VIEW, Description = "Phê duyệt hủy, báo cáo và giám sát vận hành" },
+            new Permission { PermissionCode = "SCREENING_EDIT", PermissionName = "Ghi nhận, gửi kết quả Khám lâm sàng", ModuleCode = "SCREENING", ModuleName = "Phê duyệt & Giám sát", ActionType = PermissionAction.EDIT, Description = "Phê duyệt hủy, báo cáo và giám sát vận hành" },
+            // new Permission { PermissionCode = "SCREENING_APPROVE", PermissionName = "Duyệt Phê duyệt & Giám sát", ModuleCode = "SCREENING", ModuleName = "Phê duyệt & Giám sát", ActionType = PermissionAction.APPROVE, Description = "Phê duyệt hủy, báo cáo và giám sát vận hành" },
+            // new Permission { PermissionCode = "SCREENING_CANCEL", PermissionName = "Hủy / Xóa Phê duyệt & Giám sát", ModuleCode = "SCREENING", ModuleName = "Phê duyệt & Giám sát", ActionType = PermissionAction.CANCEL, Description = "Phê duyệt hủy, báo cáo và giám sát vận hành" },
         };
 
         foreach (var p in defaultPermissions)
@@ -154,30 +148,6 @@ public static class DbInitializer
             }
         }
         await context.SaveChangesAsync();
-
-        var sysRole = await context.Roles.FirstOrDefaultAsync(r => r.RoleCode == "SYS");
-        if (sysRole != null)
-        {
-            var allPermissions = await context.Permissions.ToListAsync();
-            var assignedPermissionIds = await context.RolePermissions
-                .Where(rp => rp.RoleId == sysRole.RoleId)
-                .Select(rp => rp.PermissionId)
-                .ToListAsync();
-
-            foreach (var perm in allPermissions)
-            {
-                if (!assignedPermissionIds.Contains(perm.PermissionId))
-                {
-                    context.RolePermissions.Add(new RolePermission
-                    {
-                        RoleId = sysRole.RoleId,
-                        PermissionId = perm.PermissionId,
-                        CreatedAt = DateTime.UtcNow
-                    });
-                }
-            }
-            await context.SaveChangesAsync();
-        }
 
         var defaultPasswordHash = passwordHasher.HashPassword("password123");
         var adminPasswordHash = passwordHasher.HashPassword("admin123");
