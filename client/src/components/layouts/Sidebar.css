@@ -124,9 +124,10 @@
 
 .sider__child {
     display: block;
+    margin-top: 4px; /* Thêm khoảng trống nhỏ giữa các mục (có thể chỉnh thành 2px, 6px tùy ý) */
     padding: 9px 12px 9px 44px;
     border-radius: 10px;
-    font-size: 13.5px;
+    font-size: 14px;
     font-weight: 400;
     color: var(--c-text-muted);
     text-decoration: none;
@@ -134,13 +135,13 @@
 }
 
 .sider__child:hover {
-    background: var(--c-bg);
-    color: var(--c-text);
+    background: var(--c-primary-soft);
+    color: var(--um-green, #1a7335);
 }
 
 .sider__child.is-active {
-    background: var(--c-primary-soft);
-    color: var(--c-primary);
+    background: var(--um-green, #1a7335); /* Gọi biến toàn cục, có fallback phòng hờ */
+    color: #ffffff;                      /* Chữ trắng đồng bộ */
     font-weight: 600;
 }
 

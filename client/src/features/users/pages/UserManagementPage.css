@@ -1,13 +1,13 @@
 .app-layout__content {
     padding: 24px;
     min-width: 0;
+    background: #F3F7F4;
 }
 
 .um {
     --um-green: var(--c-primary, #1a7335);
     --um-border: #e3e8e3;
     --um-muted: #5c6b5f;
-
     display: flex;
     flex-direction: column;
     gap: 20px;

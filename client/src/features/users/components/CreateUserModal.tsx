@@ -122,6 +122,7 @@ export default function CreateUserModal({ open, onClose }: Props) {
                     <Controller name="roleIds" control={control} render={({ field }) => (
                         <Select
                             {...field}
+                            style={{ width: '50%' }}
                             mode="multiple"
                             placeholder="Chọn vai trò"
                             loading={roles.isLoading}

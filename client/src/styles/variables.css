@@ -1,56 +1,78 @@
-/*
- *
- * Font: thêm vào index.html
- * <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet" />
- */
 :root {
+    /* Layout */
     --sider-w: 240px;
-    --header-h: 64px;
+    --header-h: 80px;
 
-    --font-sans: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    /* Font */
+    --font-sans: 'Be Vietnam Pro', system-ui, -apple-system,
+    'Segoe UI', Roboto, sans-serif;
 
-    --c-primary: #1a7335;
-    --c-primary-hover: #16612d;
-    --c-primary-soft: #e6f2ea;
-    --c-on-primary: #ffffff;
+    /* Brand — theo Figma */
+    --c-primary: #1A7534;
+    --c-primary-hover: #125A26;
+    --c-primary-soft: #E9F5ED;
+    --c-on-primary: #FFFFFF;
 
+    /* Background */
     --c-bg: #F3F7F4;
-    --c-surface: #ffffff;
-    --c-border: #e3eae4;
+    --c-surface: #FFFFFF;
+    --c-border: #DFE8E2;
 
-    --c-text: #14211a;
-    --c-text-muted: #5d6c63;
+    /* Text */
+    --c-text: #15261C;
+    --c-text-muted: #5F7367;
 
-    --c-danger: #d62d20;
-    --c-danger-soft: #fdecea;
-    --c-warning-soft: #fdf1dc;
-    --c-warning: #a65f00;
+    /* Status */
+    --c-danger: #C4261B;
+    --c-danger-soft: #FDECEA;
 
+    --c-blood: #B4232C;
+    --c-blood-soft: #FCEDEE;
+
+    --c-warning: #A85F00;
+    --c-warning-soft: #FFF3DC;
+
+    --c-info: #1F5FA6;
+    --c-info-soft: #E7F0FA;
+
+    /* Radius */
     --radius-md: 12px;
     --radius-pill: 999px;
+
+    color-scheme: light;
 }
 
 :root[data-theme='dark'] {
-    --c-primary: #3fae62;
-    --c-primary-hover: #4cc072;
+    /* Giữ dark theme hiện có của dự án */
+    --c-primary: #3FAE62;
+    --c-primary-hover: #4CC072;
     --c-primary-soft: rgba(63, 174, 98, 0.16);
-    --c-on-primary: #06140b;
+    --c-on-primary: #06140B;
 
-    --c-bg: #0e1511;
-    --c-surface: #141d18;
-    --c-border: #24312a;
+    --c-bg: #0E1511;
+    --c-surface: #141D18;
+    --c-border: #24312A;
 
-    --c-text: #e7efe9;
-    --c-text-muted: #94a69b;
+    --c-text: #E7EFE9;
+    --c-text-muted: #94A69B;
 
-    --c-danger: #ff6b5e;
+    --c-danger: #FF6B5E;
     --c-danger-soft: rgba(255, 107, 94, 0.14);
+
+    --c-warning: #FFB74D;
     --c-warning-soft: rgba(255, 183, 77, 0.14);
-    --c-warning: #ffb74d;
+
+    color-scheme: dark;
 }
 
 body {
+    margin: 0;
+    min-height: 100vh;
     font-family: var(--font-sans);
     color: var(--c-text);
     background: var(--c-bg);
+}
+
+* {
+    box-sizing: border-box;
 }
