@@ -1,6 +1,7 @@
 using HuyetMach175.Api.Data;
 using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Modules.Auth.DTOs;
+using HuyetMach175.Modules.Auth.DTOs.Permissions;
 using HuyetMach175.Modules.Auth.DTOs.Roles;
 using HuyetMach175.SharedKernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -165,6 +166,138 @@ namespace HuyetMach175.Modules.Auth.Services
             await _context.SaveChangesAsync();
 
             return await GetRoleByIdAsync(roleId);
+        }
+
+        public async Task<RolePermissionsDto> GetRolePermissionsAsync(int roleId)
+        {
+            var role = await _context.Roles
+                .AsNoTracking()
+                .Include(r => r.UserRoles)
+                .Include(r => r.RolePermissions)
+                .FirstOrDefaultAsync(r => r.RoleId == roleId);
+
+            if (role == null)
+            {
+                throw new HttpException(404, "This role was not found in the system.");
+            }
+
+            var assignedPermissionIds = role.RolePermissions
+                .Select(rp => rp.PermissionId)
+                .ToHashSet();
+
+            var allPermissions = await _context.Permissions
+                .AsNoTracking()
+                .OrderBy(p => p.ModuleCode)
+                .ThenBy(p => p.PermissionId)
+                .ToListAsync();
+
+            var permissions = allPermissions.Select(p => new PermissionDto
+            {
+                PermissionId = p.PermissionId,
+                PermissionCode = p.PermissionCode,
+                PermissionName = p.PermissionName,
+                ModuleCode = p.ModuleCode,
+                ModuleName = p.ModuleName,
+                ActionType = p.ActionType.ToString(),
+                Description = p.Description,
+                IsAssigned = assignedPermissionIds.Contains(p.PermissionId)
+            }).ToList();
+
+            return new RolePermissionsDto
+            {
+                RoleId = role.RoleId,
+                RoleCode = role.RoleCode,
+                RoleName = role.RoleName,
+                Description = role.Description,
+                IsActive = role.IsActive,
+                UsersCount = role.UserRoles.Count,
+                AssignedPermissionIds = assignedPermissionIds.OrderBy(id => id).ToList(),
+                Permissions = permissions
+            };
+        }
+
+        public async Task<List<PermissionDto>> GetAllPermissionsAsync()
+        {
+            var permissions = await _context.Permissions
+                .AsNoTracking()
+                .OrderBy(p => p.ModuleCode)
+                .ThenBy(p => p.PermissionId)
+                .Select(p => new PermissionDto
+                {
+                    PermissionId = p.PermissionId,
+                    PermissionCode = p.PermissionCode,
+                    PermissionName = p.PermissionName,
+                    ModuleCode = p.ModuleCode,
+                    ModuleName = p.ModuleName,
+                    ActionType = p.ActionType.ToString(),
+                    Description = p.Description,
+                    IsAssigned = false
+                })
+                .ToListAsync();
+
+            return permissions;
+        }
+
+        public async Task<RolePermissionsDto> UpdateRolePermissionsAsync(int roleId, UpdateRolePermissionsRequest request)
+        {
+            var role = await _context.Roles
+                .Include(r => r.RolePermissions)
+                .FirstOrDefaultAsync(r => r.RoleId == roleId);
+
+            if (role == null)
+            {
+                throw new HttpException(404, "This role was not found in the system.");
+            }
+
+            if (string.Equals(role.RoleCode, "SYS", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new HttpException(400, "Cannot modify permissions of the system administrator role (SYS).");
+            }
+
+            var distinctPermissionIds = (request.PermissionIds ?? new List<int>())
+                .Distinct()
+                .ToList();
+
+            if (distinctPermissionIds.Count > 0)
+            {
+                var existingCount = await _context.Permissions
+                    .CountAsync(p => distinctPermissionIds.Contains(p.PermissionId));
+
+                if (existingCount != distinctPermissionIds.Count)
+                {
+                    throw new HttpException(400, "One or more permission IDs are invalid.");
+                }
+            }
+
+            var toRemove = role.RolePermissions
+                .Where(rp => !distinctPermissionIds.Contains(rp.PermissionId))
+                .ToList();
+
+            foreach (var rp in toRemove)
+            {
+                _context.RolePermissions.Remove(rp);
+            }
+
+            var currentPermissionIds = role.RolePermissions
+                .Select(rp => rp.PermissionId)
+                .ToHashSet();
+
+            foreach (var permId in distinctPermissionIds)
+            {
+                if (!currentPermissionIds.Contains(permId))
+                {
+                    _context.RolePermissions.Add(new RolePermission
+                    {
+                        RoleId = roleId,
+                        PermissionId = permId,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return await GetRolePermissionsAsync(roleId);
         }
     }
 }

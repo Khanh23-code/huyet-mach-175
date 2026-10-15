@@ -58,5 +58,19 @@ namespace HuyetMach175.Modules.Auth.Controllers
             var updatedRole = await _rolesService.UpdateRoleStatusAsync(roleId, request, force);
             return Ok(updatedRole);
         }
+
+        [HttpGet("{roleId}/permissions")]
+        public async Task<IActionResult> GetRolePermissionsAsync([FromRoute] int roleId)
+        {
+            var result = await _rolesService.GetRolePermissionsAsync(roleId);
+            return Ok(result);
+        }
+
+        [HttpPut("{roleId}/permissions")]
+        public async Task<IActionResult> UpdateRolePermissionsAsync([FromRoute] int roleId, [FromBody] UpdateRolePermissionsRequest request)
+        {
+            var result = await _rolesService.UpdateRolePermissionsAsync(roleId, request);
+            return Ok(result);
+        }
     }
 }
