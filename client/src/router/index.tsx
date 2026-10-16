@@ -5,7 +5,7 @@ import AppLayout from '@/components/layouts/AppLayout'
 import DashboardPage from '@/pages/DashboardPage'
 import ForbiddenPage from '@/pages/ForbiddenPage'
 import UserManagementPage from "@/features/users/pages/UserManagementPage.tsx";
-import ProfilePage from '@/features/account/pages/ProfilePage'
+// import ProfilePage from '@/features/account/pages/ProfilePage'
 
 export const router = createBrowserRouter([
     { path: '/login', element: <LoginPage /> },
@@ -18,7 +18,7 @@ export const router = createBrowserRouter([
                 children: [
                     { path: '/', element: <DashboardPage /> },
                     // Dùng chung cho mọi role
-                    { path: '/account/profile', element: <ProfilePage /> },
+                    // { path: '/account/profile', element: <ProfilePage /> },
                     { element: <ProtectedRoute allowedRoles={['SYS']} />, children: [
                             { path: '/admin/users', element: <UserManagementPage /> },
                         ]},
