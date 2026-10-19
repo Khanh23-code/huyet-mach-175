@@ -25,5 +25,12 @@ namespace HuyetMach175.Modules.Auth.Controllers
             var permissions = await _rolesService.GetAllPermissionsAsync();
             return Ok(permissions);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> CreatePermissionAsync([FromBody] CreatePermissionRequest request)
+        {
+            var createdPermission = await _rolesService.CreatePermissionAsync(request);
+            return Ok(createdPermission);
+        }
     }
 }

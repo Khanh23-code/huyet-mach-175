@@ -1,11 +1,13 @@
 using HuyetMach175.Api.Data;
 using HuyetMach175.Api.Data.Entities;
+using HuyetMach175.Api.Data.Enums;
 using HuyetMach175.Modules.Auth.DTOs;
 using HuyetMach175.Modules.Auth.DTOs.Permissions;
 using HuyetMach175.Modules.Auth.DTOs.Roles;
 using HuyetMach175.SharedKernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace HuyetMach175.Modules.Auth.Services
 {
@@ -260,6 +262,86 @@ namespace HuyetMach175.Modules.Auth.Services
                 .ToListAsync();
 
             return permissions;
+        }
+
+        public async Task<PermissionDto> CreatePermissionAsync(CreatePermissionRequest request)
+        {
+            if (request == null)
+            {
+                throw new HttpException(400, "Request body is required.");
+            }
+
+            string moduleCode = request.ModuleCode?.Trim().ToUpper() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(moduleCode) || !Regex.IsMatch(moduleCode, @"^[A-Z][A-Z0-9_]{1,19}$"))
+            {
+                throw new HttpException(400, "Module code must start with a letter, contain only uppercase letters, numbers, underscores, and be 2-20 characters long.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.ActionType) ||
+                !Enum.TryParse<PermissionAction>(request.ActionType.Trim(), true, out var action) ||
+                !Enum.IsDefined(typeof(PermissionAction), action))
+            {
+                throw new HttpException(400, "Invalid action type. Allowed values are: VIEW, EDIT, APPROVE, CANCEL.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.PermissionName))
+            {
+                throw new HttpException(400, "Permission name is required.");
+            }
+
+            if (request.PermissionName.Trim().Length > 100)
+            {
+                throw new HttpException(400, "Permission name must not exceed 100 characters.");
+            }
+
+            string permissionCode = $"{moduleCode}_{action}";
+
+            if (await _context.Permissions.AnyAsync(p => p.PermissionCode == permissionCode))
+            {
+                throw new HttpException(409, $"Permission code '{permissionCode}' already exists in the system.");
+            }
+
+            var existingModule = await _context.Permissions
+                .FirstOrDefaultAsync(p => p.ModuleCode == moduleCode);
+
+            string moduleName;
+            if (existingModule != null)
+            {
+                moduleName = existingModule.ModuleName;
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(request.ModuleName))
+                {
+                    throw new HttpException(400, "Module name is required for new modules.");
+                }
+                moduleName = request.ModuleName.Trim();
+            }
+
+            var permission = new Permission
+            {
+                ModuleCode = moduleCode,
+                ModuleName = moduleName,
+                ActionType = action,
+                PermissionCode = permissionCode,
+                PermissionName = request.PermissionName.Trim(),
+                Description = request.Description?.Trim()
+            };
+
+            _context.Permissions.Add(permission);
+            await _context.SaveChangesAsync();
+
+            return new PermissionDto
+            {
+                PermissionId = permission.PermissionId,
+                PermissionCode = permission.PermissionCode,
+                PermissionName = permission.PermissionName,
+                ModuleCode = permission.ModuleCode,
+                ModuleName = permission.ModuleName,
+                ActionType = permission.ActionType.ToString(),
+                Description = permission.Description,
+                IsAssigned = false
+            };
         }
 
         public async Task<RolePermissionsDto> UpdateRolePermissionsAsync(int roleId, UpdateRolePermissionsRequest request)
