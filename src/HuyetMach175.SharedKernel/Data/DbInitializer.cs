@@ -161,27 +161,19 @@ public static class DbInitializer
         var allDbPermissions = await context.Permissions.ToListAsync();
         var permMap = allDbPermissions.ToDictionary(p => p.PermissionCode, p => p.PermissionId);
 
+        // Clean up any business/clinical permissions mistakenly assigned to SYS (SYS manages system only, not clinical operations)
         var sysRole = await context.Roles.FirstOrDefaultAsync(r => r.RoleCode == "SYS");
         if (sysRole != null)
         {
-            var existingSysPermIds = await context.RolePermissions
+            var sysRolePerms = await context.RolePermissions
                 .Where(rp => rp.RoleId == sysRole.RoleId)
-                .Select(rp => rp.PermissionId)
-                .ToHashSetAsync();
+                .ToListAsync();
 
-            foreach (var perm in allDbPermissions)
+            if (sysRolePerms.Count > 0)
             {
-                if (!existingSysPermIds.Contains(perm.PermissionId))
-                {
-                    context.RolePermissions.Add(new RolePermission
-                    {
-                        RoleId = sysRole.RoleId,
-                        PermissionId = perm.PermissionId,
-                        CreatedAt = DateTime.UtcNow
-                    });
-                }
+                context.RolePermissions.RemoveRange(sysRolePerms);
+                await context.SaveChangesAsync();
             }
-            await context.SaveChangesAsync();
         }
 
         var defaultRolePermissions = new Dictionary<string, string[]>

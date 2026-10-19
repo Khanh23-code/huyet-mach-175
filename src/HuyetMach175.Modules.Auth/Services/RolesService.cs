@@ -273,11 +273,6 @@ namespace HuyetMach175.Modules.Auth.Services
                 throw new HttpException(404, "This role was not found in the system.");
             }
 
-            if (string.Equals(role.RoleCode, "SYS", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new HttpException(400, "Cannot modify permissions of the system administrator role (SYS).");
-            }
-
             var distinctPermissionIds = (request.PermissionIds ?? new List<int>())
                 .Distinct()
                 .ToList();
