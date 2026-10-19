@@ -1,4 +1,4 @@
-﻿using HuyetMach175.Modules.Auth.DTOs.Users;
+using HuyetMach175.Modules.Auth.DTOs.Users;
 using HuyetMach175.Modules.Auth.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -40,7 +40,8 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [Authorize(Roles = "SYS,MGT")]
         public async Task<IActionResult> CreateUserAsync([FromBody] CreateUserRequest request)
         {
-            var user = await _usersService.CreateUserAsync(request);
+            bool isSysAdmin = User.IsInRole("SYS");
+            var user = await _usersService.CreateUserAsync(request, isSysAdmin);
             return Ok(user);
         }
 
@@ -64,11 +65,13 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [Authorize(Roles = "SYS,MGT")]
         public async Task<IActionResult> UpdateUserRolesAsync([FromRoute] int id, [FromBody] UpdateUserRolesRequest request)
         {
-            var updatedUser = await _usersService.UpdateUserRolesAsync(id, request);
+            bool isSysAdmin = User.IsInRole("SYS");
+            var updatedUser = await _usersService.UpdateUserRolesAsync(id, request, isSysAdmin);
             return Ok(updatedUser);
         }
 
         [HttpPost("{id}/reset-password")]
+        [Authorize(Roles = "SYS")]
         public async Task<IActionResult> ResetPasswordAsync([FromRoute] int id)
         {
             await _usersService.ResetPasswordAsync(id);

@@ -123,10 +123,8 @@ public static class DbInitializer
             // new Permission { PermissionCode = "SURVEY_CANCEL", PermissionName = "Hủy / Xóa Khảo sát", ModuleCode = "SURVEY", ModuleName = "Khảo sát", ActionType = PermissionAction.CANCEL, Description = "Quản lý khảo sát" },
 
             // SCREENING
-            new Permission { PermissionCode = "SCREENING_VIEW", PermissionName = "Xem Danh sách chờ Khám lâm sàng / Phiếu khám chi tiết", ModuleCode = "SCREENING", ModuleName = "Phê duyệt & Giám sát", ActionType = PermissionAction.VIEW, Description = "Phê duyệt hủy, báo cáo và giám sát vận hành" },
-            new Permission { PermissionCode = "SCREENING_EDIT", PermissionName = "Ghi nhận, gửi kết quả Khám lâm sàng", ModuleCode = "SCREENING", ModuleName = "Phê duyệt & Giám sát", ActionType = PermissionAction.EDIT, Description = "Phê duyệt hủy, báo cáo và giám sát vận hành" },
-            // new Permission { PermissionCode = "SCREENING_APPROVE", PermissionName = "Duyệt Phê duyệt & Giám sát", ModuleCode = "SCREENING", ModuleName = "Phê duyệt & Giám sát", ActionType = PermissionAction.APPROVE, Description = "Phê duyệt hủy, báo cáo và giám sát vận hành" },
-            // new Permission { PermissionCode = "SCREENING_CANCEL", PermissionName = "Hủy / Xóa Phê duyệt & Giám sát", ModuleCode = "SCREENING", ModuleName = "Phê duyệt & Giám sát", ActionType = PermissionAction.CANCEL, Description = "Phê duyệt hủy, báo cáo và giám sát vận hành" },
+            new Permission { PermissionCode = "SCREENING_VIEW", PermissionName = "Xem Danh sách chờ Khám lâm sàng / Phiếu khám chi tiết", ModuleCode = "SCREENING", ModuleName = "Khám lâm sàng", ActionType = PermissionAction.VIEW, Description = "Quản lý khám lâm sàng và sàng lọc người hiến máu" },
+            new Permission { PermissionCode = "SCREENING_EDIT", PermissionName = "Ghi nhận, gửi kết quả Khám lâm sàng", ModuleCode = "SCREENING", ModuleName = "Khám lâm sàng", ActionType = PermissionAction.EDIT, Description = "Quản lý khám lâm sàng và sàng lọc người hiến máu" },
         };
 
         foreach (var p in defaultPermissions)
@@ -148,6 +146,85 @@ public static class DbInitializer
             }
         }
         await context.SaveChangesAsync();
+
+        var defaultPermissionCodes = defaultPermissions.Select(p => p.PermissionCode).ToHashSet();
+        var obsoletePermissions = await context.Permissions
+            .Where(p => !defaultPermissionCodes.Contains(p.PermissionCode))
+            .ToListAsync();
+
+        if (obsoletePermissions.Count > 0)
+        {
+            context.Permissions.RemoveRange(obsoletePermissions);
+            await context.SaveChangesAsync();
+        }
+
+        var allDbPermissions = await context.Permissions.ToListAsync();
+        var permMap = allDbPermissions.ToDictionary(p => p.PermissionCode, p => p.PermissionId);
+
+        // Clean up any business/clinical permissions mistakenly assigned to SYS (SYS manages system only, not clinical operations)
+        var sysRole = await context.Roles.FirstOrDefaultAsync(r => r.RoleCode == "SYS");
+        if (sysRole != null)
+        {
+            var sysRolePerms = await context.RolePermissions
+                .Where(rp => rp.RoleId == sysRole.RoleId)
+                .ToListAsync();
+
+            if (sysRolePerms.Count > 0)
+            {
+                context.RolePermissions.RemoveRange(sysRolePerms);
+                await context.SaveChangesAsync();
+            }
+        }
+
+        var defaultRolePermissions = new Dictionary<string, string[]>
+        {
+            ["MGT"] = new[]
+            {
+                "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "CAMPAIGN_APPROVE", "CAMPAIGN_CANCEL",
+                "DONORS_VIEW", "APPOINTMENTS_VIEW", "SURVEY_VIEW", "SCREENING_VIEW"
+            },
+            ["CLIN"] = new[]
+            {
+                "SCREENING_VIEW", "SCREENING_EDIT",
+                "SURVEY_VIEW", "SURVEY_EDIT",
+                "DONORS_VIEW", "DONORS_EDIT",
+                "APPOINTMENTS_VIEW"
+            },
+            ["DON"] = new[]
+            {
+                "APPOINTMENTS_VIEW", "APPOINTMENTS_EDIT", "APPOINTMENTS_CANCEL",
+                "DONORS_VIEW", "DONORS_EDIT",
+                "SURVEY_VIEW", "CAMPAIGN_VIEW"
+            },
+            ["BBNK"] = new[]
+            {
+                "CAMPAIGN_VIEW", "DONORS_VIEW", "SCREENING_VIEW"
+            }
+        };
+
+        foreach (var (roleCode, permCodes) in defaultRolePermissions)
+        {
+            var role = await context.Roles.FirstOrDefaultAsync(r => r.RoleCode == roleCode);
+            if (role == null) continue;
+
+            bool hasPermissions = await context.RolePermissions.AnyAsync(rp => rp.RoleId == role.RoleId);
+            if (!hasPermissions)
+            {
+                foreach (var code in permCodes)
+                {
+                    if (permMap.TryGetValue(code, out int permId))
+                    {
+                        context.RolePermissions.Add(new RolePermission
+                        {
+                            RoleId = role.RoleId,
+                            PermissionId = permId,
+                            CreatedAt = DateTime.UtcNow
+                        });
+                    }
+                }
+                await context.SaveChangesAsync();
+            }
+        }
 
         var defaultPasswordHash = passwordHasher.HashPassword("password123");
         var adminPasswordHash = passwordHasher.HashPassword("admin123");

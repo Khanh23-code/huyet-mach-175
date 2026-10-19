@@ -170,8 +170,11 @@ public class AuthService : IAuthService
     public async Task<UserInfoDto> GetCurrentUserAsync(int userId)
     {
         var user = await _context.Users
+            .Include(u => u.Department)
             .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
+                .ThenInclude(ur => ur.Role)
+                    .ThenInclude(r => r!.RolePermissions)
+                        .ThenInclude(rp => rp.Permission)
             .FirstOrDefaultAsync(u => u.UserId == userId);
 
         if (user == null || !user.IsActive)
@@ -179,8 +182,23 @@ public class AuthService : IAuthService
             throw new HttpException(404, "Cannot find user information.");
         }
 
-        var roleCodes = user.UserRoles
-            .Select(ur => ur.Role!.RoleCode.ToString()).ToList();
+        var activeRoles = user.UserRoles
+            .Where(ur => ur.Role != null && ur.Role.IsActive)
+            .Select(ur => ur.Role!)
+            .ToList();
+
+        var roleCodes = activeRoles
+            .Select(r => r.RoleCode)
+            .Distinct()
+            .ToList();
+
+        var permissions = activeRoles
+            .SelectMany(r => r.RolePermissions)
+            .Where(rp => rp.Permission != null)
+            .Select(rp => rp.Permission!.PermissionCode)
+            .Distinct()
+            .OrderBy(p => p)
+            .ToList();
 
         return new UserInfoDto
         {
@@ -191,7 +209,9 @@ public class AuthService : IAuthService
             Email = user.Email,
             PhoneNumber = user.PhoneNumber,
             DepartmentId = user.DepartmentId,
-            Roles = roleCodes
+            DepartmentName = user.Department?.DepartmentName ?? string.Empty,
+            Roles = roleCodes,
+            Permissions = permissions
         };
     }
 
