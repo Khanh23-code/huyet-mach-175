@@ -63,6 +63,26 @@ namespace HuyetMach175.Modules.Auth.Services
 
         public async Task<RoleDto> CreateRoleAsync(CreateRoleRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.RoleCode))
+            {
+                throw new HttpException(400, "Role code is required.");
+            }
+
+            if (request.RoleCode.Trim().Length > 50)
+            {
+                throw new HttpException(400, "Role code must not exceed 50 characters.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.RoleName))
+            {
+                throw new HttpException(400, "Role name is required.");
+            }
+
+            if (request.RoleName.Trim().Length > 50)
+            {
+                throw new HttpException(400, "Role name must not exceed 50 characters.");
+            }
+
             string roleCode = request.RoleCode.Trim().ToUpper();
 
             if (await _context.Roles.AnyAsync(r => r.RoleCode == roleCode))
@@ -101,14 +121,18 @@ namespace HuyetMach175.Modules.Auth.Services
                 throw new HttpException(404, "This role was not found in the system.");
             }
 
-            if (!string.IsNullOrEmpty(role.RoleName))
+            if (string.IsNullOrWhiteSpace(request.RoleName))
             {
-                role.RoleName = request.RoleName.Trim();
+                throw new HttpException(400, "Role name is required.");
             }
-            if (!string.IsNullOrEmpty(request.Description))
+
+            if (request.RoleName.Trim().Length > 50)
             {
-                role.Description = request.Description?.Trim();
+                throw new HttpException(400, "Role name must not exceed 50 characters.");
             }
+
+            role.RoleName = request.RoleName.Trim();
+            role.Description = request.Description?.Trim();
 
             await _context.SaveChangesAsync();
 

@@ -1,4 +1,4 @@
-﻿using HuyetMach175.Api.Data;
+using HuyetMach175.Api.Data;
 using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
 using HuyetMach175.Modules.Auth.DTOs.Auth;
@@ -127,24 +127,69 @@ namespace HuyetMach175.Modules.Auth.Services
             };
         }
 
-        public async Task<UserListItemDto> CreateUserAsync(CreateUserRequest request)
+        public async Task<UserListItemDto> CreateUserAsync(CreateUserRequest request, bool isSysAdmin = true)
         {
-            if (request == null || _context.Users.Any(u => u.Username == request.Username || u.StaffCode == request.StaffCode))
+            if (request == null)
             {
-                throw new HttpException(409, "This user had been exist.");
+                throw new HttpException(400, "Request body is required.");
             }
 
-            if (!_context.Departments.Any(d => d.DepartmentId == request.DepartmentId))
+            if (string.IsNullOrWhiteSpace(request.Username))
             {
-                throw new HttpException(400, "Invalid department.");
+                throw new HttpException(400, "Username is required.");
             }
 
-            foreach (var roleId in request.RoleIds)
+            if (string.IsNullOrWhiteSpace(request.StaffCode))
             {
-                if (!_context.Roles.Any(r => r.RoleId == roleId))
-                {
-                    throw new HttpException(400, "Invalid roles.");
-                }
+                throw new HttpException(400, "Staff code is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.FullName))
+            {
+                throw new HttpException(400, "Full name is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 6)
+            {
+                throw new HttpException(400, "Password must be at least 6 characters long.");
+            }
+
+            if (request.RoleIds == null || request.RoleIds.Count == 0)
+            {
+                throw new HttpException(400, "A user must have at least one role.");
+            }
+
+            string username = request.Username.Trim();
+            string staffCode = request.StaffCode.Trim();
+
+            if (await _context.Users.AnyAsync(u => u.Username == username))
+            {
+                throw new HttpException(409, "Username already exists in the system.");
+            }
+
+            if (await _context.Users.AnyAsync(u => u.StaffCode == staffCode))
+            {
+                throw new HttpException(409, "Staff code already exists in the system.");
+            }
+
+            if (!await _context.Departments.AnyAsync(d => d.DepartmentId == request.DepartmentId))
+            {
+                throw new HttpException(400, "The specified department does not exist.");
+            }
+
+            var requestedRoleIds = request.RoleIds.Distinct().ToList();
+            var targetRoles = await _context.Roles
+                .Where(r => requestedRoleIds.Contains(r.RoleId))
+                .ToListAsync();
+
+            if (targetRoles.Count != requestedRoleIds.Count)
+            {
+                throw new HttpException(400, "One or more role IDs are invalid.");
+            }
+
+            if (!isSysAdmin && targetRoles.Any(r => r.RoleCode == "SYS"))
+            {
+                throw new HttpException(403, "Only System Administrators (SYS) can assign the SYS role.");
             }
 
             var hashedPassword = _passwordHasher.HashPassword(request.Password);
@@ -152,36 +197,29 @@ namespace HuyetMach175.Modules.Auth.Services
             var user = new User
             {
                 DepartmentId = request.DepartmentId,
-                Username = request.Username,
-                StaffCode = request.StaffCode,
-                FullName = request.FullName,
+                Username = username,
+                StaffCode = staffCode,
+                FullName = request.FullName.Trim(),
                 PasswordHash = hashedPassword,
-                Email = request.Email,
-                PhoneNumber = request.PhoneNumber,
+                Email = request.Email?.Trim(),
+                PhoneNumber = request.PhoneNumber?.Trim(),
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
 
-            foreach (var roleId in request.RoleIds)
+            foreach (var role in targetRoles)
             {
-                _context.UserRoles.Add(new UserRole
+                user.UserRoles.Add(new UserRole
                 {
-                    RoleId = roleId,
-                    UserId = user.UserId,
+                    RoleId = role.RoleId,
                     CreatedAt = DateTime.UtcNow
                 });
             }
+
+            _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            var createdUser = await _context.Users
-                .Include(u => u.Department)
-                .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
-                .FirstAsync(u => u.UserId == user.UserId);
-
-            return await GetUserByIdAsync(createdUser.UserId);
+            return await GetUserByIdAsync(user.UserId);
         }
 
         public async Task<UserListItemDto> UpdateUserAsync(int userId, UpdateUserRequest request)
@@ -240,13 +278,21 @@ namespace HuyetMach175.Modules.Auth.Services
             return await GetUserByIdAsync(updatedUser.UserId);
         }
 
-        public async Task<UserListItemDto> UpdateUserRolesAsync(int userId, UpdateUserRolesRequest request)
+        public async Task<UserListItemDto> UpdateUserRolesAsync(int userId, UpdateUserRolesRequest request, bool isSysAdmin = true)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+            var user = await _context.Users
+                .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.UserId == userId);
 
             if (user == null)
             {
                 throw new HttpException(404, "This user was not found in the system.");
+            }
+
+            if (!isSysAdmin && user.UserRoles.Any(ur => ur.Role != null && ur.Role.RoleCode == "SYS"))
+            {
+                throw new HttpException(403, "Only System Administrators (SYS) can modify roles of a SYS user.");
             }
 
             if (request.UserRoles == null || request.UserRoles.Count == 0)
@@ -254,24 +300,30 @@ namespace HuyetMach175.Modules.Auth.Services
                 throw new HttpException(400, "A user must have at least one role.");
             }
 
-            var extinctRoles = await _context.Roles.Select(r => r.RoleId).ToListAsync();
-            foreach (var newRole in request.UserRoles.Distinct().ToList())
+            var requestedRoleIds = request.UserRoles.Distinct().ToList();
+            var targetRoles = await _context.Roles
+                .Where(r => requestedRoleIds.Contains(r.RoleId))
+                .ToListAsync();
+
+            if (targetRoles.Count != requestedRoleIds.Count)
             {
-                if (!extinctRoles.Contains(newRole))
-                {
-                    throw new HttpException(400, "There is at least one invalid role");
-                }
+                throw new HttpException(400, "One or more role IDs are invalid.");
+            }
+
+            if (!isSysAdmin && targetRoles.Any(r => r.RoleCode == "SYS"))
+            {
+                throw new HttpException(403, "Only System Administrators (SYS) can assign the SYS role.");
             }
 
             var currentRoles = await _context.UserRoles.Where(ur => ur.UserId == userId).ToListAsync();
             _context.UserRoles.RemoveRange(currentRoles);
 
-            foreach (var role in request.UserRoles.Distinct())
+            foreach (var role in targetRoles)
             {
                 _context.UserRoles.Add(new UserRole
                 {
                     UserId = userId,
-                    RoleId = role,
+                    RoleId = role.RoleId,
                     CreatedAt = DateTime.UtcNow
                 });
             }
