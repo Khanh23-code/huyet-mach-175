@@ -3,6 +3,7 @@ using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
 using HuyetMach175.Modules.Auth.DTOs.Auth;
 using HuyetMach175.Modules.Auth.DTOs.Common;
+using HuyetMach175.Modules.Auth.DTOs.Departments;
 using HuyetMach175.Modules.Auth.DTOs.Users;
 using HuyetMach175.SharedKernel.Exceptions;
 using HuyetMach175.SharedKernel.Services;
@@ -354,6 +355,22 @@ namespace HuyetMach175.Modules.Auth.Services
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+        public async Task<List<DepartmentDto>> GetDepartmentsAsync()
+        {
+            var departments = await _context.Departments
+                .AsNoTracking()
+                .OrderBy(d => d.DepartmentId)
+                .Select(d => new DepartmentDto
+                {
+                    DepartmentId = d.DepartmentId,
+                    DepartmentCode = d.DepartmentCode,
+                    DepartmentName = d.DepartmentName
+                })
+                .ToListAsync();
+
+            return departments;
         }
     }
 }
