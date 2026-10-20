@@ -409,7 +409,7 @@ export default function PermissionMatrix() {
                 onClose={() => setCreatingPermission(false)}
                 permissions={permissions}
                 roleLabel={locked ? undefined : (selectedRole?.code ?? undefined)}
-                onCreated={(p) => mutateDraft((next) => { next.add(p.permissionId) })}
+                onCreated={(created) => mutateDraft((next) => { created.forEach((p) => next.add(p.permissionId)) })}
             />
         </>
     )

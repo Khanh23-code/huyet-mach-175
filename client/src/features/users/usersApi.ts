@@ -1,6 +1,6 @@
 import { axiosClient } from '@/services/axiosClient'
 import type {
-    CreateUserRequest, Department, PagedResult, RoleCode, RoleOption, UserItem, UserQuery,
+    CreateUserRequest, Department, PagedResult, RoleCode, RoleOption, UpdateUserRequest, UserItem, UserQuery,
 } from '@/types/user'
 
 /* Response GET /api/users chưa rõ shape nên chuẩn hóa ở đây.
@@ -11,7 +11,10 @@ const normalizeUser = (raw: any): UserItem => ({
     staffCode: raw.staffCode ?? raw.username ?? '',
     username: raw.username ?? '',
     fullName: raw.fullName ?? '',
+    departmentId: raw.departmentId ?? raw.department?.departmentId ?? raw.department?.id ?? null,
     departmentName: raw.departmentName ?? raw.department?.departmentName ?? raw.department?.name ?? '',
+    email: raw.email ?? null,
+    phoneNumber: raw.phoneNumber ?? null,
     isActive: raw.isActive ?? true,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     roles: ((raw.roles ?? raw.roleCodes ?? []) as any[]).map((r) =>
@@ -43,6 +46,14 @@ export const usersApi = {
 
     create: (body: CreateUserRequest) =>
         axiosClient.post('/api/users', body).then((r) => r.data),
+
+    // PUT /api/users/{id}: họ tên, email, SĐT, khoa/phòng (không đổi vai trò/trạng thái/mật khẩu)
+    update: (id: number, body: UpdateUserRequest) =>
+        axiosClient.put(`/api/users/${id}`, body).then((r) => r.data),
+
+    // PUT /api/users/{id}/roles: DTO của BE đặt tên thuộc tính là `UserRoles` (không phải roleIds)
+    updateRoles: (id: number, roleIds: number[]) =>
+        axiosClient.put(`/api/users/${id}/roles`, { userRoles: roleIds }).then((r) => r.data),
 
     // BE là PATCH /api/users/{id}/status (bản cũ dùng PUT -> 405).
     updateStatus: (id: number, isActive: boolean) =>

@@ -5,7 +5,10 @@ export interface UserItem {
     staffCode: string
     username: string
     fullName: string
+    departmentId: number | null
     departmentName: string
+    email: string | null
+    phoneNumber: string | null
     roles: RoleCode[]
     isActive: boolean
 }
@@ -34,6 +37,14 @@ export interface CreateUserRequest {
     phoneNumber: string | null
     departmentId: number
     roleIds: number[]
+}
+
+/** Khớp UpdateUserRequest của BE (PUT /api/users/{id}). */
+export interface UpdateUserRequest {
+    fullName: string
+    email: string | null
+    phoneNumber: string | null
+    departmentId: number
 }
 
 export interface Department {

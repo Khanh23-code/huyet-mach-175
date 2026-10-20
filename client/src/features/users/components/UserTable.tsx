@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { App, Button, Empty, Input, Popconfirm, Select, Table, Tooltip } from 'antd'
 import type { TableColumnsType } from 'antd'
-import { LockOutlined, SearchOutlined, SettingOutlined, UnlockOutlined } from '@ant-design/icons'
+import { EditOutlined, LockOutlined, SearchOutlined, UnlockOutlined } from '@ant-design/icons'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/features/auth/authStore'
 import { ROLE_META } from '@/config/rbac'
@@ -9,6 +9,7 @@ import type { RoleCode, UserItem } from '@/types/user'
 import { useDebounce, useRoles, useUsers } from '../hooks'
 import { usersApi } from '../usersApi'
 import { parseApiError } from '@/services/apiError'
+import EditUserModal from './EditUserModal'
 
 const PAGE_SIZE = 10
 
@@ -18,11 +19,14 @@ const initials = (name: string) =>
 export default function UserTable() {
     const { message } = App.useApp()
     const qc = useQueryClient()
-    const me = useAuthStore((s) => s.user) as { id?: string | number; username?: string } | null
+    const me = useAuthStore((s) => s.user) as
+        | { id?: string | number; username?: string; roles?: string[] }
+        | null
 
     const [keyword, setKeyword] = useState('')
     const [roleCodes, setRoleCodes] = useState<RoleCode[]>([])
     const [page, setPage] = useState(1)
+    const [editing, setEditing] = useState<UserItem | null>(null)
     const debounced = useDebounce(keyword)
     const rolesQuery = useRoles()
 
@@ -45,6 +49,10 @@ export default function UserTable() {
 
     const isSelf = (u: UserItem) =>
         !!me && ((me.id !== undefined && String(me.id) === String(u.id)) || (!!me.username && me.username === u.username))
+
+    const isSysAdmin = !!me?.roles?.some((r) => r.trim().toUpperCase() === 'SYS')
+    // BE: chỉ SYS được sửa tài khoản SYS
+    const canEdit = (u: UserItem) => isSysAdmin || !u.roles.includes('SYS')
 
     const columns: TableColumnsType<UserItem> = [
         {
@@ -88,10 +96,16 @@ export default function UserTable() {
             render: (_, u) => {
                 const self = isSelf(u)
                 const nextActive = !u.isActive
+                const editable = canEdit(u)
                 return (
                     <div className="um-actions">
-                        <Tooltip title="Chỉnh sửa vai trò (chưa có API)">
-                            <Button type="text" icon={<SettingOutlined />} disabled />
+                        <Tooltip title={editable ? 'Chỉnh sửa người dùng' : 'Chỉ quản trị hệ thống (SYS) được sửa tài khoản SYS'}>
+                            <Button
+                                type="text"
+                                icon={<EditOutlined />}
+                                disabled={!editable}
+                                onClick={() => setEditing(u)}
+                            />
                         </Tooltip>
                         <Popconfirm
                             title={nextActive ? 'Mở khóa tài khoản này?' : 'Khóa tài khoản này?'}
@@ -162,6 +176,13 @@ export default function UserTable() {
                     showTotal: (total, [from, to]) => `Hiển thị ${from}–${to} trong ${total} người dùng`,
                 }}
                 scroll={{ x: 900 }}
+            />
+
+            <EditUserModal
+                user={editing}
+                isSelf={!!editing && isSelf(editing)}
+                canAssignSys={isSysAdmin}
+                onClose={() => setEditing(null)}
             />
         </section>
     )

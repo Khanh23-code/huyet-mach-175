@@ -10,10 +10,14 @@ export interface ExistingModule {
     actions: string[]
 }
 
+/** Module đã có đủ mọi thao tác (VIEW/EDIT/APPROVE/CANCEL) -> không thể thêm nữa. */
+export const isModuleFull = (m?: ExistingModule) =>
+    !!m && ACTIONS.every((a) => m.actions.includes(a.key))
+
 /**
  * Schema phụ thuộc danh sách module hiện có:
  *  - module mới  -> bắt buộc nhập tên module
- *  - module cũ   -> không cho tạo trùng action
+ *  - module cũ   -> không cho tạo trùng action, và không cho thêm nếu đã đủ thao tác
  */
 export const createPermissionSchema = (modules: ExistingModule[]) =>
     z
@@ -23,8 +27,7 @@ export const createPermissionSchema = (modules: ExistingModule[]) =>
                 .max(20, 'Tối đa 20 ký tự')
                 .regex(/^[A-Za-z][A-Za-z0-9_]*$/, 'Chỉ gồm chữ, số, dấu gạch dưới; bắt đầu bằng chữ'),
             moduleName: z.string().trim().max(100, 'Tối đa 100 ký tự'),
-            actionType: z.enum(ACTION_KEYS, { message: 'Vui lòng chọn thao tác' }),
-            permissionName: z.string().trim().min(1, 'Vui lòng nhập tên quyền').max(100, 'Tối đa 100 ký tự'),
+            actionTypes: z.array(z.enum(ACTION_KEYS)).min(1, 'Chọn ít nhất 1 thao tác'),
             description: z.string().trim().max(255, 'Tối đa 255 ký tự'),
         })
         .superRefine((v, ctx) => {
@@ -37,11 +40,17 @@ export const createPermissionSchema = (modules: ExistingModule[]) =>
                     message: 'Module mới cần có tên hiển thị',
                 })
             }
-            if (found?.actions.includes(v.actionType)) {
+            if (isModuleFull(found)) {
                 ctx.addIssue({
                     code: 'custom',
-                    path: ['actionType'],
-                    message: 'Module này đã có thao tác đó',
+                    path: ['moduleCode'],
+                    message: 'Phân hệ này đã có đủ thao tác',
+                })
+            } else if (found && v.actionTypes.some((a) => found.actions.includes(a))) {
+                ctx.addIssue({
+                    code: 'custom',
+                    path: ['actionTypes'],
+                    message: 'Có thao tác đã tồn tại trong phân hệ này',
                 })
             }
         })
