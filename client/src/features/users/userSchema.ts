@@ -26,3 +26,13 @@ export const createUserSchema = z.object({
     roleIds: z.array(z.number()).min(1, 'Chọn ít nhất 1 vai trò'),
 })
 export type CreateUserForm = z.infer<typeof createUserSchema>
+
+/** Form chỉnh sửa: tái sử dụng rule của form tạo, bỏ mã NV / username / mật khẩu (không sửa được). */
+export const editUserSchema = createUserSchema.pick({
+    fullName: true,
+    email: true,
+    phoneNumber: true,
+    departmentId: true,
+    roleIds: true,
+})
+export type EditUserForm = z.infer<typeof editUserSchema>
