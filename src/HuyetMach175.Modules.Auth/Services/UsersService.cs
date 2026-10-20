@@ -63,7 +63,7 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (filter.IsActive.HasValue)
             {
-                query = query.Where(u => u.IsActive);
+                query = query.Where(u => u.IsActive == filter.IsActive.Value);
             }
 
             var totalCount = await query.CountAsync();
@@ -127,55 +127,53 @@ namespace HuyetMach175.Modules.Auth.Services
                 IsActive = user.IsActive
             };
         }
+        
+        private static string? NormalizeOptional(string? value)
+            => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+        private async Task EnsureUniqueAsync(
+            string username, string staffCode, string? email, string? phone, int? excludeUserId = null)
+        {
+            var errors = new Dictionary<string, string>();
+
+            var others = _context.Users.AsNoTracking()
+                .Where(u => excludeUserId == null || u.UserId != excludeUserId);
+
+            if (await others.AnyAsync(u => u.Username == username))
+                errors["username"] = "Tên đăng nhập đã được sử dụng";
+
+            if (await others.AnyAsync(u => u.StaffCode == staffCode))
+                errors["staffCode"] = "Mã nhân viên đã tồn tại";
+
+            // So sánh email không phân biệt hoa thường (dữ liệu cũ có thể còn chữ hoa)
+            if (email != null && await others.AnyAsync(u => u.Email != null && u.Email.ToLower() == email))
+                errors["email"] = "Email đã được sử dụng";
+
+            if (phone != null && await others.AnyAsync(u => u.PhoneNumber == phone))
+                errors["phoneNumber"] = "Số điện thoại đã được sử dụng";
+
+            if (errors.Count > 0)
+                throw new HttpException(409, "Dữ liệu bị trùng với người dùng khác", errors);
+        }
 
         public async Task<UserListItemDto> CreateUserAsync(CreateUserRequest request, bool isSysAdmin = true)
         {
             if (request == null)
             {
-                throw new HttpException(400, "Request body is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(request.Username))
-            {
-                throw new HttpException(400, "Username is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(request.StaffCode))
-            {
-                throw new HttpException(400, "Staff code is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(request.FullName))
-            {
-                throw new HttpException(400, "Full name is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 6)
-            {
-                throw new HttpException(400, "Password must be at least 6 characters long.");
-            }
-
-            if (request.RoleIds == null || request.RoleIds.Count == 0)
-            {
-                throw new HttpException(400, "A user must have at least one role.");
+                throw new HttpException(400, "Dữ liệu gửi lên không hợp lệ.");
             }
 
             string username = request.Username.Trim();
-            string staffCode = request.StaffCode.Trim();
+            string staffCode = request.StaffCode.Trim().ToUpperInvariant();
+            string? email = NormalizeOptional(request.Email)?.ToLowerInvariant();
+            string? phone = NormalizeOptional(request.PhoneNumber);
 
-            if (await _context.Users.AnyAsync(u => u.Username == username))
-            {
-                throw new HttpException(409, "Username already exists in the system.");
-            }
-
-            if (await _context.Users.AnyAsync(u => u.StaffCode == staffCode))
-            {
-                throw new HttpException(409, "Staff code already exists in the system.");
-            }
+            await EnsureUniqueAsync(username, staffCode, email, phone);
 
             if (!await _context.Departments.AnyAsync(d => d.DepartmentId == request.DepartmentId))
             {
-                throw new HttpException(400, "The specified department does not exist.");
+                throw new HttpException(400, "Khoa/phòng không tồn tại.",
+                    new Dictionary<string, string> { ["departmentId"] = "Khoa/phòng không tồn tại" });
             }
 
             var requestedRoleIds = request.RoleIds.Distinct().ToList();
@@ -185,15 +183,20 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (targetRoles.Count != requestedRoleIds.Count)
             {
-                throw new HttpException(400, "One or more role IDs are invalid.");
+                throw new HttpException(400, "Có vai trò không hợp lệ.",
+                    new Dictionary<string, string> { ["roleIds"] = "Có vai trò không hợp lệ" });
+            }
+
+            if (targetRoles.Any(r => !r.IsActive))
+            {
+                throw new HttpException(400, "Không thể gán vai trò đã bị vô hiệu hóa.",
+                    new Dictionary<string, string> { ["roleIds"] = "Có vai trò đã bị vô hiệu hóa" });
             }
 
             if (!isSysAdmin && targetRoles.Any(r => r.RoleCode == "SYS"))
             {
-                throw new HttpException(403, "Only System Administrators (SYS) can assign the SYS role.");
+                throw new HttpException(403, "Chỉ quản trị hệ thống (SYS) mới được gán vai trò SYS.");
             }
-
-            var hashedPassword = _passwordHasher.HashPassword(request.Password);
 
             var user = new User
             {
@@ -201,9 +204,9 @@ namespace HuyetMach175.Modules.Auth.Services
                 Username = username,
                 StaffCode = staffCode,
                 FullName = request.FullName.Trim(),
-                PasswordHash = hashedPassword,
-                Email = request.Email?.Trim(),
-                PhoneNumber = request.PhoneNumber?.Trim(),
+                PasswordHash = _passwordHasher.HashPassword(request.Password),
+                Email = email,
+                PhoneNumber = phone,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
@@ -225,19 +228,28 @@ namespace HuyetMach175.Modules.Auth.Services
 
         public async Task<UserListItemDto> UpdateUserAsync(int userId, UpdateUserRequest request)
         {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.UserId == userId);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
 
             if (user == null)
             {
-                throw new HttpException(404, "This user was not found in the system.");
+                throw new HttpException(404, "Không tìm thấy người dùng.");
             }
 
-            _ = _context.Departments.Any(d => d.DepartmentId == request.DepartmentId) ? "" : throw new HttpException(400, "The department does not exist.");
+            if (!await _context.Departments.AnyAsync(d => d.DepartmentId == request.DepartmentId))
+            {
+                throw new HttpException(400, "Khoa/phòng không tồn tại.",
+                    new Dictionary<string, string> { ["departmentId"] = "Khoa/phòng không tồn tại" });
+            }
 
-            user.FullName = request.FullName;
-            user.Email = request.Email;
-            user.PhoneNumber = request.PhoneNumber;
+            string? email = NormalizeOptional(request.Email)?.ToLowerInvariant();
+            string? phone = NormalizeOptional(request.PhoneNumber);
+
+            // excludeUserId: loại trừ chính user này để không báo trùng với bản thân
+            await EnsureUniqueAsync(user.Username, user.StaffCode, email, phone, excludeUserId: userId);
+
+            user.FullName = request.FullName.Trim();
+            user.Email = email;
+            user.PhoneNumber = phone;
             user.DepartmentId = request.DepartmentId;
             await _context.SaveChangesAsync();
 
