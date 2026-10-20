@@ -14,7 +14,7 @@ import {
     UserOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '@/features/auth/authStore'
+import { useLogout } from '@/features/auth/useLogout'
 import { useCurrentUser } from '@/features/auth/useCurrentUser'
 import { getNavForRoles } from '@/config/navigation'
 import './Header.css'
@@ -32,7 +32,7 @@ const THEME_KEY = 'theme'
 
 export default function Header({ onSearch, onScan }: HeaderProps) {
     const navigate = useNavigate()
-    const logout = useAuthStore((s) => s.logout)
+    const { logout: handleLogout, isLoggingOut } = useLogout()
     const { displayName, roleLabel, initials, loading, user } = useCurrentUser()
 
     const homePath = getNavForRoles(user?.roles)?.home.path ?? '/'
@@ -74,11 +74,6 @@ export default function Header({ onSearch, onScan }: HeaderProps) {
     const unreadCount = 0
 
     /* ---------------- User menu ---------------- */
-    const handleLogout = () => {
-        logout()
-        navigate('/login', { replace: true })
-    }
-
     const menuItems: MenuProps['items'] = [
         {
             key: 'profile',
@@ -98,6 +93,7 @@ export default function Header({ onSearch, onScan }: HeaderProps) {
             icon: <LogoutOutlined />,
             label: 'Đăng xuất',
             danger: true,
+            disabled: isLoggingOut,
             onClick: handleLogout,
         },
     ]
