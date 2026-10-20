@@ -64,5 +64,33 @@ namespace HuyetMach175.Modules.Auth.Controllers
             var createdPermission = await _rolesService.CreatePermissionAsync(request);
             return Ok(createdPermission);
         }
+
+        [HttpPost("batch")]
+        [EndpointSummary("Tạo nhiều quyền (nhiều thao tác) của cùng một module trong một lần")]
+        [EndpointDescription(
+            "Tạo đồng thời nhiều quyền hạn cho **một** module trong **một transaction** (hoặc tạo hết, hoặc không tạo gì).\n\n" +
+            "**Quy tắc nghiệp vụ:**\n" +
+            "- Mỗi phần tử trong `actions` gồm `actionType` (`VIEW`, `EDIT`, `APPROVE`, `CANCEL`) và `permissionName`. Mã quyền sinh theo `{moduleCode}_{actionType}`.\n" +
+            "- Module đã tồn tại thì `moduleName` được kế thừa; module mới bắt buộc có `moduleName`.\n" +
+            "- Thao tác đã tồn tại sẽ **được bỏ qua** (trả về trong `skipped`), các thao tác còn lại vẫn được tạo.\n" +
+            "- Nếu mọi thao tác yêu cầu đều đã tồn tại, trả về 409 Conflict.\n" +
+            "- `actionType` trùng lặp trong cùng một request bị coi là dữ liệu không hợp lệ (400).\n\n" +
+            "**Yêu cầu quyền truy cập:** Bearer Token của người dùng có vai trò **SYS**.\n\n" +
+            "**HTTP Response:**" +
+            "\n- 200 OK: Trả về `created` (các quyền vừa tạo) và `skipped` (các thao tác đã tồn tại)." +
+            "\n- 400 Bad Request: Dữ liệu không hợp lệ, thao tác sai, trùng thao tác trong request, hoặc thiếu tên module mới." +
+            "\n- 401 Unauthorized: Người dùng chưa xác thực hoặc token không hợp lệ." +
+            "\n- 403 Forbidden: Người dùng không phải là Quản trị hệ thống (SYS)." +
+            "\n- 409 Conflict: Tất cả thao tác yêu cầu đều đã tồn tại trong module.")]
+        [ProducesResponseType(typeof(CreatePermissionsResultDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> CreatePermissionsAsync([FromBody] CreatePermissionsRequest request)
+        {
+            var result = await _rolesService.CreatePermissionsAsync(request);
+            return Ok(result);
+        }
     }
 }
