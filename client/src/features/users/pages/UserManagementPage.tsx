@@ -5,6 +5,7 @@ import UserStatsCards from '../components/UserStatsCards'
 import UserTable from '../components/UserTable'
 import PermissionMatrix from '../components/PermissionMatrix'
 import CreateUserModal from '../components/CreateUserModal'
+import type { RoleCode } from '@/types/user'
 import './UserManagementPage.css'
 
 type Tab = 'users' | 'matrix'
@@ -12,6 +13,12 @@ type Tab = 'users' | 'matrix'
 export default function UserManagementPage() {
     const [tab, setTab] = useState<Tab>('users')
     const [creating, setCreating] = useState(false)
+    const [selectedRoleCodes, setSelectedRoleCodes] = useState<RoleCode[]>([])
+
+    const handleNavigateToUsers = (roleCode: RoleCode) => {
+        setSelectedRoleCodes([roleCode])
+        setTab('users')
+    }
 
     return (
         <div className="um">
@@ -41,10 +48,13 @@ export default function UserManagementPage() {
             {tab === 'users' ? (
                 <>
                     <UserStatsCards />
-                    <UserTable />
+                    <UserTable
+                        selectedRoleCodes={selectedRoleCodes}
+                        onRoleCodesChange={setSelectedRoleCodes}
+                    />
                 </>
             ) : (
-                <PermissionMatrix />
+                <PermissionMatrix onNavigateToUsers={handleNavigateToUsers} />
             )}
 
             <CreateUserModal open={creating} onClose={() => setCreating(false)} />

@@ -16,7 +16,12 @@ const PAGE_SIZE = 10
 const initials = (name: string) =>
     name.trim().split(/\s+/).slice(-2).map((w) => w[0]?.toUpperCase()).join('')
 
-export default function UserTable() {
+interface UserTableProps {
+    selectedRoleCodes?: RoleCode[]
+    onRoleCodesChange?: (roles: RoleCode[]) => void
+}
+
+export default function UserTable({ selectedRoleCodes, onRoleCodesChange }: UserTableProps = {}) {
     const { message } = App.useApp()
     const qc = useQueryClient()
     const me = useAuthStore((s) => s.user) as
@@ -24,11 +29,19 @@ export default function UserTable() {
         | null
 
     const [keyword, setKeyword] = useState('')
-    const [roleCodes, setRoleCodes] = useState<RoleCode[]>([])
+    const [localRoleCodes, setLocalRoleCodes] = useState<RoleCode[]>([])
+    const roleCodes = selectedRoleCodes !== undefined ? selectedRoleCodes : localRoleCodes
+    const setRoleCodes = onRoleCodesChange ?? setLocalRoleCodes
     const [page, setPage] = useState(1)
     const [editing, setEditing] = useState<UserItem | null>(null)
     const debounced = useDebounce(keyword)
     const rolesQuery = useRoles()
+
+    const [prevRoleCodes, setPrevRoleCodes] = useState(roleCodes)
+    if (prevRoleCodes !== roleCodes) {
+        setPrevRoleCodes(roleCodes)
+        setPage(1)
+    }
 
     const { data, isLoading, isFetching, isError } = useUsers({
         keyword: debounced || undefined,
