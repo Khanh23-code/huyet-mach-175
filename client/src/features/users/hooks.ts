@@ -20,7 +20,7 @@ export const useUsers = (q: UserQuery) =>
     })
 
 /** Chỉ lấy tổng số bản ghi (pageSize = 1) cho thẻ thống kê / đếm theo vai trò */
-export const useUserCount = (filters: Pick<UserQuery, 'isActive' | 'roleCode'> = {}) =>
+export const useUserCount = (filters: Pick<UserQuery, 'isActive' | 'roleCode' | 'roleCodes'> = {}) =>
     useQuery({
         queryKey: ['users', 'count', filters],
         queryFn: () => usersApi.list({ ...filters, pageNumber: 1, pageSize: 1 }),
