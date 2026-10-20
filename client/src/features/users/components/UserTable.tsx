@@ -4,10 +4,11 @@ import type { TableColumnsType } from 'antd'
 import { LockOutlined, SearchOutlined, SettingOutlined, UnlockOutlined } from '@ant-design/icons'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/features/auth/authStore'
-import { ROLE_CODES, ROLE_META } from '@/config/rbac'
+import { ROLE_META } from '@/config/rbac'
 import type { RoleCode, UserItem } from '@/types/user'
-import { useDebounce, useUsers } from '../hooks'
+import { useDebounce, useRoles, useUsers } from '../hooks'
 import { usersApi } from '../usersApi'
+import { parseApiError } from '@/services/apiError'
 
 const PAGE_SIZE = 10
 
@@ -23,6 +24,7 @@ export default function UserTable() {
     const [roleCode, setRoleCode] = useState<RoleCode | undefined>()
     const [page, setPage] = useState(1)
     const debounced = useDebounce(keyword)
+    const rolesQuery = useRoles()
 
     const { data, isLoading, isFetching, isError } = useUsers({
         keyword: debounced || undefined,
@@ -38,7 +40,7 @@ export default function UserTable() {
             message.success(v.isActive ? 'Đã mở khóa tài khoản' : 'Đã khóa tài khoản')
             qc.invalidateQueries({ queryKey: ['users'] })
         },
-        onError: () => message.error('Không thể cập nhật trạng thái, vui lòng thử lại'),
+        onError: (err) => message.error(parseApiError(err).message),
     })
 
     const isSelf = (u: UserItem) =>
@@ -65,7 +67,7 @@ export default function UserTable() {
                     {roles.map((r) => (
                         <span className="um-role" key={r}>
               <b className={`um-role__code um-role__code--${r}`}>{r}</b>
-              <small>{ROLE_META[r]?.label}</small>
+              <small>{ROLE_META[r]?.label ?? r}</small>
             </span>
                     ))}
                 </div>
@@ -134,7 +136,7 @@ export default function UserTable() {
                         style={{ minWidth: 170 }}
                         value={roleCode}
                         onChange={(v) => { setRoleCode(v); setPage(1) }}
-                        options={ROLE_CODES.map((c) => ({ value: c, label: `${c} · ${ROLE_META[c].label}` }))}
+                        options={rolesQuery.data?.map((r) => ({ value: r.code, label: `${r.code} · ${r.name}` }))}
                     />
                 </div>
             </header>

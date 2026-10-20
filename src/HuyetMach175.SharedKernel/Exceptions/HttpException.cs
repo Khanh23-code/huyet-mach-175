@@ -4,8 +4,13 @@ public class HttpException : Exception
 {
     public int StatusCode { get; }
 
-    public HttpException(int statusCode, string message) : base(message)
+    /// <summary>Lỗi theo từng field, key là tên field dạng camelCase (vd: "email").</summary>
+    public IDictionary<string, string>? Errors { get; }
+
+    public HttpException(int statusCode, string message, IDictionary<string, string>? errors = null)
+        : base(message)
     {
         StatusCode = statusCode;
+        Errors = errors;
     }
 }
