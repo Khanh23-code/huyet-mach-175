@@ -10,16 +10,22 @@ export const ROLE_META: Record<RoleCode, { label: string; desc: string }> = {
 
 export const ROLE_CODES = Object.keys(ROLE_META) as RoleCode[]
 
-/**
- * Chỉ dùng để đặt nhãn + thứ tự cột. `key` phải khớp enum PermissionAction ở BE
- * (VIEW / EDIT / APPROVE / CANCEL). Module KHÔNG còn hard-code ở FE:
- * danh sách module lấy hoàn toàn từ bảng `permissions` qua API.
- */
+export const MODULES = [
+    { code: 'W1', name: 'Tiếp đón & Sàng lọc', desc: 'Quản lý hàng chờ, khám sàng lọc, phiên lấy máu' },
+    { code: 'W2', name: 'Túi máu & Kho', desc: 'Khởi tạo, theo dõi vòng đời, kiểm kê và xử lý túi máu' },
+    { code: 'W3', name: 'Yêu cầu máu Lâm sàng', desc: 'Lập phiếu, theo dõi và nhận bàn giao túi máu' },
+    { code: 'W4', name: 'Điều phối Kho máu', desc: 'Cung cầu, hàng đợi yêu cầu và cấp phát máu' },
+    { code: 'W5', name: 'Phê duyệt & Giám sát', desc: 'Phê duyệt hủy, báo cáo và giám sát vận hành' },
+    { code: 'W6', name: 'Quản trị hệ thống', desc: 'Người dùng, phân quyền, danh mục, tích hợp và audit log' },
+] as const
+
 export const ACTIONS = [
-    { key: 'VIEW', label: 'Xem' },
-    { key: 'EDIT', label: 'Tạo / Sửa' },
-    { key: 'APPROVE', label: 'Duyệt' },
-    { key: 'CANCEL', label: 'Hủy / Từ chối' },
+    { key: 'view', label: 'Xem' },
+    { key: 'edit', label: 'Thao tác – Tạo/Sửa' },
+    { key: 'approve', label: 'Duyệt' },
+    { key: 'delete', label: 'Hủy / Xóa' },
 ] as const
 
 export type ActionKey = (typeof ACTIONS)[number]['key']
+export type ModuleCode = (typeof MODULES)[number]['code']
+export type RoleMatrix = Record<ModuleCode, Record<ActionKey, boolean>>

@@ -33,25 +33,29 @@ export function useCurrentUser() {
     const accessToken = useAuthStore((s) => s.accessToken)
     const setUser = useAuthStore((s) => s.setUser)
 
-    // const hasName = Boolean(user?.fullName?.trim())
+    const hasName = Boolean(user?.fullName?.trim())
 
     useEffect(() => {
-        if (!accessToken) return
+        if (!accessToken || hasName) return
+
         let cancelled = false
 
         authApi
             .me()
             .then((currentUser: AuthUser) => {
                 if (!cancelled) {
-                    setUser({ ...currentUser, permissions: currentUser.permissions ?? [] })
+                    setUser(currentUser)
                 }
             })
-            .catch(() => {})
+            .catch(() => {
+                // Lỗi 401 được axiosClient xử lý.
+                // Các lỗi khác không làm ứng dụng bị crash.
+            })
 
         return () => {
             cancelled = true
         }
-    }, [accessToken, setUser])
+    }, [accessToken, hasName, setUser])
 
     return useMemo(() => {
         const role = resolveRole(user?.roles)

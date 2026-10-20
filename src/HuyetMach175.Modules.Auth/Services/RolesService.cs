@@ -65,25 +65,38 @@ namespace HuyetMach175.Modules.Auth.Services
 
         public async Task<RoleDto> CreateRoleAsync(CreateRoleRequest request)
         {
-            string roleCode = request.RoleCode.Trim().ToUpperInvariant();
-            string roleName = request.RoleName.Trim();
+            if (string.IsNullOrWhiteSpace(request.RoleCode))
+            {
+                throw new HttpException(400, "Role code is required.");
+            }
 
-            var errors = new Dictionary<string, string>();
+            if (request.RoleCode.Trim().Length > 50)
+            {
+                throw new HttpException(400, "Role code must not exceed 50 characters.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.RoleName))
+            {
+                throw new HttpException(400, "Role name is required.");
+            }
+
+            if (request.RoleName.Trim().Length > 50)
+            {
+                throw new HttpException(400, "Role name must not exceed 50 characters.");
+            }
+
+            string roleCode = request.RoleCode.Trim().ToUpper();
 
             if (await _context.Roles.AnyAsync(r => r.RoleCode == roleCode))
-                errors["roleCode"] = "Mã vai trò đã tồn tại";
-
-            if (await _context.Roles.AnyAsync(r => r.RoleName.ToLower() == roleName.ToLower()))
-                errors["roleName"] = "Tên vai trò đã tồn tại";
-
-            if (errors.Count > 0)
-                throw new HttpException(409, "Dữ liệu bị trùng với vai trò khác", errors);
+            {
+                throw new HttpException(400, "This role code already exists in the system.");
+            }
 
             var newRole = new Role
             {
                 RoleCode = roleCode,
-                RoleName = roleName,
-                Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(),
+                RoleName = request.RoleName.Trim(),
+                Description = request.Description?.Trim(),
                 IsActive = true
             };
 
@@ -107,31 +120,21 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (role == null)
             {
-                throw new HttpException(404, "Không tìm thấy vai trò.");
+                throw new HttpException(404, "This role was not found in the system.");
             }
 
             if (string.IsNullOrWhiteSpace(request.RoleName))
             {
-                throw new HttpException(400, "Vui lòng nhập tên vai trò.",
-                    new Dictionary<string, string> { ["roleName"] = "Vui lòng nhập tên vai trò" });
+                throw new HttpException(400, "Role name is required.");
             }
 
-            string newName = request.RoleName.Trim();
-
-            if (newName.Length > 50)
+            if (request.RoleName.Trim().Length > 50)
             {
-                throw new HttpException(400, "Tên vai trò tối đa 50 ký tự.",
-                    new Dictionary<string, string> { ["roleName"] = "Tên vai trò tối đa 50 ký tự" });
+                throw new HttpException(400, "Role name must not exceed 50 characters.");
             }
 
-            if (await _context.Roles.AnyAsync(r => r.RoleId != roleId && r.RoleName.ToLower() == newName.ToLower()))
-            {
-                throw new HttpException(409, "Dữ liệu bị trùng với vai trò khác",
-                    new Dictionary<string, string> { ["roleName"] = "Tên vai trò đã tồn tại" });
-            }
-
-            role.RoleName = newName;
-            role.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
+            role.RoleName = request.RoleName.Trim();
+            role.Description = request.Description?.Trim();
 
             await _context.SaveChangesAsync();
 
@@ -265,24 +268,37 @@ namespace HuyetMach175.Modules.Auth.Services
         {
             if (request == null)
             {
-                throw new HttpException(400, "Dữ liệu gửi lên không hợp lệ.");
+                throw new HttpException(400, "Request body is required.");
             }
 
-            string moduleCode = request.ModuleCode.Trim().ToUpperInvariant();
+            string moduleCode = request.ModuleCode?.Trim().ToUpper() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(moduleCode) || !Regex.IsMatch(moduleCode, @"^[A-Z][A-Z0-9_]{1,19}$"))
+            {
+                throw new HttpException(400, "Module code must start with a letter, contain only uppercase letters, numbers, underscores, and be 2-20 characters long.");
+            }
 
-            if (!Enum.TryParse<PermissionAction>(request.ActionType.Trim(), true, out var action) ||
+            if (string.IsNullOrWhiteSpace(request.ActionType) ||
+                !Enum.TryParse<PermissionAction>(request.ActionType.Trim(), true, out var action) ||
                 !Enum.IsDefined(typeof(PermissionAction), action))
             {
-                throw new HttpException(400, "Thao tác không hợp lệ.",
-                    new Dictionary<string, string> { ["actionType"] = "Thao tác phải là VIEW, EDIT, APPROVE hoặc CANCEL" });
+                throw new HttpException(400, "Invalid action type. Allowed values are: VIEW, EDIT, APPROVE, CANCEL.");
             }
 
-            string permissionCode = $"{moduleCode}_{action.ToString().ToUpperInvariant()}";
+            if (string.IsNullOrWhiteSpace(request.PermissionName))
+            {
+                throw new HttpException(400, "Permission name is required.");
+            }
+
+            if (request.PermissionName.Trim().Length > 100)
+            {
+                throw new HttpException(400, "Permission name must not exceed 100 characters.");
+            }
+
+            string permissionCode = $"{moduleCode}_{action}";
 
             if (await _context.Permissions.AnyAsync(p => p.PermissionCode == permissionCode))
             {
-                throw new HttpException(409, $"Quyền '{permissionCode}' đã tồn tại.",
-                    new Dictionary<string, string> { ["actionType"] = "Module này đã có thao tác đó" });
+                throw new HttpException(409, $"Permission code '{permissionCode}' already exists in the system.");
             }
 
             var existingModule = await _context.Permissions
@@ -297,8 +313,7 @@ namespace HuyetMach175.Modules.Auth.Services
             {
                 if (string.IsNullOrWhiteSpace(request.ModuleName))
                 {
-                    throw new HttpException(400, "Module mới cần có tên hiển thị.",
-                        new Dictionary<string, string> { ["moduleName"] = "Module mới cần có tên hiển thị" });
+                    throw new HttpException(400, "Module name is required for new modules.");
                 }
                 moduleName = request.ModuleName.Trim();
             }
@@ -310,7 +325,7 @@ namespace HuyetMach175.Modules.Auth.Services
                 ActionType = action,
                 PermissionCode = permissionCode,
                 PermissionName = request.PermissionName.Trim(),
-                Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim()
+                Description = request.Description?.Trim()
             };
 
             _context.Permissions.Add(permission);
@@ -326,123 +341,6 @@ namespace HuyetMach175.Modules.Auth.Services
                 ActionType = permission.ActionType.ToString(),
                 Description = permission.Description,
                 IsAssigned = false
-            };
-        }
-
-        public async Task<CreatePermissionsResultDto> CreatePermissionsAsync(CreatePermissionsRequest request)
-        {
-            if (request == null || request.Actions == null || request.Actions.Count == 0)
-            {
-                throw new HttpException(400, "Vui lòng chọn ít nhất một thao tác.",
-                    new Dictionary<string, string> { ["actionTypes"] = "Chọn ít nhất 1 thao tác" });
-            }
-
-            string moduleCode = request.ModuleCode.Trim().ToUpperInvariant();
-
-            // 1) Parse + kiểm tra từng thao tác, chặn trùng ngay trong request
-            var parsed = new List<(PermissionAction Action, string Name)>();
-            var seen = new HashSet<PermissionAction>();
-            foreach (var item in request.Actions)
-            {
-                if (!Enum.TryParse<PermissionAction>(item.ActionType?.Trim(), true, out var action) ||
-                    !Enum.IsDefined(typeof(PermissionAction), action))
-                {
-                    throw new HttpException(400, "Thao tác không hợp lệ.",
-                        new Dictionary<string, string> { ["actionTypes"] = "Thao tác phải là VIEW, EDIT, APPROVE hoặc CANCEL" });
-                }
-
-                if (!seen.Add(action))
-                {
-                    throw new HttpException(400, $"Thao tác '{action}' bị lặp trong yêu cầu.",
-                        new Dictionary<string, string> { ["actionTypes"] = "Thao tác bị lặp" });
-                }
-
-                parsed.Add((action, item.PermissionName.Trim()));
-            }
-
-            // 2) Thao tác nào đã tồn tại thì bỏ qua
-            var codes = parsed.Select(p => $"{moduleCode}_{p.Action.ToString().ToUpperInvariant()}").ToList();
-            var existingCodes = await _context.Permissions
-                .Where(p => codes.Contains(p.PermissionCode))
-                .Select(p => p.PermissionCode)
-                .ToListAsync();
-            var existingSet = existingCodes.ToHashSet();
-
-            var toCreate = parsed
-                .Where(p => !existingSet.Contains($"{moduleCode}_{p.Action.ToString().ToUpperInvariant()}"))
-                .ToList();
-
-            var skipped = parsed
-                .Where(p => existingSet.Contains($"{moduleCode}_{p.Action.ToString().ToUpperInvariant()}"))
-                .Select(p => p.Action.ToString().ToUpperInvariant())
-                .ToList();
-
-            if (toCreate.Count == 0)
-            {
-                throw new HttpException(409, "Tất cả thao tác được chọn đã tồn tại trong phân hệ này.",
-                    new Dictionary<string, string> { ["actionTypes"] = "Phân hệ này đã có các thao tác đó" });
-            }
-
-            // 3) Tên module: module cũ kế thừa, module mới bắt buộc nhập
-            var existingModule = await _context.Permissions
-                .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.ModuleCode == moduleCode);
-
-            string moduleName;
-            if (existingModule != null)
-            {
-                moduleName = existingModule.ModuleName;
-            }
-            else
-            {
-                if (string.IsNullOrWhiteSpace(request.ModuleName))
-                {
-                    throw new HttpException(400, "Module mới cần có tên hiển thị.",
-                        new Dictionary<string, string> { ["moduleName"] = "Module mới cần có tên hiển thị" });
-                }
-                moduleName = request.ModuleName.Trim();
-            }
-
-            string? description = string.IsNullOrWhiteSpace(request.Description)
-                ? existingModule?.Description
-                : request.Description.Trim();
-
-            var entities = toCreate.Select(p => new Permission
-            {
-                ModuleCode = moduleCode,
-                ModuleName = moduleName,
-                ActionType = p.Action,
-                PermissionCode = $"{moduleCode}_{p.Action.ToString().ToUpperInvariant()}",
-                PermissionName = p.Name,
-                Description = description
-            }).ToList();
-
-            // 4) Một SaveChanges duy nhất = một transaction: hoặc tạo hết, hoặc không tạo gì
-            _context.Permissions.AddRange(entities);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                // Có người khác vừa tạo trùng mã quyền giữa lúc kiểm tra và lúc lưu (unique index)
-                throw new HttpException(409, "Có quyền vừa được tạo bởi người khác. Vui lòng tải lại và thử lại.");
-            }
-
-            return new CreatePermissionsResultDto
-            {
-                Created = entities.Select(permission => new PermissionDto
-                {
-                    PermissionId = permission.PermissionId,
-                    PermissionCode = permission.PermissionCode,
-                    PermissionName = permission.PermissionName,
-                    ModuleCode = permission.ModuleCode,
-                    ModuleName = permission.ModuleName,
-                    ActionType = permission.ActionType.ToString(),
-                    Description = permission.Description,
-                    IsAssigned = false
-                }).ToList(),
-                Skipped = skipped
             };
         }
 

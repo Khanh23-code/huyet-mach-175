@@ -32,21 +32,10 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
-        var identifier = !string.IsNullOrWhiteSpace(request.StaffCode)
-            ? request.StaffCode.Trim()
-            : request.Username?.Trim();
-
-        if (string.IsNullOrWhiteSpace(identifier))
-        {
-            throw new HttpException(400, "Username or StaffCode is required.");
-        }
-
-        var normalizedIdentifier = identifier.ToLower();
-
         var user = await _context.Users
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.Username.ToLower() == normalizedIdentifier || u.StaffCode.ToLower() == normalizedIdentifier);
+            .FirstOrDefaultAsync(u => u.Username == request.Username);
 
         if (user == null)
         {

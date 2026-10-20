@@ -20,7 +20,7 @@ export const useUsers = (q: UserQuery) =>
     })
 
 /** Chỉ lấy tổng số bản ghi (pageSize = 1) cho thẻ thống kê / đếm theo vai trò */
-export const useUserCount = (filters: Pick<UserQuery, 'isActive' | 'roleCode' | 'roleCodes'> = {}) =>
+export const useUserCount = (filters: Pick<UserQuery, 'isActive' | 'roleCode'> = {}) =>
     useQuery({
         queryKey: ['users', 'count', filters],
         queryFn: () => usersApi.list({ ...filters, pageNumber: 1, pageSize: 1 }),
@@ -28,7 +28,7 @@ export const useUserCount = (filters: Pick<UserQuery, 'isActive' | 'roleCode' | 
     })
 
 export const useRoles = () =>
-    useQuery({ queryKey: ['roles'], queryFn: referenceApi.roles, staleTime: 5 * 60 * 1000 })
+    useQuery({ queryKey: ['roles'], queryFn: referenceApi.roles, staleTime: Infinity })
 
 export const useDepartments = () =>
-    useQuery({ queryKey: ['departments'], queryFn: referenceApi.departments, staleTime: 5 * 60 * 1000 })
+    useQuery({ queryKey: ['departments'], queryFn: referenceApi.departments, staleTime: Infinity })

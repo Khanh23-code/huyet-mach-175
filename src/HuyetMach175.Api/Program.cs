@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using HuyetMach175.Api.Data;
 using HuyetMach175.SharedKernel.Authorization;
@@ -23,35 +22,16 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowReactApp", policy =>
     {
         policy.WithOrigins(
-                "http://localhost:5173", 
-                "http://localhost:5174", 
-                "http://localhost:3000")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+                    "http://localhost:5173", 
+                    "http://localhost:5174", 
+                    "http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
-builder.Services.AddControllers()
-    .ConfigureApiBehaviorOptions(o =>
-    {
-        // Lỗi validate DataAnnotations trả cùng format { message, errors } với HttpException
-        o.InvalidModelStateResponseFactory = ctx =>
-        {
-            var errors = ctx.ModelState
-                .Where(e => e.Key.Length > 0 && e.Value?.Errors.Count > 0)
-                .GroupBy(e => char.ToLowerInvariant(e.Key[0]) + e.Key[1..].Split('[')[0])
-                .ToDictionary(g => g.Key, g => g.First().Value!.Errors[0].ErrorMessage);
-
-            return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(new
-            {
-                statusCode = 400,
-                message = "Dữ liệu không hợp lệ",
-                errors,
-                timestamp = DateTime.UtcNow
-            });
-        };
-    });
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi(options =>
 {
@@ -70,23 +50,6 @@ builder.Services.AddOpenApi(options =>
         }
         return Task.CompletedTask;
     });
-
-    options.AddOperationTransformer((operation, context, cancellationToken) =>
-    {
-        var metadata = context.Description.ActionDescriptor.EndpointMetadata;
-        var hasAuthorize = metadata.OfType<IAuthorizeData>().Any();
-        var allowAnonymous = metadata.OfType<IAllowAnonymous>().Any();
-
-        if (hasAuthorize && !allowAnonymous)
-        {
-            operation.Security ??= new List<OpenApiSecurityRequirement>();
-            var req = new OpenApiSecurityRequirement();
-            var schemeRef = new OpenApiSecuritySchemeReference("Bearer");
-            req.Add(schemeRef, new List<string>());
-            operation.Security.Add(req);
-        }
-        return Task.CompletedTask;
-    });
 });
 
 builder.Services.AddExceptionHandler<HuyetMach175.SharedKernel.Middlewares.GlobalExceptionHandler>();
@@ -101,7 +64,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference(options =>
     {
-        options.WithTitle("Huyết Mạch 175 - API Documentation")
+        options.WithTitle("API Documentation")
                .WithTheme(ScalarTheme.Purple)
                .WithDefaultHttpClient(ScalarTarget.JavaScript, ScalarClient.Axios);
     });

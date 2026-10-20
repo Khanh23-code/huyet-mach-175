@@ -1,6 +1,6 @@
 import { axiosClient } from '@/services/axiosClient'
 import type {
-    CreateUserRequest, Department, PagedResult, RoleCode, RoleOption, UpdateUserRequest, UserItem, UserQuery,
+    CreateUserRequest, Department, PagedResult, RoleCode, RoleOption, UserItem, UserQuery,
 } from '@/types/user'
 
 /* Response GET /api/users chưa rõ shape nên chuẩn hóa ở đây.
@@ -11,10 +11,7 @@ const normalizeUser = (raw: any): UserItem => ({
     staffCode: raw.staffCode ?? raw.username ?? '',
     username: raw.username ?? '',
     fullName: raw.fullName ?? '',
-    departmentId: raw.departmentId ?? raw.department?.departmentId ?? raw.department?.id ?? null,
     departmentName: raw.departmentName ?? raw.department?.departmentName ?? raw.department?.name ?? '',
-    email: raw.email ?? null,
-    phoneNumber: raw.phoneNumber ?? null,
     isActive: raw.isActive ?? true,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     roles: ((raw.roles ?? raw.roleCodes ?? []) as any[]).map((r) =>
@@ -25,16 +22,9 @@ const normalizeUser = (raw: any): UserItem => ({
 export const usersApi = {
     list: async (q: UserQuery): Promise<PagedResult<UserItem>> => {
         const params = Object.fromEntries(
-            Object.entries(q).filter(
-                ([, v]) => v !== undefined && v !== '' && (!Array.isArray(v) || v.length > 0),
-            ),
+            Object.entries(q).filter(([, v]) => v !== undefined && v !== ''),
         )
-        const { data } = await axiosClient.get('/api/users', {
-            params,
-            paramsSerializer: {
-                indexes: null,
-            },
-        })
+        const { data } = await axiosClient.get('/api/users', { params })
         const rawItems = Array.isArray(data) ? data : (data.items ?? data.data ?? data.results ?? [])
         return {
             items: rawItems.map(normalizeUser),
@@ -47,46 +37,27 @@ export const usersApi = {
     create: (body: CreateUserRequest) =>
         axiosClient.post('/api/users', body).then((r) => r.data),
 
-    // PUT /api/users/{id}: họ tên, email, SĐT, khoa/phòng (không đổi vai trò/trạng thái/mật khẩu)
-    update: (id: number, body: UpdateUserRequest) =>
-        axiosClient.put(`/api/users/${id}`, body).then((r) => r.data),
-
-    // PUT /api/users/{id}/roles: DTO của BE đặt tên thuộc tính là `UserRoles` (không phải roleIds)
-    updateRoles: (id: number, roleIds: number[]) =>
-        axiosClient.put(`/api/users/${id}/roles`, { userRoles: roleIds }).then((r) => r.data),
-
-    // BE là PATCH /api/users/{id}/status (bản cũ dùng PUT -> 405).
     updateStatus: (id: number, isActive: boolean) =>
-        axiosClient.patch(`/api/users/${id}/status`, { isActive }).then((r) => r.data),
+        axiosClient.put(`/api/users/${id}/status`, { isActive }).then((r) => r.data),
 }
 
+/* ===== MOCK: BE chưa có API roles / departments. Thay bằng axios khi có. ===== */
+// Phiên bản chưa dùng API roles
+//TODO cập nhật API role
 export const referenceApi = {
-    roles: async (): Promise<RoleOption[]> => {
-        const { data } = await axiosClient.get('/api/roles')
-
-        return data.map((r: {
-            roleId: number
-            roleCode: RoleOption['code']
-            roleName: string
-            isActive: boolean
-        }): RoleOption => ({
-            id: r.roleId,
-            code: r.roleCode,
-            name: r.roleName,
-            isActive: r.isActive,
-        }))
-    },
-
-    /**
-     * Cần BE có GET /api/departments (xem file BE handoff).
-     * Bản mock cũ có id/tên KHÔNG khớp DB seed nên đã bỏ để tránh gán sai khoa/phòng.
-     */
-    departments: async (): Promise<Department[]> => {
-        const { data } = await axiosClient.get('/api/departments')
-
-        return data.map((d: { departmentId: number; departmentName: string }): Department => ({
-            id: d.departmentId,
-            name: d.departmentName,
-        }))
-    },
+    roles: async (): Promise<RoleOption[]> => [
+        { id: 1, code: 'SYS', name: 'Quản trị hệ thống' },
+        { id: 2, code: 'MGT', name: 'Ban Giám đốc / Quản lý' },
+        { id: 3, code: 'CLIN', name: 'Bác sĩ / Nhân viên Lâm sàng' },
+        { id: 4, code: 'BBNK', name: 'Nhân viên Ngân hàng máu' },
+        { id: 5, code: 'DON', name: 'Nhân viên Tiếp nhận & Lấy máu' },
+    ],
+    departments: async (): Promise<Department[]> => [
+        { id: 1, name: 'Khoa Huyết học' },
+        { id: 2, name: 'Khoa Cấp cứu' },
+        { id: 3, name: 'Phòng CNTT' },
+        { id: 4, name: 'Trung tâm Truyền máu' },
+        { id: 5, name: 'Phòng Kế hoạch' },
+        { id: 6, name: 'Khoa Hồi sức' },
+    ],
 }

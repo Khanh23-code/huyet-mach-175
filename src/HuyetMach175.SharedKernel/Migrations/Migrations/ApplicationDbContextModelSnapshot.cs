@@ -1182,12 +1182,6 @@ namespace HuyetMach175.Api.Migrations
 
                     b.HasIndex("DepartmentId");
 
-                    b.HasIndex("Email")
-                        .IsUnique();
-
-                    b.HasIndex("PhoneNumber")
-                        .IsUnique();
-
                     b.HasIndex("StaffCode")
                         .IsUnique();
 

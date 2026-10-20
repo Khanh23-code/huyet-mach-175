@@ -1,15 +1,13 @@
 import { useState } from 'react'
 import { App, Button, Empty, Input, Popconfirm, Select, Table, Tooltip } from 'antd'
 import type { TableColumnsType } from 'antd'
-import { EditOutlined, LockOutlined, SearchOutlined, UnlockOutlined } from '@ant-design/icons'
+import { LockOutlined, SearchOutlined, SettingOutlined, UnlockOutlined } from '@ant-design/icons'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/features/auth/authStore'
-import { ROLE_META } from '@/config/rbac'
+import { ROLE_CODES, ROLE_META } from '@/config/rbac'
 import type { RoleCode, UserItem } from '@/types/user'
-import { useDebounce, useRoles, useUsers } from '../hooks'
+import { useDebounce, useUsers } from '../hooks'
 import { usersApi } from '../usersApi'
-import { parseApiError } from '@/services/apiError'
-import EditUserModal from './EditUserModal'
 
 const PAGE_SIZE = 10
 
@@ -19,20 +17,16 @@ const initials = (name: string) =>
 export default function UserTable() {
     const { message } = App.useApp()
     const qc = useQueryClient()
-    const me = useAuthStore((s) => s.user) as
-        | { id?: string | number; username?: string; roles?: string[] }
-        | null
+    const me = useAuthStore((s) => s.user) as { id?: string | number; username?: string } | null
 
     const [keyword, setKeyword] = useState('')
-    const [roleCodes, setRoleCodes] = useState<RoleCode[]>([])
+    const [roleCode, setRoleCode] = useState<RoleCode | undefined>()
     const [page, setPage] = useState(1)
-    const [editing, setEditing] = useState<UserItem | null>(null)
     const debounced = useDebounce(keyword)
-    const rolesQuery = useRoles()
 
     const { data, isLoading, isFetching, isError } = useUsers({
         keyword: debounced || undefined,
-        roleCodes: roleCodes.length > 0 ? roleCodes : undefined,
+        roleCode,
         pageNumber: page,
         pageSize: PAGE_SIZE,
     })
@@ -44,15 +38,11 @@ export default function UserTable() {
             message.success(v.isActive ? 'Đã mở khóa tài khoản' : 'Đã khóa tài khoản')
             qc.invalidateQueries({ queryKey: ['users'] })
         },
-        onError: (err) => message.error(parseApiError(err).message),
+        onError: () => message.error('Không thể cập nhật trạng thái, vui lòng thử lại'),
     })
 
     const isSelf = (u: UserItem) =>
         !!me && ((me.id !== undefined && String(me.id) === String(u.id)) || (!!me.username && me.username === u.username))
-
-    const isSysAdmin = !!me?.roles?.some((r) => r.trim().toUpperCase() === 'SYS')
-    // BE: chỉ SYS được sửa tài khoản SYS
-    const canEdit = (u: UserItem) => isSysAdmin || !u.roles.includes('SYS')
 
     const columns: TableColumnsType<UserItem> = [
         {
@@ -74,9 +64,9 @@ export default function UserTable() {
                 <div className="um-roles">
                     {roles.map((r) => (
                         <span className="um-role" key={r}>
-                            <b className={`um-role__code um-role__code--${r}`}>{r}</b>
-                            <small>{ROLE_META[r]?.label ?? r}</small>
-                        </span>
+              <b className={`um-role__code um-role__code--${r}`}>{r}</b>
+              <small>{ROLE_META[r]?.label}</small>
+            </span>
                     ))}
                 </div>
             ),
@@ -86,8 +76,8 @@ export default function UserTable() {
             dataIndex: 'isActive',
             render: (a: boolean) => (
                 <span className={`um-status ${a ? 'um-status--on' : 'um-status--off'}`}>
-                    <i /> {a ? 'Active' : 'Locked'}
-                </span>
+          <i /> {a ? 'Active' : 'Locked'}
+        </span>
             ),
         },
         {
@@ -96,16 +86,10 @@ export default function UserTable() {
             render: (_, u) => {
                 const self = isSelf(u)
                 const nextActive = !u.isActive
-                const editable = canEdit(u)
                 return (
                     <div className="um-actions">
-                        <Tooltip title={editable ? 'Chỉnh sửa người dùng' : 'Chỉ quản trị hệ thống (SYS) được sửa tài khoản SYS'}>
-                            <Button
-                                type="text"
-                                icon={<EditOutlined />}
-                                disabled={!editable}
-                                onClick={() => setEditing(u)}
-                            />
+                        <Tooltip title="Chỉnh sửa vai trò (chưa có API)">
+                            <Button type="text" icon={<SettingOutlined />} disabled />
                         </Tooltip>
                         <Popconfirm
                             title={nextActive ? 'Mở khóa tài khoản này?' : 'Khóa tài khoản này?'}
@@ -145,14 +129,12 @@ export default function UserTable() {
                         onChange={(e) => { setKeyword(e.target.value); setPage(1) }}
                     />
                     <Select
-                        mode="multiple"
                         allowClear
-                        placeholder="Lọc theo vai trò"
-                        style={{ minWidth: 200, maxWidth: 360 }}
-                        maxTagCount="responsive"
-                        value={roleCodes}
-                        onChange={(v) => { setRoleCodes(v); setPage(1) }}
-                        options={rolesQuery.data?.map((r) => ({ value: r.code, label: `${r.code} · ${r.name}` }))}
+                        placeholder="Tất cả vai trò"
+                        style={{ minWidth: 170 }}
+                        value={roleCode}
+                        onChange={(v) => { setRoleCode(v); setPage(1) }}
+                        options={ROLE_CODES.map((c) => ({ value: c, label: `${c} · ${ROLE_META[c].label}` }))}
                     />
                 </div>
             </header>
@@ -176,13 +158,6 @@ export default function UserTable() {
                     showTotal: (total, [from, to]) => `Hiển thị ${from}–${to} trong ${total} người dùng`,
                 }}
                 scroll={{ x: 900 }}
-            />
-
-            <EditUserModal
-                user={editing}
-                isSelf={!!editing && isSelf(editing)}
-                canAssignSys={isSysAdmin}
-                onClose={() => setEditing(null)}
             />
         </section>
     )

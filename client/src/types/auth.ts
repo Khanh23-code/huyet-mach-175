@@ -1,6 +1,5 @@
-export interface LoginRequest {
-    username?: string
-    staffCode?: string
+﻿export interface LoginRequest {
+    username: string
     password: string
 }
 
@@ -13,7 +12,6 @@ export interface AuthUser {
     username: string
     fullName?: string
     roles: string[]
-    permissions?: string[]
 }
 
 export interface AuthTokens {

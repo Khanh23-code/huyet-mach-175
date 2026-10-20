@@ -6,7 +6,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createUserSchema, type CreateUserForm } from '../userSchema'
 import { useDepartments, useRoles } from '../hooks'
 import { usersApi } from '../usersApi'
-import { applyServerErrors, parseApiError } from '@/services/apiError'
 
 interface Props { open: boolean; onClose: () => void }
 
@@ -18,17 +17,14 @@ const Field = ({ label, error, children }: { label: string; error?: string; chil
     </div>
 )
 
-const FORM_FIELDS = Object.keys(createUserSchema.shape)
-
 export default function CreateUserModal({ open, onClose }: Props) {
     const { message } = App.useApp()
     const qc = useQueryClient()
     const roles = useRoles()
     const departments = useDepartments()
 
-    const { control, handleSubmit, reset, setError, formState: { errors } } = useForm<CreateUserForm>({
+    const { control, handleSubmit, reset, formState: { errors } } = useForm<CreateUserForm>({
         resolver: zodResolver(createUserSchema),
-        mode: 'onBlur',
         defaultValues: {
             staffCode: '', username: '', fullName: '', password: '',
             email: '', phoneNumber: '', roleIds: [],
@@ -39,16 +35,15 @@ export default function CreateUserModal({ open, onClose }: Props) {
 
     const create = useMutation({
         mutationFn: usersApi.create,
-        onSuccess: async (u) => {
-            // Làm mới danh sách + thẻ thống kê TRƯỚC, rồi mới báo và đóng modal
-            await qc.invalidateQueries({ queryKey: ['users'] })
-            message.success(`Đã tạo người dùng ${u?.fullName ?? ''}`.trim())
+        onSuccess: () => {
+            message.success('Đã tạo người dùng')
+            qc.invalidateQueries({ queryKey: ['users'] })
             close()
         },
-        onError: (err) => {
-            const { message: msg, fieldErrors } = parseApiError(err)
-            const applied = applyServerErrors(fieldErrors, setError, FORM_FIELDS)
-            message.error(applied ? 'Vui lòng kiểm tra lại các trường được đánh dấu' : msg)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onError: (err: any) => {
+            const d = err?.response?.data
+            message.error(d?.message ?? d?.title ?? 'Không thể tạo người dùng, vui lòng thử lại')
         },
     })
 
@@ -82,7 +77,7 @@ export default function CreateUserModal({ open, onClose }: Props) {
                 <div className="um-form__row">
                     <Field label="Mã nhân viên" error={errors.staffCode?.message}>
                         <Controller name="staffCode" control={control} render={({ field }) => (
-                            <Input {...field} placeholder="NV12345" status={errors.staffCode ? 'error' : ''} />
+                            <Input {...field} placeholder="175-01245" status={errors.staffCode ? 'error' : ''} />
                         )} />
                     </Field>
                     <Field label="Tên đăng nhập" error={errors.username?.message}>
@@ -132,9 +127,7 @@ export default function CreateUserModal({ open, onClose }: Props) {
                             placeholder="Chọn vai trò"
                             loading={roles.isLoading}
                             status={errors.roleIds ? 'error' : ''}
-                            options={roles.data
-                                ?.filter((r) => r.isActive)
-                                .map((r) => ({ value: r.id, label: `${r.code} · ${r.name}` }))}
+                            options={roles.data?.map((r) => ({ value: r.id, label: `${r.code} · ${r.name}` }))}
                         />
                     )} />
                 </Field>
