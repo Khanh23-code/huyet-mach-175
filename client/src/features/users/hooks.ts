@@ -28,7 +28,7 @@ export const useUserCount = (filters: Pick<UserQuery, 'isActive' | 'roleCode'> =
     })
 
 export const useRoles = () =>
-    useQuery({ queryKey: ['roles'], queryFn: referenceApi.roles, staleTime: Infinity })
+    useQuery({ queryKey: ['roles'], queryFn: referenceApi.roles, staleTime: 5 * 60 * 1000 })
 
 export const useDepartments = () =>
-    useQuery({ queryKey: ['departments'], queryFn: referenceApi.departments, staleTime: Infinity })
+    useQuery({ queryKey: ['departments'], queryFn: referenceApi.departments, staleTime: 5 * 60 * 1000 })

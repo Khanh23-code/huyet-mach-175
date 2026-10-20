@@ -44,4 +44,5 @@ export interface RoleOption {
     id: number
     code: RoleCode
     name: string
+    isActive: boolean
 }
