@@ -19,14 +19,36 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        policy.WithOrigins(
+                "http://localhost:5173", 
+                "http://localhost:5174", 
+                "http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(o =>
+    {
+        // Lỗi validate DataAnnotations trả cùng format { message, errors } với HttpException
+        o.InvalidModelStateResponseFactory = ctx =>
+        {
+            var errors = ctx.ModelState
+                .Where(e => e.Key.Length > 0 && e.Value?.Errors.Count > 0)
+                .GroupBy(e => char.ToLowerInvariant(e.Key[0]) + e.Key[1..].Split('[')[0])
+                .ToDictionary(g => g.Key, g => g.First().Value!.Errors[0].ErrorMessage);
+
+            return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(new
+            {
+                statusCode = 400,
+                message = "Dữ liệu không hợp lệ",
+                errors,
+                timestamp = DateTime.UtcNow
+            });
+        };
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi(options =>
 {
