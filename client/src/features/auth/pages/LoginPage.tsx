@@ -91,7 +91,7 @@ export default function LoginPage() {
                     <h2>Chào mừng trở lại</h2>
                     <p className="login__sub">Sử dụng tài khoản nhân viên bệnh viện để tiếp tục.</p>
 
-                    <label className="login__label">Mã nhân viên</label>
+                    <label className="login__label">Tên đăng nhập</label>
                     <Controller
                         name="username"
                         control={control}
@@ -99,7 +99,7 @@ export default function LoginPage() {
                             <Input
                                 {...field}
                                 size="large"
-                                placeholder="Ví dụ: 175-01245"
+                                placeholder="Nhập tên đăng nhập"
                                 status={errors.username ? 'error' : ''}
                             />
                         )}
