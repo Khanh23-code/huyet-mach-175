@@ -23,13 +23,13 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [HttpPost("login")]
         [EndpointSummary("Đăng nhập hệ thống")]
         [EndpointDescription(
-            "Xác thực tài khoản người dùng bằng tên đăng nhập (Username) và mật khẩu (Password).\n\n" +
+            "Xác thực tài khoản người dùng bằng tên đăng nhập (Username) hoặc mã nhân viên (StaffCode) và mật khẩu (Password).\n\n" +
             "Nếu thành công, trả về JWT Access Token (dùng để xác thực các request tiếp theo), Refresh Token (dùng để làm mới Access Token) và thông tin chi tiết hồ sơ người dùng kèm danh sách quyền hạn.\n\n" +
             "**Yêu cầu quyền truy cập:** Công khai (Public / Không yêu cầu đăng nhập).\n\n" +
             "**HTTP Response:**" +
             "\n- 200 OK: Đăng nhập thành công, trả về Access Token, Refresh Token và thông tin người dùng." +
             "\n- 400 Bad Request: Dữ liệu gửi lên không đúng định dạng hoặc thiếu các trường bắt buộc." +
-            "\n- 401 Unauthorized: Tên đăng nhập hoặc mật khẩu không chính xác, hoặc tài khoản đã bị vô hiệu hóa.")]
+            "\n- 401 Unauthorized: Tên đăng nhập / mã nhân viên hoặc mật khẩu không chính xác, hoặc tài khoản đã bị vô hiệu hóa.")]
         [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
