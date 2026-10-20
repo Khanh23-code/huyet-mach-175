@@ -65,7 +65,6 @@ namespace HuyetMach175.Modules.Auth.Services
 
         public async Task<RoleDto> CreateRoleAsync(CreateRoleRequest request)
         {
-            // Định dạng, độ dài đã được DataAnnotations trên CreateRoleRequest kiểm tra
             string roleCode = request.RoleCode.Trim().ToUpperInvariant();
             string roleName = request.RoleName.Trim();
 
@@ -125,7 +124,6 @@ namespace HuyetMach175.Modules.Auth.Services
                     new Dictionary<string, string> { ["roleName"] = "Tên vai trò tối đa 50 ký tự" });
             }
 
-            // Loại trừ chính role đang sửa
             if (await _context.Roles.AnyAsync(r => r.RoleId != roleId && r.RoleName.ToLower() == newName.ToLower()))
             {
                 throw new HttpException(409, "Dữ liệu bị trùng với vai trò khác",
@@ -270,7 +268,6 @@ namespace HuyetMach175.Modules.Auth.Services
                 throw new HttpException(400, "Dữ liệu gửi lên không hợp lệ.");
             }
 
-            // Định dạng ModuleCode, độ dài tên đã được DataAnnotations kiểm tra
             string moduleCode = request.ModuleCode.Trim().ToUpperInvariant();
 
             if (!Enum.TryParse<PermissionAction>(request.ActionType.Trim(), true, out var action) ||
