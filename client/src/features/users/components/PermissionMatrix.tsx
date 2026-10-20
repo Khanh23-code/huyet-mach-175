@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Alert, App, Button, Checkbox, Input, Tooltip } from 'antd'
-import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
+import { ArrowRightOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons'
 
 import { ACTIONS, ROLE_META } from '@/config/rbac'
 import { MODULE_LABEL_OVERRIDES, resolvePreset } from '@/config/permissionDefaults'
@@ -71,7 +71,11 @@ const buildColumns = (permissions: PermissionDto[]): ActionColumn[] => {
 const sameSet = (a: Set<number>, b: Set<number>) =>
     a.size === b.size && [...a].every((id) => b.has(id))
 
-export default function PermissionMatrix() {
+interface PermissionMatrixProps {
+    onNavigateToUsers?: (roleCode: RoleCode) => void
+}
+
+export default function PermissionMatrix({ onNavigateToUsers }: PermissionMatrixProps = {}) {
     const { message, modal } = App.useApp()
 
     const [roleId, setRoleId] = useState<number>()
@@ -228,9 +232,20 @@ export default function PermissionMatrix() {
                         <h3 className="um-panel__title-lg">
                             Chi tiết quyền hạn của vai trò: {roleLabel}
                         </h3>
-                        <span className="um-pill">
-                            {data?.usersCount ?? '–'} tài khoản được gán vai trò này
-                        </span>
+                        <Tooltip title={selectedRole ? `Xem danh sách tài khoản thuộc vai trò ${roleLabel}` : undefined}>
+                            <button
+                                type="button"
+                                className="um-pill um-pill--btn"
+                                onClick={() => {
+                                    if (selectedRole?.code) {
+                                        onNavigateToUsers?.(selectedRole.code as RoleCode)
+                                    }
+                                }}
+                            >
+                                <span>{data?.usersCount ?? '–'} tài khoản được gán vai trò này</span>
+                                <ArrowRightOutlined style={{ fontSize: 11 }} />
+                            </button>
+                        </Tooltip>
                     </div>
 
                     <Input

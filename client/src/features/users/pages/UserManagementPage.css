@@ -71,6 +71,38 @@
 .um-eyebrow { color: var(--um-green); font-weight: 700; letter-spacing: 1.5px; font-size: 13px; text-transform: uppercase; }
 .um-pill { display: inline-block; padding: 6px 14px; border-radius: 999px; background: #e6eefc; color: #1d4ed8; font-weight: 600; font-size: 14px; }
 
+button.um-pill,
+.um-pill--btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: #e6eefc;
+    color: #1d4ed8;
+    font-weight: 600;
+    font-size: 13px;
+    border: 1px solid #c7d9f9;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+button.um-pill:hover,
+.um-pill--btn:hover {
+    background: #d8e5fa;
+    border-color: #93b7f5;
+    color: #1e40af;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(29, 78, 216, 0.15);
+}
+
+button.um-pill:active,
+.um-pill--btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
 .um-matrix-wrap { overflow-x: auto; }
 .um-matrix { width: 100%; border-collapse: collapse; min-width: 880px; }
 .um-matrix th { text-align: left; padding: 16px 24px; font-size: 12px; letter-spacing: .5px; color: var(--um-muted); background: #f6f9f6; border-bottom: 1px solid var(--um-border); }
