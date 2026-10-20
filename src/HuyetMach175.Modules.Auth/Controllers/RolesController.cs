@@ -22,6 +22,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "SYS,MGT")]
         public async Task<IActionResult> GetRolesAsync()
         {
             var roles = await _rolesService.GetRolesAsync();
