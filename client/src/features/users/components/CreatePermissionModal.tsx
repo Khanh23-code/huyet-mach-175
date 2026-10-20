@@ -112,6 +112,7 @@ export default function CreatePermissionModal({ open, onClose, permissions, role
                     <Controller name="moduleCode" control={control} render={({ field }) => (
                         <AutoComplete
                             {...field}
+                            style={{ width: '100%' }}
                             placeholder="VD: INVENTORY"
                             status={errors.moduleCode ? 'error' : ''}
                             options={modules.map((m) => ({ value: m.code, label: `${m.code} – ${m.name}` }))}
