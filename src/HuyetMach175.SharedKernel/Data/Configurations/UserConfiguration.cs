@@ -11,7 +11,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(u => u.Username).IsUnique();
         builder.HasIndex(u => u.StaffCode).IsUnique();
 
-        // PostgreSQL cho phép nhiều giá trị NULL trong unique index nên không cần HasFilter.
         builder.HasIndex(u => u.Email).IsUnique();
         builder.HasIndex(u => u.PhoneNumber).IsUnique();
     }

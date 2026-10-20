@@ -145,7 +145,6 @@ namespace HuyetMach175.Modules.Auth.Services
             if (await others.AnyAsync(u => u.StaffCode == staffCode))
                 errors["staffCode"] = "Mã nhân viên đã tồn tại";
 
-            // So sánh email không phân biệt hoa thường (dữ liệu cũ có thể còn chữ hoa)
             if (email != null && await others.AnyAsync(u => u.Email != null && u.Email.ToLower() == email))
                 errors["email"] = "Email đã được sử dụng";
 
@@ -244,7 +243,6 @@ namespace HuyetMach175.Modules.Auth.Services
             string? email = NormalizeOptional(request.Email)?.ToLowerInvariant();
             string? phone = NormalizeOptional(request.PhoneNumber);
 
-            // excludeUserId: loại trừ chính user này để không báo trùng với bản thân
             await EnsureUniqueAsync(user.Username, user.StaffCode, email, phone, excludeUserId: userId);
 
             user.FullName = request.FullName.Trim();
