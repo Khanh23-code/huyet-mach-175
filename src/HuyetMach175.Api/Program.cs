@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using HuyetMach175.Api.Data;
 using HuyetMach175.SharedKernel.Authorization;
@@ -69,6 +70,23 @@ builder.Services.AddOpenApi(options =>
         }
         return Task.CompletedTask;
     });
+
+    options.AddOperationTransformer((operation, context, cancellationToken) =>
+    {
+        var metadata = context.Description.ActionDescriptor.EndpointMetadata;
+        var hasAuthorize = metadata.OfType<IAuthorizeData>().Any();
+        var allowAnonymous = metadata.OfType<IAllowAnonymous>().Any();
+
+        if (hasAuthorize && !allowAnonymous)
+        {
+            operation.Security ??= new List<OpenApiSecurityRequirement>();
+            var req = new OpenApiSecurityRequirement();
+            var schemeRef = new OpenApiSecuritySchemeReference("Bearer");
+            req.Add(schemeRef, new List<string>());
+            operation.Security.Add(req);
+        }
+        return Task.CompletedTask;
+    });
 });
 
 builder.Services.AddExceptionHandler<HuyetMach175.SharedKernel.Middlewares.GlobalExceptionHandler>();
@@ -83,7 +101,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference(options =>
     {
-        options.WithTitle("API Documentation")
+        options.WithTitle("Huyết Mạch 175 - API Documentation")
                .WithTheme(ScalarTheme.Purple)
                .WithDefaultHttpClient(ScalarTarget.JavaScript, ScalarClient.Axios);
     });

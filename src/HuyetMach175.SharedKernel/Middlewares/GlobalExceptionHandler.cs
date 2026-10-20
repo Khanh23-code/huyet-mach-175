@@ -33,7 +33,6 @@ public class GlobalExceptionHandler : IExceptionHandler
         }
         else if (exception is DbUpdateException dbEx && IsUniqueViolation(dbEx))
         {
-            // Race condition: 2 request cùng lúc vượt qua bước kiểm tra trùng
             statusCode = StatusCodes.Status409Conflict;
             message = "Dữ liệu đã tồn tại trong hệ thống (trùng tên đăng nhập, mã nhân viên, email hoặc số điện thoại).";
             _logger.LogWarning(exception, "Unique constraint violation");
@@ -60,7 +59,6 @@ public class GlobalExceptionHandler : IExceptionHandler
         return true;
     }
 
-    /// <summary>PostgreSQL báo lỗi trùng unique bằng SqlState 23505.</summary>
     private static bool IsUniqueViolation(DbUpdateException ex)
     {
         var inner = ex.InnerException;
