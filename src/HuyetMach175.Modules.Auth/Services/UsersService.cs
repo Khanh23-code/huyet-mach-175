@@ -58,7 +58,7 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (!string.IsNullOrWhiteSpace(filter.RoleCode))
             {
-                query = query.Where(u => u.UserRoles.Any(ur => ur.Role!.RoleCode.ToString() == filter.RoleCode));
+                query = query.Where(u => u.UserRoles.Any(ur => ur.Role != null && ur.Role.RoleCode == filter.RoleCode.Trim()));
             }
 
             if (filter.IsActive.HasValue)
