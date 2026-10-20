@@ -329,6 +329,123 @@ namespace HuyetMach175.Modules.Auth.Services
             };
         }
 
+        public async Task<CreatePermissionsResultDto> CreatePermissionsAsync(CreatePermissionsRequest request)
+        {
+            if (request == null || request.Actions == null || request.Actions.Count == 0)
+            {
+                throw new HttpException(400, "Vui lòng chọn ít nhất một thao tác.",
+                    new Dictionary<string, string> { ["actionTypes"] = "Chọn ít nhất 1 thao tác" });
+            }
+
+            string moduleCode = request.ModuleCode.Trim().ToUpperInvariant();
+
+            // 1) Parse + kiểm tra từng thao tác, chặn trùng ngay trong request
+            var parsed = new List<(PermissionAction Action, string Name)>();
+            var seen = new HashSet<PermissionAction>();
+            foreach (var item in request.Actions)
+            {
+                if (!Enum.TryParse<PermissionAction>(item.ActionType?.Trim(), true, out var action) ||
+                    !Enum.IsDefined(typeof(PermissionAction), action))
+                {
+                    throw new HttpException(400, "Thao tác không hợp lệ.",
+                        new Dictionary<string, string> { ["actionTypes"] = "Thao tác phải là VIEW, EDIT, APPROVE hoặc CANCEL" });
+                }
+
+                if (!seen.Add(action))
+                {
+                    throw new HttpException(400, $"Thao tác '{action}' bị lặp trong yêu cầu.",
+                        new Dictionary<string, string> { ["actionTypes"] = "Thao tác bị lặp" });
+                }
+
+                parsed.Add((action, item.PermissionName.Trim()));
+            }
+
+            // 2) Thao tác nào đã tồn tại thì bỏ qua
+            var codes = parsed.Select(p => $"{moduleCode}_{p.Action.ToString().ToUpperInvariant()}").ToList();
+            var existingCodes = await _context.Permissions
+                .Where(p => codes.Contains(p.PermissionCode))
+                .Select(p => p.PermissionCode)
+                .ToListAsync();
+            var existingSet = existingCodes.ToHashSet();
+
+            var toCreate = parsed
+                .Where(p => !existingSet.Contains($"{moduleCode}_{p.Action.ToString().ToUpperInvariant()}"))
+                .ToList();
+
+            var skipped = parsed
+                .Where(p => existingSet.Contains($"{moduleCode}_{p.Action.ToString().ToUpperInvariant()}"))
+                .Select(p => p.Action.ToString().ToUpperInvariant())
+                .ToList();
+
+            if (toCreate.Count == 0)
+            {
+                throw new HttpException(409, "Tất cả thao tác được chọn đã tồn tại trong phân hệ này.",
+                    new Dictionary<string, string> { ["actionTypes"] = "Phân hệ này đã có các thao tác đó" });
+            }
+
+            // 3) Tên module: module cũ kế thừa, module mới bắt buộc nhập
+            var existingModule = await _context.Permissions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.ModuleCode == moduleCode);
+
+            string moduleName;
+            if (existingModule != null)
+            {
+                moduleName = existingModule.ModuleName;
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(request.ModuleName))
+                {
+                    throw new HttpException(400, "Module mới cần có tên hiển thị.",
+                        new Dictionary<string, string> { ["moduleName"] = "Module mới cần có tên hiển thị" });
+                }
+                moduleName = request.ModuleName.Trim();
+            }
+
+            string? description = string.IsNullOrWhiteSpace(request.Description)
+                ? existingModule?.Description
+                : request.Description.Trim();
+
+            var entities = toCreate.Select(p => new Permission
+            {
+                ModuleCode = moduleCode,
+                ModuleName = moduleName,
+                ActionType = p.Action,
+                PermissionCode = $"{moduleCode}_{p.Action.ToString().ToUpperInvariant()}",
+                PermissionName = p.Name,
+                Description = description
+            }).ToList();
+
+            // 4) Một SaveChanges duy nhất = một transaction: hoặc tạo hết, hoặc không tạo gì
+            _context.Permissions.AddRange(entities);
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // Có người khác vừa tạo trùng mã quyền giữa lúc kiểm tra và lúc lưu (unique index)
+                throw new HttpException(409, "Có quyền vừa được tạo bởi người khác. Vui lòng tải lại và thử lại.");
+            }
+
+            return new CreatePermissionsResultDto
+            {
+                Created = entities.Select(permission => new PermissionDto
+                {
+                    PermissionId = permission.PermissionId,
+                    PermissionCode = permission.PermissionCode,
+                    PermissionName = permission.PermissionName,
+                    ModuleCode = permission.ModuleCode,
+                    ModuleName = permission.ModuleName,
+                    ActionType = permission.ActionType.ToString(),
+                    Description = permission.Description,
+                    IsAssigned = false
+                }).ToList(),
+                Skipped = skipped
+            };
+        }
+
         public async Task<RolePermissionsDto> UpdateRolePermissionsAsync(int roleId, UpdateRolePermissionsRequest request)
         {
             var role = await _context.Roles
