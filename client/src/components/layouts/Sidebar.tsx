@@ -43,7 +43,7 @@ export default function Sidebar() {
 
     return (
         <Layout.Sider
-            width={240}
+            width={280}
             theme="light"
             style={{
                 position: 'sticky',
@@ -81,7 +81,6 @@ export default function Sidebar() {
                                     aria-controls={panelId}
                                     onClick={() => toggle(group.key)}
                                 >
-                                    <span className="sider__code">{group.code}</span>
                                     <span className="sider__group-icon">{group.icon}</span>
                                     <span className="sider__group-label">{group.label}</span>
                                     <RightOutlined className={cx('sider__chevron', open && 'is-open')} />

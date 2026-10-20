@@ -159,7 +159,6 @@ export default function LoginPage() {
                         <InfoCircleOutlined /> Hệ thống chỉ truy cập được trong mạng nội bộ bệnh viện.
                     </div>
 
-                    <p className="login__help">Cần hỗ trợ? Liên hệ Trung tâm CNTT · Máy lẻ 115</p>
                 </form>
             </section>
         </div>
