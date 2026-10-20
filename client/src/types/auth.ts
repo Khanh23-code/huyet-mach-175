@@ -1,5 +1,6 @@
-﻿export interface LoginRequest {
-    username: string
+export interface LoginRequest {
+    username?: string
+    staffCode?: string
     password: string
 }
 

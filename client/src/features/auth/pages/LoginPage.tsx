@@ -1,4 +1,4 @@
-﻿import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { Button, Input, Checkbox, message } from 'antd'
@@ -34,7 +34,7 @@ export default function LoginPage() {
             const status = err?.response?.status
             message.error(
                 status === 401 || status === 400
-                    ? 'Mã nhân viên hoặc mật khẩu không đúng'
+                    ? 'Tên đăng nhập / Mã nhân viên hoặc mật khẩu không chính xác'
                     : 'Không thể kết nối máy chủ, vui lòng thử lại'
             )
         },
@@ -84,14 +84,18 @@ export default function LoginPage() {
                 <form
                     className="login__card"
                     onSubmit={handleSubmit((v) =>
-                        loginMutation.mutate({ username: v.username, password: v.password })
+                        loginMutation.mutate({
+                            username: v.username.trim(),
+                            staffCode: v.username.trim(),
+                            password: v.password,
+                        })
                     )}
                 >
                     <div className="login__eyebrow">ĐĂNG NHẬP</div>
                     <h2>Chào mừng trở lại</h2>
                     <p className="login__sub">Sử dụng tài khoản nhân viên bệnh viện để tiếp tục.</p>
 
-                    <label className="login__label">Mã nhân viên</label>
+                    <label className="login__label">Tên đăng nhập hoặc Mã nhân viên</label>
                     <Controller
                         name="username"
                         control={control}
@@ -99,7 +103,7 @@ export default function LoginPage() {
                             <Input
                                 {...field}
                                 size="large"
-                                placeholder="Ví dụ: 175-01245"
+                                placeholder="Nhập tên đăng nhập hoặc mã nhân viên (VD: admin, NV00001)"
                                 status={errors.username ? 'error' : ''}
                             />
                         )}

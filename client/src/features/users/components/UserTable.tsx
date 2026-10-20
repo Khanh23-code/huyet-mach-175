@@ -21,14 +21,14 @@ export default function UserTable() {
     const me = useAuthStore((s) => s.user) as { id?: string | number; username?: string } | null
 
     const [keyword, setKeyword] = useState('')
-    const [roleCode, setRoleCode] = useState<RoleCode | undefined>()
+    const [roleCodes, setRoleCodes] = useState<RoleCode[]>([])
     const [page, setPage] = useState(1)
     const debounced = useDebounce(keyword)
     const rolesQuery = useRoles()
 
     const { data, isLoading, isFetching, isError } = useUsers({
         keyword: debounced || undefined,
-        roleCode,
+        roleCodes: roleCodes.length > 0 ? roleCodes : undefined,
         pageNumber: page,
         pageSize: PAGE_SIZE,
     })
@@ -66,9 +66,9 @@ export default function UserTable() {
                 <div className="um-roles">
                     {roles.map((r) => (
                         <span className="um-role" key={r}>
-              <b className={`um-role__code um-role__code--${r}`}>{r}</b>
-              <small>{ROLE_META[r]?.label ?? r}</small>
-            </span>
+                            <b className={`um-role__code um-role__code--${r}`}>{r}</b>
+                            <small>{ROLE_META[r]?.label ?? r}</small>
+                        </span>
                     ))}
                 </div>
             ),
@@ -78,8 +78,8 @@ export default function UserTable() {
             dataIndex: 'isActive',
             render: (a: boolean) => (
                 <span className={`um-status ${a ? 'um-status--on' : 'um-status--off'}`}>
-          <i /> {a ? 'Active' : 'Locked'}
-        </span>
+                    <i /> {a ? 'Active' : 'Locked'}
+                </span>
             ),
         },
         {
@@ -131,11 +131,13 @@ export default function UserTable() {
                         onChange={(e) => { setKeyword(e.target.value); setPage(1) }}
                     />
                     <Select
+                        mode="multiple"
                         allowClear
-                        placeholder="Tất cả vai trò"
-                        style={{ minWidth: 170 }}
-                        value={roleCode}
-                        onChange={(v) => { setRoleCode(v); setPage(1) }}
+                        placeholder="Lọc theo vai trò"
+                        style={{ minWidth: 200, maxWidth: 360 }}
+                        maxTagCount="responsive"
+                        value={roleCodes}
+                        onChange={(v) => { setRoleCodes(v); setPage(1) }}
                         options={rolesQuery.data?.map((r) => ({ value: r.code, label: `${r.code} · ${r.name}` }))}
                     />
                 </div>

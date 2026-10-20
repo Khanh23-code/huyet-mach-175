@@ -19,6 +19,7 @@ export interface UserQuery {
     keyword?: string
     departmentId?: number
     roleCode?: RoleCode
+    roleCodes?: RoleCode[]
     isActive?: boolean
     pageNumber: number
     pageSize: number

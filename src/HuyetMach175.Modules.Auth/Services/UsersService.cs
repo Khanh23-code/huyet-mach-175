@@ -56,9 +56,34 @@ namespace HuyetMach175.Modules.Auth.Services
                 query = query.Where(u => u.DepartmentId == filter.DepartmentId.Value);
             }
 
+            var targetRoles = new List<string>();
+            if (filter.RoleCodes != null && filter.RoleCodes.Count > 0)
+            {
+                foreach (var rc in filter.RoleCodes)
+                {
+                    if (!string.IsNullOrWhiteSpace(rc))
+                    {
+                        var parts = rc.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                        foreach (var part in parts)
+                        {
+                            if (!targetRoles.Contains(part, StringComparer.OrdinalIgnoreCase))
+                                targetRoles.Add(part.ToUpperInvariant());
+                        }
+                    }
+                }
+            }
             if (!string.IsNullOrWhiteSpace(filter.RoleCode))
             {
-                query = query.Where(u => u.UserRoles.Any(ur => ur.Role!.RoleCode.ToString() == filter.RoleCode));
+                var parts = filter.RoleCode.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                foreach (var part in parts)
+                {
+                    if (!targetRoles.Contains(part, StringComparer.OrdinalIgnoreCase))
+                        targetRoles.Add(part.ToUpperInvariant());
+                }
+            }
+            if (targetRoles.Count > 0)
+            {
+                query = query.Where(u => u.UserRoles.Any(ur => ur.Role != null && targetRoles.Contains(ur.Role.RoleCode)));
             }
 
             if (filter.IsActive.HasValue)

@@ -22,9 +22,16 @@ const normalizeUser = (raw: any): UserItem => ({
 export const usersApi = {
     list: async (q: UserQuery): Promise<PagedResult<UserItem>> => {
         const params = Object.fromEntries(
-            Object.entries(q).filter(([, v]) => v !== undefined && v !== ''),
+            Object.entries(q).filter(
+                ([, v]) => v !== undefined && v !== '' && (!Array.isArray(v) || v.length > 0),
+            ),
         )
-        const { data } = await axiosClient.get('/api/users', { params })
+        const { data } = await axiosClient.get('/api/users', {
+            params,
+            paramsSerializer: {
+                indexes: null,
+            },
+        })
         const rawItems = Array.isArray(data) ? data : (data.items ?? data.data ?? data.results ?? [])
         return {
             items: rawItems.map(normalizeUser),
