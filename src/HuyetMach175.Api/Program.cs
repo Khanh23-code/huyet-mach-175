@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using HuyetMach175.Api.Data;
+using HuyetMach175.SharedKernel.Authorization;
 using HuyetMach175.SharedKernel.Services;
 
 using HuyetMach175.Modules.Auth;
@@ -14,6 +15,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddAuthModule(builder.Configuration);
+builder.Services.AddPermissionAuthorization();
 
 builder.Services.AddCors(options =>
 {
