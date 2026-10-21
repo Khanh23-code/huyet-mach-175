@@ -1,0 +1,12 @@
+**/.git
+**/.github
+**/.vs
+**/.vscode
+**/bin
+**/obj
+**/client
+**/node_modules
+**/database
+README.md
+docker-compose.yml
+*.PublishSettings
