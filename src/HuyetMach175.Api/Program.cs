@@ -22,10 +22,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:5173", 
-                "http://localhost:5174", 
-                "http://localhost:3000")
+        policy.SetIsOriginAllowed(origin => true) // Hỗ trợ cả localhost và domain frontend Cloudflare Pages
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -96,22 +93,27 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 
-if (app.Environment.IsDevelopment())
+app.MapOpenApi();
+app.MapScalarApiReference(options =>
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference(options =>
-    {
-        options.WithTitle("Huyết Mạch 175 - API Documentation")
-               .WithTheme(ScalarTheme.Purple)
-               .WithDefaultHttpClient(ScalarTarget.JavaScript, ScalarClient.Axios);
-    });
+    options.WithTitle("Huyết Mạch 175 - API Documentation")
+           .WithTheme(ScalarTheme.Purple)
+           .WithDefaultHttpClient(ScalarTarget.JavaScript, ScalarClient.Axios);
+});
 
+try
+{
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
 
     await dbContext.Database.MigrateAsync();
     await DbInitializer.SeedAsync(dbContext, passwordHasher);
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "Lỗi xảy ra trong quá trình Migrate hoặc Seed Database.");
 }
 
 app.UseHttpsRedirection();
