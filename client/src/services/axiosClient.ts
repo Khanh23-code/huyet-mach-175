@@ -1,9 +1,9 @@
-﻿import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { message } from 'antd'
 import { useAuthStore } from '@/features/auth/authStore'
 
 export const axiosClient = axios.create({
-    baseURL: 'http://localhost:5208',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5208',
     headers: {
         'Content-Type': 'application/json',
     },
