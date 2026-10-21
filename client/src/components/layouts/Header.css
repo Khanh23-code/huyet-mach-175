@@ -1,0 +1,305 @@
+﻿.app-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    height: var(--header-h);
+    padding: 0 24px 0 16px;
+    background: var(--c-surface);
+    border-bottom: 1px solid var(--c-border);
+    font-family: var(--font-sans);
+}
+
+/* ---------- Brand ---------- */
+.app-header__brand {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 12px;
+    width: calc(var(--sider-w) - 16px);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+}
+
+.app-header__logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background: var(--c-primary);
+    color: var(--c-on-primary);
+}
+
+.app-header__brand-text {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--c-text);
+    white-space: nowrap;
+}
+
+/* ---------- Search ---------- */
+.app-header__search {
+    position: relative;
+    flex: 1;
+    max-width: 640px;
+    min-width: 0;
+    margin: 0;
+}
+
+.app-header__search input {
+    width: 100%;
+    height: 40px;
+    padding: 0 76px 0 42px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-md);
+    background: var(--c-bg);
+    font: inherit;
+    font-size: 14px;
+    color: var(--c-text);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+    appearance: none;
+}
+
+.app-header__search input::placeholder {
+    color: var(--c-text-muted);
+}
+
+.app-header__search input:focus {
+    border-color: var(--c-primary);
+    background: var(--c-surface);
+    box-shadow: 0 0 0 3px var(--c-primary-soft);
+}
+
+.app-header__search input::-webkit-search-cancel-button {
+    display: none;
+}
+
+.app-header__search-icon {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    font-size: 15px;
+    color: var(--c-text-muted);
+    pointer-events: none;
+}
+
+.app-header__kbd {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    padding: 2px 7px;
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    background: var(--c-surface);
+    font-family: inherit;
+    font-size: 11px;
+    color: var(--c-text-muted);
+    pointer-events: none;
+}
+
+/* ---------- Actions ---------- */
+.app-header__actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.app-header__icon-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    font-size: 18px;
+    color: var(--c-text-muted);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.app-header__icon-btn:hover {
+    background: var(--c-bg);
+    color: var(--c-text);
+}
+
+.app-header__bell-dot {
+    position: absolute;
+    top: 8px;
+    right: 9px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--c-danger);
+    box-shadow: 0 0 0 2px var(--c-surface);
+}
+
+/* Pill HIS/LIS */
+.app-header__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: var(--radius-pill);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.app-header__pill-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.app-header__pill.is-online {
+    background: var(--c-primary-soft);
+    color: var(--c-primary);
+}
+
+.app-header__pill.is-offline {
+    background: var(--c-danger-soft);
+    color: var(--c-danger);
+}
+
+.app-header__divider {
+    width: 1px;
+    height: 32px;
+    margin: 0 8px;
+    background: var(--c-border);
+}
+
+/* ---------- User ---------- */
+.app-header__user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 8px 4px 4px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.app-header__user:hover {
+    background: var(--c-bg);
+}
+
+.app-header__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--c-primary);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--c-on-primary);
+}
+
+.app-header__user-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.app-header__user-name {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--c-text);
+    white-space: nowrap;
+}
+
+.app-header__user-role {
+    font-size: 12px;
+    line-height: 1.2;
+    color: var(--c-text-muted);
+    white-space: nowrap;
+}
+
+.app-header__user-chevron {
+    font-size: 11px;
+    color: var(--c-text-muted);
+}
+
+/* Skeleton khi đang tải tên từ API */
+.app-header__skeleton {
+    display: block;
+    height: 12px;
+    border-radius: 6px;
+    background: var(--c-border);
+    animation: app-header-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes app-header-pulse {
+    50% {
+        opacity: 0.45;
+    }
+}
+
+/* ---------- Focus & a11y ---------- */
+.app-header__brand:focus-visible,
+.app-header__icon-btn:focus-visible,
+.app-header__user:focus-visible {
+    outline: 2px solid var(--c-primary);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-header__skeleton {
+        animation: none;
+    }
+    .app-header__search input,
+    .app-header__icon-btn,
+    .app-header__user {
+        transition: none;
+    }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+    .app-header__kbd {
+        display: none;
+    }
+    .app-header__search input {
+        padding-right: 14px;
+    }
+}
+
+@media (max-width: 900px) {
+    .app-header {
+        gap: 12px;
+    }
+    .app-header__brand {
+        width: auto;
+    }
+    .app-header__brand-text,
+    .app-header__user-text,
+    .app-header__user-chevron {
+        display: none;
+    }
+}

@@ -1,0 +1,453 @@
+// ========================================================
+// HỆ THỐNG QUẢN LÝ NGÂN HÀNG MÁU HUYẾT MẠCH 175
+// ĐẦY ĐỦ ENUMS & KIỂU DỮ LIỆU CHUẨN ĐỐI CHIẾU SPECIFICATION
+// ========================================================
+
+// --------------------------------------------------------
+// KHAI BÁO CÁC DANH MỤC ENUM (ENUM DEFINITIONS)
+// --------------------------------------------------------
+
+Enum RoleCode {
+  DON
+  REC
+  BBNK
+  CLIN
+  MGT
+  SYS
+}
+
+Enum CampaignStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+Enum BloodType {
+  A
+  B
+  AB
+  O
+}
+
+Enum RhFactor {
+  POSITIVE
+  NEGATIVE
+}
+
+Enum AppointmentStatus {
+  BOOKED
+  CHECKED_IN
+  CANCELLED
+  NO_SHOW
+}
+
+Enum ScreeningStatus {
+  QUALIFIED
+  DEFERRED
+  UNQUALIFIED
+}
+
+Enum TargetVolume {
+  VOL_250 [note: '250 ml']
+  VOL_350 [note: '350 ml']
+  VOL_450 [note: '450 ml']
+}
+
+Enum SessionStatus {
+  PENDING
+  QUALIFIED
+  ABORTED
+  COMPLETED
+  REFERRED
+}
+
+Enum ComponentCode {
+  WB
+  PRBC
+  FFP
+  PLT
+}
+
+Enum BagStatus {
+  NEWLY_COLLECTED
+  READY_TESTING
+  TESTED_PASSED
+  AVAILABLE
+  LOCKED
+  RESERVED
+  ISSUED
+  TRANSFUSED
+  DISCARDED
+}
+
+Enum TestResult {
+  NEGATIVE
+  POSITIVE
+}
+
+Enum OverallConclusion {
+  PASSED
+  FAILED
+}
+
+Enum UrgencyLevel {
+  ROUTINE
+  URGENT
+}
+
+Enum RequestStatus {
+  PENDING
+  REJECTED
+  READY
+  COMPLETED
+}
+
+Enum AllocationStatus {
+  RESERVED
+  ISSUED
+  COMPLETED
+  RETURNED
+}
+
+Enum ReturnFinalAction {
+  RESTOCK
+  DISCARD
+}
+
+Enum ActionType {
+  INSERT
+  UPDATE
+  DELETE
+  STATUS_CHANGE
+}
+
+Enum NotificationType {
+  INFO
+  WARNING
+  URGENT_REQUEST
+  RECALL
+}
+
+Enum NotificationReferenceType {
+  BLOOD_REQUEST
+  BLOOD_BAG
+  DONATION_SESSION
+}
+
+// --------------------------------------------------------
+// NHÓM A: NGƯỜI DÙNG, ĐỊNH DANH & PHÂN QUYỀN (AUTH & RBAC)
+// --------------------------------------------------------
+
+Table departments {
+  department_id int [pk, increment]
+  department_code varchar(20) [unique, not null]
+  department_name varchar(100) [not null]
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table roles {
+  role_id int [pk, increment]
+  role_code RoleCode [unique, not null]
+  role_name varchar(50) [not null]
+  description varchar(255) [null]
+}
+
+Table users {
+  user_id int [pk, increment]
+  department_id int [not null]
+  username varchar(50) [unique, not null]
+  password_hash varchar(255) [not null]
+  full_name varchar(100) [not null]
+  phone_number varchar(15) [null]
+  email varchar(100) [null]
+  is_active boolean [not null, default: true]
+  last_login_at datetime [null]
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table user_roles {
+  user_id int [not null]
+  role_id int [not null]
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (user_id, role_id) [pk]
+  }
+}
+
+Table permissions {
+  permission_id int [pk, increment]
+  permission_code varchar(50) [unique, not null]
+  permission_name varchar(100) [not null]
+  description varchar(255) [null]
+}
+
+Table role_permissions {
+  role_id int [not null]
+  permission_id int [not null]
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (role_id, permission_id) [pk]
+  }
+}
+
+// --------------------------------------------------------
+// NHÓM B: NGƯỜI HIẾN MÁU & PHIÊN TIẾP NHẬN (DONATION DOMAIN)
+// --------------------------------------------------------
+
+Table donation_campaigns {
+  campaign_id int [pk, increment]
+  campaign_name varchar(150) [not null]
+  location_name varchar(255) [not null]
+  start_date date [not null]
+  end_date date [not null]
+  target_donations int [not null, default: 100]
+  status CampaignStatus [not null, default: 'DRAFT']
+  created_by int [not null]
+  approved_by int [null]
+  rejection_reason varchar(255) [null]
+  approved_at timestamptz [null]
+  created_at timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table donors {
+  donor_id int [pk, increment]
+  citizen_id varchar(12) [unique, not null]
+  full_name varchar(100) [not null]
+  date_of_birth date [not null]
+  gender varchar(10) [not null]
+  phone_number varchar(15) [unique, not null]
+  email varchar(100) [null]
+  blood_type BloodType [null]
+  rh_factor RhFactor [null]
+  total_donations int [not null, default: 0]
+  last_donation_date date [null]
+}
+
+Table donation_appointments {
+  appointment_id int [pk, increment]
+  donor_id int [not null]
+  campaign_id int [null]
+  appointment_date date [not null]
+  time_slot varchar(20) [not null]
+  qr_code_token varchar(100) [unique, not null]
+  status AppointmentStatus [not null, default: 'BOOKED']
+  is_walk_in boolean [not null, default: false]
+  checked_in_at datetime [null]
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table pre_screening_surveys {
+  survey_id int [pk, increment]
+  appointment_id int [unique, not null]
+  survey_answers json [not null]
+  risk_score int [not null, default: 0]
+  has_risk boolean [not null, default: false]
+  submitted_at datetime [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table donation_sessions {
+  session_id int [pk, increment]
+  appointment_id int [unique, not null]
+  doctor_id int [not null]
+  phlebotomist_id int [null]
+  weight_kg decimal(5,2) [not null]
+  blood_pressure varchar(20) [not null]
+  hemoglobin_level decimal(4,1) [null]
+  screening_status ScreeningStatus [not null]
+  deferral_reason varchar(255) [null]
+  target_volume_ml TargetVolume [null]
+  actual_volume_ml int [null]
+  collection_incident varchar(255) [null]
+  status SessionStatus [not null, default: 'PENDING_SCREENING']
+  completed_at datetime [null]
+}
+
+// --------------------------------------------------------
+// NHÓM C: QUẢN LÝ ĐƠN VỊ MÁU & LƯU KHO (BLOOD BANK INVENTORY)
+// --------------------------------------------------------
+
+Table blood_component_types {
+  component_type_id int [pk, increment]
+  type_code ComponentCode [unique, not null]
+  type_name varchar(100) [not null]
+  life_days int [not null]
+  storage_temperature varchar(50) [not null]
+  description varchar(255) [null]
+}
+
+Table storage_locations {
+  location_id int [pk, increment]
+  refrigerator_name varchar(50) [not null]
+  shelf_number varchar(20) [not null]
+  target_temperature decimal(4,1) [not null]
+  is_full boolean [not null, default: false]
+  is_active boolean [not null, default: true]
+}
+
+Table blood_bags {
+  bag_id int [pk, increment]
+  barcode varchar(50) [unique, not null]
+  parent_bag_id int [null]
+  session_id int [null]
+  component_type_id int [not null]
+  location_id int [null]
+  blood_type BloodType [not null]
+  rh_factor RhFactor [not null]
+  volume_ml int [not null]
+  collected_at datetime [not null]
+  expired_at datetime [not null]
+  status BagStatus [not null, default: 'NEWLY_COLLECTED']
+  discard_reason varchar(255) [null]
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table blood_test_results {
+  test_id int [pk, increment]
+  bag_id int [not null]
+  technician_id int [not null]
+  hiv_result TestResult [not null]
+  hbv_result TestResult [not null]
+  hcv_result TestResult [not null]
+  syphilis_result TestResult [not null]
+  irregular_antibody TestResult [not null, default: 'NEGATIVE']
+  confirmed_blood_type BloodType [not null]
+  confirmed_rh RhFactor [not null]
+  overall_conclusion OverallConclusion [not null]
+  tested_at datetime [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+// --------------------------------------------------------
+// NHÓM D: YÊU CẦU LÂM SÀNG, GIỮ CHỖ & CẤP PHÁT (CLINICAL ALLOCATION)
+// --------------------------------------------------------
+
+Table blood_requests {
+  request_id int [pk, increment]
+  request_code varchar(30) [unique, not null]
+  doctor_id int [null]
+  patient_code varchar(50) [not null]
+  patient_name varchar(100) [not null]
+  patient_blood_type BloodType [not null]
+  patient_rh RhFactor [not null]
+  urgency_level UrgencyLevel [not null]
+  diagnosis varchar(255) [null]
+  status RequestStatus [not null, default: 'PENDING']
+  rejection_reason varchar(255) [null]
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table blood_request_items {
+  request_item_id int [pk, increment]
+  request_id int [not null]
+  component_type_id int [not null]
+  requested_units int [not null]
+  allocated_units int [not null, default: 0]
+}
+
+Table blood_allocations {
+  allocation_id int [pk, increment]
+  request_id int [not null]
+  bag_id int [not null]
+  reserved_by int [not null]
+  reserved_at datetime [not null, default: `CURRENT_TIMESTAMP`]
+  issued_by int [null]
+  received_by int [null]
+  issued_at datetime [null]
+  status AllocationStatus [not null, default: 'RESERVED']
+}
+
+Table blood_returns {
+  return_id int [pk, increment]
+  allocation_id int [unique, not null]
+  returned_by int [not null]
+  received_by int [not null]
+  return_reason varchar(255) [not null]
+  qualified boolean [not null]
+  final_action ReturnFinalAction [not null]
+  processed_at datetime [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+// --------------------------------------------------------
+// NHÓM E: GIÁM SÁT, KIỂM TOÁN & THÔNG BÁO (AUDIT & NOTIFICATION)
+// --------------------------------------------------------
+
+Table audit_logs {
+  log_id bigint [pk, increment]
+  table_name varchar(50) [not null]
+  record_id int [not null]
+  action_type ActionType [not null]
+  old_state json [null]
+  new_state json [not null]
+  performed_by int [null]
+  ip_address varchar(45) [null]
+  change_reason varchar(255) [null]
+  created_at datetime [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table notification {
+  notification_id bigint [pk, increment]
+  recipient_user_id int [null]
+  target_role_id int [null]
+  target_department_id int [null]
+  title varchar(150) [not null]
+  message text [not null]
+  type NotificationType [not null, default: 'INFO']
+  reference_type NotificationReferenceType [null]
+  reference_id int [null]
+  is_read boolean [not null, default: false]
+  read_at timestamptz [null]
+  created_at timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+// --------------------------------------------------------
+// MỐI QUAN HỆ KHÓA NGOẠI (RELATIONSHIPS & CONSTRAINTS)
+// --------------------------------------------------------
+
+// Auth & RBAC
+Ref: users.department_id > departments.department_id
+Ref: user_roles.user_id > users.user_id [delete: cascade]
+Ref: user_roles.role_id > roles.role_id [delete: cascade]
+Ref: role_permissions.role_id > roles.role_id [delete: cascade]
+Ref: role_permissions.permission_id > permissions.permission_id [delete: cascade]
+
+// Campaigns & Donation
+Ref: donation_campaigns.created_by > users.user_id
+Ref: donation_campaigns.approved_by > users.user_id
+Ref: donation_appointments.donor_id > donors.donor_id
+Ref: donation_appointments.campaign_id > donation_campaigns.campaign_id
+Ref: pre_screening_surveys.appointment_id - donation_appointments.appointment_id
+Ref: donation_sessions.appointment_id - donation_appointments.appointment_id
+Ref: donation_sessions.doctor_id > users.user_id
+Ref: donation_sessions.phlebotomist_id > users.user_id
+
+// Inventory & Testing
+Ref: blood_bags.parent_bag_id - blood_bags.bag_id
+Ref: blood_bags.session_id > donation_sessions.session_id
+Ref: blood_bags.component_type_id > blood_component_types.component_type_id
+Ref: blood_bags.location_id > storage_locations.location_id
+Ref: blood_test_results.bag_id > blood_bags.bag_id
+Ref: blood_test_results.technician_id > users.user_id
+
+// Clinical & Allocation
+Ref: blood_requests.doctor_id > users.user_id
+Ref: blood_request_items.request_id > blood_requests.request_id
+Ref: blood_request_items.component_type_id > blood_component_types.component_type_id
+Ref: blood_allocations.request_id > blood_requests.request_id
+Ref: blood_allocations.bag_id > blood_bags.bag_id
+Ref: blood_allocations.reserved_by > users.user_id
+Ref: blood_allocations.issued_by > users.user_id
+Ref: blood_allocations.received_by > users.user_id
+Ref: blood_returns.allocation_id - blood_allocations.allocation_id
+Ref: blood_returns.returned_by > users.user_id
+Ref: blood_returns.received_by > users.user_id
+
+// Audit & Notification
+Ref: audit_logs.performed_by > users.user_id
+Ref: notification.recipient_user_id > users.user_id
+Ref: notification.target_role_id > roles.role_id
+Ref: notification.target_department_id > departments.department_id
