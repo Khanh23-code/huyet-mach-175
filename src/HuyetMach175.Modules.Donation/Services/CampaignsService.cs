@@ -1,4 +1,5 @@
 using HuyetMach175.Api.Data;
+using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
 using HuyetMach175.Modules.Donation.DTOs.Campaigns;
 using HuyetMach175.Modules.Donation.DTOs.Common;
@@ -148,5 +149,47 @@ public class CampaignsService : ICampaignsService
             CompletionRate = completionRate,
             RemainingDays = remainingDays
         };
+    }
+
+    public async Task<CampaignDetailDto> CreateCampaignAsync(CreateCampaignRequest request, int userId)
+    {
+        if (request.EndDate < request.StartDate)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.");
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        if (request.StartDate < today)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Ngày bắt đầu đợt hiến máu không thể trong quá khứ.");
+        }
+
+        if (request.TargetDonations <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Chỉ tiêu thu gom phải lớn hơn 0 túi máu.");
+        }
+
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null || !user.IsActive)
+        {
+            throw new HttpException(StatusCodes.Status401Unauthorized, "Người dùng không hợp lệ hoặc đã bị vô hiệu hóa.");
+        }
+
+        var campaign = new DonationCampaign
+        {
+            CampaignName = request.CampaignName.Trim(),
+            LocationName = request.LocationName.Trim(),
+            StartDate = request.StartDate,
+            EndDate = request.EndDate,
+            TargetDonations = request.TargetDonations,
+            Status = CampaignStatus.DRAFT,
+            CreatedBy = userId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.DonationCampaigns.Add(campaign);
+        await _context.SaveChangesAsync();
+
+        return await GetCampaignByIdAsync(campaign.CampaignId);
     }
 }

@@ -2,6 +2,7 @@ using HuyetMach175.Modules.Donation.DTOs.Campaigns;
 using HuyetMach175.Modules.Donation.DTOs.Common;
 using HuyetMach175.Modules.Donation.Services;
 using HuyetMach175.SharedKernel.Authorization;
+using HuyetMach175.SharedKernel.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -71,5 +72,29 @@ public class CampaignsController : ControllerBase
     {
         var result = await _campaignsService.GetCampaignByIdAsync(id);
         return Ok(result);
+    }
+
+    [HttpPost]
+    [HasPermission("CAMPAIGN_EDIT")]
+    [EndpointSummary("Tạo mới đề xuất đợt hiến máu")]
+    [EndpointDescription(
+        "Nhân viên Ngân hàng máu (BBNK) hoặc Lãnh đạo (MGT) tạo một đề xuất đợt hiến máu mới. " +
+        "Đợt hiến máu vừa tạo sẽ mặc định ở trạng thái Bản nháp (**DRAFT**).\n\n" +
+        "Người tạo sẽ được tự động ghi nhận theo định danh của tài khoản đang đăng nhập.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **CAMPAIGN_EDIT** (vai trò BBNK hoặc MGT).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 201 Created: Tạo đề xuất đợt hiến máu thành công, trả về chi tiết đợt hiến máu vừa tạo.\n" +
+        "- 400 BadRequest: Dữ liệu gửi lên không hợp lệ (ngày kết thúc trước ngày bắt đầu, ngày bắt đầu trong quá khứ, chỉ tiêu <= 0...).\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền CAMPAIGN_EDIT.")]
+    [ProducesResponseType(typeof(CampaignDetailDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> CreateCampaign([FromBody] CreateCampaignRequest request)
+    {
+        var userId = User.GetUserId();
+        var result = await _campaignsService.CreateCampaignAsync(request, userId);
+        return CreatedAtAction(nameof(GetCampaignById), new { id = result.CampaignId }, result);
     }
 }
