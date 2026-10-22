@@ -198,7 +198,7 @@ public static class DbInitializer
             },
             ["BBNK"] = new[]
             {
-                "CAMPAIGN_VIEW", "DONORS_VIEW", "SCREENING_VIEW"
+                "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "DONORS_VIEW", "SCREENING_VIEW"
             }
         };
 
