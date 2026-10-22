@@ -37,6 +37,7 @@ public class CampaignsService : ICampaignsService
         }
 
         var query = _context.DonationCampaigns
+            .OrderByDescending(c => c.CampaignId)
             .AsNoTracking();
 
         if (filter.Status.HasValue)
@@ -63,7 +64,7 @@ public class CampaignsService : ICampaignsService
         var totalCount = await query.CountAsync();
 
         var items = await query
-            .OrderByDescending(c => c.CreatedAt)
+            .OrderBy(c => c.CampaignId)
             .Skip((filter.PageNumber - 1) * filter.PageSize)
             .Take(filter.PageSize)
             .Select(c => new CampaignListItemDto
