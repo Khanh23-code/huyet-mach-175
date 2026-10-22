@@ -624,6 +624,14 @@ namespace HuyetMach175.Api.Migrations
                         .HasColumnType("character varying(150)")
                         .HasColumnName("campaign_name");
 
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelled_at");
+
+                    b.Property<int?>("CancelledBy")
+                        .HasColumnType("integer")
+                        .HasColumnName("cancelled_by");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -663,6 +671,8 @@ namespace HuyetMach175.Api.Migrations
                     b.HasKey("CampaignId");
 
                     b.HasIndex("ApprovedBy");
+
+                    b.HasIndex("CancelledBy");
 
                     b.HasIndex("CreatedBy");
 
@@ -1399,6 +1409,11 @@ namespace HuyetMach175.Api.Migrations
                         .HasForeignKey("ApprovedBy")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("HuyetMach175.Api.Data.Entities.User", "CancelledByUser")
+                        .WithMany("CancelledCampaigns")
+                        .HasForeignKey("CancelledBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("HuyetMach175.Api.Data.Entities.User", "CreatedByUser")
                         .WithMany("CreatedCampaigns")
                         .HasForeignKey("CreatedBy")
@@ -1406,6 +1421,8 @@ namespace HuyetMach175.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("ApprovedByUser");
+
+                    b.Navigation("CancelledByUser");
 
                     b.Navigation("CreatedByUser");
                 });
@@ -1609,6 +1626,8 @@ namespace HuyetMach175.Api.Migrations
                     b.Navigation("ApprovedCampaigns");
 
                     b.Navigation("AuditLogs");
+
+                    b.Navigation("CancelledCampaigns");
 
                     b.Navigation("CreatedCampaigns");
 

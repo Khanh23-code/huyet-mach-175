@@ -46,6 +46,12 @@ public class DonationCampaign
     [Column("approved_at")]
     public DateTime? ApprovedAt { get; set; }
 
+    [Column("cancelled_by")]
+    public int? CancelledBy { get; set; }
+
+    [Column("cancelled_at")]
+    public DateTime? CancelledAt { get; set; }
+
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
@@ -54,6 +60,9 @@ public class DonationCampaign
 
     [ForeignKey(nameof(ApprovedBy))]
     public User? ApprovedByUser { get; set; }
+
+    [ForeignKey(nameof(CancelledBy))]
+    public User? CancelledByUser { get; set; }
 
     public ICollection<DonationAppointment> Appointments { get; set; } = new List<DonationAppointment>();
 }
