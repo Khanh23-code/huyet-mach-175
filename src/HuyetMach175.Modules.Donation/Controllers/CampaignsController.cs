@@ -43,4 +43,33 @@ public class CampaignsController : ControllerBase
         var result = await _campaignsService.GetCampaignsAsync(filter);
         return Ok(result);
     }
+
+    [HttpGet("{id:int}")]
+    [HasPermission("CAMPAIGN_VIEW")]
+    [EndpointSummary("Xem chi tiết đợt hiến máu và thống kê tiến độ")]
+    [EndpointDescription(
+        "Trả về thông tin chi tiết một đợt hiến máu cùng thống kê tiến độ thu gom thực tế:\n" +
+        "- Số lượng người hiến máu đã đăng ký lịch (TotalRegistered).\n" +
+        "- Số người đã có mặt điểm danh (TotalCheckedIn).\n" +
+        "- Số túi máu đã thu gom được (TotalCollected).\n" +
+        "- Tỷ lệ hoàn thành mục tiêu % (CompletionRate).\n" +
+        "- Số ngày còn lại đến khi kết thúc đợt (RemainingDays).\n" +
+        "- Thông tin người tạo, người phê duyệt, người hủy (kèm thời gian tương ứng).\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **CAMPAIGN_VIEW** (vai trò BBNK, MGT, DON, CLIN).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Trả về thông tin chi tiết đợt hiến máu kèm thống kê tiến độ.\n" +
+        "- 400 BadRequest: ID đợt hiến máu không hợp lệ (<= 0).\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền truy cập CAMPAIGN_VIEW.\n" +
+        "- 404 NotFound: Không tìm thấy đợt hiến máu với ID chỉ định.")]
+    [ProducesResponseType(typeof(CampaignDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetCampaignById(int id)
+    {
+        var result = await _campaignsService.GetCampaignByIdAsync(id);
+        return Ok(result);
+    }
 }

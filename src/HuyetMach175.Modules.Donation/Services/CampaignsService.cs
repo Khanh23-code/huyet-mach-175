@@ -37,7 +37,6 @@ public class CampaignsService : ICampaignsService
         }
 
         var query = _context.DonationCampaigns
-            .OrderByDescending(c => c.CampaignId)
             .AsNoTracking();
 
         if (filter.Status.HasValue)
@@ -90,6 +89,64 @@ public class CampaignsService : ICampaignsService
             TotalCount = totalCount,
             PageNumber = filter.PageNumber,
             PageSize = filter.PageSize
+        };
+    }
+
+    public async Task<CampaignDetailDto> GetCampaignByIdAsync(int id)
+    {
+        if (id <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
+        }
+
+        var campaign = await _context.DonationCampaigns
+            .AsNoTracking()
+            .Include(c => c.CreatedByUser)
+            .Include(c => c.ApprovedByUser)
+            .Include(c => c.CancelledByUser)
+            .Include(c => c.Appointments)
+                .ThenInclude(a => a.DonationSession)
+            .FirstOrDefaultAsync(c => c.CampaignId == id);
+
+        if (campaign == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
+        }
+
+        var totalRegistered = campaign.Appointments.Count(a => a.Status != AppointmentStatus.CANCELLED);
+        var totalCheckedIn = campaign.Appointments.Count(a => a.CheckedInAt != null || a.Status == AppointmentStatus.CHECKED_IN);
+        var totalCollected = campaign.Appointments.Count(a => a.DonationSession != null && a.DonationSession.Status == SessionStatus.COMPLETED);
+        var completionRate = campaign.TargetDonations > 0
+            ? Math.Round((double)totalCollected / campaign.TargetDonations * 100, 2)
+            : 0;
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var remainingDays = campaign.EndDate >= today ? campaign.EndDate.DayNumber - today.DayNumber : 0;
+
+        return new CampaignDetailDto
+        {
+            CampaignId = campaign.CampaignId,
+            CampaignName = campaign.CampaignName,
+            LocationName = campaign.LocationName,
+            StartDate = campaign.StartDate,
+            EndDate = campaign.EndDate,
+            TargetDonations = campaign.TargetDonations,
+            Status = campaign.Status,
+            CreatedBy = campaign.CreatedBy,
+            CreatedByName = campaign.CreatedByUser != null ? campaign.CreatedByUser.FullName : string.Empty,
+            ApprovedBy = campaign.ApprovedBy,
+            ApprovedByName = campaign.ApprovedByUser != null ? campaign.ApprovedByUser.FullName : null,
+            ApprovedAt = campaign.ApprovedAt,
+            CancelledBy = campaign.CancelledBy,
+            CancelledByName = campaign.CancelledByUser != null ? campaign.CancelledByUser.FullName : null,
+            CancelledAt = campaign.CancelledAt,
+            RejectionReason = campaign.RejectionReason,
+            CreatedAt = campaign.CreatedAt,
+            TotalRegistered = totalRegistered,
+            TotalCheckedIn = totalCheckedIn,
+            TotalCollected = totalCollected,
+            CompletionRate = completionRate,
+            RemainingDays = remainingDays
         };
     }
 }

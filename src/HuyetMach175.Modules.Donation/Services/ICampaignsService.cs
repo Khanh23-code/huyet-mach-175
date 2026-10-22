@@ -6,4 +6,5 @@ namespace HuyetMach175.Modules.Donation.Services;
 public interface ICampaignsService
 {
     Task<PagedResult<CampaignListItemDto>> GetCampaignsAsync(CampaignFilterDto filter);
+    Task<CampaignDetailDto> GetCampaignByIdAsync(int id);
 }
