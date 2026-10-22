@@ -207,21 +207,27 @@ public static class DbInitializer
             var role = await context.Roles.FirstOrDefaultAsync(r => r.RoleCode == roleCode);
             if (role == null) continue;
 
-            bool hasPermissions = await context.RolePermissions.AnyAsync(rp => rp.RoleId == role.RoleId);
-            if (!hasPermissions)
+            var existingPermIds = await context.RolePermissions
+                .Where(rp => rp.RoleId == role.RoleId)
+                .Select(rp => rp.PermissionId)
+                .ToHashSetAsync();
+
+            bool hasChanges = false;
+            foreach (var code in permCodes)
             {
-                foreach (var code in permCodes)
+                if (permMap.TryGetValue(code, out int permId) && !existingPermIds.Contains(permId))
                 {
-                    if (permMap.TryGetValue(code, out int permId))
+                    context.RolePermissions.Add(new RolePermission
                     {
-                        context.RolePermissions.Add(new RolePermission
-                        {
-                            RoleId = role.RoleId,
-                            PermissionId = permId,
-                            CreatedAt = DateTime.UtcNow
-                        });
-                    }
+                        RoleId = role.RoleId,
+                        PermissionId = permId,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                    hasChanges = true;
                 }
+            }
+            if (hasChanges)
+            {
                 await context.SaveChangesAsync();
             }
         }
