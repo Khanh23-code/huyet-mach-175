@@ -8,4 +8,5 @@ public interface ICampaignsService
     Task<PagedResult<CampaignListItemDto>> GetCampaignsAsync(CampaignFilterDto filter);
     Task<CampaignDetailDto> GetCampaignByIdAsync(int id);
     Task<CampaignDetailDto> CreateCampaignAsync(CreateCampaignRequest request, int userId);
+    Task<CampaignDetailDto> UpdateCampaignAsync(int id, UpdateCampaignRequest request);
 }

@@ -192,4 +192,45 @@ public class CampaignsService : ICampaignsService
 
         return await GetCampaignByIdAsync(campaign.CampaignId);
     }
+
+    public async Task<CampaignDetailDto> UpdateCampaignAsync(int id, UpdateCampaignRequest request)
+    {
+        if (id <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
+        }
+
+        var campaign = await _context.DonationCampaigns.FindAsync(id);
+        if (campaign == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
+        }
+
+        if (campaign.Status != CampaignStatus.DRAFT && campaign.Status != CampaignStatus.REJECTED)
+        {
+            throw new HttpException(
+                StatusCodes.Status400BadRequest,
+                $"Không thể chỉnh sửa đợt hiến máu ở trạng thái '{campaign.Status}'. Chỉ cho phép chỉnh sửa khi ở trạng thái Bản nháp (DRAFT) hoặc Bị từ chối (REJECTED).");
+        }
+
+        if (request.EndDate < request.StartDate)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.");
+        }
+
+        if (request.TargetDonations <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Chỉ tiêu thu gom phải lớn hơn 0 túi máu.");
+        }
+
+        campaign.CampaignName = request.CampaignName.Trim();
+        campaign.LocationName = request.LocationName.Trim();
+        campaign.StartDate = request.StartDate;
+        campaign.EndDate = request.EndDate;
+        campaign.TargetDonations = request.TargetDonations;
+
+        await _context.SaveChangesAsync();
+
+        return await GetCampaignByIdAsync(campaign.CampaignId);
+    }
 }
