@@ -12,4 +12,5 @@ public interface ICampaignsService
     Task<CampaignDetailDto> SubmitForApprovalAsync(int id);
     Task<CampaignDetailDto> ApproveCampaignAsync(int id, ApproveCampaignRequest request, int userId);
     Task<CampaignDetailDto> UpdateCampaignStatusAsync(int id, UpdateCampaignStatusRequest request, int userId);
+    Task DeleteCampaignAsync(int id);
 }

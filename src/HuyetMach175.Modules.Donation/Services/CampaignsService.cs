@@ -384,4 +384,38 @@ public class CampaignsService : ICampaignsService
 
         return await GetCampaignByIdAsync(campaign.CampaignId);
     }
+
+    public async Task DeleteCampaignAsync(int id)
+    {
+        if (id <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
+        }
+
+        var campaign = await _context.DonationCampaigns
+            .Include(c => c.Appointments)
+            .FirstOrDefaultAsync(c => c.CampaignId == id);
+
+        if (campaign == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
+        }
+
+        if (campaign.Status != CampaignStatus.DRAFT)
+        {
+            throw new HttpException(
+                StatusCodes.Status400BadRequest,
+                $"Không thể xóa đợt hiến máu ở trạng thái '{campaign.Status}'. Chỉ cho phép xóa khi còn ở trạng thái Bản nháp (DRAFT). Nếu đợt đã được duyệt hoặc đang diễn ra, vui lòng chuyển trạng thái sang Đã hủy (CANCELLED).");
+        }
+
+        if (campaign.Appointments.Any())
+        {
+            throw new HttpException(
+                StatusCodes.Status400BadRequest,
+                "Không thể xóa đợt hiến máu vì đã có lịch đăng ký phát sinh.");
+        }
+
+        _context.DonationCampaigns.Remove(campaign);
+        await _context.SaveChangesAsync();
+    }
 }

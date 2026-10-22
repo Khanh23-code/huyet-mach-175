@@ -201,4 +201,30 @@ public class CampaignsController : ControllerBase
         var result = await _campaignsService.UpdateCampaignStatusAsync(id, request, userId);
         return Ok(result);
     }
+
+    [HttpDelete("{id:int}")]
+    [HasPermission("CAMPAIGN_EDIT")]
+    [EndpointSummary("Xóa đợt hiến máu (Chỉ áp dụng cho Bản nháp)")]
+    [EndpointDescription(
+        "Xóa hoàn toàn đợt hiến máu khỏi cơ sở dữ liệu.\n\n" +
+        "**Quy tắc nghiệp vụ:** Nghiêm ngặt chỉ áp dụng khi đợt hiến máu đang ở trạng thái Bản nháp (**DRAFT**) và chưa phát sinh bất kỳ lịch hẹn nào.\n\n" +
+        "Đối với các đợt hiến máu đã được phê duyệt hoặc đang diễn ra, " +
+        "vui lòng sử dụng API chuyển trạng thái sang **CANCELLED** để đảm bảo tính toàn vẹn dữ liệu và lịch sử kiểm toán.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **CAMPAIGN_EDIT** (vai trò BBNK hoặc MGT).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 204 NoContent: Xóa đợt hiến máu thành công.\n" +
+        "- 400 BadRequest: Đợt hiến máu không ở trạng thái DRAFT hoặc đã có lịch hẹn phát sinh.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền CAMPAIGN_EDIT.\n" +
+        "- 404 NotFound: Không tìm thấy đợt hiến máu với ID chỉ định.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteCampaign(int id)
+    {
+        await _campaignsService.DeleteCampaignAsync(id);
+        return NoContent();
+    }
 }
