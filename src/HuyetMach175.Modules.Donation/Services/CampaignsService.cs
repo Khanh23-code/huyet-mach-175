@@ -269,4 +269,119 @@ public class CampaignsService : ICampaignsService
 
         return await GetCampaignByIdAsync(campaign.CampaignId);
     }
+
+    public async Task<CampaignDetailDto> ApproveCampaignAsync(int id, ApproveCampaignRequest request, int userId)
+    {
+        if (id <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
+        }
+
+        var campaign = await _context.DonationCampaigns.FindAsync(id);
+        if (campaign == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
+        }
+
+        if (campaign.Status != CampaignStatus.PENDING_APPROVAL)
+        {
+            throw new HttpException(
+                StatusCodes.Status400BadRequest,
+                $"Đợt hiến máu không ở trạng thái Chờ phê duyệt (PENDING_APPROVAL). Trạng thái hiện tại: '{campaign.Status}'.");
+        }
+
+        var approver = await _context.Users.FindAsync(userId);
+        if (approver == null || !approver.IsActive)
+        {
+            throw new HttpException(StatusCodes.Status401Unauthorized, "Người phê duyệt không hợp lệ hoặc đã bị vô hiệu hóa.");
+        }
+
+        if (request.IsApproved)
+        {
+            campaign.Status = CampaignStatus.APPROVED;
+            campaign.ApprovedBy = userId;
+            campaign.ApprovedAt = DateTime.UtcNow;
+            campaign.RejectionReason = null;
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(request.RejectionReason))
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, "Vui lòng nhập lý do từ chối đợt hiến máu.");
+            }
+
+            campaign.Status = CampaignStatus.REJECTED;
+            campaign.ApprovedBy = userId;
+            campaign.ApprovedAt = DateTime.UtcNow;
+            campaign.RejectionReason = request.RejectionReason.Trim();
+        }
+
+        await _context.SaveChangesAsync();
+
+        return await GetCampaignByIdAsync(campaign.CampaignId);
+    }
+
+    public async Task<CampaignDetailDto> UpdateCampaignStatusAsync(int id, UpdateCampaignStatusRequest request, int userId)
+    {
+        if (id <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
+        }
+
+        var campaign = await _context.DonationCampaigns.FindAsync(id);
+        if (campaign == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
+        }
+
+        switch (request.Status)
+        {
+            case CampaignStatus.IN_PROGRESS:
+                if (campaign.Status != CampaignStatus.APPROVED)
+                {
+                    throw new HttpException(
+                        StatusCodes.Status400BadRequest,
+                        $"Không thể bắt đầu đợt hiến máu khi đang ở trạng thái '{campaign.Status}'. Đợt hiến máu phải ở trạng thái Đã phê duyệt (APPROVED) trước.");
+                }
+                break;
+
+            case CampaignStatus.COMPLETED:
+                if (campaign.Status != CampaignStatus.IN_PROGRESS)
+                {
+                    throw new HttpException(
+                        StatusCodes.Status400BadRequest,
+                        $"Không thể kết thúc đợt hiến máu khi đang ở trạng thái '{campaign.Status}'. Đợt hiến máu phải đang diễn ra (IN_PROGRESS) mới có thể chuyển sang Hoàn thành.");
+                }
+                break;
+
+            case CampaignStatus.CANCELLED:
+                if (campaign.Status == CampaignStatus.COMPLETED || campaign.Status == CampaignStatus.CANCELLED)
+                {
+                    throw new HttpException(
+                        StatusCodes.Status400BadRequest,
+                        $"Đợt hiến máu đã ở trạng thái kết thúc ({campaign.Status}), không thể hủy bỏ.");
+                }
+
+                if (campaign.Status == CampaignStatus.DRAFT || campaign.Status == CampaignStatus.PENDING_APPROVAL || campaign.Status == CampaignStatus.REJECTED)
+                {
+                    throw new HttpException(
+                        StatusCodes.Status400BadRequest,
+                        $"Không thể hủy đợt hiến máu ở trạng thái '{campaign.Status}'. Bản nháp có thể xóa hoặc đề xuất chưa được duyệt.");
+                }
+
+                campaign.CancelledBy = userId;
+                campaign.CancelledAt = DateTime.UtcNow;
+                break;
+
+            default:
+                throw new HttpException(
+                    StatusCodes.Status400BadRequest,
+                    $"Không thể chuyển trực tiếp sang trạng thái '{request.Status}' qua endpoint này. Vui lòng thực hiện qua quy trình đề xuất và phê duyệt tương ứng.");
+        }
+
+        campaign.Status = request.Status;
+        await _context.SaveChangesAsync();
+
+        return await GetCampaignByIdAsync(campaign.CampaignId);
+    }
 }
