@@ -121,4 +121,29 @@ public class CampaignsController : ControllerBase
         var result = await _campaignsService.UpdateCampaignAsync(id, request);
         return Ok(result);
     }
+
+    [HttpPatch("{id:int}/submit-approval")]
+    [HasPermission("CAMPAIGN_EDIT")]
+    [EndpointSummary("Gửi đợt hiến máu lên Ban Giám đốc phê duyệt")]
+    [EndpointDescription(
+        "Gửi đề xuất đợt hiến máu lên Ban Giám đốc / Trưởng khoa xét duyệt. Trạng thái sẽ được chuyển sang Chờ phê duyệt (**PENDING_APPROVAL**).\n\n" +
+        "**Quy tắc nghiệp vụ:** Chỉ áp dụng khi đợt hiến máu đang ở trạng thái Bản nháp (**DRAFT**) hoặc Bị từ chối (**REJECTED**). " +
+        "Lý do từ chối cũ (nếu có) sẽ được tự động xóa để bắt đầu vòng xét duyệt mới.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **CAMPAIGN_EDIT** (vai trò BBNK hoặc MGT).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Gửi phê duyệt thành công, trả về chi tiết đợt hiến máu với trạng thái PENDING_APPROVAL.\n" +
+        "- 400 BadRequest: Đợt hiến máu không ở trạng thái DRAFT hoặc REJECTED, hoặc đợt hiến máu đã quá hạn (ngày kết thúc trong quá khứ).\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền CAMPAIGN_EDIT.\n" +
+        "- 404 NotFound: Không tìm thấy đợt hiến máu với ID chỉ định.")]
+    [ProducesResponseType(typeof(CampaignDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SubmitForApproval(int id)
+    {
+        var result = await _campaignsService.SubmitForApprovalAsync(id);
+        return Ok(result);
+    }
 }

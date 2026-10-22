@@ -9,4 +9,5 @@ public interface ICampaignsService
     Task<CampaignDetailDto> GetCampaignByIdAsync(int id);
     Task<CampaignDetailDto> CreateCampaignAsync(CreateCampaignRequest request, int userId);
     Task<CampaignDetailDto> UpdateCampaignAsync(int id, UpdateCampaignRequest request);
+    Task<CampaignDetailDto> SubmitForApprovalAsync(int id);
 }

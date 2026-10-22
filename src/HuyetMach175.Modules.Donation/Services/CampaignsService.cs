@@ -233,4 +233,40 @@ public class CampaignsService : ICampaignsService
 
         return await GetCampaignByIdAsync(campaign.CampaignId);
     }
+
+    public async Task<CampaignDetailDto> SubmitForApprovalAsync(int id)
+    {
+        if (id <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
+        }
+
+        var campaign = await _context.DonationCampaigns.FindAsync(id);
+        if (campaign == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
+        }
+
+        if (campaign.Status != CampaignStatus.DRAFT && campaign.Status != CampaignStatus.REJECTED)
+        {
+            throw new HttpException(
+                StatusCodes.Status400BadRequest,
+                $"Không thể gửi phê duyệt đợt hiến máu ở trạng thái '{campaign.Status}'. Chỉ áp dụng cho trạng thái Bản nháp (DRAFT) hoặc Bị từ chối (REJECTED).");
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        if (campaign.EndDate < today)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Đợt hiến máu đã quá hạn (ngày kết thúc trong quá khứ). Vui lòng cập nhật lại thời gian trước khi gửi duyệt.");
+        }
+
+        campaign.Status = CampaignStatus.PENDING_APPROVAL;
+        campaign.RejectionReason = null;
+        campaign.ApprovedBy = null;
+        campaign.ApprovedAt = null;
+
+        await _context.SaveChangesAsync();
+
+        return await GetCampaignByIdAsync(campaign.CampaignId);
+    }
 }
