@@ -1,0 +1,9 @@
+using HuyetMach175.Modules.Donation.DTOs.Campaigns;
+using HuyetMach175.Modules.Donation.DTOs.Common;
+
+namespace HuyetMach175.Modules.Donation.Services;
+
+public interface ICampaignsService
+{
+    Task<PagedResult<CampaignListItemDto>> GetCampaignsAsync(CampaignFilterDto filter);
+}
