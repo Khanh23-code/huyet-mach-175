@@ -121,4 +121,33 @@ public class DonorsController : ControllerBase
         var result = await _donorsService.CreateDonorAsync(request);
         return CreatedAtAction(nameof(GetDonorById), new { id = result.DonorId }, result);
     }
+
+    [HttpPut("{id:int}")]
+    [HasPermission("DONORS_EDIT")]
+    [EndpointSummary("Cập nhật thông tin người hiến máu")]
+    [EndpointDescription(
+        "Cập nhật thông tin hành chính và liên hệ của người hiến máu (họ tên, ngày sinh, giới tính, số điện thoại, email).\n\n" +
+        "**Quy tắc nghiệp vụ:**\n" +
+        "- Không cho phép chỉnh sửa nhóm máu (bloodType), yếu tố Rh (rhFactor), tổng số lần hiến (totalDonations) và ngày hiến gần nhất qua API này.\n" +
+        "- Số điện thoại và số CCCD (nếu có thay đổi) không được trùng với người hiến khác trong hệ thống (nếu trùng trả về 409 Conflict).\n" +
+        "- Độ tuổi người hiến máu phải nằm trong khoảng 18 - 60 tuổi.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **DONORS_EDIT** (các vai trò như DON, CLIN).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Cập nhật thành công, trả về chi tiết hồ sơ sau khi cập nhật.\n" +
+        "- 400 BadRequest: Dữ liệu không hợp lệ hoặc ID người hiến không hợp lệ (id <= 0).\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền truy cập DONORS_EDIT.\n" +
+        "- 404 NotFound: Không tìm thấy người hiến máu với ID chỉ định.\n" +
+        "- 409 Conflict: Số điện thoại hoặc số CCCD đã được sử dụng bởi người hiến khác.")]
+    [ProducesResponseType(typeof(DonorDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpdateDonor(int id, [FromBody] UpdateDonorRequest request)
+    {
+        var result = await _donorsService.UpdateDonorAsync(id, request);
+        return Ok(result);
+    }
 }

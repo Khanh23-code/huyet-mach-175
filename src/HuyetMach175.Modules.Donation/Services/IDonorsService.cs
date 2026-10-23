@@ -9,4 +9,5 @@ public interface IDonorsService
     Task<DonorDetailDto> GetDonorByIdAsync(int id);
     Task<DonorEligibilityDto> CheckEligibilityAsync(string citizenId);
     Task<DonorDetailDto> CreateDonorAsync(CreateDonorRequest request);
+    Task<DonorDetailDto> UpdateDonorAsync(int id, UpdateDonorRequest request);
 }

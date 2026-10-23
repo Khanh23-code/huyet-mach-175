@@ -309,4 +309,71 @@ public class DonorsService : IDonorsService
 
         return await GetDonorByIdAsync(donor.DonorId);
     }
+
+    public async Task<DonorDetailDto> UpdateDonorAsync(int id, UpdateDonorRequest request)
+    {
+        if (id <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "ID người hiến máu không hợp lệ.");
+        }
+
+        var donor = await _context.Donors.FindAsync(id);
+        if (donor == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy người hiến máu với mã #{id}.");
+        }
+
+        var phone = request.PhoneNumber.Trim();
+        if (!Regex.IsMatch(phone, @"^0\d{9}$"))
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Số điện thoại không hợp lệ (phải gồm 10 chữ số, bắt đầu bằng 0).");
+        }
+
+        if (await _context.Donors.AnyAsync(d => d.PhoneNumber == phone && d.DonorId != id))
+        {
+            throw new HttpException(StatusCodes.Status409Conflict, "Số điện thoại này đã được sử dụng bởi người hiến khác.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.CitizenId))
+        {
+            var trimmedCitizenId = request.CitizenId.Trim();
+            if (!Regex.IsMatch(trimmedCitizenId, @"^[0-9]{12}$"))
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, "Số CCCD không hợp lệ. Số CCCD phải gồm đúng 12 chữ số.");
+            }
+
+            if (trimmedCitizenId != donor.CitizenId)
+            {
+                if (await _context.Donors.AnyAsync(d => d.CitizenId == trimmedCitizenId && d.DonorId != id))
+                {
+                    throw new HttpException(StatusCodes.Status409Conflict, "Số CCCD này đã tồn tại trong hệ thống.");
+                }
+                donor.CitizenId = trimmedCitizenId;
+            }
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var age = today.Year - request.DateOfBirth.Year;
+        if (request.DateOfBirth > today.AddYears(-age))
+        {
+            age--;
+        }
+
+        if (age < 18 || age > 60)
+        {
+            throw new HttpException(
+                StatusCodes.Status400BadRequest,
+                $"Người hiến máu phải trong độ tuổi từ 18 đến 60 theo quy định (hiện tại {age} tuổi).");
+        }
+
+        donor.FullName = request.FullName.Trim();
+        donor.DateOfBirth = request.DateOfBirth;
+        donor.Gender = request.Gender.Trim();
+        donor.PhoneNumber = phone;
+        donor.Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
+
+        await _context.SaveChangesAsync();
+
+        return await GetDonorByIdAsync(donor.DonorId);
+    }
 }
