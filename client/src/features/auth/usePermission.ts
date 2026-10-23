@@ -1,30 +1,40 @@
-﻿import { useCallback } from 'react'
+﻿import { useMemo } from 'react'
 import { useAuthStore } from './authStore'
+import type { PermissionRequirement } from '@/config/permissions'
 
-const SUPER_ROLE = 'SYS'
+export interface PermissionApi {
+    /** Có đúng quyền này không. */
+    can: (code: string) => boolean
+    /** Có ÍT NHẤT 1 quyền trong danh sách. Danh sách rỗng -> false. */
+    canAny: (codes: readonly string[]) => boolean
+    /** Có TOÀN BỘ quyền trong danh sách. Danh sách rỗng -> true. */
+    canAll: (codes: readonly string[]) => boolean
+    /**
+     * Dạng gộp cho cấu hình route / `<Can>`:
+     * undefined hoặc [] -> true; string -> can; string[] -> canAny.
+     */
+    canAccess: (required?: PermissionRequirement) => boolean
+}
 
 /**
- * Kiểm tra quyền của user hiện tại.
- *
- *   const can = useCan()
- *   can('CAMPAIGN_APPROVE')                 // có quyền này?
- *   can(['DONORS_EDIT', 'DONORS_VIEW'])     // có ÍT NHẤT 1 trong các quyền?
- *
- * SYS luôn được qua (BE khóa không cho sửa quyền của SYS).
- * `permissions` do GET /me trả về; khi BE chưa trả thì coi như rỗng.
+ * Kiểm tra quyền của user hiện tại, chỉ dựa trên mảng `permissions`
+ * do BE trả về (GET /api/Auth/me). KHÔNG xét tên vai trò.
  */
-export function useCan() {
-    const roles = useAuthStore((s) => s.user?.roles)
+export function usePermission(): PermissionApi {
     const permissions = useAuthStore((s) => s.user?.permissions)
 
-    return useCallback(
-        (code: string | string[]): boolean => {
-            if (roles?.some((r) => r.trim().toUpperCase() === SUPER_ROLE)) return true
+    return useMemo<PermissionApi>(() => {
+        const owned = new Set(permissions ?? [])
 
-            const owned = new Set(permissions ?? [])
-            const required = Array.isArray(code) ? code : [code]
-            return required.some((c) => owned.has(c))
-        },
-        [roles, permissions],
-    )
+        const can = (code: string) => owned.has(code)
+        const canAny = (codes: readonly string[]) => codes.some(can)
+        const canAll = (codes: readonly string[]) => codes.every(can)
+        const canAccess = (required?: PermissionRequirement) => {
+            if (required === undefined) return true
+            if (typeof required === 'string') return can(required)
+            return required.length === 0 || canAny(required)
+        }
+
+        return { can, canAny, canAll, canAccess }
+    }, [permissions])
 }
