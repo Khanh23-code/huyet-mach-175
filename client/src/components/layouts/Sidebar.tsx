@@ -2,8 +2,8 @@
 import { Layout } from 'antd'
 import { AppstoreOutlined, RightOutlined } from '@ant-design/icons'
 import { NavLink, useLocation } from 'react-router-dom'
-import { useAuthStore } from '@/features/auth/authStore'
-import { getNavForRoles } from '@/config/navigation'
+import { usePermission } from '@/features/auth/usePermission'
+import { HOME_PATH, ROUTE_GROUPS, filterRouteGroups } from '@/config/routeConfig'
 import './Sidebar.css'
 
 const isPathActive = (pathname: string, path: string) =>
@@ -11,32 +11,31 @@ const isPathActive = (pathname: string, path: string) =>
 
 const cx = (...parts: Array<string | false | undefined>) => parts.filter(Boolean).join(' ')
 
-export default function Sidebar() {
+/** Sidebar động: chỉ hiện các mục (và nhóm) mà user có quyền tương ứng. */
+export default function DynamicSidebar() {
     const { pathname } = useLocation()
-    const roles = useAuthStore((s) => s.user?.roles)
+    const { canAccess } = usePermission()
 
-    const nav = useMemo(() => getNavForRoles(roles), [roles])
-    const role = nav?.role
+    const groups = useMemo(() => filterRouteGroups(ROUTE_GROUPS, canAccess), [canAccess])
+    // Chỉ đổi khi tập nhóm hiển thị thay đổi (vd. sau khi /me trả quyền mới)
+    const groupSignature = groups.map((g) => g.key).join('|')
 
-    // Nhóm đang mở. Mặc định mở các nhóm nghiệp vụ của role (trừ "Tài khoản").
     const [openKeys, setOpenKeys] = useState<string[]>([])
 
     useEffect(() => {
-        if (!nav) return
-        setOpenKeys(nav.groups.filter((g) => g.key !== 'account').map((g) => g.key))
-        // chỉ chạy lại khi đổi role
+        setOpenKeys(groups.filter((g) => g.defaultOpen).map((g) => g.key))
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [role])
+    }, [groupSignature])
 
-    // Điều hướng thẳng tới 1 trang con (vd. từ chuông thông báo) -> tự mở nhóm chứa nó.
-    const activeGroupKey = nav?.groups.find((g) =>
-        g.children.some((c) => isPathActive(pathname, c.path))
+    // Điều hướng thẳng tới 1 trang con -> tự mở nhóm chứa nó.
+    const activeGroupKey = groups.find((g) =>
+        g.children.some((c) => isPathActive(pathname, c.path)),
     )?.key
 
     useEffect(() => {
         if (!activeGroupKey) return
         setOpenKeys((prev) => (prev.includes(activeGroupKey) ? prev : [...prev, activeGroupKey]))
-    }, [activeGroupKey])
+    }, [activeGroupKey, groupSignature])
 
     const toggle = (key: string) =>
         setOpenKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]))
@@ -57,18 +56,16 @@ export default function Sidebar() {
                 <nav className="sider__nav" aria-label="Điều hướng chính">
                     <div className="sider__section">Không gian làm việc</div>
 
-                    {nav && (
-                        <NavLink
-                            to={nav.home.path}
-                            end
-                            className={({ isActive }) => cx('sider__home', isActive && 'is-active')}
-                        >
-                            <AppstoreOutlined className="sider__home-icon" />
-                            <span>{nav.home.label}</span>
-                        </NavLink>
-                    )}
+                    <NavLink
+                        to={HOME_PATH}
+                        end
+                        className={({ isActive }) => cx('sider__home', isActive && 'is-active')}
+                    >
+                        <AppstoreOutlined className="sider__home-icon" />
+                        <span>Trang chủ</span>
+                    </NavLink>
 
-                    {nav?.groups.map((group) => {
+                    {groups.map((group) => {
                         const open = openKeys.includes(group.key)
                         const panelId = `sider-group-${group.key}`
 

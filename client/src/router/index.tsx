@@ -8,6 +8,10 @@ import UserManagementPage from '@/features/users/pages/UserManagementPage'
 import ProfilePage from '@/features/account/pages/ProfilePage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import RouteErrorBoundary from '@/components/RouteErrorBoundary'
+import { findRouteItem } from '@/config/routeConfig'
+
+// Quyền của từng route lấy từ routeConfig (cùng nguồn với Sidebar)
+const usersRoute = findRouteItem('users')
 
 export const router = createBrowserRouter([
     {
@@ -16,10 +20,12 @@ export const router = createBrowserRouter([
         errorElement: <RouteErrorBoundary />,
     },
     {
-        path: '/403',
+        path: '/403-forbidden',
         element: <ForbiddenPage />,
         errorElement: <RouteErrorBoundary />,
     },
+    // Đường dẫn cũ
+    { path: '/403', element: <Navigate to="/403-forbidden" replace /> },
     {
         element: <ProtectedRoute />,
         errorElement: <RouteErrorBoundary />,
@@ -28,15 +34,12 @@ export const router = createBrowserRouter([
                 element: <AppLayout />,
                 children: [
                     { path: '/', element: <DashboardPage /> },
-                    // Trang chủ cho role SYS tự động chuyển đến Quản lý người dùng
-                    { path: '/admin', element: <Navigate to="/admin/users" replace /> },
-                    // Dùng chung cho mọi role
+                    // Dùng chung cho mọi tài khoản đã đăng nhập
                     { path: '/account/profile', element: <ProfilePage /> },
                     {
-                        element: <ProtectedRoute allowedRoles={['SYS']} />,
-                        children: [
-                            { path: '/admin/users', element: <UserManagementPage /> },
-                        ],
+                        // Route theo quyền: phải nằm trong AppLayout (nơi đồng bộ permissions)
+                        element: <ProtectedRoute requiredPermission={usersRoute.requiredPermission} />,
+                        children: [{ path: usersRoute.path, element: <UserManagementPage /> }],
                     },
                     // Bắt tất cả các đường dẫn chưa có giao diện bên trong AppLayout
                     { path: '*', element: <NotFoundPage /> },

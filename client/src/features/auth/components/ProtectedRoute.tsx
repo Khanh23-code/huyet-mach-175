@@ -1,26 +1,40 @@
 ﻿import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Spin } from 'antd'
 import { useAuthStore } from '../authStore'
-import { useCan } from '../usePermission'
+import { usePermission } from '../usePermission'
+import type { PermissionRequirement } from '@/config/permissions'
 
 interface Props {
-    allowedRoles?: string[]
-    /** Cần ÍT NHẤT 1 trong các permission code này (SYS luôn qua). Chỉ dùng khi BE đã trả `permissions`. */
-    requiredPermission?: string | string[]
+    /** Cần ÍT NHẤT 1 trong các quyền này. Bỏ trống = chỉ cần đã đăng nhập. */
+    requiredPermission?: PermissionRequirement
 }
 
-export default function ProtectedRoute({ allowedRoles, requiredPermission }: Props) {
-    const { accessToken, user } = useAuthStore()
-    const can = useCan()
+/**
+ * - Chưa đăng nhập                -> /login
+ * - Đã đăng nhập nhưng thiếu quyền -> /403-forbidden
+ *
+ * Route có `requiredPermission` chỉ được quyết định sau khi GET /me đã trả về
+ * (useCurrentUser ở Header trong AppLayout). Vì vậy route này phải nằm BÊN TRONG AppLayout.
+ */
+export default function ProtectedRoute({ requiredPermission }: Props) {
+    const accessToken = useAuthStore((s) => s.accessToken)
+    const permissionsSynced = useAuthStore((s) => s.permissionsSynced)
+    const { canAccess } = usePermission()
     const location = useLocation()
 
     if (!accessToken) return <Navigate to="/login" state={{ from: location }} replace />
 
-    if (allowedRoles && !user?.roles.some((r: string) => allowedRoles.includes(r))) {
-        return <Navigate to="/403" replace />
-    }
-
-    if (requiredPermission && !can(requiredPermission)) {
-        return <Navigate to="/403" replace />
+    if (requiredPermission !== undefined) {
+        if (!permissionsSynced) {
+            return (
+                <div style={{ display: 'grid', placeItems: 'center', minHeight: 240 }}>
+                    <Spin />
+                </div>
+            )
+        }
+        if (!canAccess(requiredPermission)) {
+            return <Navigate to="/403-forbidden" replace />
+        }
     }
 
     return <Outlet />

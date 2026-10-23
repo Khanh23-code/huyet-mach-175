@@ -10,6 +10,8 @@ export const ROLE_META: Record<RoleCode, { label: string; desc: string }> = {
 
 export const ROLE_CODES = Object.keys(ROLE_META) as RoleCode[]
 
+export const SYSTEM_ROLE_CODES: readonly string[] = ['SYS']
+
 /**
  * Chỉ dùng để đặt nhãn + thứ tự cột. `key` phải khớp enum PermissionAction ở BE
  * (VIEW / EDIT / APPROVE / CANCEL). Module KHÔNG còn hard-code ở FE:

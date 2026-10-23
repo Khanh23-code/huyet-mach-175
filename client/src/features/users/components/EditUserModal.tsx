@@ -8,14 +8,15 @@ import { useDepartments, useRoles } from '../hooks'
 import { usersApi } from '../usersApi'
 import { applyServerErrors, parseApiError } from '@/services/apiError'
 import type { UserItem } from '@/types/user'
+import { SYSTEM_ROLE_CODES } from '@/config/rbac'
 
 interface Props {
     /** null = đóng modal */
     user: UserItem | null
     /** Đang sửa chính mình: khóa phần vai trò để tránh tự tước quyền */
     isSelf: boolean
-    /** Chỉ SYS mới được gán vai trò SYS (BE trả 403 nếu MGT làm) */
-    canAssignSys: boolean
+    /** Được gán vai trò hệ thống hay không (BE trả 403 nếu không đủ quyền) */
+    canAssignSystemRole: boolean
     onClose: () => void
 }
 
@@ -35,7 +36,7 @@ const sameIds = (a: number[], b: number[]) => {
     return x.length === y.length && x.every((v, i) => v === y[i])
 }
 
-export default function EditUserModal({ user, isSelf, canAssignSys, onClose }: Props) {
+export default function EditUserModal({ user, isSelf, canAssignSystemRole, onClose }: Props) {
     const { message } = App.useApp()
     const qc = useQueryClient()
     const roles = useRoles()
@@ -169,7 +170,7 @@ export default function EditUserModal({ user, isSelf, canAssignSys, onClose }: P
                                 .map((r) => ({
                                     value: r.id,
                                     label: `${r.code} · ${r.name}`,
-                                    disabled: r.code === 'SYS' && !canAssignSys,
+                                    disabled: SYSTEM_ROLE_CODES.includes(r.code) && !canAssignSystemRole,
                                 }))}
                         />
                     )} />

@@ -16,7 +16,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { useLogout } from '@/features/auth/useLogout'
 import { useCurrentUser } from '@/features/auth/useCurrentUser'
-import { getNavForRoles } from '@/config/navigation'
+import { HOME_PATH } from '@/config/routeConfig'
 import './Header.css'
 
 interface HeaderProps {
@@ -33,9 +33,9 @@ const THEME_KEY = 'theme'
 export default function Header({ onSearch, onScan }: HeaderProps) {
     const navigate = useNavigate()
     const { logout: handleLogout, isLoggingOut } = useLogout()
-    const { displayName, roleLabel, initials, loading, user } = useCurrentUser()
+    const { displayName, roleLabel, initials, loading } = useCurrentUser()
 
-    const homePath = getNavForRoles(user?.roles)?.home.path ?? '/'
+    const homePath = HOME_PATH
 
     /* ---------------- Theme ---------------- */
     const [theme, setTheme] = useState<Theme>(() =>

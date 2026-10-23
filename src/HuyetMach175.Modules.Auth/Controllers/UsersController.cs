@@ -1,6 +1,7 @@
 using HuyetMach175.Modules.Auth.DTOs.Common;
 using HuyetMach175.Modules.Auth.DTOs.Users;
 using HuyetMach175.Modules.Auth.Services;
+using HuyetMach175.SharedKernel.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,17 +21,17 @@ namespace HuyetMach175.Modules.Auth.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "SYS,MGT")]
+        [HasPermission("USERS_VIEW")]
         [EndpointSummary("Lấy danh sách người dùng (phân trang, lọc, tìm kiếm)")]
         [EndpointDescription(
             "Trả về danh sách người dùng trong hệ thống có hỗ trợ phân trang và tìm kiếm theo nhiều tiêu chí.\n\n" +
             "- **Tìm kiếm tổng hợp:** Hỗ trợ tìm kiếm theo tên đăng nhập, họ tên, mã nhân viên, email, số điện thoại (`keyWord`).\n" +
             "- **Bộ lọc:** Lọc theo khoa/phòng ban (`departmentId`), vai trò (`roleCode`), trạng thái hoạt động (`isActive`).\n\n" +
-            "**Yêu cầu quyền truy cập:** Bearer Token của người dùng có vai trò **SYS** (Quản trị hệ thống) hoặc **MGT** (Ban Giám đốc / Quản lý).\n\n" +
+            "**Yêu cầu quyền truy cập:** Bearer Token của người dùng có quyền **USERS_VIEW**.\n\n" +
             "**HTTP Response:**" +
             "\n- 200 OK: Trả về danh sách người dùng phân trang kèm tổng số lượng bản ghi." +
             "\n- 401 Unauthorized: Người dùng chưa xác thực hoặc token không hợp lệ." +
-            "\n- 403 Forbidden: Người dùng không có vai trò SYS hoặc MGT.")]
+            "\n- 403 Forbidden: Người dùng không có quyền USERS_VIEW.")]
         [ProducesResponseType(typeof(PagedResult<UserListItemDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -41,15 +42,15 @@ namespace HuyetMach175.Modules.Auth.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "SYS,MGT")]
+        [HasPermission("USERS_VIEW")]
         [EndpointSummary("Lấy thông tin chi tiết một người dùng theo ID")]
         [EndpointDescription(
             "Truy vấn thông tin chi tiết của một tài khoản người dùng theo ID (bao gồm thông tin cá nhân, mã nhân viên, khoa/phòng ban và danh sách vai trò đang được gán).\n\n" +
-            "**Yêu cầu quyền truy cập:** Bearer Token của người dùng có vai trò **SYS** (Quản trị hệ thống) hoặc **MGT** (Ban Giám đốc / Quản lý).\n\n" +
+            "**Yêu cầu quyền truy cập:** Bearer Token của người dùng có quyền **USERS_VIEW**.\n\n" +
             "**HTTP Response:**" +
             "\n- 200 OK: Trả về thông tin chi tiết tài khoản người dùng." +
             "\n- 401 Unauthorized: Người dùng chưa xác thực hoặc token không hợp lệ." +
-            "\n- 403 Forbidden: Người dùng không có vai trò SYS hoặc MGT." +
+            "\n- 403 Forbidden: Người dùng không có quyền USERS_VIEW." +
             "\n- 404 Not Found: Không tìm thấy tài khoản người dùng với ID cung cấp.")]
         [ProducesResponseType(typeof(UserListItemDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -62,14 +63,14 @@ namespace HuyetMach175.Modules.Auth.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "SYS,MGT")]
+        [HasPermission("USERS_EDIT")]
         [EndpointSummary("Tạo tài khoản người dùng mới")]
         [EndpointDescription(
             "Tạo mới một tài khoản người dùng trong hệ thống với mật khẩu được mã hóa an toàn bằng BCrypt và gán vào một khoa/phòng ban cùng các vai trò khởi tạo.\n\n" +
             "**Lưu ý nghiệp vụ:**\n" +
             "- Tên đăng nhập (`username`), mã nhân viên (`staffCode`), email và số điện thoại phải là duy nhất trên toàn hệ thống.\n" +
             "- Chỉ người dùng có vai trò **SYS** mới có quyền gán vai trò **SYS** cho tài khoản mới. Quản lý (**MGT**) không thể tự tạo tài khoản SYS.\n\n" +
-            "**Yêu cầu quyền truy cập:** Bearer Token của người dùng có vai trò **SYS** hoặc **MGT**.\n\n" +
+            "**Yêu cầu quyền truy cập:** Bearer Token của người dùng có quyền **USERS_EDIT**.\n\n" +
             "**HTTP Response:**" +
             "\n- 200 OK: Tạo người dùng thành công, trả về thông tin tài khoản vừa tạo." +
             "\n- 400 Bad Request: Dữ liệu không hợp lệ, thiếu trường bắt buộc, khoa/phòng không tồn tại, hoặc có vai trò bị vô hiệu hóa." +
@@ -89,17 +90,17 @@ namespace HuyetMach175.Modules.Auth.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "SYS,MGT")]
+        [HasPermission("USERS_EDIT")]
         [EndpointSummary("Cập nhật thông tin người dùng theo ID")]
         [EndpointDescription(
             "Cập nhật thông tin cơ bản của người dùng (Họ và tên, Email, Số điện thoại, Khoa/phòng ban).\n\n" +
             "API này không dùng để đổi mật khẩu, thay đổi vai trò hoặc thay đổi trạng thái hoạt động.\n\n" +
-            "**Yêu cầu quyền truy cập:** Bearer Token của người dùng có vai trò **SYS** hoặc **MGT**.\n\n" +
+            "**Yêu cầu quyền truy cập:** Bearer Token của người dùng có quyền **USERS_EDIT**.\n\n" +
             "**HTTP Response:**" +
             "\n- 200 OK: Cập nhật thông tin thành công, trả về thông tin tài khoản sau khi chỉnh sửa." +
             "\n- 400 Bad Request: Dữ liệu không hợp lệ hoặc khoa/phòng ban không tồn tại." +
             "\n- 401 Unauthorized: Người dùng chưa xác thực hoặc token không hợp lệ." +
-            "\n- 403 Forbidden: Người dùng không có vai trò SYS hoặc MGT." +
+            "\n- 403 Forbidden: Người dùng không có quyền USERS_EDIT." +
             "\n- 404 Not Found: Không tìm thấy tài khoản người dùng với ID cung cấp." +
             "\n- 409 Conflict: Email hoặc số điện thoại chỉnh sửa bị trùng với người dùng khác trong hệ thống.")]
         [ProducesResponseType(typeof(UserListItemDto), StatusCodes.Status200OK)]
@@ -115,17 +116,17 @@ namespace HuyetMach175.Modules.Auth.Controllers
         }
 
         [HttpPatch("{id}/status")]
-        [Authorize(Roles = "SYS,MGT")]
+        [HasPermission("USERS_EDIT")]
         [EndpointSummary("Cập nhật trạng thái hoạt động của người dùng (Kích hoạt / Vô hiệu hóa)")]
         [EndpointDescription(
             "Thay đổi trạng thái hoạt động (`isActive`: true / false) của một tài khoản người dùng.\n\n" +
             "**Cơ chế bảo mật:** Khi vô hiệu hóa (`isActive = false`), toàn bộ Refresh Token của tài khoản đó sẽ lập tức bị thu hồi (revoke) để buộc đăng xuất khỏi toàn bộ phiên làm việc trên mọi thiết bị.\n\n" +
-            "**Yêu cầu quyền truy cập:** Bearer Token của người dùng có vai trò **SYS** hoặc **MGT**.\n\n" +
+            "**Yêu cầu quyền truy cập:** Bearer Token của người dùng có quyền **USERS_EDIT**.\n\n" +
             "**HTTP Response:**" +
             "\n- 200 OK: Cập nhật trạng thái thành công, trả về thông tin tài khoản tương ứng." +
             "\n- 400 Bad Request: Dữ liệu gửi lên không hợp lệ." +
             "\n- 401 Unauthorized: Người dùng chưa xác thực hoặc token không hợp lệ." +
-            "\n- 403 Forbidden: Người dùng không có vai trò SYS hoặc MGT." +
+            "\n- 403 Forbidden: Người dùng không có quyền USERS_EDIT." +
             "\n- 404 Not Found: Không tìm thấy tài khoản người dùng với ID cung cấp.")]
         [ProducesResponseType(typeof(UserListItemDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -139,7 +140,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
         }
 
         [HttpPut("{id}/roles")]
-        [Authorize(Roles = "SYS,MGT")]
+        [HasPermission("USERS_EDIT")]
         [EndpointSummary("Cập nhật danh sách vai trò của người dùng")]
         [EndpointDescription(
             "Gán lại toàn bộ danh sách vai trò cho một người dùng bằng danh sách `roleIds` mới.\n\n" +
@@ -147,7 +148,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
             "- Mỗi người dùng phải có ít nhất một vai trò.\n" +
             "- Chỉ tài khoản có vai trò **SYS** mới có quyền chỉnh sửa vai trò của một tài khoản SYS khác.\n" +
             "- Chỉ tài khoản có vai trò **SYS** mới có quyền gán vai trò SYS cho bất kỳ ai. Người dùng **MGT** không có quyền này.\n\n" +
-            "**Yêu cầu quyền truy cập:** Bearer Token của người dùng có vai trò **SYS** hoặc **MGT**.\n\n" +
+            "**Yêu cầu quyền truy cập:** Bearer Token của người dùng có quyền **USERS_EDIT**.\n\n" +
             "**HTTP Response:**" +
             "\n- 200 OK: Cập nhật vai trò thành công, trả về thông tin người dùng với danh sách vai trò mới." +
             "\n- 400 Bad Request: Dữ liệu không hợp lệ, danh sách vai trò rỗng, hoặc có ID vai trò không tồn tại." +
