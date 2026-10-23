@@ -2,7 +2,10 @@ import { useMemo, useState } from 'react'
 import { Alert, App, Button, Checkbox, Input, Tooltip } from 'antd'
 import { ArrowRightOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons'
 
-import { ACTIONS, ROLE_META } from '@/config/rbac'
+import { ACTIONS, SYSTEM_ROLE_CODES } from '@/config/rbac'
+import { PERMISSIONS } from '@/config/permissions'
+import { usePermission } from '@/features/auth/usePermission'
+import Can from '@/features/auth/components/Can'
 import { MODULE_LABEL_OVERRIDES, resolvePreset } from '@/config/permissionDefaults'
 import type { RoleCode } from '@/types/user'
 import { useRoles } from '../hooks'
@@ -15,8 +18,7 @@ import CreateRoleModal from './CreateRoleModal'
 import CreatePermissionModal from './CreatePermissionModal'
 import { parseApiError } from '@/services/apiError'
 
-/** Role luôn có toàn quyền, BE cũng chặn sửa (RolesService.UpdateRolePermissionsAsync). */
-const LOCKED_ROLE = 'SYS'
+/** Vai trò hệ thống: BE chặn sửa quyền (RolesService.UpdateRolePermissionsAsync). Xem SYSTEM_ROLE_CODES. */
 
 interface ModuleRow {
     code: string
@@ -77,6 +79,7 @@ interface PermissionMatrixProps {
 
 export default function PermissionMatrix({ onNavigateToUsers }: PermissionMatrixProps = {}) {
     const { message, modal } = App.useApp()
+    const { can } = usePermission()
 
     const [roleId, setRoleId] = useState<number>()
     // Bản nháp gắn với 1 role cụ thể; đổi role thì bản nháp cũ tự bị bỏ qua.
@@ -97,25 +100,22 @@ export default function PermissionMatrix({ onNavigateToUsers }: PermissionMatrix
     const modules = useMemo(() => groupByModule(permissions), [permissions])
     const columns = useMemo(() => buildColumns(permissions), [permissions])
 
-    const locked = selectedRole?.code === LOCKED_ROLE
+    const locked = !!selectedRole && SYSTEM_ROLE_CODES.includes(selectedRole.code)
 
     const savedIds = useMemo(
         () => new Set(data?.assignedPermissionIds ?? []),
         [data],
     )
-    const allIds = useMemo(
-        () => new Set(permissions.map((p) => p.permissionId)),
-        [permissions],
-    )
 
     const activeDraft =
         draft && draft.roleId === selectedRole?.id ? draft.ids : null
-    const currentIds = locked ? allIds : (activeDraft ?? savedIds)
+    const currentIds = activeDraft ?? savedIds
     const dirty =
         !locked && activeDraft !== null && !sameSet(activeDraft, savedIds)
 
     const readOnly =
         locked ||
+        !can(PERMISSIONS.ROLES_EDIT) ||
         !selectedRole ||
         permissionsQuery.isLoading ||
         permissionsQuery.isError ||
@@ -193,7 +193,7 @@ export default function PermissionMatrix({ onNavigateToUsers }: PermissionMatrix
     }
 
     const roleLabel = selectedRole
-        ? (ROLE_META[selectedRole.code as RoleCode]?.label ?? selectedRole.name)
+        ? selectedRole.name
         : ''
 
     return (
@@ -215,13 +215,15 @@ export default function PermissionMatrix({ onNavigateToUsers }: PermissionMatrix
                     ))}
                 </div>
 
-                <Button
-                    className="um-dashed"
-                    icon={<PlusOutlined />}
-                    onClick={() => setCreatingRole(true)}
-                >
-                    Thêm vai trò mới
-                </Button>
+                <Can do={PERMISSIONS.ROLES_EDIT}>
+                    <Button
+                        className="um-dashed"
+                        icon={<PlusOutlined />}
+                        onClick={() => setCreatingRole(true)}
+                    >
+                        Thêm vai trò mới
+                    </Button>
+                </Can>
 
             </div>
 
@@ -263,7 +265,7 @@ export default function PermissionMatrix({ onNavigateToUsers }: PermissionMatrix
                         type="info"
                         showIcon
                         style={{ margin: '0 0 12px' }}
-                        message="Vai trò SYS luôn có toàn bộ quyền và không thể chỉnh sửa."
+                        message="Đây là vai trò hệ thống, quyền hạn bị khóa và không thể chỉnh sửa."
                     />
                 )}
 
@@ -364,16 +366,18 @@ export default function PermissionMatrix({ onNavigateToUsers }: PermissionMatrix
                     </table>
                 </div>
 
-                <div style={{ padding: '12px 0' }}>
-                    <Button
-                        className="um-dashed"
-                        icon={<PlusOutlined />}
-                        disabled={!data}
-                        onClick={() => setCreatingPermission(true)}
-                    >
-                        Thêm quyền mới
-                    </Button>
-                </div>
+                <Can do={PERMISSIONS.ROLES_EDIT}>
+                    <div style={{ padding: '12px 0' }}>
+                        <Button
+                            className="um-dashed"
+                            icon={<PlusOutlined />}
+                            disabled={!data}
+                            onClick={() => setCreatingPermission(true)}
+                        >
+                            Thêm quyền mới
+                        </Button>
+                    </div>
+                </Can>
 
                 <footer className="um-legend">
                     <span>
@@ -386,29 +390,32 @@ export default function PermissionMatrix({ onNavigateToUsers }: PermissionMatrix
                 </footer>
             </section>
 
-            <div className="um-savebar">
+            <Can do={PERMISSIONS.ROLES_EDIT}>
+                <div className="um-savebar">
                 <span>
                     {dirty ? 'Có thay đổi chưa lưu' : 'Không có thay đổi chưa lưu'}
                 </span>
 
-                <Button disabled={readOnly || !preset} onClick={applyPreset}>
-                    Áp dụng mẫu mặc định
-                </Button>
+                    <Button disabled={readOnly || !preset} onClick={applyPreset}>
+                        Áp dụng mẫu mặc định
+                    </Button>
 
-                <Button disabled={!dirty || updatePermissions.isPending} onClick={() => setDraft(null)}>
-                    Hoàn tác
-                </Button>
+                    <Button disabled={!dirty || updatePermissions.isPending} onClick={() => setDraft(null)}>
+                        Hoàn tác
+                    </Button>
 
-                <Button
-                    type="primary"
-                    size="large"
-                    disabled={!dirty || readOnly}
-                    loading={updatePermissions.isPending}
-                    onClick={save}
-                >
-                    Lưu thay đổi
-                </Button>
-            </div>
+                    <Button
+                        type="primary"
+                        size="large"
+                        disabled={!dirty || readOnly}
+                        loading={updatePermissions.isPending}
+                        onClick={save}
+                    >
+                        Lưu thay đổi
+                    </Button>
+                </div>
+
+            </Can>
 
             <CreateRoleModal
                 open={creatingRole}

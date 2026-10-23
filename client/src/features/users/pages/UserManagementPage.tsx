@@ -5,6 +5,8 @@ import UserStatsCards from '../components/UserStatsCards'
 import UserTable from '../components/UserTable'
 import PermissionMatrix from '../components/PermissionMatrix'
 import CreateUserModal from '../components/CreateUserModal'
+import Can from '@/features/auth/components/Can'
+import { PERMISSIONS } from '@/config/permissions'
 import type { RoleCode } from '@/types/user'
 import './UserManagementPage.css'
 
@@ -30,9 +32,11 @@ export default function UserManagementPage() {
                     <p>Quản lý tài khoản nhân viên và phạm vi truy cập theo vai trò.</p>
                 </div>
                 {tab === 'users' && (
-                    <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setCreating(true)}>
-                        Thêm người dùng
-                    </Button>
+                    <Can do={PERMISSIONS.USERS_EDIT}>
+                        <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setCreating(true)}>
+                            Thêm người dùng
+                        </Button>
+                    </Can>
                 )}
             </div>
 
@@ -40,9 +44,11 @@ export default function UserManagementPage() {
                 <button role="tab" aria-selected={tab === 'users'} className={tab === 'users' ? 'is-active' : ''} onClick={() => setTab('users')}>
                     <TeamOutlined /> Danh sách tài khoản
                 </button>
-                <button role="tab" aria-selected={tab === 'matrix'} className={tab === 'matrix' ? 'is-active' : ''} onClick={() => setTab('matrix')}>
-                    <AppstoreOutlined /> Ma trận phân quyền
-                </button>
+                <Can do={PERMISSIONS.ROLES_VIEW}>
+                    <button role="tab" aria-selected={tab === 'matrix'} className={tab === 'matrix' ? 'is-active' : ''} onClick={() => setTab('matrix')}>
+                        <AppstoreOutlined /> Ma trận phân quyền
+                    </button>
+                </Can>
             </div>
 
             {tab === 'users' ? (
