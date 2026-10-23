@@ -17,7 +17,7 @@
  */
 export const ROLE_PRESETS: Record<string, string[]> = {
     SYS: ['*'],
-    MGT: ['*_VIEW', 'CAMPAIGN_APPROVE', 'CAMPAIGN_CANCEL'],
+    MGT: ['*_VIEW', 'CAMPAIGN_APPROVE', 'CAMPAIGN_CANCEL', '!USERS_*', '!ROLES_*'],
     CLIN: ['DONORS_VIEW', 'SCREENING_*'],
     BBNK: ['CAMPAIGN_VIEW', 'DONORS_VIEW'],
     DON: ['CAMPAIGN_VIEW', 'DONORS_*', 'APPOINTMENTS_*', 'SURVEY_*', 'SCREENING_*'],
