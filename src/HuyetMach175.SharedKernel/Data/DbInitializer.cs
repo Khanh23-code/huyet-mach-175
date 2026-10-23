@@ -125,6 +125,14 @@ public static class DbInitializer
             // SCREENING
             new Permission { PermissionCode = "SCREENING_VIEW", PermissionName = "Xem Danh sách chờ Khám lâm sàng / Phiếu khám chi tiết", ModuleCode = "SCREENING", ModuleName = "Khám lâm sàng", ActionType = PermissionAction.VIEW, Description = "Quản lý khám lâm sàng và sàng lọc người hiến máu" },
             new Permission { PermissionCode = "SCREENING_EDIT", PermissionName = "Ghi nhận, gửi kết quả Khám lâm sàng", ModuleCode = "SCREENING", ModuleName = "Khám lâm sàng", ActionType = PermissionAction.EDIT, Description = "Quản lý khám lâm sàng và sàng lọc người hiến máu" },
+
+            // USERS (quản trị hệ thống)
+            new Permission { PermissionCode = "USERS_VIEW", PermissionName = "Xem danh sách Người dùng", ModuleCode = "USERS", ModuleName = "Người dùng", ActionType = PermissionAction.VIEW, Description = "Quản lý tài khoản nhân viên" },
+            new Permission { PermissionCode = "USERS_EDIT", PermissionName = "Tạo mới / Sửa / Khóa Người dùng", ModuleCode = "USERS", ModuleName = "Người dùng", ActionType = PermissionAction.EDIT, Description = "Quản lý tài khoản nhân viên" },
+
+            // ROLES (vai trò & ma trận phân quyền)
+            new Permission { PermissionCode = "ROLES_VIEW", PermissionName = "Xem Vai trò và Ma trận phân quyền", ModuleCode = "ROLES", ModuleName = "Vai trò & Phân quyền", ActionType = PermissionAction.VIEW, Description = "Quản lý vai trò và phân quyền" },
+            new Permission { PermissionCode = "ROLES_EDIT", PermissionName = "Tạo / Sửa Vai trò và Phân quyền", ModuleCode = "ROLES", ModuleName = "Vai trò & Phân quyền", ActionType = PermissionAction.EDIT, Description = "Quản lý vai trò và phân quyền" },
         };
 
         foreach (var p in defaultPermissions)
@@ -178,6 +186,10 @@ public static class DbInitializer
 
         var defaultRolePermissions = new Dictionary<string, string[]>
         {
+            ["SYS"] = new[]
+            {
+                "USERS_VIEW", "USERS_EDIT", "ROLES_VIEW", "ROLES_EDIT"
+            },
             ["MGT"] = new[]
             {
                 "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "CAMPAIGN_APPROVE", "CAMPAIGN_CANCEL",
