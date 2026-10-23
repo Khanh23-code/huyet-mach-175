@@ -6,4 +6,5 @@ namespace HuyetMach175.Modules.Donation.Services;
 public interface IDonorsService
 {
     Task<PagedResult<DonorListItemDto>> GetDonorsAsync(DonorFilterDto filter);
+    Task<DonorDetailDto> GetDonorByIdAsync(int id);
 }

@@ -79,4 +79,57 @@ public class DonorsService : IDonorsService
             PageSize = filter.PageSize
         };
     }
+
+    public async Task<DonorDetailDto> GetDonorByIdAsync(int id)
+    {
+        if (id <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "ID người hiến máu không hợp lệ.");
+        }
+
+        var donor = await _context.Donors
+            .AsNoTracking()
+            .Where(d => d.DonorId == id)
+            .Select(d => new DonorDetailDto
+            {
+                DonorId = d.DonorId,
+                CitizenId = d.CitizenId,
+                FullName = d.FullName,
+                DateOfBirth = d.DateOfBirth,
+                Gender = d.Gender,
+                PhoneNumber = d.PhoneNumber,
+                Email = d.Email,
+                BloodType = d.BloodType,
+                RhFactor = d.RhFactor,
+                TotalDonations = d.TotalDonations,
+                LastDonationDate = d.LastDonationDate,
+                DonationHistory = d.Appointments
+                    .OrderByDescending(a => a.AppointmentDate)
+                    .ThenByDescending(a => a.AppointmentId)
+                    .Select(a => new DonorHistoryItemDto
+                    {
+                        AppointmentId = a.AppointmentId,
+                        AppointmentDate = a.AppointmentDate,
+                        TimeSlot = a.TimeSlot,
+                        CampaignId = a.CampaignId,
+                        CampaignName = a.Campaign != null ? a.Campaign.CampaignName : "Hiến tại bệnh viện",
+                        Status = a.Status,
+                        IsWalkIn = a.IsWalkIn,
+                        ActualVolumeMl = a.DonationSession != null ? a.DonationSession.ActualVolumeMl : null,
+                        SessionStatus = a.DonationSession != null ? a.DonationSession.Status : null,
+                        ScreeningStatus = a.DonationSession != null ? a.DonationSession.ScreeningStatus : null,
+                        DeferralReason = a.DonationSession != null ? a.DonationSession.DeferralReason : null,
+                        CompletedAt = a.DonationSession != null ? a.DonationSession.CompletedAt : null
+                    })
+                    .ToList()
+            })
+            .FirstOrDefaultAsync();
+
+        if (donor == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy người hiến máu với mã #{id}.");
+        }
+
+        return donor;
+    }
 }
