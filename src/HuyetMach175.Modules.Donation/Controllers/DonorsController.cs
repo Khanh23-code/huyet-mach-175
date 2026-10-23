@@ -43,6 +43,31 @@ public class DonorsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("check-eligibility")]
+    [HasPermission("DONORS_VIEW")]
+    [EndpointSummary("Kiểm tra nhanh điều kiện hiến máu theo số CCCD")]
+    [EndpointDescription(
+        "Kiểm tra nhanh người hiến máu có đủ điều kiện về khoảng cách ngày (tối thiểu 84 ngày đối với máu toàn phần) " +
+        "và độ tuổi (18 - 60 tuổi theo Thông tư 26/2013/TT-BYT) hay không trước khi tiếp nhận.\n\n" +
+        "**Xử lý các kịch bản nghiệp vụ:**\n" +
+        "- Nếu số CCCD chưa có trong hệ thống: Trả về trạng thái đủ điều kiện (isEligible = true) với thông báo người hiến mới, không báo lỗi 404 để bàn tiếp đón xử lý đăng ký.\n" +
+        "- Nếu số CCCD đã tồn tại: Tự động trả về thông tin người hiến và tính toán khoảng cách so với lần hiến gần nhất (lastDonationDate). Nếu dưới 84 ngày, trả về cảnh báo kèm số ngày còn lại (daysRemaining) và ngày sớm nhất có thể hiến (nextEligibleDate).\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **DONORS_VIEW** (các vai trò như DON, CLIN, MGT, BBNK).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Trả về kết quả kiểm tra điều kiện hiến máu kèm thông tin người hiến (nếu có).\n" +
+        "- 400 BadRequest: Số CCCD không hợp lệ (trống hoặc không đúng định dạng 12 chữ số).\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền truy cập DONORS_VIEW.")]
+    [ProducesResponseType(typeof(DonorEligibilityDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> CheckEligibility([FromQuery] string citizenId)
+    {
+        var result = await _donorsService.CheckEligibilityAsync(citizenId);
+        return Ok(result);
+    }
+
     [HttpGet("{id:int}")]
     [HasPermission("DONORS_VIEW")]
     [EndpointSummary("Xem chi tiết hồ sơ người hiến máu và lịch sử hiến")]

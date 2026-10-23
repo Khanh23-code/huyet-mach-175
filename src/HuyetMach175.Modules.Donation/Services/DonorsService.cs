@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using HuyetMach175.Api.Data;
 using HuyetMach175.Modules.Donation.DTOs.Common;
 using HuyetMach175.Modules.Donation.DTOs.Donors;
@@ -131,5 +132,124 @@ public class DonorsService : IDonorsService
         }
 
         return donor;
+    }
+
+    public async Task<DonorEligibilityDto> CheckEligibilityAsync(string citizenId)
+    {
+        if (string.IsNullOrWhiteSpace(citizenId))
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Vui lòng cung cấp số CCCD cần kiểm tra.");
+        }
+
+        var trimmedCitizenId = citizenId.Trim();
+        if (!Regex.IsMatch(trimmedCitizenId, @"^[0-9]{12}$"))
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Số CCCD không hợp lệ. Số CCCD phải gồm đúng 12 chữ số.");
+        }
+
+        var donor = await _context.Donors
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d => d.CitizenId == trimmedCitizenId);
+
+        // Trường hợp 1: Người mới hoàn toàn (chưa có trong database)
+        if (donor == null)
+        {
+            return new DonorEligibilityDto
+            {
+                CitizenId = trimmedCitizenId,
+                DonorId = null,
+                FullName = null,
+                DateOfBirth = null,
+                Age = null,
+                Gender = null,
+                PhoneNumber = null,
+                BloodType = null,
+                RhFactor = null,
+                TotalDonations = 0,
+                HasDonatedBefore = false,
+                LastDonationDate = null,
+                NextEligibleDate = null,
+                DaysRemaining = 0,
+                IsEligible = true,
+                IsAgeQualified = true,
+                Message = "Người hiến máu mới, chưa có hồ sơ trong hệ thống. Đủ điều kiện đăng ký hiến máu."
+            };
+        }
+
+        // Trường hợp 2: Đã có hồ sơ trong hệ thống
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // Tính tuổi và kiểm tra độ tuổi theo Thông tư 26/2013/TT-BYT (18 - 60 tuổi)
+        int? age = null;
+        bool isAgeQualified = true;
+        if (donor.DateOfBirth != default)
+        {
+            age = today.Year - donor.DateOfBirth.Year;
+            if (donor.DateOfBirth > today.AddYears(-age.Value))
+            {
+                age--;
+            }
+
+            if (age < 18 || age > 60)
+            {
+                isAgeQualified = false;
+            }
+        }
+
+        bool hasDonatedBefore = donor.TotalDonations > 0 && donor.LastDonationDate.HasValue;
+        DateOnly? nextEligibleDate = null;
+        int daysRemaining = 0;
+        bool isDateEligible = true;
+
+        if (hasDonatedBefore)
+        {
+            // Khoảng cách tối thiểu giữa 2 lần hiến máu toàn phần là 84 ngày (12 tuần)
+            nextEligibleDate = donor.LastDonationDate!.Value.AddDays(84);
+            var diff = nextEligibleDate.Value.DayNumber - today.DayNumber;
+            if (diff > 0)
+            {
+                daysRemaining = diff;
+                isDateEligible = false;
+            }
+        }
+
+        bool isEligible = isAgeQualified && isDateEligible;
+
+        string message;
+        if (!isAgeQualified)
+        {
+            message = $"Người hiến máu hiện tại {age} tuổi, không nằm trong độ tuổi quy định hiến máu (18 - 60 tuổi theo Thông tư 26/2013/TT-BYT).";
+        }
+        else if (!isDateEligible)
+        {
+            message = $"Chưa đủ khoảng cách 84 ngày kể từ lần hiến gần nhất ({donor.LastDonationDate!.Value:dd/MM/yyyy}). Cần chờ thêm {daysRemaining} ngày (ngày sớm nhất có thể hiến là {nextEligibleDate!.Value:dd/MM/yyyy}).";
+        }
+        else
+        {
+            message = hasDonatedBefore
+                ? $"Đã đủ khoảng cách 84 ngày kể từ lần hiến gần nhất ({donor.LastDonationDate!.Value:dd/MM/yyyy}). Đủ điều kiện hiến máu."
+                : "Người hiến máu chưa có lịch sử hiến máu trước đây. Đủ điều kiện hiến máu.";
+        }
+
+        return new DonorEligibilityDto
+        {
+            CitizenId = donor.CitizenId,
+            DonorId = donor.DonorId,
+            FullName = donor.FullName,
+            DateOfBirth = donor.DateOfBirth,
+            Age = age,
+            Gender = donor.Gender,
+            PhoneNumber = donor.PhoneNumber,
+            BloodType = donor.BloodType,
+            RhFactor = donor.RhFactor,
+            TotalDonations = donor.TotalDonations,
+            HasDonatedBefore = hasDonatedBefore,
+            LastDonationDate = donor.LastDonationDate,
+            NextEligibleDate = nextEligibleDate,
+            DaysRemaining = daysRemaining,
+            IsEligible = isEligible,
+            IsAgeQualified = isAgeQualified,
+            Message = message
+        };
     }
 }
