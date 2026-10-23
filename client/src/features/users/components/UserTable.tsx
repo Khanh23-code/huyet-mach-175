@@ -4,7 +4,9 @@ import type { TableColumnsType } from 'antd'
 import { EditOutlined, LockOutlined, SearchOutlined, UnlockOutlined } from '@ant-design/icons'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/features/auth/authStore'
-import { ROLE_META } from '@/config/rbac'
+import { SYSTEM_ROLE_CODES } from '@/config/rbac'
+import { PERMISSIONS } from '@/config/permissions'
+import { usePermission } from '@/features/auth/usePermission'
 import type { RoleCode, UserItem } from '@/types/user'
 import { useDebounce, useRoles, useUsers } from '../hooks'
 import { usersApi } from '../usersApi'
@@ -36,6 +38,10 @@ export default function UserTable({ selectedRoleCodes, onRoleCodesChange }: User
     const [editing, setEditing] = useState<UserItem | null>(null)
     const debounced = useDebounce(keyword)
     const rolesQuery = useRoles()
+    const { can } = usePermission()
+    const roleNameByCode = new Map<string, string>(
+        rolesQuery.data?.map((r): [string, string] => [r.code, r.name]),
+    )
 
     const [prevRoleCodes, setPrevRoleCodes] = useState(roleCodes)
     if (prevRoleCodes !== roleCodes) {
@@ -63,9 +69,11 @@ export default function UserTable({ selectedRoleCodes, onRoleCodesChange }: User
     const isSelf = (u: UserItem) =>
         !!me && ((me.id !== undefined && String(me.id) === String(u.id)) || (!!me.username && me.username === u.username))
 
-    const isSysAdmin = !!me?.roles?.some((r) => r.trim().toUpperCase() === 'SYS')
-    // BE: chỉ SYS được sửa tài khoản SYS
-    const canEdit = (u: UserItem) => isSysAdmin || !u.roles.includes('SYS')
+    const canManageUsers = can(PERMISSIONS.USERS_EDIT)
+    const canManageRoles = can(PERMISSIONS.ROLES_EDIT)
+    // BE: tài khoản mang vai trò hệ thống chỉ người có quyền quản trị vai trò mới được sửa
+    const canEdit = (u: UserItem) =>
+        canManageUsers && (canManageRoles || !u.roles.some((r) => SYSTEM_ROLE_CODES.includes(r)))
 
     const columns: TableColumnsType<UserItem> = [
         {
@@ -88,7 +96,7 @@ export default function UserTable({ selectedRoleCodes, onRoleCodesChange }: User
                     {roles.map((r) => (
                         <span className="um-role" key={r}>
                             <b className={`um-role__code um-role__code--${r}`}>{r}</b>
-                            <small>{ROLE_META[r]?.label ?? r}</small>
+                            <small>{roleNameByCode.get(r) ?? r}</small>
                         </span>
                     ))}
                 </div>
@@ -112,7 +120,7 @@ export default function UserTable({ selectedRoleCodes, onRoleCodesChange }: User
                 const editable = canEdit(u)
                 return (
                     <div className="um-actions">
-                        <Tooltip title={editable ? 'Chỉnh sửa người dùng' : 'Chỉ quản trị hệ thống (SYS) được sửa tài khoản SYS'}>
+                        <Tooltip title={editable ? 'Chỉnh sửa người dùng' : 'Bạn không đủ quyền sửa tài khoản này'}>
                             <Button
                                 type="text"
                                 icon={<EditOutlined />}
@@ -172,7 +180,7 @@ export default function UserTable({ selectedRoleCodes, onRoleCodesChange }: User
 
             <Table<UserItem>
                 rowKey="id"
-                columns={columns}
+                columns={canManageUsers ? columns : columns.filter((c) => c.title !== 'THAO TÁC')}
                 dataSource={data?.items}
                 loading={isLoading || isFetching}
                 locale={{
@@ -194,7 +202,7 @@ export default function UserTable({ selectedRoleCodes, onRoleCodesChange }: User
             <EditUserModal
                 user={editing}
                 isSelf={!!editing && isSelf(editing)}
-                canAssignSys={isSysAdmin}
+                canAssignSystemRole={canManageRoles}
                 onClose={() => setEditing(null)}
             />
         </section>

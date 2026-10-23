@@ -20,5 +20,10 @@ public class DonationCampaignConfiguration : IEntityTypeConfiguration<DonationCa
             .WithMany(u => u.ApprovedCampaigns)
             .HasForeignKey(c => c.ApprovedBy)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(c => c.CancelledByUser)
+            .WithMany(u => u.CancelledCampaigns)
+            .HasForeignKey(c => c.CancelledBy)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

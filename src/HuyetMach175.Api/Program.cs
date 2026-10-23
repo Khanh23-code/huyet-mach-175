@@ -5,6 +5,7 @@ using HuyetMach175.SharedKernel.Authorization;
 using HuyetMach175.SharedKernel.Services;
 
 using HuyetMach175.Modules.Auth;
+using HuyetMach175.Modules.Donation;
 
 using Scalar.AspNetCore;
 using Microsoft.OpenApi;
@@ -16,13 +17,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddAuthModule(builder.Configuration);
+builder.Services.AddDonationModule();
 builder.Services.AddPermissionAuthorization();
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.SetIsOriginAllowed(origin => true) // Hỗ trợ cả localhost và domain frontend Cloudflare Pages
+        policy.SetIsOriginAllowed(origin => true)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -32,7 +34,6 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(o =>
     {
-        // Lỗi validate DataAnnotations trả cùng format { message, errors } với HttpException
         o.InvalidModelStateResponseFactory = ctx =>
         {
             var errors = ctx.ModelState

@@ -6,7 +6,8 @@ import {
     ToolOutlined,
 } from '@ant-design/icons'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useAuthStore } from '@/features/auth/authStore'
+import { usePermission } from '@/features/auth/usePermission'
+import { PERMISSIONS } from '@/config/permissions'
 import './NotFoundPage.css'
 
 interface KnownModuleInfo {
@@ -61,7 +62,7 @@ const KNOWN_MODULES: Record<string, KnownModuleInfo> = {
 export default function NotFoundPage() {
     const location = useLocation()
     const navigate = useNavigate()
-    const user = useAuthStore((s) => s.user)
+    const { can } = usePermission()
 
     const pathname = location.pathname.replace(/\/+$/, '')
     const known = KNOWN_MODULES[pathname]
@@ -103,7 +104,7 @@ export default function NotFoundPage() {
                             <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
                                 Quay lại trang trước
                             </Button>
-                            {user?.roles?.includes('SYS') && (
+                            {can(PERMISSIONS.USERS_VIEW) && (
                                 <Button
                                     type="primary"
                                     icon={<TeamOutlined />}

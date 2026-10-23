@@ -1,4 +1,5 @@
-export type RoleCode = 'DON' | 'BBNK' | 'CLIN' | 'MGT' | 'SYS'
+/** Mã vai trò do BE trả về. Admin có thể tạo vai trò mới nên không giới hạn bằng union. */
+export type RoleCode = string
 
 export interface UserItem {
     id: number
