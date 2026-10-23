@@ -1,5 +1,6 @@
 import { Skeleton } from 'antd'
 import { getInitials, useCurrentUser } from '@/features/auth/useCurrentUser'
+import { useRoles } from '@/features/users/hooks'
 import type { UserProfile } from '@/types/auth'
 import { formatDate } from '../utils/device'
 
@@ -9,7 +10,8 @@ interface Props {
 }
 
 export default function ProfileCard({ profile, loading }: Props) {
-    const { displayName, role, roleLabel } = useCurrentUser()
+    const { displayName } = useCurrentUser()
+    const rolesQuery = useRoles()
 
     if (loading || !profile) {
         return (
@@ -22,12 +24,28 @@ export default function ProfileCard({ profile, loading }: Props) {
     const name = profile.fullName?.trim() || profile.username
     const isActive = profile.isActive !== false
 
+    // Mọi vai trò của tài khoản (mã lấy từ /me, tên lấy từ danh sách vai trò; chưa có tên thì hiện mã)
+    const roles = (profile.roles ?? []).map((code) => ({
+        code,
+        name: rolesQuery.data?.find((r) => r.code === code)?.name,
+    }))
+    const roleSummary = roles.map((r) => r.name ?? r.code).join(', ')
+
     const rows: { label: string; value: React.ReactNode }[] = [
         { label: 'Mã nhân viên', value: profile.staffCode ?? '—' },
         { label: 'Khoa / Phòng', value: profile.departmentName ?? '—' },
         {
             label: 'Vai trò',
-            value: role ? <span className="pf-pill"><i />{roleLabel} ({role})</span> : '—',
+            value: roles.length ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {roles.map((r) => (
+                        <span className="pf-pill" key={r.code}>
+                            <i />
+                            {r.name ? `${r.name} (${r.code})` : r.code}
+                        </span>
+                    ))}
+                </div>
+            ) : '—',
         },
         { label: 'Email nội bộ', value: profile.email || '—' },
         { label: 'Số điện thoại', value: profile.phoneNumber || '—' },
@@ -43,7 +61,7 @@ export default function ProfileCard({ profile, loading }: Props) {
                         <i />{isActive ? 'Hoạt động' : 'Đã khóa'}
                     </span>
                     <h2>{displayName || name}</h2>
-                    <p>{[roleLabel, profile.departmentName].filter(Boolean).join(' · ')}</p>
+                    <p>{[roleSummary, profile.departmentName].filter(Boolean).join(' · ')}</p>
                 </div>
             </header>
 
