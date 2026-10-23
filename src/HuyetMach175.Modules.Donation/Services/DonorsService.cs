@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using HuyetMach175.Api.Data;
+using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Modules.Donation.DTOs.Common;
 using HuyetMach175.Modules.Donation.DTOs.Donors;
 using HuyetMach175.SharedKernel.Exceptions;
@@ -151,7 +152,6 @@ public class DonorsService : IDonorsService
             .AsNoTracking()
             .FirstOrDefaultAsync(d => d.CitizenId == trimmedCitizenId);
 
-        // Trường hợp 1: Người mới hoàn toàn (chưa có trong database)
         if (donor == null)
         {
             return new DonorEligibilityDto
@@ -176,10 +176,8 @@ public class DonorsService : IDonorsService
             };
         }
 
-        // Trường hợp 2: Đã có hồ sơ trong hệ thống
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-        // Tính tuổi và kiểm tra độ tuổi theo Thông tư 26/2013/TT-BYT (18 - 60 tuổi)
         int? age = null;
         bool isAgeQualified = true;
         if (donor.DateOfBirth != default)
@@ -203,7 +201,6 @@ public class DonorsService : IDonorsService
 
         if (hasDonatedBefore)
         {
-            // Khoảng cách tối thiểu giữa 2 lần hiến máu toàn phần là 84 ngày (12 tuần)
             nextEligibleDate = donor.LastDonationDate!.Value.AddDays(84);
             var diff = nextEligibleDate.Value.DayNumber - today.DayNumber;
             if (diff > 0)
@@ -251,5 +248,65 @@ public class DonorsService : IDonorsService
             IsAgeQualified = isAgeQualified,
             Message = message
         };
+    }
+
+    public async Task<DonorDetailDto> CreateDonorAsync(CreateDonorRequest request)
+    {
+        var citizenId = request.CitizenId.Trim();
+        if (!Regex.IsMatch(citizenId, @"^[0-9]{12}$"))
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Số CCCD không hợp lệ. Số CCCD phải gồm đúng 12 chữ số.");
+        }
+
+        var phone = request.PhoneNumber.Trim();
+        if (!Regex.IsMatch(phone, @"^0\d{9}$"))
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Số điện thoại không hợp lệ (phải gồm 10 chữ số, bắt đầu bằng 0).");
+        }
+
+        if (await _context.Donors.AnyAsync(d => d.CitizenId == citizenId))
+        {
+            throw new HttpException(StatusCodes.Status409Conflict, "Số CCCD này đã tồn tại trong hệ thống.");
+        }
+
+        if (await _context.Donors.AnyAsync(d => d.PhoneNumber == phone))
+        {
+            throw new HttpException(StatusCodes.Status409Conflict, "Số điện thoại này đã được sử dụng bởi người hiến khác.");
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var age = today.Year - request.DateOfBirth.Year;
+        if (request.DateOfBirth > today.AddYears(-age))
+        {
+            age--;
+        }
+
+        if (age < 18 || age > 60)
+        {
+            throw new HttpException(
+                StatusCodes.Status400BadRequest,
+                $"Người hiến máu phải trong độ tuổi từ 18 đến 60 theo quy định (hiện tại {age} tuổi).");
+        }
+
+        var email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
+
+        var donor = new Donor
+        {
+            CitizenId = citizenId,
+            FullName = request.FullName.Trim(),
+            DateOfBirth = request.DateOfBirth,
+            Gender = request.Gender.Trim(),
+            PhoneNumber = phone,
+            Email = email,
+            BloodType = null,
+            RhFactor = null,
+            TotalDonations = 0,
+            LastDonationDate = null
+        };
+
+        _context.Donors.Add(donor);
+        await _context.SaveChangesAsync();
+
+        return await GetDonorByIdAsync(donor.DonorId);
     }
 }

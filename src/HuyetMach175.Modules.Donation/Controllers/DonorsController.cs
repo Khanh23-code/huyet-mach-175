@@ -93,4 +93,32 @@ public class DonorsController : ControllerBase
         var result = await _donorsService.GetDonorByIdAsync(id);
         return Ok(result);
     }
+
+    [HttpPost]
+    [HasPermission("DONORS_EDIT")]
+    [EndpointSummary("Đăng ký mới hồ sơ người hiến máu")]
+    [EndpointDescription(
+        "Đăng ký hồ sơ người hiến máu mới tại quầy tiếp nhận (áp dụng cho người hiến vãng lai lần đầu đến viện).\n\n" +
+        "**Quy tắc nghiệp vụ:**\n" +
+        "- Số CCCD gồm đúng 12 chữ số và không được trùng với người hiến khác trong hệ thống (nếu trùng trả về 409 Conflict).\n" +
+        "- Số điện thoại gồm 10 chữ số bắt đầu bằng 0 và không được trùng với người hiến khác (nếu trùng trả về 409 Conflict).\n" +
+        "- Người hiến máu phải từ đủ 18 tuổi đến 60 tuổi theo quy định y tế.\n" +
+        "- Nhóm máu (bloodType) và yếu tố Rh (rhFactor) ban đầu được để trống (null), sẽ được cập nhật tự động sau quy trình xét nghiệm lâm sàng.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **DONORS_EDIT** (các vai trò như DON, CLIN).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 201 Created: Đăng ký hồ sơ thành công, trả về chi tiết hồ sơ vừa tạo.\n" +
+        "- 400 BadRequest: Dữ liệu không hợp lệ hoặc độ tuổi ngoài khoảng 18 - 60.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền truy cập DONORS_EDIT.\n" +
+        "- 409 Conflict: Số CCCD hoặc Số điện thoại đã tồn tại trong hệ thống.")]
+    [ProducesResponseType(typeof(DonorDetailDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CreateDonor([FromBody] CreateDonorRequest request)
+    {
+        var result = await _donorsService.CreateDonorAsync(request);
+        return CreatedAtAction(nameof(GetDonorById), new { id = result.DonorId }, result);
+    }
 }
