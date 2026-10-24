@@ -6,12 +6,16 @@ import DashboardPage from '@/pages/DashboardPage'
 import ForbiddenPage from '@/pages/ForbiddenPage'
 import UserManagementPage from '@/features/users/pages/UserManagementPage'
 import ProfilePage from '@/features/account/pages/ProfilePage'
+import SiteMonitorPage from '@/features/campaigns/pages/SiteMonitorPage'
+import ProposalPage from '@/features/campaigns/pages/ProposalPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import RouteErrorBoundary from '@/components/RouteErrorBoundary'
 import { findRouteItem } from '@/config/routeConfig'
 
 // Quyền của từng route lấy từ routeConfig (cùng nguồn với Sidebar)
 const usersRoute = findRouteItem('users')
+const siteListRoute = findRouteItem('site-list')
+const proposalsRoute = findRouteItem('site-proposals')
 
 export const router = createBrowserRouter([
     {
@@ -40,6 +44,16 @@ export const router = createBrowserRouter([
                         // Route theo quyền: phải nằm trong AppLayout (nơi đồng bộ permissions)
                         element: <ProtectedRoute requiredPermission={usersRoute.requiredPermission} />,
                         children: [{ path: usersRoute.path, element: <UserManagementPage /> }],
+                    },
+                    // Điểm hiến & lịch slot
+                    { path: '/campaigns', element: <Navigate to={siteListRoute.path} replace /> },
+                    {
+                        element: <ProtectedRoute requiredPermission={siteListRoute.requiredPermission} />,
+                        children: [{ path: siteListRoute.path, element: <SiteMonitorPage /> }],
+                    },
+                    {
+                        element: <ProtectedRoute requiredPermission={proposalsRoute.requiredPermission} />,
+                        children: [{ path: proposalsRoute.path, element: <ProposalPage /> }],
                     },
                     // Bắt tất cả các đường dẫn chưa có giao diện bên trong AppLayout
                     { path: '*', element: <NotFoundPage /> },

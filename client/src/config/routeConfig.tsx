@@ -50,12 +50,14 @@ export const ROUTE_GROUPS: RouteGroup[] = [
     },
     {
         key: 'campaigns',
-        label: 'Đợt hiến máu',
+        label: 'Điểm hiến & Lịch slot',
         icon: <CalendarOutlined />,
         defaultOpen: true,
         children: [
-            // TODO: đổi path khi làm trang danh sách đợt hiến máu
-            { key: 'campaign-list', label: 'Danh sách đợt hiến máu', path: '/campaigns', requiredPermission: PERMISSIONS.CAMPAIGN_VIEW },
+            // MGT / BBNK / DON: theo dõi điểm hiến; MGT thấy thêm khu vực duyệt đề xuất
+            { key: 'site-list', label: 'Điểm hiến máu & Lịch slot', path: '/campaigns/sites', requiredPermission: PERMISSIONS.CAMPAIGN_VIEW },
+            // BBNK: tạo / gửi đề xuất
+            { key: 'site-proposals', label: 'Đề xuất lịch & điểm hiến', path: '/campaigns/proposals', requiredPermission: PERMISSIONS.CAMPAIGN_EDIT },
         ],
     },
     {
