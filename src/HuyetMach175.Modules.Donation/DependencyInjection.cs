@@ -9,6 +9,8 @@ public static class DependencyInjection
     {
         services.AddScoped<ICampaignsService, CampaignsService>();
         services.AddScoped<IDonorsService, DonorsService>();
+        services.AddScoped<ISitesService, SitesService>();
+        services.AddScoped<IProposalsService, ProposalsService>();
 
         services.AddControllers()
             .AddApplicationPart(typeof(DependencyInjection).Assembly);
