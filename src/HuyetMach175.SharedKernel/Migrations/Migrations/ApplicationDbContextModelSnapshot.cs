@@ -758,6 +758,96 @@ namespace HuyetMach175.Api.Migrations
                     b.ToTable("donation_sessions");
                 });
 
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.DonationSite", b =>
+                {
+                    b.Property<int>("SiteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("site_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SiteId"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("address");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)")
+                        .HasColumnName("phone_number");
+
+                    b.Property<string>("SiteCode")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("site_code");
+
+                    b.Property<string>("SiteName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("site_name");
+
+                    b.Property<string>("SiteType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("site_type");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("SiteId");
+
+                    b.HasIndex("SiteCode")
+                        .IsUnique();
+
+                    b.ToTable("donation_sites");
+                });
+
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.DonationSiteSlot", b =>
+                {
+                    b.Property<int>("SlotId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("slot_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SlotId"));
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("integer")
+                        .HasColumnName("capacity");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("end_time");
+
+                    b.Property<int>("SiteId")
+                        .HasColumnType("integer")
+                        .HasColumnName("site_id");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("start_time");
+
+                    b.HasKey("SlotId");
+
+                    b.HasIndex("SiteId", "StartTime");
+
+                    b.ToTable("donation_site_slots");
+                });
+
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.Donor", b =>
                 {
                     b.Property<int>("DonorId")
@@ -1089,6 +1179,103 @@ namespace HuyetMach175.Api.Migrations
                     b.HasIndex("PermissionId");
 
                     b.ToTable("role_permissions");
+                });
+
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.SiteProposal", b =>
+                {
+                    b.Property<int>("ProposalId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("proposal_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ProposalId"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("address");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)")
+                        .HasColumnName("phone_number");
+
+                    b.Property<string>("ProposalCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("proposal_code");
+
+                    b.Property<string>("ProposalType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("proposal_type");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("rejection_reason");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reviewed_at");
+
+                    b.Property<int?>("ReviewedBy")
+                        .HasColumnType("integer")
+                        .HasColumnName("reviewed_by");
+
+                    b.Property<int?>("SiteId")
+                        .HasColumnType("integer")
+                        .HasColumnName("site_id");
+
+                    b.Property<string>("SiteName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("site_name");
+
+                    b.Property<string>("SiteType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("site_type");
+
+                    b.Property<string>("SlotsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("slots_json");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.HasKey("ProposalId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("ProposalCode")
+                        .IsUnique();
+
+                    b.HasIndex("ReviewedBy");
+
+                    b.HasIndex("SiteId", "Status");
+
+                    b.HasIndex("Status", "CreatedAt");
+
+                    b.ToTable("site_proposals");
                 });
 
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.StorageLocation", b =>
@@ -1453,6 +1640,17 @@ namespace HuyetMach175.Api.Migrations
                     b.Navigation("Phlebotomist");
                 });
 
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.DonationSiteSlot", b =>
+                {
+                    b.HasOne("HuyetMach175.Api.Data.Entities.DonationSite", "Site")
+                        .WithMany("Slots")
+                        .HasForeignKey("SiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Site");
+                });
+
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.Notification", b =>
                 {
                     b.HasOne("HuyetMach175.Api.Data.Entities.User", "RecipientUser")
@@ -1513,6 +1711,31 @@ namespace HuyetMach175.Api.Migrations
                     b.Navigation("Permission");
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.SiteProposal", b =>
+                {
+                    b.HasOne("HuyetMach175.Api.Data.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HuyetMach175.Api.Data.Entities.User", "ReviewedByUser")
+                        .WithMany()
+                        .HasForeignKey("ReviewedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HuyetMach175.Api.Data.Entities.DonationSite", "Site")
+                        .WithMany()
+                        .HasForeignKey("SiteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("ReviewedByUser");
+
+                    b.Navigation("Site");
                 });
 
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.User", b =>
@@ -1595,6 +1818,11 @@ namespace HuyetMach175.Api.Migrations
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.DonationSession", b =>
                 {
                     b.Navigation("BloodBags");
+                });
+
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.DonationSite", b =>
+                {
+                    b.Navigation("Slots");
                 });
 
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.Donor", b =>
