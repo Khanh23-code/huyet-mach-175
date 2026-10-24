@@ -192,7 +192,7 @@ public static class DbInitializer
             },
             ["MGT"] = new[]
             {
-                "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "CAMPAIGN_APPROVE", "CAMPAIGN_CANCEL",
+                "CAMPAIGN_VIEW", "CAMPAIGN_APPROVE", "CAMPAIGN_CANCEL",
                 "DONORS_VIEW", "APPOINTMENTS_VIEW", "SURVEY_VIEW", "SCREENING_VIEW"
             },
             ["CLIN"] = new[]
@@ -240,6 +240,19 @@ public static class DbInitializer
             }
             if (hasChanges)
             {
+                await context.SaveChangesAsync();
+            }
+        }
+
+        var mgtRole = await context.Roles.FirstOrDefaultAsync(r => r.RoleCode == "MGT");
+        if (mgtRole != null && permMap.TryGetValue("CAMPAIGN_EDIT", out var editPermId))
+        {
+            var stale = await context.RolePermissions
+                .Where(rp => rp.RoleId == mgtRole.RoleId && rp.PermissionId == editPermId)
+                .ToListAsync();
+            if (stale.Count > 0)
+            {
+                context.RolePermissions.RemoveRange(stale);
                 await context.SaveChangesAsync();
             }
         }
