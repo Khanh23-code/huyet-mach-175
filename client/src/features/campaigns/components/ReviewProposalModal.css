@@ -1,0 +1,20 @@
+/* Đồng bộ chữ trong hai thẻ cấu hình */
+.review-proposal-modal .ds-config__label,
+.review-proposal-modal .ds-config__title,
+.review-proposal-modal .ds-config__sub {
+    font-size: 13px !important;
+    line-height: 1.5;
+}
+
+/* Đồng bộ chữ trong bảng khung giờ */
+.review-proposal-modal .ds-config table,
+.review-proposal-modal .ds-config th,
+.review-proposal-modal .ds-config td {
+    font-size: 13px !important;
+}
+
+/* Đưa bộ đếm ký tự sang lề trái */
+.review-proposal-modal .reject-reason-input .ant-input-data-count {
+    left: 0;
+    right: auto;
+}

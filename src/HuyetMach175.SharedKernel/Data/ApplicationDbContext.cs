@@ -23,6 +23,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<DonationAppointment> DonationAppointments => Set<DonationAppointment>();
     public DbSet<PreScreeningSurvey> PreScreeningSurveys => Set<PreScreeningSurvey>();
     public DbSet<DonationSession> DonationSessions => Set<DonationSession>();
+    public DbSet<DonationSite> DonationSites => Set<DonationSite>();
+    public DbSet<DonationSiteSlot> DonationSiteSlots => Set<DonationSiteSlot>();
+    public DbSet<SiteProposal> SiteProposals => Set<SiteProposal>();
 
     public DbSet<BloodComponentType> BloodComponentTypes => Set<BloodComponentType>();
     public DbSet<StorageLocation> StorageLocations => Set<StorageLocation>();
