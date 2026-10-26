@@ -101,6 +101,20 @@ export const useUpdateCampaignStatus = () => {
     })
 }
 
+export const useCancelCampaign = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ id, reason }: { id: number; reason: string }) =>
+            campaignsApi.cancel(id, reason),
+        onSuccess: async (_, variables) => {
+            await Promise.all([
+                qc.invalidateQueries({ queryKey: ['campaigns'] }),
+                qc.invalidateQueries({ queryKey: ['campaigns', 'detail', variables.id] }),
+            ])
+        },
+    })
+}
+
 export const useDeleteCampaign = () => {
     const qc = useQueryClient()
     return useMutation({

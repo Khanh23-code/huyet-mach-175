@@ -28,6 +28,8 @@ export interface CampaignListItem {
     targetDonations: number
     maxCapacity?: number | null
     status: CampaignStatus
+    rejectionReason?: string | null
+    cancellationReason?: string | null
     totalRegistered: number
     totalCollected: number
     createdBy?: number
@@ -49,6 +51,7 @@ export interface CampaignDetail extends CampaignListItem {
     cancelledBy?: number | null
     cancelledByName?: string | null
     cancelledAt?: string | null
+    cancellationReason?: string | null
     slots: CampaignSlot[]
 }
 
@@ -90,6 +93,10 @@ export interface UpdateCampaignRequest extends CreateCampaignRequest {}
 export interface ApproveCampaignRequest {
     isApproved: boolean
     rejectionReason?: string
+}
+
+export interface CancelCampaignRequest {
+    reason: string
 }
 
 export interface UpdateCampaignStatusRequest {

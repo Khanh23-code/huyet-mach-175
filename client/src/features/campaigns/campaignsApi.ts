@@ -67,6 +67,11 @@ export const campaignsApi = {
             .patch<CampaignDetail>(`/api/campaigns/${id}/status`, { status: toCampaignStatusNumber(status) })
             .then((r) => r.data),
 
+    cancel: (id: number, reason: string) =>
+        axiosClient
+            .patch<CampaignDetail>(`/api/campaigns/${id}/cancel`, { reason })
+            .then((r) => r.data),
+
     delete: (id: number) =>
         axiosClient.delete<void>(`/api/campaigns/${id}`).then((r) => r.data),
 }
