@@ -25,7 +25,6 @@ import Can from '@/features/auth/components/Can'
 import { PERMISSIONS } from '@/config/permissions'
 import { useCampaignDetail, useUpdateCampaignStatus } from '../hooks'
 import {
-    CAMPAIGN_STATUS_COLOR,
     CAMPAIGN_STATUS_LABEL,
     CAMPAIGN_TYPE_LABEL,
     fmtDate,
@@ -189,12 +188,12 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                             <b>{detail.campaignName}</b>
                         </Descriptions.Item>
                         <Descriptions.Item label="Hình thức">
-                            <Tag color={campaignType === 'EVENT' ? 'blue' : 'orange'}>
+                            <Tag className="campaign-tag">
                                 {CAMPAIGN_TYPE_LABEL[campaignType]}
                             </Tag>
                         </Descriptions.Item>
                         <Descriptions.Item label="Trạng thái">
-                            <Tag color={CAMPAIGN_STATUS_COLOR[status]} style={{ fontWeight: 600 }}>
+                            <Tag className="campaign-tag" style={{ fontWeight: 600 }}>
                                 {CAMPAIGN_STATUS_LABEL[status]}
                             </Tag>
                         </Descriptions.Item>
