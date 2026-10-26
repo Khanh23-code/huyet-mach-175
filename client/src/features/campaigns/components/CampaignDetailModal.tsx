@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
     App,
     Button,
@@ -6,7 +7,6 @@ import {
     Descriptions,
     Divider,
     Modal,
-    Popconfirm,
     Progress,
     Row,
     Skeleton,
@@ -20,6 +20,7 @@ import {
     PlayCircleOutlined,
 } from '@ant-design/icons'
 import ConfigCard from './ConfigCard'
+import CancelCampaignModal from './CancelCampaignModal'
 import Can from '@/features/auth/components/Can'
 import { PERMISSIONS } from '@/config/permissions'
 import { useCampaignDetail, useUpdateCampaignStatus } from '../hooks'
@@ -45,6 +46,7 @@ interface Props {
 export default function CampaignDetailModal({ campaignId, campaign, site, onClose }: Props) {
     const id = campaignId ?? campaign?.campaignId ?? site?.siteId ?? null
     const { message } = App.useApp()
+    const [isCancelOpen, setIsCancelOpen] = useState(false)
     const { data: detail, isLoading } = useCampaignDetail(id)
     const updateStatusMutation = useUpdateCampaignStatus()
 
@@ -67,11 +69,19 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
             title="Chi tiết đợt hiến máu"
             open={id !== null}
             onCancel={onClose}
+            style={{ top: 64, paddingBottom: 24 }}
+            styles={{
+                body: {
+                    maxHeight: 'calc(85vh - 110px)',
+                    overflowY: 'auto',
+                    paddingRight: 8,
+                },
+            }}
             footer={
                 detail ? (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Can do={PERMISSIONS.CAMPAIGN_EDIT}>
-                            <Space>
+                        <Space>
+                            <Can do={PERMISSIONS.CAMPAIGN_EDIT}>
                                 {status === 'APPROVED' && (
                                     <Button
                                         type="primary"
@@ -93,23 +103,19 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                                         Hoàn thành chiến dịch
                                     </Button>
                                 )}
+                            </Can>
+                            <Can do={PERMISSIONS.CAMPAIGN_CANCEL}>
                                 {(status === 'APPROVED' || status === 'IN_PROGRESS') && (
-                                    <Popconfirm
-                                        title="Hủy bỏ đợt hiến máu này?"
-                                        description="Thao tác này sẽ dừng đợt hiến và không thể hoàn tác."
-                                        onConfirm={() => handleUpdateStatus('CANCELLED', 'Đã hủy')}
+                                    <Button
+                                        danger
+                                        icon={<CloseCircleOutlined />}
+                                        onClick={() => setIsCancelOpen(true)}
                                     >
-                                        <Button
-                                            danger
-                                            icon={<CloseCircleOutlined />}
-                                            loading={updateStatusMutation.isPending}
-                                        >
-                                            Hủy đợt hiến
-                                        </Button>
-                                    </Popconfirm>
+                                        Hủy đợt hiến
+                                    </Button>
                                 )}
-                            </Space>
-                        </Can>
+                            </Can>
+                        </Space>
                         <Button onClick={onClose}>Đóng</Button>
                     </div>
                 ) : null
@@ -171,7 +177,7 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                                 <span>
                                     {status === 'REJECTED'
                                         ? 'Đề xuất chiến dịch này đã bị từ chối · Không mở tiếp nhận đăng ký'
-                                        : 'Chiến dịch này đã bị hủy · Đã dừng tiếp nhận người hiến máu'}
+                                        : `Đợt hiến máu đã bị hủy${detail.cancellationReason ? ` · Lý do: ${detail.cancellationReason}` : ' · Đã dừng tiếp nhận người hiến máu'}`}
                                 </span>
                             </div>
                         )}
@@ -237,6 +243,11 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                                 <span style={{ color: '#c4261b', fontWeight: 500 }}>{detail.rejectionReason}</span>
                             </Descriptions.Item>
                         )}
+                        {detail.cancellationReason && (
+                            <Descriptions.Item label="Lý do hủy đợt hiến" span={2}>
+                                <span style={{ color: '#c4261b', fontWeight: 500 }}>{detail.cancellationReason}</span>
+                            </Descriptions.Item>
+                        )}
                         {detail.description && (
                             <Descriptions.Item label="Mô tả / Ghi chú" span={2}>
                                 {detail.description}
@@ -255,6 +266,12 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                     />
                 </>
             )}
+
+            <CancelCampaignModal
+                campaign={detail ?? null}
+                open={isCancelOpen}
+                onClose={() => setIsCancelOpen(false)}
+            />
         </Modal>
     )
 }

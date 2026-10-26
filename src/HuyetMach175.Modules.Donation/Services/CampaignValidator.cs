@@ -75,6 +75,30 @@ public class CampaignValidator : ICampaignValidator
         }
     }
 
+    public void ValidateCancellable(DonationCampaign campaign, string reason)
+    {
+        if (campaign.Status != CampaignStatus.APPROVED && campaign.Status != CampaignStatus.IN_PROGRESS)
+        {
+            throw new HttpException(
+                StatusCodes.Status400BadRequest,
+                $"Chỉ có thể hủy bỏ đợt hiến máu khi đang ở trạng thái Đã duyệt (APPROVED) hoặc Đang diễn ra (IN_PROGRESS). Trạng thái hiện tại: '{campaign.Status}'.");
+        }
+
+        if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length < 5)
+        {
+            throw new HttpException(
+                StatusCodes.Status400BadRequest,
+                "Lý do hủy đợt hiến máu là bắt buộc và phải có ít nhất 5 ký tự.");
+        }
+
+        if (reason.Trim().Length > 255)
+        {
+            throw new HttpException(
+                StatusCodes.Status400BadRequest,
+                "Lý do hủy đợt hiến máu không được vượt quá 255 ký tự.");
+        }
+    }
+
     public void ValidateStatusTransition(DonationCampaign campaign, CampaignStatus targetStatus)
     {
         switch (targetStatus)
@@ -98,18 +122,14 @@ public class CampaignValidator : ICampaignValidator
                 break;
 
             case CampaignStatus.CANCELLED:
-                if (campaign.Status != CampaignStatus.APPROVED && campaign.Status != CampaignStatus.IN_PROGRESS)
-                {
-                    throw new HttpException(
-                        StatusCodes.Status400BadRequest,
-                        $"Chỉ có thể hủy bỏ (CANCELLED) đợt hiến máu khi đang ở trạng thái Đã duyệt (APPROVED) hoặc Đang diễn ra (IN_PROGRESS). Trạng thái hiện tại: '{campaign.Status}'.");
-                }
-                break;
+                throw new HttpException(
+                    StatusCodes.Status400BadRequest,
+                    "Không thể hủy đợt hiến máu qua thao tác vận hành này. Thao tác hủy yêu cầu sự phê duyệt của Lãnh đạo qua chức năng Hủy chuyên biệt.");
 
             default:
                 throw new HttpException(
                     StatusCodes.Status400BadRequest,
-                    $"Không thể chuyển sang trạng thái '{targetStatus}' bằng thao tác này. Các trạng thái hợp lệ là: IN_PROGRESS, COMPLETED, CANCELLED.");
+                    $"Không thể chuyển sang trạng thái '{targetStatus}' bằng thao tác này. Các trạng thái hợp lệ là: IN_PROGRESS, COMPLETED.");
         }
     }
 
