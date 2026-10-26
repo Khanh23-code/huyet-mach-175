@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HuyetMach175.Modules.Donation.DTOs.Sites;
 
-/// <summary>Khung giờ trả về cho client (giờ dạng "HH:mm").</summary>
 public class SlotDto
 {
     public string StartTime { get; set; } = string.Empty;
@@ -10,7 +9,6 @@ public class SlotDto
     public int Capacity { get; set; }
 }
 
-/// <summary>Khung giờ client gửi lên.</summary>
 public class SlotInput
 {
     [Required(ErrorMessage = "Giờ bắt đầu không được để trống.")]
@@ -28,7 +26,6 @@ public class SiteDto
     public int SiteId { get; set; }
     public string SiteCode { get; set; } = string.Empty;
     public string SiteName { get; set; } = string.Empty;
-    /// <summary>FIXED | MOBILE</summary>
     public string SiteType { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;

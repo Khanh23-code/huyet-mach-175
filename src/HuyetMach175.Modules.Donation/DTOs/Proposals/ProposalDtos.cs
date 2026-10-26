@@ -5,17 +5,14 @@ namespace HuyetMach175.Modules.Donation.DTOs.Proposals;
 
 public class CreateProposalRequest
 {
-    /// <summary>NEW_SITE | UPDATE_SCHEDULE</summary>
     [Required(ErrorMessage = "Loại đề xuất không được để trống.")]
     public string ProposalType { get; set; } = string.Empty;
 
-    /// <summary>Bắt buộc khi UPDATE_SCHEDULE.</summary>
     public int? SiteId { get; set; }
 
     [StringLength(150, ErrorMessage = "Tên điểm hiến không được vượt quá 150 ký tự.")]
     public string? SiteName { get; set; }
 
-    /// <summary>FIXED | MOBILE. Bắt buộc khi NEW_SITE.</summary>
     public string? SiteType { get; set; }
 
     [StringLength(255, ErrorMessage = "Địa chỉ không được vượt quá 255 ký tự.")]
@@ -43,7 +40,6 @@ public class ProposalFilterDto
     [Range(1, 100, ErrorMessage = "Kích thước trang (PageSize) phải từ 1 đến 100.")]
     public int PageSize { get; set; } = 10;
 
-    /// <summary>PENDING | APPROVED | REJECTED</summary>
     public string? Status { get; set; }
 }
 
@@ -58,10 +54,8 @@ public class ProposalDto
     public string SiteType { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
-    /// <summary>Cấu hình slot được đề xuất.</summary>
     public List<SlotDto> Slots { get; set; } = new();
     public int TotalCapacityPerDay { get; set; }
-    /// <summary>Cấu hình đang áp dụng (chỉ có ở API chi tiết, với UPDATE_SCHEDULE).</summary>
     public List<SlotDto> CurrentSlots { get; set; } = new();
     public int CreatedBy { get; set; }
     public string CreatedByName { get; set; } = string.Empty;

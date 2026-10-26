@@ -50,7 +50,6 @@ internal static class SlotValidator
 {
     private const int MaxSlots = 12;
 
-    /// <summary>Kiểm tra định dạng, khoảng giờ, sức chứa, chồng lấn; trả về danh sách đã sắp xếp theo giờ bắt đầu.</summary>
     public static List<SlotDto> ValidateAndNormalize(IEnumerable<SlotInput>? input)
     {
         var list = input?.ToList() ?? new List<SlotInput>();
