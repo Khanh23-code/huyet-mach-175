@@ -12,6 +12,8 @@ import {
     fmtDate,
     fmtDateTime,
     fmtOperatingDays,
+    normalizeCampaignStatus,
+    normalizeCampaignType,
 } from '../format'
 import './ReviewProposalModal.css'
 
@@ -145,47 +147,53 @@ export default function ReviewProposalModal({ campaignId, proposalId, onClose }:
                 <Skeleton active paragraph={{ rows: 6 }} />
             ) : (
                 <>
-                    <Descriptions column={2} size="small" bordered style={{ marginBottom: 16 }}>
-                        <Descriptions.Item label="Tên chiến dịch" span={2}>
-                            <b>{campaign.campaignName}</b>
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Hình thức">
-                            <Tag color={campaign.campaignType === 'EVENT' ? 'blue' : 'orange'}>
-                                {CAMPAIGN_TYPE_LABEL[campaign.campaignType]}
-                            </Tag>
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Trạng thái">
-                            <Tag color={CAMPAIGN_STATUS_COLOR[campaign.status]}>
-                                {CAMPAIGN_STATUS_LABEL[campaign.status]}
-                            </Tag>
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Địa điểm" span={2}>
-                            {campaign.locationName}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Thời gian">
-                            {fmtDate(campaign.startDate)} – {fmtDate(campaign.endDate)}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Chỉ tiêu">
-                            <b>{campaign.targetDonations}</b> túi máu
-                            {campaign.maxCapacity ? ` (Tối đa: ${campaign.maxCapacity})` : ''}
-                        </Descriptions.Item>
-                        {campaign.campaignType === 'RECURRING' && campaign.operatingDays && (
-                            <Descriptions.Item label="Ngày định kỳ" span={2}>
-                                {fmtOperatingDays(campaign.operatingDays)}
-                            </Descriptions.Item>
-                        )}
-                        <Descriptions.Item label="Người tạo">
-                            {campaign.createdByName}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="Thời gian gửi">
-                            {fmtDateTime(campaign.createdAt)}
-                        </Descriptions.Item>
-                        {campaign.description && (
-                            <Descriptions.Item label="Ghi chú" span={2}>
-                                {campaign.description}
-                            </Descriptions.Item>
-                        )}
-                    </Descriptions>
+                    {(() => {
+                        const cType = normalizeCampaignType(campaign.campaignType)
+                        const cStatus = normalizeCampaignStatus(campaign.status)
+                        return (
+                            <Descriptions column={2} size="small" bordered style={{ marginBottom: 16 }}>
+                                <Descriptions.Item label="Tên chiến dịch" span={2}>
+                                    <b>{campaign.campaignName}</b>
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Hình thức">
+                                    <Tag color={cType === 'EVENT' ? 'blue' : 'orange'}>
+                                        {CAMPAIGN_TYPE_LABEL[cType]}
+                                    </Tag>
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Trạng thái">
+                                    <Tag color={CAMPAIGN_STATUS_COLOR[cStatus]} style={{ fontWeight: 600 }}>
+                                        {CAMPAIGN_STATUS_LABEL[cStatus]}
+                                    </Tag>
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Địa điểm" span={2}>
+                                    {campaign.locationName}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Thời gian">
+                                    {fmtDate(campaign.startDate)} – {fmtDate(campaign.endDate)}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Chỉ tiêu">
+                                    <b>{campaign.targetDonations}</b> túi máu
+                                    {campaign.maxCapacity ? ` (Tối đa: ${campaign.maxCapacity})` : ''}
+                                </Descriptions.Item>
+                                {cType === 'RECURRING' && campaign.operatingDays && (
+                                    <Descriptions.Item label="Ngày định kỳ" span={2}>
+                                        {fmtOperatingDays(campaign.operatingDays)}
+                                    </Descriptions.Item>
+                                )}
+                                <Descriptions.Item label="Người tạo">
+                                    {campaign.createdByName}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Thời gian gửi">
+                                    {fmtDateTime(campaign.createdAt)}
+                                </Descriptions.Item>
+                                {campaign.description && (
+                                    <Descriptions.Item label="Ghi chú" span={2}>
+                                        {campaign.description}
+                                    </Descriptions.Item>
+                                )}
+                            </Descriptions>
+                        )
+                    })()}
 
                     <div className="ds-compare">
                         <ConfigCard

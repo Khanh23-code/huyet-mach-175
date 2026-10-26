@@ -30,6 +30,8 @@ import {
     fmtDate,
     fmtDateTime,
     fmtOperatingDays,
+    normalizeCampaignStatus,
+    normalizeCampaignType,
 } from '../format'
 import { parseApiError } from '@/services/apiError'
 import type { CampaignListItem, CampaignStatus } from '../types'
@@ -46,6 +48,10 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
     const { message } = App.useApp()
     const { data: detail, isLoading } = useCampaignDetail(id)
     const updateStatusMutation = useUpdateCampaignStatus()
+
+    const status = detail ? normalizeCampaignStatus(detail.status) : 'DRAFT'
+    const campaignType = detail ? normalizeCampaignType(detail.campaignType) : 'EVENT'
+    const isClosed = status === 'REJECTED' || status === 'CANCELLED'
 
     const handleUpdateStatus = async (newStatus: CampaignStatus, label: string) => {
         if (!id) return
@@ -67,7 +73,7 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Can do={PERMISSIONS.CAMPAIGN_EDIT}>
                             <Space>
-                                {detail.status === 'APPROVED' && (
+                                {status === 'APPROVED' && (
                                     <Button
                                         type="primary"
                                         icon={<PlayCircleOutlined />}
@@ -77,7 +83,7 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                                         Bắt đầu diễn ra
                                     </Button>
                                 )}
-                                {detail.status === 'IN_PROGRESS' && (
+                                {status === 'IN_PROGRESS' && (
                                     <Button
                                         type="primary"
                                         icon={<CheckCircleOutlined />}
@@ -88,7 +94,7 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                                         Hoàn thành chiến dịch
                                     </Button>
                                 )}
-                                {(detail.status === 'APPROVED' || detail.status === 'IN_PROGRESS') && (
+                                {(status === 'APPROVED' || status === 'IN_PROGRESS') && (
                                     <Popconfirm
                                         title="Hủy bỏ đợt hiến máu này?"
                                         description="Thao tác này sẽ dừng đợt hiến và không thể hoàn tác."
@@ -148,16 +154,28 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                                 />
                             </Col>
                         </Row>
-                        <div style={{ marginTop: 12 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
-                                <span>Tiến độ hoàn thành chỉ tiêu</span>
-                                <b>{detail.completionRate}%</b>
+
+                        {!isClosed ? (
+                            <div style={{ marginTop: 12 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+                                    <span>Tiến độ hoàn thành chỉ tiêu</span>
+                                    <b>{detail.completionRate}%</b>
+                                </div>
+                                <Progress
+                                    percent={Math.min(100, Math.round(detail.completionRate))}
+                                    strokeColor={status === 'COMPLETED' ? '#6d28d9' : '#1a7534'}
+                                />
                             </div>
-                            <Progress
-                                percent={Math.min(100, Math.round(detail.completionRate))}
-                                strokeColor={detail.status === 'COMPLETED' ? '#6d28d9' : '#1a7534'}
-                            />
-                        </div>
+                        ) : (
+                            <div className="ds-closed-alert" style={{ marginTop: 12 }}>
+                                <CloseCircleOutlined style={{ color: '#c4261b' }} />
+                                <span>
+                                    {status === 'REJECTED'
+                                        ? 'Đề xuất chiến dịch này đã bị từ chối · Không mở tiếp nhận đăng ký'
+                                        : 'Chiến dịch này đã bị hủy · Đã dừng tiếp nhận người hiến máu'}
+                                </span>
+                            </div>
+                        )}
                     </Card>
 
                     <Descriptions column={2} size="small" bordered style={{ marginBottom: 16 }}>
@@ -165,13 +183,13 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                             <b>{detail.campaignName}</b>
                         </Descriptions.Item>
                         <Descriptions.Item label="Hình thức">
-                            <Tag color={detail.campaignType === 'EVENT' ? 'blue' : 'orange'}>
-                                {CAMPAIGN_TYPE_LABEL[detail.campaignType]}
+                            <Tag color={campaignType === 'EVENT' ? 'blue' : 'orange'}>
+                                {CAMPAIGN_TYPE_LABEL[campaignType]}
                             </Tag>
                         </Descriptions.Item>
                         <Descriptions.Item label="Trạng thái">
-                            <Tag color={CAMPAIGN_STATUS_COLOR[detail.status]}>
-                                {CAMPAIGN_STATUS_LABEL[detail.status]}
+                            <Tag color={CAMPAIGN_STATUS_COLOR[status]} style={{ fontWeight: 600 }}>
+                                {CAMPAIGN_STATUS_LABEL[status]}
                             </Tag>
                         </Descriptions.Item>
                         <Descriptions.Item label="Địa điểm" span={2}>
@@ -184,7 +202,7 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                             <b>{detail.targetDonations}</b> túi máu
                             {detail.maxCapacity ? ` (Sức chứa tối đa: ${detail.maxCapacity})` : ''}
                         </Descriptions.Item>
-                        {detail.campaignType === 'RECURRING' && detail.operatingDays && (
+                        {campaignType === 'RECURRING' && detail.operatingDays && (
                             <Descriptions.Item label="Ngày định kỳ" span={2}>
                                 {fmtOperatingDays(detail.operatingDays)}
                             </Descriptions.Item>
@@ -217,7 +235,7 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                         )}
                         {detail.rejectionReason && (
                             <Descriptions.Item label="Lý do từ chối" span={2}>
-                                <span style={{ color: '#c4261b' }}>{detail.rejectionReason}</span>
+                                <span style={{ color: '#c4261b', fontWeight: 500 }}>{detail.rejectionReason}</span>
                             </Descriptions.Item>
                         )}
                         {detail.description && (
@@ -241,4 +259,3 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
         </Modal>
     )
 }
-
