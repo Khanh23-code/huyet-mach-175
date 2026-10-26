@@ -21,6 +21,9 @@ import {
     SendOutlined,
 } from '@ant-design/icons'
 import CampaignForm from './CampaignForm'
+import CancelCampaignModal from './CancelCampaignModal'
+import Can from '@/features/auth/components/Can'
+import { PERMISSIONS } from '@/config/permissions'
 import {
     useDeleteCampaign,
     useMyCampaigns,
@@ -52,6 +55,7 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
     const [statusFilter, setStatusFilter] = useState<CampaignStatus | undefined>(undefined)
     const [keyword, setKeyword] = useState<string>('')
     const [editingCampaign, setEditingCampaign] = useState<CampaignListItem | null>(null)
+    const [cancellingCampaign, setCancellingCampaign] = useState<CampaignListItem | null>(null)
 
     const { data, isLoading, isFetching } = useMyCampaigns({
         pageNumber: page,
@@ -159,14 +163,24 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
         {
             title: 'TRẠNG THÁI',
             dataIndex: 'status',
-            width: 160,
-            render: (s: unknown) => {
+            width: 170,
+            render: (s: unknown, c: CampaignListItem) => {
                 const cStatus = normalizeCampaignStatus(s)
                 return (
                     <div>
                         <Tag color={CAMPAIGN_STATUS_COLOR[cStatus]} style={{ fontWeight: 600 }}>
                             {CAMPAIGN_STATUS_LABEL[cStatus]}
                         </Tag>
+                        {cStatus === 'REJECTED' && c.rejectionReason && (
+                            <div className="ds-muted ds-small" style={{ color: '#c4261b', marginTop: 4 }} title={c.rejectionReason}>
+                                Lý do: {c.rejectionReason.length > 25 ? `${c.rejectionReason.slice(0, 25)}...` : c.rejectionReason}
+                            </div>
+                        )}
+                        {cStatus === 'CANCELLED' && c.cancellationReason && (
+                            <div className="ds-muted ds-small" style={{ color: '#c4261b', marginTop: 4 }} title={c.cancellationReason}>
+                                Lý do: {c.cancellationReason.length > 25 ? `${c.cancellationReason.slice(0, 25)}...` : c.cancellationReason}
+                            </div>
+                        )}
                     </div>
                 )
             },
@@ -236,47 +250,49 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
 
                         {status === 'APPROVED' && (
                             <>
-                                <Tooltip title="Bắt đầu diễn ra">
-                                    <Button
-                                        type="text"
-                                        icon={<PlayCircleOutlined style={{ color: '#1a7534', fontSize: 16 }} />}
-                                        onClick={() => handleUpdateStatus(c, 'IN_PROGRESS', 'Đang diễn ra')}
-                                    />
-                                </Tooltip>
-                                <Popconfirm
-                                    title="Hủy đợt hiến máu này?"
-                                    description="Đợt hiến đã duyệt này sẽ chuyển sang trạng thái Hủy."
-                                    onConfirm={() => handleUpdateStatus(c, 'CANCELLED', 'Đã hủy')}
-                                >
-                                    <Button
-                                        type="text"
-                                        danger
-                                        icon={<CloseCircleOutlined style={{ fontSize: 16 }} />}
-                                    />
-                                </Popconfirm>
+                                <Can do={PERMISSIONS.CAMPAIGN_EDIT}>
+                                    <Tooltip title="Bắt đầu diễn ra">
+                                        <Button
+                                            type="text"
+                                            icon={<PlayCircleOutlined style={{ color: '#1a7534', fontSize: 16 }} />}
+                                            onClick={() => handleUpdateStatus(c, 'IN_PROGRESS', 'Đang diễn ra')}
+                                        />
+                                    </Tooltip>
+                                </Can>
+                                <Can do={PERMISSIONS.CAMPAIGN_CANCEL}>
+                                    <Tooltip title="Hủy đợt hiến máu">
+                                        <Button
+                                            type="text"
+                                            danger
+                                            icon={<CloseCircleOutlined style={{ fontSize: 16 }} />}
+                                            onClick={() => setCancellingCampaign(c)}
+                                        />
+                                    </Tooltip>
+                                </Can>
                             </>
                         )}
 
                         {status === 'IN_PROGRESS' && (
                             <>
-                                <Tooltip title="Hoàn thành đợt hiến máu">
-                                    <Button
-                                        type="text"
-                                        icon={<CheckCircleOutlined style={{ color: '#6d28d9', fontSize: 16 }} />}
-                                        onClick={() => handleUpdateStatus(c, 'COMPLETED', 'Đã hoàn thành')}
-                                    />
-                                </Tooltip>
-                                <Popconfirm
-                                    title="Hủy đợt hiến máu này?"
-                                    description="Đợt hiến đang diễn ra sẽ bị hủy."
-                                    onConfirm={() => handleUpdateStatus(c, 'CANCELLED', 'Đã hủy')}
-                                >
-                                    <Button
-                                        type="text"
-                                        danger
-                                        icon={<CloseCircleOutlined style={{ fontSize: 16 }} />}
-                                    />
-                                </Popconfirm>
+                                <Can do={PERMISSIONS.CAMPAIGN_EDIT}>
+                                    <Tooltip title="Hoàn thành đợt hiến máu">
+                                        <Button
+                                            type="text"
+                                            icon={<CheckCircleOutlined style={{ color: '#6d28d9', fontSize: 16 }} />}
+                                            onClick={() => handleUpdateStatus(c, 'COMPLETED', 'Đã hoàn thành')}
+                                        />
+                                    </Tooltip>
+                                </Can>
+                                <Can do={PERMISSIONS.CAMPAIGN_CANCEL}>
+                                    <Tooltip title="Hủy đợt hiến máu">
+                                        <Button
+                                            type="text"
+                                            danger
+                                            icon={<CloseCircleOutlined style={{ fontSize: 16 }} />}
+                                            onClick={() => setCancellingCampaign(c)}
+                                        />
+                                    </Tooltip>
+                                </Can>
                             </>
                         )}
                     </Space>
@@ -358,6 +374,13 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
                     />
                 )}
             </Modal>
+
+            {/* Modal Hủy đợt hiến máu (dành cho Lãnh đạo) */}
+            <CancelCampaignModal
+                campaign={cancellingCampaign}
+                open={cancellingCampaign !== null}
+                onClose={() => setCancellingCampaign(null)}
+            />
         </section>
     )
 }
