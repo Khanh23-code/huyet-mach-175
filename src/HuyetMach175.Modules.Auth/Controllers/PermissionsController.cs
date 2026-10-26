@@ -13,11 +13,11 @@ namespace HuyetMach175.Modules.Auth.Controllers
     [Tags("Identity.Permissions")]
     public class PermissionsController : ControllerBase
     {
-        private readonly IRolesService _rolesService;
+        private readonly IPermissionsService _permissionsService;
 
-        public PermissionsController(IRolesService rolesService)
+        public PermissionsController(IPermissionsService permissionsService)
         {
-            _rolesService = rolesService;
+            _permissionsService = permissionsService;
         }
 
         [HttpGet]
@@ -36,7 +36,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetAllPermissionsAsync()
         {
-            var permissions = await _rolesService.GetAllPermissionsAsync();
+            var permissions = await _permissionsService.GetAllPermissionsAsync();
             return Ok(permissions);
         }
 
@@ -64,7 +64,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> CreatePermissionAsync([FromBody] CreatePermissionRequest request)
         {
-            var createdPermission = await _rolesService.CreatePermissionAsync(request);
+            var createdPermission = await _permissionsService.CreatePermissionAsync(request);
             return Ok(createdPermission);
         }
 
@@ -93,7 +93,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> CreatePermissionsAsync([FromBody] CreatePermissionsRequest request)
         {
-            var result = await _rolesService.CreatePermissionsAsync(request);
+            var result = await _permissionsService.CreatePermissionsAsync(request);
             return Ok(result);
         }
     }

@@ -24,7 +24,6 @@ public class ProposalsService : IProposalsService
         _context = context;
     }
 
-    // ------------------------------------------------------------ Tạo đề xuất
     public async Task<ProposalDto> CreateAsync(CreateProposalRequest request, int userId)
     {
         if (!Enum.TryParse<ProposalType>(request.ProposalType, true, out var type) || !Enum.IsDefined(type))
@@ -107,7 +106,6 @@ public class ProposalsService : IProposalsService
         return await GetByIdAsync(proposal.ProposalId);
     }
 
-    // ------------------------------------------------------------ Truy vấn
     public Task<PagedResult<ProposalDto>> GetMyProposalsAsync(ProposalFilterDto filter, int userId) =>
         QueryAsync(filter, userId);
 
@@ -134,7 +132,6 @@ public class ProposalsService : IProposalsService
         return ToDto(p, current);
     }
 
-    // ------------------------------------------------------------ Duyệt / từ chối
     public async Task<ProposalDto> ApproveAsync(int id, int userId)
     {
         var p = await LoadForReviewAsync(id, userId);
@@ -199,7 +196,6 @@ public class ProposalsService : IProposalsService
         return await GetByIdAsync(p.ProposalId);
     }
 
-    // ------------------------------------------------------------ Helpers
     private async Task<SiteProposal> LoadForReviewAsync(int id, int userId)
     {
         if (id <= 0) throw Bad("ID đề xuất không hợp lệ.");
