@@ -198,15 +198,41 @@ public class CampaignsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPatch("{id:int}/cancel")]
+    [HasPermission("CAMPAIGN_CANCEL")]
+    [EndpointSummary("Hủy bỏ đợt hiến máu (Dành riêng cho Lãnh đạo)")]
+    [EndpointDescription(
+        "Lãnh đạo bệnh viện (MGT) hủy bỏ đợt hiến máu đang ở trạng thái Đã duyệt (**APPROVED**) hoặc Đang diễn ra (**IN_PROGRESS**):\n" +
+        "- Bắt buộc phải có lý do hủy (`reason`, tối thiểu 5 ký tự, tối đa 255 ký tự).\n" +
+        "- Trạng thái sẽ được chuyển sang **CANCELLED**.\n" +
+        "- Người hủy (`cancelled_by`), thời điểm hủy (`cancelled_at`) và lý do hủy (`cancellation_reason`) được tự động lưu trữ kiểm toán.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **CAMPAIGN_CANCEL** (vai trò MGT).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Hủy đợt hiến máu thành công, trả về chi tiết đợt hiến máu sau khi hủy.\n" +
+        "- 400 BadRequest: Đợt hiến máu không ở trạng thái APPROVED hoặc IN_PROGRESS, hoặc thiếu lý do hủy.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền CAMPAIGN_CANCEL.\n" +
+        "- 404 NotFound: Không tìm thấy đợt hiến máu với ID chỉ định.")]
+    [ProducesResponseType(typeof(CampaignDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CancelCampaign(int id, [FromBody] CancelCampaignRequest request)
+    {
+        var userId = User.GetUserId();
+        var result = await _campaignsService.CancelCampaignAsync(id, request, userId);
+        return Ok(result);
+    }
+
     [HttpPatch("{id:int}/status")]
     [HasPermission("CAMPAIGN_EDIT")]
     [EndpointSummary("Chuyển đổi trạng thái vận hành đợt hiến máu")]
     [EndpointDescription(
         "Quản lý vòng đời vận hành của đợt hiến máu theo quy trình nghiệp vụ:\n" +
         "- Chuyển sang **IN_PROGRESS**: Bắt đầu triển khai chiến dịch hiến máu (chỉ được chuyển từ **APPROVED**).\n" +
-        "- Chuyển sang **COMPLETED**: Hoàn thành đợt hiến máu (chỉ được chuyển từ **IN_PROGRESS**).\n" +
-        "- Chuyển sang **CANCELLED**: Hủy bỏ đợt hiến máu (chỉ được chuyển từ **APPROVED** hoặc **IN_PROGRESS**). " +
-        "Thông tin người hủy và thời điểm hủy sẽ được tự động ghi nhận.\n\n" +
+        "- Chuyển sang **COMPLETED**: Hoàn thành đợt hiến máu khi kết thúc ca hiến (chỉ được chuyển từ **IN_PROGRESS**).\n\n" +
+        "**Lưu ý:** Thao tác hủy đợt hiến (**CANCELLED**) không thể thực hiện qua endpoint này mà bắt buộc phải thông qua endpoint hủy chuyên biệt của Lãnh đạo (`PATCH /api/campaigns/{id}/cancel`).\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **CAMPAIGN_EDIT** (vai trò BBNK hoặc MGT).\n\n" +
         "**HTTP Response:**\n" +
         "- 200 OK: Chuyển đổi trạng thái vận hành thành công, trả về chi tiết đợt hiến máu sau khi cập nhật.\n" +

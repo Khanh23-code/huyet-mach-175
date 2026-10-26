@@ -281,6 +281,37 @@ public class CampaignsService : ICampaignsService
         return await GetCampaignByIdAsync(campaign.CampaignId);
     }
 
+    public async Task<CampaignDetailDto> CancelCampaignAsync(int id, CancelCampaignRequest request, int userId)
+    {
+        if (id <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
+        }
+
+        var campaign = await _context.DonationCampaigns.FindAsync(id);
+        if (campaign == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
+        }
+
+        _validator.ValidateCancellable(campaign, request.Reason);
+
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null || !user.IsActive)
+        {
+            throw new HttpException(StatusCodes.Status401Unauthorized, "Người thực hiện không hợp lệ hoặc đã bị vô hiệu hóa.");
+        }
+
+        campaign.Status = CampaignStatus.CANCELLED;
+        campaign.CancelledBy = userId;
+        campaign.CancelledAt = DateTime.UtcNow;
+        campaign.CancellationReason = request.Reason.Trim();
+
+        await _context.SaveChangesAsync();
+
+        return await GetCampaignByIdAsync(campaign.CampaignId);
+    }
+
     public async Task<CampaignDetailDto> UpdateCampaignStatusAsync(int id, UpdateCampaignStatusRequest request, int userId)
     {
         if (id <= 0)
@@ -297,11 +328,6 @@ public class CampaignsService : ICampaignsService
         _validator.ValidateStatusTransition(campaign, request.Status);
 
         campaign.Status = request.Status;
-        if (request.Status == CampaignStatus.CANCELLED)
-        {
-            campaign.CancelledBy = userId;
-            campaign.CancelledAt = DateTime.UtcNow;
-        }
 
         await _context.SaveChangesAsync();
 

@@ -10,6 +10,7 @@ public interface ICampaignValidator
     void ValidateEditable(DonationCampaign campaign);
     void ValidateSubmittable(DonationCampaign campaign);
     void ValidateApprovable(DonationCampaign campaign, bool isApproved, string? rejectionReason);
+    void ValidateCancellable(DonationCampaign campaign, string reason);
     void ValidateStatusTransition(DonationCampaign campaign, CampaignStatus targetStatus);
     void ValidateDeletable(DonationCampaign campaign);
 }
