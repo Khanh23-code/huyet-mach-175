@@ -7,7 +7,7 @@
     --font-sans: 'Be Vietnam Pro', system-ui, -apple-system,
     'Segoe UI', Roboto, sans-serif;
 
-    /* Brand — theo Figma */
+    /* Brand â€” theo Figma */
     --c-primary: #1A7534;
     --c-primary-hover: #125A26;
     --c-primary-soft: #E9F5ED;
@@ -43,7 +43,7 @@
 }
 
 :root[data-theme='dark'] {
-    /* Giữ dark theme hiện có của dự án */
+    /* Giá»¯ dark theme hiá»‡n cÃ³ cá»§a dá»± Ã¡n */
     --c-primary: #3FAE62;
     --c-primary-hover: #4CC072;
     --c-primary-soft: rgba(63, 174, 98, 0.16);
@@ -76,6 +76,7 @@ body {
 * {
     box-sizing: border-box;
 }
+
 
 .campaign-tag {
     background-color: var(--c-primary-soft, #E9F5ED) !important;
