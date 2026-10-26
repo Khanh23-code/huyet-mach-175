@@ -1,25 +1,36 @@
 import { useState } from 'react'
-import { App, Button, Descriptions, Input, Modal, Skeleton } from 'antd'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { App, Button, Descriptions, Input, Modal, Skeleton, Tag } from 'antd'
 import ConfigCard from './ConfigCard'
 import Can from '@/features/auth/components/Can'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
-import { proposalsApi } from '../proposalsApi'
-import { useProposal } from '../hooks'
-import { SITE_TYPE_LABEL, fmtDateTime, proposalKindText } from '../format'
-import "./ReviewProposalModal.css";
+import { useApproveCampaign, useCampaignDetail } from '../hooks'
+import {
+    CAMPAIGN_STATUS_COLOR,
+    CAMPAIGN_STATUS_LABEL,
+    CAMPAIGN_TYPE_LABEL,
+    fmtDate,
+    fmtDateTime,
+    fmtOperatingDays,
+} from '../format'
+import './ReviewProposalModal.css'
 
-interface Props { proposalId: number | null; onClose: () => void }
+interface Props {
+    campaignId?: number | null
+    proposalId?: number | null
+    onClose: () => void
+}
 
-export default function ReviewProposalModal({ proposalId, onClose }: Props) {
+export default function ReviewProposalModal({ campaignId, proposalId, onClose }: Props) {
+    const id = campaignId ?? proposalId ?? null
     const { message, modal } = App.useApp()
-    const qc = useQueryClient()
-    const { data: p, isLoading } = useProposal(proposalId)
+    const { data: campaign, isLoading } = useCampaignDetail(id)
 
     const [rejecting, setRejecting] = useState(false)
     const [reason, setReason] = useState('')
     const [reasonError, setReasonError] = useState('')
+
+    const approveMutation = useApproveCampaign()
 
     const close = () => {
         setRejecting(false)
@@ -28,40 +39,26 @@ export default function ReviewProposalModal({ proposalId, onClose }: Props) {
         onClose()
     }
 
-    const refresh = async () => {
-        await qc.invalidateQueries({ queryKey: ['proposals'] })
-        await qc.invalidateQueries({ queryKey: ['sites'] })
-    }
-
-    const approve = useMutation({
-        mutationFn: () => proposalsApi.approve(proposalId as number),
-        onSuccess: async (r) => {
-            await refresh()
+    const handleApprove = async () => {
+        if (!id) return
+        try {
+            const result = await approveMutation.mutateAsync({
+                id,
+                body: { isApproved: true },
+            })
             close()
             modal.success({
-                title: 'Phê duyệt & kích hoạt thành công',
-                content: `Đề xuất ${r.proposalCode} đã được kích hoạt và đồng bộ sang ứng dụng người hiến.`,
+                title: 'Phê duyệt đợt hiến máu thành công',
+                content: `Chiến dịch "${result.campaignName}" đã được phê duyệt và sẵn sàng triển khai.`,
                 okText: 'Đóng',
             })
-        },
-        onError: (e) => message.error(parseApiError(e).message),
-    })
+        } catch (e) {
+            message.error(parseApiError(e).message)
+        }
+    }
 
-    const reject = useMutation({
-        mutationFn: (r: string) => proposalsApi.reject(proposalId as number, r),
-        onSuccess: async (r) => {
-            await refresh()
-            close()
-            modal.info({
-                title: 'Đã từ chối đề xuất',
-                content: `Đề xuất ${r.proposalCode} đã bị từ chối. Lý do được gửi tới người đề xuất.`,
-                okText: 'Đóng',
-            })
-        },
-        onError: (e) => message.error(parseApiError(e).message),
-    })
-
-    const submitReject = () => {
+    const handleReject = async () => {
+        if (!id) return
         const r = reason.trim()
         if (r.length < 5) {
             setReasonError('Vui lòng nhập lý do từ chối (tối thiểu 5 ký tự)')
@@ -71,86 +68,140 @@ export default function ReviewProposalModal({ proposalId, onClose }: Props) {
             setReasonError('Lý do tối đa 255 ký tự')
             return
         }
-        reject.mutate(r)
+
+        try {
+            const result = await approveMutation.mutateAsync({
+                id,
+                body: { isApproved: false, rejectionReason: r },
+            })
+            close()
+            modal.info({
+                title: 'Đã từ chối đề xuất đợt hiến máu',
+                content: `Đề xuất "${result.campaignName}" đã bị từ chối. Lý do từ chối đã được gửi đến người khởi tạo.`,
+                okText: 'Đóng',
+            })
+        } catch (e) {
+            message.error(parseApiError(e).message)
+        }
     }
 
-    const busy = approve.isPending || reject.isPending
+    const busy = approveMutation.isPending
 
     return (
         <Modal
             className="review-proposal-modal"
-            title="Xem & duyệt đề xuất"
-            open={proposalId !== null}
+            title="Xem xét & phê duyệt đợt hiến máu"
+            open={id !== null}
             onCancel={close}
             width={760}
             destroyOnHidden
             maskClosable={!busy}
             footer={
                 <div className="ds-modal-foot">
-                    <Button onClick={close} disabled={busy}>Đóng</Button>
-                    {p && !rejecting && (
+                    <Button onClick={close} disabled={busy}>
+                        Đóng
+                    </Button>
+                    {campaign && !rejecting && (
                         <>
-                            <Can do={PERMISSIONS.CAMPAIGN_CANCEL}>
-                                <Button danger onClick={() => setRejecting(true)} disabled={busy}>Từ chối</Button>
-                            </Can>
                             <Can do={PERMISSIONS.CAMPAIGN_APPROVE}>
-                                <Button type="primary" loading={approve.isPending} onClick={() => approve.mutate()}>
-                                    Phê duyệt &amp; kích hoạt
+                                <Button danger onClick={() => setRejecting(true)} disabled={busy}>
+                                    Từ chối
+                                </Button>
+                                <Button
+                                    type="primary"
+                                    loading={approveMutation.isPending}
+                                    onClick={handleApprove}
+                                >
+                                    Phê duyệt đợt hiến
                                 </Button>
                             </Can>
                         </>
                     )}
-                    {p && rejecting && (
+                    {campaign && rejecting && (
                         <>
-                            <Button onClick={() => { setRejecting(false); setReasonError('') }} disabled={busy}>Quay lại</Button>
-                            <Button danger type="primary" loading={reject.isPending} onClick={submitReject}>Xác nhận từ chối</Button>
+                            <Button
+                                onClick={() => {
+                                    setRejecting(false)
+                                    setReasonError('')
+                                }}
+                                disabled={busy}
+                            >
+                                Quay lại
+                            </Button>
+                            <Button
+                                danger
+                                type="primary"
+                                loading={approveMutation.isPending}
+                                onClick={handleReject}
+                            >
+                                Xác nhận từ chối
+                            </Button>
                         </>
                     )}
                 </div>
             }
         >
-            {isLoading || !p ? (
+            {isLoading || !campaign ? (
                 <Skeleton active paragraph={{ rows: 6 }} />
             ) : (
                 <>
                     <Descriptions column={2} size="small" bordered style={{ marginBottom: 16 }}>
-                        <Descriptions.Item label="Mã đề xuất">{p.proposalCode}</Descriptions.Item>
-                        <Descriptions.Item label="Loại đề xuất">{proposalKindText(p)}</Descriptions.Item>
-                        <Descriptions.Item label="Điểm hiến" span={2}>
-                            {p.siteName} <span className={`ds-tag ds-tag--${p.siteType}`}>{SITE_TYPE_LABEL[p.siteType]}</span>
+                        <Descriptions.Item label="Tên chiến dịch" span={2}>
+                            <b>{campaign.campaignName}</b>
                         </Descriptions.Item>
-                        <Descriptions.Item label="Địa chỉ" span={2}>{p.address}</Descriptions.Item>
-                        <Descriptions.Item label="Số điện thoại">{p.phoneNumber}</Descriptions.Item>
-                        <Descriptions.Item label="Thời gian gửi">{fmtDateTime(p.createdAt)}</Descriptions.Item>
-                        <Descriptions.Item label="Người gửi" span={2}>
-                            {p.createdByName}{p.createdByRoleCode ? ` · ${p.createdByRoleCode}` : ''}
+                        <Descriptions.Item label="Hình thức">
+                            <Tag color={campaign.campaignType === 'EVENT' ? 'blue' : 'orange'}>
+                                {CAMPAIGN_TYPE_LABEL[campaign.campaignType]}
+                            </Tag>
                         </Descriptions.Item>
+                        <Descriptions.Item label="Trạng thái">
+                            <Tag color={CAMPAIGN_STATUS_COLOR[campaign.status]}>
+                                {CAMPAIGN_STATUS_LABEL[campaign.status]}
+                            </Tag>
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Địa điểm" span={2}>
+                            {campaign.locationName}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Thời gian">
+                            {fmtDate(campaign.startDate)} – {fmtDate(campaign.endDate)}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Chỉ tiêu">
+                            <b>{campaign.targetDonations}</b> túi máu
+                            {campaign.maxCapacity ? ` (Tối đa: ${campaign.maxCapacity})` : ''}
+                        </Descriptions.Item>
+                        {campaign.campaignType === 'RECURRING' && campaign.operatingDays && (
+                            <Descriptions.Item label="Ngày định kỳ" span={2}>
+                                {fmtOperatingDays(campaign.operatingDays)}
+                            </Descriptions.Item>
+                        )}
+                        <Descriptions.Item label="Người tạo">
+                            {campaign.createdByName}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Thời gian gửi">
+                            {fmtDateTime(campaign.createdAt)}
+                        </Descriptions.Item>
+                        {campaign.description && (
+                            <Descriptions.Item label="Ghi chú" span={2}>
+                                {campaign.description}
+                            </Descriptions.Item>
+                        )}
                     </Descriptions>
 
                     <div className="ds-compare">
                         <ConfigCard
-                            label="Cấu hình hiện tại"
-                            title="Trước khi thay đổi"
-                            subtitle={p.proposalType === 'NEW_SITE'
-                                ? 'Chưa có điểm hiến trong hệ thống'
-                                : `${p.currentSlots.reduce((n, x) => n + x.capacity, 0)} lượt/ngày`}
-                            slots={p.proposalType === 'NEW_SITE' ? undefined : p.currentSlots}
-                        />
-                        <span className="ds-compare__arrow" aria-hidden>→</span>
-                        <ConfigCard
-                            label="Cấu hình đề xuất"
-                            title="Sau khi kích hoạt"
-                            subtitle={p.proposalType === 'NEW_SITE'
-                                ? `${p.siteType === 'MOBILE' ? 'Điểm lưu động mới' : 'Điểm cố định mới'} · ${p.totalCapacityPerDay} lượt/ngày`
-                                : `${p.totalCapacityPerDay} lượt/ngày`}
-                            slots={p.slots}
+                            label="Khung giờ & Sức chứa ca hiến"
+                            title="Các slot tiếp nhận người hiến"
+                            subtitle={`Tổng ${campaign.slots?.length ?? 0} khung giờ`}
+                            slots={campaign.slots}
                             highlight
                         />
                     </div>
 
                     {rejecting && (
                         <div className="ds-field" style={{ marginTop: 16 }}>
-                            <label>Lý do từ chối <span className="ds-req">*</span></label>
+                            <label>
+                                Lý do từ chối <span className="ds-req">*</span>
+                            </label>
                             <Input.TextArea
                                 className="reject-reason-input"
                                 rows={3}
@@ -158,8 +209,11 @@ export default function ReviewProposalModal({ proposalId, onClose }: Props) {
                                 showCount
                                 value={reason}
                                 status={reasonError ? 'error' : ''}
-                                placeholder="Nêu rõ lý do để BBNK chỉnh sửa và gửi lại"
-                                onChange={(e) => { setReason(e.target.value); if (reasonError) setReasonError('') }}
+                                placeholder="Nêu rõ lý do để người tạo chỉnh sửa và gửi lại..."
+                                onChange={(e) => {
+                                    setReason(e.target.value)
+                                    if (reasonError) setReasonError('')
+                                }}
                             />
                             {reasonError && <div className="ds-field__error">{reasonError}</div>}
                         </div>
