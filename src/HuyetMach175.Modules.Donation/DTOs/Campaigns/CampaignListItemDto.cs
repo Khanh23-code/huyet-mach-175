@@ -17,6 +17,8 @@ public class CampaignListItemDto
     public CampaignStatus Status { get; set; }
     public int TotalRegistered { get; set; }
     public int TotalCollected { get; set; }
+    public string? RejectionReason { get; set; }
+    public string? CancellationReason { get; set; }
     public int CreatedBy { get; set; }
     public string CreatedByName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }

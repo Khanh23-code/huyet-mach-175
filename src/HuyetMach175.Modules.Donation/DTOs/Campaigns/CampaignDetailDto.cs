@@ -23,6 +23,7 @@ public class CampaignDetailDto
     public int? CancelledBy { get; set; }
     public string? CancelledByName { get; set; }
     public DateTime? CancelledAt { get; set; }
+    public string? CancellationReason { get; set; }
     public string? RejectionReason { get; set; }
     public DateTime CreatedAt { get; set; }
 

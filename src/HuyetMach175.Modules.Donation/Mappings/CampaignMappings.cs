@@ -22,6 +22,8 @@ public static class CampaignMappings
         Status = c.Status,
         TotalRegistered = c.Appointments.Count(a => a.Status != AppointmentStatus.CANCELLED),
         TotalCollected = c.Appointments.Count(a => a.DonationSession != null && a.DonationSession.Status == SessionStatus.COMPLETED),
+        RejectionReason = c.RejectionReason,
+        CancellationReason = c.CancellationReason,
         CreatedBy = c.CreatedBy,
         CreatedByName = c.CreatedByUser != null ? c.CreatedByUser.FullName : string.Empty,
         CreatedAt = c.CreatedAt
@@ -60,6 +62,7 @@ public static class CampaignMappings
             CancelledBy = campaign.CancelledBy,
             CancelledByName = campaign.CancelledByUser != null ? campaign.CancelledByUser.FullName : null,
             CancelledAt = campaign.CancelledAt,
+            CancellationReason = campaign.CancellationReason,
             RejectionReason = campaign.RejectionReason,
             CreatedAt = campaign.CreatedAt,
             TotalRegistered = totalRegistered,

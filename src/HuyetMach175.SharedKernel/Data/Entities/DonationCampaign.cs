@@ -62,6 +62,10 @@ public class DonationCampaign
     [Column("cancelled_by")]
     public int? CancelledBy { get; set; }
 
+    [MaxLength(255)]
+    [Column("cancellation_reason")]
+    public string? CancellationReason { get; set; }
+
     [Column("cancelled_at")]
     public DateTime? CancelledAt { get; set; }
 
