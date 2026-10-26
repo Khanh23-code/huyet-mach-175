@@ -31,6 +31,7 @@ import {
     useUpdateCampaignStatus,
 } from '../hooks'
 import {
+    CAMPAIGN_STATUS_COLOR,
     CAMPAIGN_STATUS_LABEL,
     CAMPAIGN_TYPE_LABEL,
     fmtDate,
@@ -167,7 +168,7 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
                 const cStatus = normalizeCampaignStatus(s)
                 return (
                     <div>
-                        <Tag className="campaign-tag" style={{ fontWeight: 600 }}>
+                        <Tag color={CAMPAIGN_STATUS_COLOR[cStatus]} style={{ fontWeight: 600 }}>
                             {CAMPAIGN_STATUS_LABEL[cStatus]}
                         </Tag>
                         {cStatus === 'REJECTED' && c.rejectionReason && (

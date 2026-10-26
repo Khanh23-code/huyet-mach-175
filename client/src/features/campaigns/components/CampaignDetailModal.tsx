@@ -25,6 +25,7 @@ import Can from '@/features/auth/components/Can'
 import { PERMISSIONS } from '@/config/permissions'
 import { useCampaignDetail, useUpdateCampaignStatus } from '../hooks'
 import {
+    CAMPAIGN_STATUS_COLOR,
     CAMPAIGN_STATUS_LABEL,
     CAMPAIGN_TYPE_LABEL,
     fmtDate,
@@ -69,7 +70,7 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
             title="Chi tiết đợt hiến máu"
             open={id !== null}
             onCancel={onClose}
-            style={{ top: 64, paddingBottom: 24 }}
+            style={{ top: 24, paddingBottom: 24 }}
             styles={{
                 body: {
                     maxHeight: 'calc(85vh - 110px)',
@@ -193,7 +194,7 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                             </Tag>
                         </Descriptions.Item>
                         <Descriptions.Item label="Trạng thái">
-                            <Tag className="campaign-tag" style={{ fontWeight: 600 }}>
+                            <Tag color={CAMPAIGN_STATUS_COLOR[status]} style={{ fontWeight: 600 }}>
                                 {CAMPAIGN_STATUS_LABEL[status]}
                             </Tag>
                         </Descriptions.Item>
