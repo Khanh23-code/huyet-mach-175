@@ -10,6 +10,8 @@ public class CreateAppointmentRequest
 
     public int? CampaignId { get; set; }
 
+    public int? SlotId { get; set; }
+
     [Required(ErrorMessage = "Ngày hẹn (appointmentDate) là bắt buộc.")]
     public DateOnly AppointmentDate { get; set; }
 
@@ -17,4 +19,3 @@ public class CreateAppointmentRequest
     [MaxLength(20, ErrorMessage = "Khung giờ hẹn không được vượt quá 20 ký tự.")]
     public string TimeSlot { get; set; } = string.Empty;
 }
-

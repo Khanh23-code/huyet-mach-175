@@ -19,6 +19,7 @@ public static class AppointmentMappings
         DonorRhFactor = a.Donor != null ? a.Donor.RhFactor : null,
         CampaignId = a.CampaignId,
         CampaignName = a.Campaign != null ? a.Campaign.CampaignName : null,
+        SlotId = a.SlotId,
         AppointmentDate = a.AppointmentDate,
         TimeSlot = a.TimeSlot,
         QrCodeToken = a.QrCodeToken,
@@ -49,6 +50,7 @@ public static class AppointmentMappings
         CampaignId = a.CampaignId,
         CampaignName = a.Campaign != null ? a.Campaign.CampaignName : null,
         CampaignLocation = a.Campaign != null ? a.Campaign.LocationName : null,
+        SlotId = a.SlotId,
 
         AppointmentDate = a.AppointmentDate,
         TimeSlot = a.TimeSlot,
@@ -86,6 +88,7 @@ public static class AppointmentMappings
             CampaignId = appointment.CampaignId,
             CampaignName = appointment.Campaign?.CampaignName,
             CampaignLocation = appointment.Campaign?.LocationName,
+            SlotId = appointment.SlotId,
 
             AppointmentDate = appointment.AppointmentDate,
             TimeSlot = appointment.TimeSlot,
@@ -104,4 +107,3 @@ public static class AppointmentMappings
         };
     }
 }
-

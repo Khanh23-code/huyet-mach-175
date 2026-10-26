@@ -6,10 +6,14 @@ public class CampaignDetailDto
 {
     public int CampaignId { get; set; }
     public string CampaignName { get; set; } = string.Empty;
+    public string? Description { get; set; }
     public string LocationName { get; set; } = string.Empty;
+    public CampaignType CampaignType { get; set; } = CampaignType.EVENT;
+    public string? OperatingDays { get; set; }
     public DateOnly StartDate { get; set; }
     public DateOnly EndDate { get; set; }
     public int TargetDonations { get; set; }
+    public int? MaxCapacity { get; set; }
     public CampaignStatus Status { get; set; }
     public int CreatedBy { get; set; }
     public string CreatedByName { get; set; } = string.Empty;
@@ -27,4 +31,6 @@ public class CampaignDetailDto
     public int TotalCollected { get; set; }
     public double CompletionRate { get; set; }
     public int RemainingDays { get; set; }
+
+    public List<CampaignSlotDto> Slots { get; set; } = new List<CampaignSlotDto>();
 }

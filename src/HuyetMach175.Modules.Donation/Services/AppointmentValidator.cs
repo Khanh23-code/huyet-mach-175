@@ -46,11 +46,14 @@ public class AppointmentValidator : IAppointmentValidator
         }
     }
 
-    public async Task ValidateCampaignAsync(int? campaignId, DateOnly appointmentDate)
+    public async Task ValidateCampaignAsync(int? campaignId, DateOnly appointmentDate, string? timeSlot = null, int? slotId = null)
     {
         if (!campaignId.HasValue) return;
 
-        var campaign = await _context.DonationCampaigns.FirstOrDefaultAsync(c => c.CampaignId == campaignId.Value);
+        var campaign = await _context.DonationCampaigns
+            .Include(c => c.Slots)
+            .FirstOrDefaultAsync(c => c.CampaignId == campaignId.Value);
+
         if (campaign == null)
         {
             throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy chiến dịch hiến máu với ID {campaignId.Value}.");
@@ -67,6 +70,51 @@ public class AppointmentValidator : IAppointmentValidator
             throw new HttpException(StatusCodes.Status400BadRequest,
                 $"Ngày hẹn ({appointmentDate:dd/MM/yyyy}) nằm ngoài thời gian diễn ra chiến dịch ({campaign.StartDate:dd/MM/yyyy} - {campaign.EndDate:dd/MM/yyyy}).");
         }
+
+        // Kiểm tra ngày hoạt động trong tuần nếu là RECURRING
+        if (campaign.CampaignType == CampaignType.RECURRING && !string.IsNullOrWhiteSpace(campaign.OperatingDays))
+        {
+            var dow = appointmentDate.DayOfWeek.ToString().ToUpperInvariant().Substring(0, 3);
+            var allowedDays = campaign.OperatingDays.ToUpperInvariant().Split(',', StringSplitOptions.TrimEntries);
+            if (!allowedDays.Contains(dow))
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest,
+                    $"Đợt hiến máu định kỳ chỉ mở tiếp nhận vào các ngày: {campaign.OperatingDays}. Ngày bạn chọn ({appointmentDate:dd/MM/yyyy}) không có lịch tiếp nhận.");
+            }
+        }
+
+        // Kiểm tra sức chứa tối đa của cả campaign (nếu có cấu hình)
+        if (campaign.MaxCapacity.HasValue && campaign.MaxCapacity.Value > 0)
+        {
+            var totalActiveBookings = await _context.DonationAppointments
+                .CountAsync(a => a.CampaignId == campaign.CampaignId && a.Status != AppointmentStatus.CANCELLED);
+
+            if (totalActiveBookings >= campaign.MaxCapacity.Value)
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest,
+                    $"Đợt hiến máu này đã đạt số lượng đăng ký tối đa ({campaign.MaxCapacity.Value} người). Hệ thống đã đóng tiếp nhận.");
+            }
+        }
+
+        // Kiểm tra sức chứa tối đa theo từng khung giờ (Slot Capacity)
+        var slot = campaign.Slots.FirstOrDefault(s =>
+            (slotId.HasValue && s.SlotId == slotId.Value) ||
+            (!string.IsNullOrWhiteSpace(timeSlot) && $"{s.StartTime:HH\\:mm}-{s.EndTime:HH\\:mm}" == timeSlot.Trim()));
+
+        if (slot != null && slot.Capacity > 0)
+        {
+            var slotBooked = await _context.DonationAppointments.CountAsync(a =>
+                a.CampaignId == campaign.CampaignId &&
+                a.AppointmentDate == appointmentDate &&
+                (a.SlotId == slot.SlotId || (!string.IsNullOrWhiteSpace(timeSlot) && a.TimeSlot == timeSlot.Trim())) &&
+                a.Status != AppointmentStatus.CANCELLED);
+
+            if (slotBooked >= slot.Capacity)
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest,
+                    $"Khung giờ {timeSlot ?? $"{slot.StartTime:HH\\:mm}-{slot.EndTime:HH\\:mm}"} ngày {appointmentDate:dd/MM/yyyy} đã đủ số lượng người đăng ký (sức chứa tối đa: {slot.Capacity} người). Vui lòng chọn khung giờ khác.");
+            }
+        }
     }
 
     public async Task ValidateNoDuplicateBookingAsync(int donorId, DateOnly appointmentDate)
@@ -82,4 +130,3 @@ public class AppointmentValidator : IAppointmentValidator
         }
     }
 }
-
