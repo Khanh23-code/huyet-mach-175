@@ -1,5 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace HuyetMach175.Api.Data.Enums;
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum CampaignStatus
 {
     DRAFT,
@@ -11,6 +14,7 @@ public enum CampaignStatus
     CANCELLED
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum CampaignType
 {
     EVENT,

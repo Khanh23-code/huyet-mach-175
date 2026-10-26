@@ -1,18 +1,27 @@
 import { useState } from 'react'
-import { Breadcrumb } from 'antd'
+import { Breadcrumb, Button } from 'antd'
 import CampaignForm from '../components/CampaignForm'
 import MyCampaigns from '../components/MyCampaigns'
 import CampaignDetailModal from '../components/CampaignDetailModal'
 import { useMyCampaigns } from '../hooks'
-import type { CampaignType } from '../types'
+import type { CampaignListItem } from '../types'
 import './CampaignPage.css'
 
 export default function ProposalPage() {
-    const [campaignType, setCampaignType] = useState<CampaignType>('EVENT')
     const [detailId, setDetailId] = useState<number | null>(null)
+    const [editingCampaign, setEditingCampaign] = useState<CampaignListItem | null>(null)
 
     const pendingQuery = useMyCampaigns({ status: 'PENDING_APPROVAL', pageNumber: 1, pageSize: 1 })
     const pendingTotal = pendingQuery.data?.totalCount ?? 0
+
+    const handleEdit = (campaign: CampaignListItem) => {
+        setEditingCampaign(campaign)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
+    const handleFormDone = () => {
+        setEditingCampaign(null)
+    }
 
     return (
         <div className="ds">
@@ -36,36 +45,39 @@ export default function ProposalPage() {
             <section className="ds-card">
                 <div className="ds-card__head ds-card__head--row">
                     <div>
-                        <h3>Tạo đề xuất đợt hiến máu mới</h3>
-                        <p>Đợt hiến máu sẽ được lưu ở trạng thái Bản nháp (DRAFT) trước khi gửi phê duyệt.</p>
+                        <div className="ds-eyebrow">
+                            {editingCampaign ? 'Đang chỉnh sửa bản nháp' : 'Khởi tạo mới'}
+                        </div>
+                        <h3>
+                            {editingCampaign
+                                ? `Chỉnh sửa đợt hiến: ${editingCampaign.campaignName}`
+                                : 'Tạo đề xuất đợt hiến máu mới'}
+                        </h3>
+                        <p>
+                            {editingCampaign
+                                ? 'Cập nhật lại các thông tin của đợt hiến máu trước khi gửi phê duyệt.'
+                                : 'Đợt hiến máu sẽ được lưu ở trạng thái Bản nháp (DRAFT) trước khi gửi phê duyệt.'}
+                        </p>
                     </div>
-                    <div className="ds-tabs" role="tablist">
-                        <button
-                            type="button"
-                            role="tab"
-                            aria-selected={campaignType === 'EVENT'}
-                            className={campaignType === 'EVENT' ? 'is-active' : ''}
-                            onClick={() => setCampaignType('EVENT')}
-                        >
-                            Chiến dịch sự kiện
-                        </button>
-                        <button
-                            type="button"
-                            role="tab"
-                            aria-selected={campaignType === 'RECURRING'}
-                            className={campaignType === 'RECURRING' ? 'is-active' : ''}
-                            onClick={() => setCampaignType('RECURRING')}
-                        >
-                            Điểm hiến định kỳ
-                        </button>
-                    </div>
+                    {editingCampaign && (
+                        <Button onClick={handleFormDone}>
+                            Hủy chế độ sửa (Tạo mới)
+                        </Button>
+                    )}
                 </div>
                 <div className="ds-card__body">
-                    <CampaignForm key={campaignType} defaultType={campaignType} />
+                    <CampaignForm
+                        campaign={editingCampaign}
+                        onSuccess={handleFormDone}
+                        onCancel={handleFormDone}
+                    />
                 </div>
             </section>
 
-            <MyCampaigns onOpenDetail={setDetailId} />
+            <MyCampaigns
+                onOpenDetail={setDetailId}
+                onEdit={handleEdit}
+            />
 
             <CampaignDetailModal campaignId={detailId} onClose={() => setDetailId(null)} />
         </div>

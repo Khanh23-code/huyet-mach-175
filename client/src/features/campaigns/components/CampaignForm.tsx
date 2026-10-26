@@ -5,7 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import dayjs from 'dayjs'
 import SlotEditor from './SlotEditor'
 import { campaignSchema, type CampaignFormValues } from '../campaignSchema'
-import { useCreateCampaign, useSubmitApproval, useUpdateCampaign } from '../hooks'
+import { useCampaignDetail, useCreateCampaign, useSubmitApproval, useUpdateCampaign } from '../hooks'
+import { normalizeCampaignType } from '../format'
 import { applyServerErrors, parseApiError } from '@/services/apiError'
 import type { CampaignDetail, CampaignListItem, CampaignType } from '../types'
 import '../pages/CampaignPage.css'
@@ -71,6 +72,8 @@ interface Props {
 export default function CampaignForm({ campaign, defaultType = 'EVENT', onSuccess, onCancel }: Props) {
     const { modal, message } = App.useApp()
     const isEditing = Boolean(campaign && campaign.campaignId > 0)
+    const detailQuery = useCampaignDetail(campaign?.campaignId ?? null)
+    const activeData = detailQuery.data ?? campaign
 
     const createMutation = useCreateCampaign()
     const updateMutation = useUpdateCampaign()
@@ -88,7 +91,7 @@ export default function CampaignForm({ campaign, defaultType = 'EVENT', onSucces
         mode: 'onBlur',
         defaultValues: {
             campaignName: campaign?.campaignName ?? '',
-            campaignType: campaign?.campaignType ?? defaultType,
+            campaignType: campaign?.campaignType ? normalizeCampaignType(campaign.campaignType) : defaultType,
             locationName: campaign?.locationName ?? '',
             description: campaign?.description ?? '',
             operatingDays: campaign?.operatingDays ?? '',
@@ -111,27 +114,41 @@ export default function CampaignForm({ campaign, defaultType = 'EVENT', onSucces
     const operatingDays = useWatch({ control, name: 'operatingDays' })
 
     useEffect(() => {
-        if (campaign) {
+        if (activeData) {
+            const cType = normalizeCampaignType(activeData.campaignType)
             reset({
-                campaignName: campaign.campaignName,
-                campaignType: campaign.campaignType,
-                locationName: campaign.locationName,
-                description: campaign.description ?? '',
-                operatingDays: campaign.operatingDays ?? '',
-                startDate: campaign.startDate ? campaign.startDate.split('T')[0] : '',
-                endDate: campaign.endDate ? campaign.endDate.split('T')[0] : '',
-                targetDonations: campaign.targetDonations,
-                maxCapacity: campaign.maxCapacity ?? undefined,
-                slots: campaign.slots && campaign.slots.length > 0
-                    ? campaign.slots.map((s) => ({
+                campaignName: activeData.campaignName,
+                campaignType: cType,
+                locationName: activeData.locationName,
+                description: activeData.description ?? '',
+                operatingDays: activeData.operatingDays ?? '',
+                startDate: activeData.startDate ? activeData.startDate.split('T')[0] : '',
+                endDate: activeData.endDate ? activeData.endDate.split('T')[0] : '',
+                targetDonations: activeData.targetDonations,
+                maxCapacity: activeData.maxCapacity ?? undefined,
+                slots: activeData.slots && activeData.slots.length > 0
+                    ? activeData.slots.map((s) => ({
                         startTime: s.startTime.slice(0, 5),
                         endTime: s.endTime.slice(0, 5),
                         capacity: s.capacity,
                     }))
                     : [...DEFAULT_SLOTS],
             })
+        } else {
+            reset({
+                campaignName: '',
+                campaignType: defaultType,
+                locationName: '',
+                description: '',
+                operatingDays: '',
+                startDate: dayjs().format('YYYY-MM-DD'),
+                endDate: dayjs().add(7, 'day').format('YYYY-MM-DD'),
+                targetDonations: 100,
+                maxCapacity: undefined,
+                slots: [...DEFAULT_SLOTS],
+            })
         }
-    }, [campaign, reset])
+    }, [activeData, defaultType, reset])
 
     const handleFormSubmit = async (values: CampaignFormValues, andSubmitApproval = false) => {
         const payload = {
