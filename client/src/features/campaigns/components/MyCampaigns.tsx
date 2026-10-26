@@ -28,7 +28,6 @@ import {
     useUpdateCampaignStatus,
 } from '../hooks'
 import {
-    CAMPAIGN_STATUS_COLOR,
     CAMPAIGN_STATUS_LABEL,
     CAMPAIGN_TYPE_LABEL,
     fmtDate,
@@ -106,7 +105,7 @@ export default function MyCampaigns({ onOpenDetail }: Props) {
                         </a>
                         <div className="ds-muted ds-small">{c.locationName}</div>
                         <Space size={4} orientation="horizontal" style={{ marginTop: 4 }}>
-                            <Tag color={cType === 'EVENT' ? 'blue' : 'orange'}>
+                            <Tag className="campaign-tag">
                                 {CAMPAIGN_TYPE_LABEL[cType]}
                             </Tag>
                             {cType === 'RECURRING' && c.operatingDays && (
@@ -155,7 +154,7 @@ export default function MyCampaigns({ onOpenDetail }: Props) {
                 const cStatus = normalizeCampaignStatus(s)
                 return (
                     <div>
-                        <Tag color={CAMPAIGN_STATUS_COLOR[cStatus]} style={{ fontWeight: 600 }}>
+                        <Tag className="campaign-tag" style={{ fontWeight: 600 }}>
                             {CAMPAIGN_STATUS_LABEL[cStatus]}
                         </Tag>
                         {cStatus === 'REJECTED' && (

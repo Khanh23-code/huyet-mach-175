@@ -76,3 +76,9 @@ body {
 * {
     box-sizing: border-box;
 }
+
+.campaign-tag {
+    background-color: var(--c-primary-soft, #E9F5ED) !important;
+    color: var(--c-primary, #1A7534) !important;
+    border-color: transparent !important;
+}

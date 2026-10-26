@@ -3,7 +3,6 @@ import { Progress, Tag } from 'antd'
 import { CalendarOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons'
 import SlotsTable from './SlotsTable'
 import {
-    CAMPAIGN_STATUS_COLOR,
     CAMPAIGN_STATUS_LABEL,
     CAMPAIGN_TYPE_LABEL,
     fmtDate,
@@ -44,18 +43,20 @@ export default function CampaignCard({ campaign, onOpen }: Props) {
             onClick={() => onOpen(campaign)}
             onKeyDown={onKey}
         >
+
             <div className="ds-site__top">
-                <Tag color={campaignType === 'EVENT' ? 'blue' : 'orange'}>
+                <Tag className="campaign-tag">
                     {CAMPAIGN_TYPE_LABEL[campaignType]}
                 </Tag>
-                <Tag
-                    color={CAMPAIGN_STATUS_COLOR[status]}
-                    style={{ fontWeight: 600, padding: '2px 8px' }}
-                >
-                    {status === 'IN_PROGRESS' && <span className="ds-pulse-dot" />}
+
+                <Tag className="campaign-tag">
+                    {status === 'IN_PROGRESS' && (
+                        <span className="ds-pulse-dot" />
+                    )}
                     {CAMPAIGN_STATUS_LABEL[status]}
                 </Tag>
             </div>
+
 
             <h4>{campaign.campaignName}</h4>
             <p className="ds-site__addr">{campaign.locationName}</p>
