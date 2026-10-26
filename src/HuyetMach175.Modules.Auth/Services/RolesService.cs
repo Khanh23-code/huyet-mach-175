@@ -5,6 +5,7 @@ using HuyetMach175.Modules.Auth.DTOs;
 using HuyetMach175.Modules.Auth.DTOs.Permissions;
 using HuyetMach175.Modules.Auth.DTOs.Roles;
 using HuyetMach175.SharedKernel.Exceptions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -57,7 +58,7 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (role == null)
             {
-                throw new HttpException(404, "This role was not found in the system.");
+                throw new HttpException(StatusCodes.Status404NotFound, "Không tìm thấy vai trò trong hệ thống.");
             }
 
             return role;
@@ -77,7 +78,7 @@ namespace HuyetMach175.Modules.Auth.Services
                 errors["roleName"] = "Tên vai trò đã tồn tại";
 
             if (errors.Count > 0)
-                throw new HttpException(409, "Dữ liệu bị trùng với vai trò khác", errors);
+                throw new HttpException(StatusCodes.Status409Conflict, "Dữ liệu bị trùng với vai trò khác", errors);
 
             var newRole = new Role
             {
@@ -107,12 +108,12 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (role == null)
             {
-                throw new HttpException(404, "Không tìm thấy vai trò.");
+                throw new HttpException(StatusCodes.Status404NotFound, "Không tìm thấy vai trò.");
             }
 
             if (string.IsNullOrWhiteSpace(request.RoleName))
             {
-                throw new HttpException(400, "Vui lòng nhập tên vai trò.",
+                throw new HttpException(StatusCodes.Status400BadRequest, "Vui lòng nhập tên vai trò.",
                     new Dictionary<string, string> { ["roleName"] = "Vui lòng nhập tên vai trò" });
             }
 
@@ -120,13 +121,13 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (newName.Length > 50)
             {
-                throw new HttpException(400, "Tên vai trò tối đa 50 ký tự.",
+                throw new HttpException(StatusCodes.Status400BadRequest, "Tên vai trò tối đa 50 ký tự.",
                     new Dictionary<string, string> { ["roleName"] = "Tên vai trò tối đa 50 ký tự" });
             }
 
             if (await _context.Roles.AnyAsync(r => r.RoleId != roleId && r.RoleName.ToLower() == newName.ToLower()))
             {
-                throw new HttpException(409, "Dữ liệu bị trùng với vai trò khác",
+                throw new HttpException(StatusCodes.Status409Conflict, "Dữ liệu bị trùng với vai trò khác",
                     new Dictionary<string, string> { ["roleName"] = "Tên vai trò đã tồn tại" });
             }
 
@@ -144,7 +145,7 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (role == null)
             {
-                throw new HttpException(404, "This role was not found in the system.");
+                throw new HttpException(StatusCodes.Status404NotFound, "Không tìm thấy vai trò trong hệ thống.");
             }
 
             bool targetStatus = request?.IsActive ?? !role.IsActive;
@@ -158,7 +159,7 @@ namespace HuyetMach175.Modules.Auth.Services
             {
                 if (string.Equals(role.RoleCode, "SYS", StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new HttpException(400, "Cannot deactivate the system administrator role (SYS).");
+                    throw new HttpException(StatusCodes.Status400BadRequest, "Không thể vô hiệu hóa vai trò quản trị hệ thống (SYS).");
                 }
 
                 var userIds = await _context.UserRoles
@@ -171,7 +172,7 @@ namespace HuyetMach175.Modules.Auth.Services
                 {
                     if (!force)
                     {
-                        throw new HttpException(400, $"This role currently has {userIds.Count} user(s) assigned. Please confirm with force=true to proceed.");
+                        throw new HttpException(StatusCodes.Status400BadRequest, $"Vai trò này hiện đang được gán cho {userIds.Count} người dùng. Vui lòng xác nhận với tham số force=true để tiếp tục.");
                     }
 
                     var activeTokens = await _context.RefreshTokens
@@ -201,7 +202,7 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (role == null)
             {
-                throw new HttpException(404, "This role was not found in the system.");
+                throw new HttpException(StatusCodes.Status404NotFound, "Không tìm thấy vai trò trong hệ thống.");
             }
 
             var assignedPermissionIds = role.RolePermissions
@@ -265,7 +266,7 @@ namespace HuyetMach175.Modules.Auth.Services
         {
             if (request == null)
             {
-                throw new HttpException(400, "Dữ liệu gửi lên không hợp lệ.");
+                throw new HttpException(StatusCodes.Status400BadRequest, "Dữ liệu gửi lên không hợp lệ.");
             }
 
             string moduleCode = request.ModuleCode.Trim().ToUpperInvariant();
@@ -273,7 +274,7 @@ namespace HuyetMach175.Modules.Auth.Services
             if (!Enum.TryParse<PermissionAction>(request.ActionType.Trim(), true, out var action) ||
                 !Enum.IsDefined(typeof(PermissionAction), action))
             {
-                throw new HttpException(400, "Thao tác không hợp lệ.",
+                throw new HttpException(StatusCodes.Status400BadRequest, "Thao tác không hợp lệ.",
                     new Dictionary<string, string> { ["actionType"] = "Thao tác phải là VIEW, EDIT, APPROVE hoặc CANCEL" });
             }
 
@@ -281,7 +282,7 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (await _context.Permissions.AnyAsync(p => p.PermissionCode == permissionCode))
             {
-                throw new HttpException(409, $"Quyền '{permissionCode}' đã tồn tại.",
+                throw new HttpException(StatusCodes.Status409Conflict, $"Quyền '{permissionCode}' đã tồn tại.",
                     new Dictionary<string, string> { ["actionType"] = "Module này đã có thao tác đó" });
             }
 
@@ -297,7 +298,7 @@ namespace HuyetMach175.Modules.Auth.Services
             {
                 if (string.IsNullOrWhiteSpace(request.ModuleName))
                 {
-                    throw new HttpException(400, "Module mới cần có tên hiển thị.",
+                    throw new HttpException(StatusCodes.Status400BadRequest, "Module mới cần có tên hiển thị.",
                         new Dictionary<string, string> { ["moduleName"] = "Module mới cần có tên hiển thị" });
                 }
                 moduleName = request.ModuleName.Trim();
@@ -333,13 +334,12 @@ namespace HuyetMach175.Modules.Auth.Services
         {
             if (request == null || request.Actions == null || request.Actions.Count == 0)
             {
-                throw new HttpException(400, "Vui lòng chọn ít nhất một thao tác.",
+                throw new HttpException(StatusCodes.Status400BadRequest, "Vui lòng chọn ít nhất một thao tác.",
                     new Dictionary<string, string> { ["actionTypes"] = "Chọn ít nhất 1 thao tác" });
             }
 
             string moduleCode = request.ModuleCode.Trim().ToUpperInvariant();
 
-            // 1) Parse + kiểm tra từng thao tác, chặn trùng ngay trong request
             var parsed = new List<(PermissionAction Action, string Name)>();
             var seen = new HashSet<PermissionAction>();
             foreach (var item in request.Actions)
@@ -347,20 +347,19 @@ namespace HuyetMach175.Modules.Auth.Services
                 if (!Enum.TryParse<PermissionAction>(item.ActionType?.Trim(), true, out var action) ||
                     !Enum.IsDefined(typeof(PermissionAction), action))
                 {
-                    throw new HttpException(400, "Thao tác không hợp lệ.",
+                    throw new HttpException(StatusCodes.Status400BadRequest, "Thao tác không hợp lệ.",
                         new Dictionary<string, string> { ["actionTypes"] = "Thao tác phải là VIEW, EDIT, APPROVE hoặc CANCEL" });
                 }
 
                 if (!seen.Add(action))
                 {
-                    throw new HttpException(400, $"Thao tác '{action}' bị lặp trong yêu cầu.",
+                    throw new HttpException(StatusCodes.Status400BadRequest, $"Thao tác '{action}' bị lặp trong yêu cầu.",
                         new Dictionary<string, string> { ["actionTypes"] = "Thao tác bị lặp" });
                 }
 
                 parsed.Add((action, item.PermissionName.Trim()));
             }
 
-            // 2) Thao tác nào đã tồn tại thì bỏ qua
             var codes = parsed.Select(p => $"{moduleCode}_{p.Action.ToString().ToUpperInvariant()}").ToList();
             var existingCodes = await _context.Permissions
                 .Where(p => codes.Contains(p.PermissionCode))
@@ -379,11 +378,10 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (toCreate.Count == 0)
             {
-                throw new HttpException(409, "Tất cả thao tác được chọn đã tồn tại trong phân hệ này.",
+                throw new HttpException(StatusCodes.Status409Conflict, "Tất cả thao tác được chọn đã tồn tại trong phân hệ này.",
                     new Dictionary<string, string> { ["actionTypes"] = "Phân hệ này đã có các thao tác đó" });
             }
 
-            // 3) Tên module: module cũ kế thừa, module mới bắt buộc nhập
             var existingModule = await _context.Permissions
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.ModuleCode == moduleCode);
@@ -397,7 +395,7 @@ namespace HuyetMach175.Modules.Auth.Services
             {
                 if (string.IsNullOrWhiteSpace(request.ModuleName))
                 {
-                    throw new HttpException(400, "Module mới cần có tên hiển thị.",
+                    throw new HttpException(StatusCodes.Status400BadRequest, "Module mới cần có tên hiển thị.",
                         new Dictionary<string, string> { ["moduleName"] = "Module mới cần có tên hiển thị" });
                 }
                 moduleName = request.ModuleName.Trim();
@@ -417,7 +415,6 @@ namespace HuyetMach175.Modules.Auth.Services
                 Description = description
             }).ToList();
 
-            // 4) Một SaveChanges duy nhất = một transaction: hoặc tạo hết, hoặc không tạo gì
             _context.Permissions.AddRange(entities);
             try
             {
@@ -425,8 +422,7 @@ namespace HuyetMach175.Modules.Auth.Services
             }
             catch (DbUpdateException)
             {
-                // Có người khác vừa tạo trùng mã quyền giữa lúc kiểm tra và lúc lưu (unique index)
-                throw new HttpException(409, "Có quyền vừa được tạo bởi người khác. Vui lòng tải lại và thử lại.");
+                throw new HttpException(StatusCodes.Status409Conflict, "Có quyền vừa được tạo bởi người khác. Vui lòng tải lại và thử lại.");
             }
 
             return new CreatePermissionsResultDto
@@ -454,7 +450,7 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (role == null)
             {
-                throw new HttpException(404, "This role was not found in the system.");
+                throw new HttpException(StatusCodes.Status404NotFound, "Không tìm thấy vai trò trong hệ thống.");
             }
 
             var distinctPermissionIds = (request.PermissionIds ?? new List<int>())
@@ -468,7 +464,7 @@ namespace HuyetMach175.Modules.Auth.Services
 
                 if (existingCount != distinctPermissionIds.Count)
                 {
-                    throw new HttpException(400, "One or more permission IDs are invalid.");
+                    throw new HttpException(StatusCodes.Status400BadRequest, "Một hoặc nhiều mã quyền không hợp lệ.");
                 }
             }
 

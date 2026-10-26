@@ -7,6 +7,7 @@ using HuyetMach175.Modules.Auth.DTOs.Departments;
 using HuyetMach175.Modules.Auth.DTOs.Users;
 using HuyetMach175.SharedKernel.Exceptions;
 using HuyetMach175.SharedKernel.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -132,7 +133,7 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (user == null)
             {
-                throw new HttpException(404, "This user was not found in the system.");
+                throw new HttpException(StatusCodes.Status404NotFound, "Không tìm thấy người dùng trong hệ thống.");
             }
 
             var roleCodes = user.UserRoles
@@ -177,14 +178,14 @@ namespace HuyetMach175.Modules.Auth.Services
                 errors["phoneNumber"] = "Số điện thoại đã được sử dụng";
 
             if (errors.Count > 0)
-                throw new HttpException(409, "Dữ liệu bị trùng với người dùng khác", errors);
+                throw new HttpException(StatusCodes.Status409Conflict, "Dữ liệu bị trùng với người dùng khác", errors);
         }
 
         public async Task<UserListItemDto> CreateUserAsync(CreateUserRequest request, bool isSysAdmin = true)
         {
             if (request == null)
             {
-                throw new HttpException(400, "Dữ liệu gửi lên không hợp lệ.");
+                throw new HttpException(StatusCodes.Status400BadRequest, "Dữ liệu gửi lên không hợp lệ.");
             }
 
             string username = request.Username.Trim();
@@ -196,7 +197,7 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (!await _context.Departments.AnyAsync(d => d.DepartmentId == request.DepartmentId))
             {
-                throw new HttpException(400, "Khoa/phòng không tồn tại.",
+                throw new HttpException(StatusCodes.Status400BadRequest, "Khoa/phòng không tồn tại.",
                     new Dictionary<string, string> { ["departmentId"] = "Khoa/phòng không tồn tại" });
             }
 
@@ -207,19 +208,19 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (targetRoles.Count != requestedRoleIds.Count)
             {
-                throw new HttpException(400, "Có vai trò không hợp lệ.",
+                throw new HttpException(StatusCodes.Status400BadRequest, "Có vai trò không hợp lệ.",
                     new Dictionary<string, string> { ["roleIds"] = "Có vai trò không hợp lệ" });
             }
 
             if (targetRoles.Any(r => !r.IsActive))
             {
-                throw new HttpException(400, "Không thể gán vai trò đã bị vô hiệu hóa.",
+                throw new HttpException(StatusCodes.Status400BadRequest, "Không thể gán vai trò đã bị vô hiệu hóa.",
                     new Dictionary<string, string> { ["roleIds"] = "Có vai trò đã bị vô hiệu hóa" });
             }
 
             if (!isSysAdmin && targetRoles.Any(r => r.RoleCode == "SYS"))
             {
-                throw new HttpException(403, "Chỉ quản trị hệ thống (SYS) mới được gán vai trò SYS.");
+                throw new HttpException(StatusCodes.Status403Forbidden, "Chỉ quản trị hệ thống (SYS) mới được gán vai trò SYS.");
             }
 
             var user = new User
@@ -256,12 +257,12 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (user == null)
             {
-                throw new HttpException(404, "Không tìm thấy người dùng.");
+                throw new HttpException(StatusCodes.Status404NotFound, "Không tìm thấy người dùng.");
             }
 
             if (!await _context.Departments.AnyAsync(d => d.DepartmentId == request.DepartmentId))
             {
-                throw new HttpException(400, "Khoa/phòng không tồn tại.",
+                throw new HttpException(StatusCodes.Status400BadRequest, "Khoa/phòng không tồn tại.",
                     new Dictionary<string, string> { ["departmentId"] = "Khoa/phòng không tồn tại" });
             }
 
@@ -286,7 +287,7 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (user == null)
             {
-                throw new HttpException(404, "This user ID is not exist.");
+                throw new HttpException(StatusCodes.Status404NotFound, "Mã người dùng này không tồn tại.");
             }
 
             user.IsActive = request.IsActive;
@@ -323,17 +324,17 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (user == null)
             {
-                throw new HttpException(404, "This user was not found in the system.");
+                throw new HttpException(StatusCodes.Status404NotFound, "Không tìm thấy người dùng trong hệ thống.");
             }
 
             if (!isSysAdmin && user.UserRoles.Any(ur => ur.Role != null && ur.Role.RoleCode == "SYS"))
             {
-                throw new HttpException(403, "Only System Administrators (SYS) can modify roles of a SYS user.");
+                throw new HttpException(StatusCodes.Status403Forbidden, "Chỉ quản trị hệ thống (SYS) mới có quyền chỉnh sửa vai trò của người dùng có vai trò SYS.");
             }
 
             if (request.UserRoles == null || request.UserRoles.Count == 0)
             {
-                throw new HttpException(400, "A user must have at least one role.");
+                throw new HttpException(StatusCodes.Status400BadRequest, "Người dùng phải có ít nhất một vai trò.");
             }
 
             var requestedRoleIds = request.UserRoles.Distinct().ToList();
@@ -343,12 +344,12 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (targetRoles.Count != requestedRoleIds.Count)
             {
-                throw new HttpException(400, "One or more role IDs are invalid.");
+                throw new HttpException(StatusCodes.Status400BadRequest, "Một hoặc nhiều mã vai trò không hợp lệ.");
             }
 
             if (!isSysAdmin && targetRoles.Any(r => r.RoleCode == "SYS"))
             {
-                throw new HttpException(403, "Only System Administrators (SYS) can assign the SYS role.");
+                throw new HttpException(StatusCodes.Status403Forbidden, "Chỉ quản trị hệ thống (SYS) mới được phép gán vai trò SYS.");
             }
 
             var currentRoles = await _context.UserRoles.Where(ur => ur.UserId == userId).ToListAsync();
@@ -375,7 +376,7 @@ namespace HuyetMach175.Modules.Auth.Services
 
             if (user == null)
             {
-                throw new HttpException(404, "This user was not found in the system.");
+                throw new HttpException(StatusCodes.Status404NotFound, "Không tìm thấy người dùng trong hệ thống.");
             }
 
             var activeToken = await _context.RefreshTokens.Where(rt => rt.UserId == userId && rt.IsRevoked == false).ToListAsync();
