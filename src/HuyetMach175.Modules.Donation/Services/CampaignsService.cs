@@ -3,6 +3,7 @@ using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
 using HuyetMach175.Modules.Donation.DTOs.Campaigns;
 using HuyetMach175.Modules.Donation.DTOs.Common;
+using HuyetMach175.Modules.Donation.Mappings;
 using HuyetMach175.SharedKernel.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -12,10 +13,12 @@ namespace HuyetMach175.Modules.Donation.Services;
 public class CampaignsService : ICampaignsService
 {
     private readonly ApplicationDbContext _context;
+    private readonly ICampaignValidator _validator;
 
-    public CampaignsService(ApplicationDbContext context)
+    public CampaignsService(ApplicationDbContext context, ICampaignValidator validator)
     {
         _context = context;
+        _validator = validator;
     }
 
     public async Task<PagedResult<CampaignListItemDto>> GetCampaignsAsync(CampaignFilterDto filter)
@@ -37,8 +40,7 @@ public class CampaignsService : ICampaignsService
                 "Khoảng thời gian không hợp lệ: 'Từ ngày' (FromDate) phải nhỏ hơn hoặc bằng 'Đến ngày' (ToDate).");
         }
 
-        var query = _context.DonationCampaigns
-            .AsNoTracking();
+        var query = _context.DonationCampaigns.AsNoTracking();
 
         if (filter.Status.HasValue)
         {
@@ -67,25 +69,7 @@ public class CampaignsService : ICampaignsService
             .OrderBy(c => c.CampaignId)
             .Skip((filter.PageNumber - 1) * filter.PageSize)
             .Take(filter.PageSize)
-            .Select(c => new CampaignListItemDto
-            {
-                CampaignId = c.CampaignId,
-                CampaignName = c.CampaignName,
-                Description = c.Description,
-                LocationName = c.LocationName,
-                CampaignType = c.CampaignType,
-                OperatingDays = c.OperatingDays,
-                StartDate = c.StartDate,
-                EndDate = c.EndDate,
-                TargetDonations = c.TargetDonations,
-                MaxCapacity = c.MaxCapacity,
-                Status = c.Status,
-                TotalRegistered = c.Appointments.Count(a => a.Status != AppointmentStatus.CANCELLED),
-                TotalCollected = c.Appointments.Count(a => a.DonationSession != null && a.DonationSession.Status == SessionStatus.COMPLETED),
-                CreatedBy = c.CreatedBy,
-                CreatedByName = c.CreatedByUser != null ? c.CreatedByUser.FullName : string.Empty,
-                CreatedAt = c.CreatedAt
-            })
+            .Select(CampaignMappings.ProjectToListItem)
             .ToListAsync();
 
         return new PagedResult<CampaignListItemDto>
@@ -119,74 +103,13 @@ public class CampaignsService : ICampaignsService
             throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
         }
 
-        var totalRegistered = campaign.Appointments.Count(a => a.Status != AppointmentStatus.CANCELLED);
-        var totalCheckedIn = campaign.Appointments.Count(a => a.CheckedInAt != null || a.Status == AppointmentStatus.CHECKED_IN);
-        var totalCollected = campaign.Appointments.Count(a => a.DonationSession != null && a.DonationSession.Status == SessionStatus.COMPLETED);
-        var completionRate = campaign.TargetDonations > 0
-            ? Math.Round((double)totalCollected / campaign.TargetDonations * 100, 2)
-            : 0;
-
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var remainingDays = campaign.EndDate >= today ? campaign.EndDate.DayNumber - today.DayNumber : 0;
-
-        return new CampaignDetailDto
-        {
-            CampaignId = campaign.CampaignId,
-            CampaignName = campaign.CampaignName,
-            Description = campaign.Description,
-            LocationName = campaign.LocationName,
-            CampaignType = campaign.CampaignType,
-            OperatingDays = campaign.OperatingDays,
-            StartDate = campaign.StartDate,
-            EndDate = campaign.EndDate,
-            TargetDonations = campaign.TargetDonations,
-            MaxCapacity = campaign.MaxCapacity,
-            Status = campaign.Status,
-            CreatedBy = campaign.CreatedBy,
-            CreatedByName = campaign.CreatedByUser != null ? campaign.CreatedByUser.FullName : string.Empty,
-            ApprovedBy = campaign.ApprovedBy,
-            ApprovedByName = campaign.ApprovedByUser != null ? campaign.ApprovedByUser.FullName : null,
-            ApprovedAt = campaign.ApprovedAt,
-            CancelledBy = campaign.CancelledBy,
-            CancelledByName = campaign.CancelledByUser != null ? campaign.CancelledByUser.FullName : null,
-            CancelledAt = campaign.CancelledAt,
-            RejectionReason = campaign.RejectionReason,
-            CreatedAt = campaign.CreatedAt,
-            TotalRegistered = totalRegistered,
-            TotalCheckedIn = totalCheckedIn,
-            TotalCollected = totalCollected,
-            CompletionRate = completionRate,
-            RemainingDays = remainingDays,
-            Slots = campaign.Slots
-                .OrderBy(s => s.StartTime)
-                .Select(s => new CampaignSlotDto
-                {
-                    SlotId = s.SlotId,
-                    StartTime = s.StartTime,
-                    EndTime = s.EndTime,
-                    Capacity = s.Capacity
-                })
-                .ToList()
-        };
+        return campaign.ToDetailDto();
     }
 
     public async Task<CampaignDetailDto> CreateCampaignAsync(CreateCampaignRequest request, int userId)
     {
-        if (request.EndDate < request.StartDate)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.");
-        }
-
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        if (request.StartDate < today)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "Ngày bắt đầu đợt hiến máu không thể trong quá khứ.");
-        }
-
-        if (request.TargetDonations <= 0)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "Chỉ tiêu thu gom phải lớn hơn 0 túi máu.");
-        }
+        _validator.ValidateDates(request.StartDate, request.EndDate, isNew: true);
+        _validator.ValidateTargetDonations(request.TargetDonations);
 
         var user = await _context.Users.FindAsync(userId);
         if (user == null || !user.IsActive)
@@ -245,22 +168,9 @@ public class CampaignsService : ICampaignsService
             throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
         }
 
-        if (campaign.Status != CampaignStatus.DRAFT && campaign.Status != CampaignStatus.REJECTED)
-        {
-            throw new HttpException(
-                StatusCodes.Status400BadRequest,
-                $"Không thể chỉnh sửa đợt hiến máu ở trạng thái '{campaign.Status}'. Chỉ cho phép chỉnh sửa khi ở trạng thái Bản nháp (DRAFT) hoặc Bị từ chối (REJECTED).");
-        }
-
-        if (request.EndDate < request.StartDate)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.");
-        }
-
-        if (request.TargetDonations <= 0)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "Chỉ tiêu thu gom phải lớn hơn 0 túi máu.");
-        }
+        _validator.ValidateEditable(campaign);
+        _validator.ValidateDates(request.StartDate, request.EndDate, isNew: false);
+        _validator.ValidateTargetDonations(request.TargetDonations);
 
         campaign.CampaignName = request.CampaignName.Trim();
         campaign.Description = request.Description?.Trim();
@@ -305,20 +215,7 @@ public class CampaignsService : ICampaignsService
             throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
         }
 
-        if (campaign.Status != CampaignStatus.DRAFT && campaign.Status != CampaignStatus.REJECTED)
-        {
-            throw new HttpException(
-                StatusCodes.Status400BadRequest,
-                $"Không thể gửi duyệt đợt hiến máu ở trạng thái '{campaign.Status}'. Chỉ áp dụng cho trạng thái Bản nháp (DRAFT) hoặc Bị từ chối (REJECTED).");
-        }
-
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        if (campaign.EndDate < today)
-        {
-            throw new HttpException(
-                StatusCodes.Status400BadRequest,
-                "Không thể gửi duyệt đợt hiến máu đã quá hạn (ngày kết thúc nằm trong quá khứ).");
-        }
+        _validator.ValidateSubmittable(campaign);
 
         campaign.Status = CampaignStatus.PENDING_APPROVAL;
         campaign.RejectionReason = null;
@@ -341,12 +238,7 @@ public class CampaignsService : ICampaignsService
             throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
         }
 
-        if (campaign.Status != CampaignStatus.PENDING_APPROVAL)
-        {
-            throw new HttpException(
-                StatusCodes.Status400BadRequest,
-                $"Đợt hiến máu không ở trạng thái Chờ duyệt (PENDING_APPROVAL). Trạng thái hiện tại: '{campaign.Status}'.");
-        }
+        _validator.ValidateApprovable(campaign, request.IsApproved, request.RejectionReason);
 
         var user = await _context.Users.FindAsync(userId);
         if (user == null || !user.IsActive)
@@ -363,15 +255,10 @@ public class CampaignsService : ICampaignsService
         }
         else
         {
-            if (string.IsNullOrWhiteSpace(request.RejectionReason))
-            {
-                throw new HttpException(StatusCodes.Status400BadRequest, "Vui lòng cung cấp lý do từ chối đợt hiến máu.");
-            }
-
             campaign.Status = CampaignStatus.REJECTED;
             campaign.ApprovedBy = userId;
             campaign.ApprovedAt = DateTime.UtcNow;
-            campaign.RejectionReason = request.RejectionReason.Trim();
+            campaign.RejectionReason = request.RejectionReason!.Trim();
         }
 
         await _context.SaveChangesAsync();
@@ -392,46 +279,13 @@ public class CampaignsService : ICampaignsService
             throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
         }
 
-        var targetStatus = request.Status;
+        _validator.ValidateStatusTransition(campaign, request.Status);
 
-        switch (targetStatus)
+        campaign.Status = request.Status;
+        if (request.Status == CampaignStatus.CANCELLED)
         {
-            case CampaignStatus.IN_PROGRESS:
-                if (campaign.Status != CampaignStatus.APPROVED)
-                {
-                    throw new HttpException(
-                        StatusCodes.Status400BadRequest,
-                        $"Chỉ có thể chuyển sang trạng thái Đang diễn ra (IN_PROGRESS) từ trạng thái Đã duyệt (APPROVED). Trạng thái hiện tại: '{campaign.Status}'.");
-                }
-                campaign.Status = CampaignStatus.IN_PROGRESS;
-                break;
-
-            case CampaignStatus.COMPLETED:
-                if (campaign.Status != CampaignStatus.IN_PROGRESS)
-                {
-                    throw new HttpException(
-                        StatusCodes.Status400BadRequest,
-                        $"Chỉ có thể kết thúc đợt hiến máu (COMPLETED) khi đợt hiến đang diễn ra (IN_PROGRESS). Trạng thái hiện tại: '{campaign.Status}'.");
-                }
-                campaign.Status = CampaignStatus.COMPLETED;
-                break;
-
-            case CampaignStatus.CANCELLED:
-                if (campaign.Status != CampaignStatus.APPROVED && campaign.Status != CampaignStatus.IN_PROGRESS)
-                {
-                    throw new HttpException(
-                        StatusCodes.Status400BadRequest,
-                        $"Chỉ có thể hủy bỏ (CANCELLED) đợt hiến máu khi đang ở trạng thái Đã duyệt (APPROVED) hoặc Đang diễn ra (IN_PROGRESS). Trạng thái hiện tại: '{campaign.Status}'.");
-                }
-                campaign.Status = CampaignStatus.CANCELLED;
-                campaign.CancelledBy = userId;
-                campaign.CancelledAt = DateTime.UtcNow;
-                break;
-
-            default:
-                throw new HttpException(
-                    StatusCodes.Status400BadRequest,
-                    $"Không thể chuyển sang trạng thái '{targetStatus}' bằng API này. Các trạng thái hợp lệ là: IN_PROGRESS, COMPLETED, CANCELLED.");
+            campaign.CancelledBy = userId;
+            campaign.CancelledAt = DateTime.UtcNow;
         }
 
         await _context.SaveChangesAsync();
@@ -456,19 +310,7 @@ public class CampaignsService : ICampaignsService
             throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
         }
 
-        if (campaign.Status != CampaignStatus.DRAFT)
-        {
-            throw new HttpException(
-                StatusCodes.Status400BadRequest,
-                $"Chỉ có thể xóa đợt hiến máu ở trạng thái Bản nháp (DRAFT). Trạng thái hiện tại: '{campaign.Status}'. Vui lòng sử dụng tính năng Hủy (CANCELLED) nếu muốn dừng đợt hiến.");
-        }
-
-        if (campaign.Appointments.Any())
-        {
-            throw new HttpException(
-                StatusCodes.Status400BadRequest,
-                "Không thể xóa đợt hiến máu đã có người hiến đăng ký lịch hẹn.");
-        }
+        _validator.ValidateDeletable(campaign);
 
         _context.DonationCampaignSlots.RemoveRange(campaign.Slots);
         _context.DonationCampaigns.Remove(campaign);

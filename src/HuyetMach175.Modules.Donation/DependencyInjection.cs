@@ -7,6 +7,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddDonationModule(this IServiceCollection services)
     {
+        services.AddScoped<ICampaignValidator, CampaignValidator>();
         services.AddScoped<ICampaignsService, CampaignsService>();
         services.AddScoped<IDonorsService, DonorsService>();
         services.AddScoped<IAppointmentValidator, AppointmentValidator>();
