@@ -8,7 +8,7 @@ import type { CampaignType } from '../types'
 import './CampaignPage.css'
 
 export default function ProposalPage() {
-    const [campaignType, setCampaignType] = useState<CampaignType>('EVENT')
+    const [campaignType] = useState<CampaignType>('EVENT')
     const [detailId, setDetailId] = useState<number | null>(null)
 
     const pendingQuery = useMyCampaigns({ status: 'PENDING_APPROVAL', pageNumber: 1, pageSize: 1 })
@@ -38,26 +38,6 @@ export default function ProposalPage() {
                     <div>
                         <h3>Tạo đề xuất đợt hiến máu mới</h3>
                         <p>Đợt hiến máu sẽ được lưu ở trạng thái Bản nháp (DRAFT) trước khi gửi phê duyệt.</p>
-                    </div>
-                    <div className="ds-tabs" role="tablist">
-                        <button
-                            type="button"
-                            role="tab"
-                            aria-selected={campaignType === 'EVENT'}
-                            className={campaignType === 'EVENT' ? 'is-active' : ''}
-                            onClick={() => setCampaignType('EVENT')}
-                        >
-                            Chiến dịch sự kiện
-                        </button>
-                        <button
-                            type="button"
-                            role="tab"
-                            aria-selected={campaignType === 'RECURRING'}
-                            className={campaignType === 'RECURRING' ? 'is-active' : ''}
-                            onClick={() => setCampaignType('RECURRING')}
-                        >
-                            Điểm hiến định kỳ
-                        </button>
                     </div>
                 </div>
                 <div className="ds-card__body">
