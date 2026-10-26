@@ -8,6 +8,7 @@ import { campaignSchema, type CampaignFormValues } from '../campaignSchema'
 import { useCreateCampaign, useSubmitApproval, useUpdateCampaign } from '../hooks'
 import { applyServerErrors, parseApiError } from '@/services/apiError'
 import type { CampaignDetail, CampaignListItem, CampaignType } from '../types'
+import '../pages/CampaignPage.css'
 
 const DEFAULT_SLOTS = [
     { startTime: '07:30', endTime: '09:00', capacity: 20 },
@@ -203,6 +204,7 @@ export default function CampaignForm({ campaign, defaultType = 'EVENT', onSucces
                         <Radio.Group
                             {...field}
                             buttonStyle="solid"
+                            className="campaign-type-radio"
                             onChange={(e) => {
                                 field.onChange(e)
                                 if (e.target.value === 'EVENT') {

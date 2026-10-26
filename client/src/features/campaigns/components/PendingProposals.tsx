@@ -7,6 +7,7 @@ import {
     fmtDate,
     fmtDateTime,
     fmtOperatingDays,
+    normalizeCampaignType,
     slotsText,
 } from '../format'
 
@@ -33,39 +34,42 @@ export default function PendingProposals() {
                 />
             ) : (
                 <div className="ds-rows">
-                    {data.items.map((c) => (
-                        <div className="ds-row" key={c.campaignId}>
-                            <div>
-                                <Tag color={c.campaignType === 'EVENT' ? 'blue' : 'orange'}>
-                                    {CAMPAIGN_TYPE_LABEL[c.campaignType]}
-                                </Tag>
-                            </div>
-                            <div>
-                                <b>{c.campaignName}</b>
-                                <div className="ds-muted ds-small">{c.locationName}</div>
-                            </div>
-                            <div>
-                                <div className="ds-muted ds-small">
-                                    {fmtDate(c.startDate)} – {fmtDate(c.endDate)}
-                                    {c.campaignType === 'RECURRING' && c.operatingDays && ` (${fmtOperatingDays(c.operatingDays)})`}
+                    {data.items.map((c) => {
+                        const cType = normalizeCampaignType(c.campaignType)
+                        return (
+                            <div className="ds-row" key={c.campaignId}>
+                                <div>
+                                    <Tag color={cType === 'EVENT' ? 'blue' : 'orange'}>
+                                        {CAMPAIGN_TYPE_LABEL[cType]}
+                                    </Tag>
                                 </div>
-                                <b>Chỉ tiêu: {c.targetDonations} túi</b>
-                                {c.slots && c.slots.length > 0 && (
-                                    <div className="ds-muted ds-small">{slotsText(c.slots)}</div>
-                                )}
+                                <div>
+                                    <b>{c.campaignName}</b>
+                                    <div className="ds-muted ds-small">{c.locationName}</div>
+                                </div>
+                                <div>
+                                    <div className="ds-muted ds-small">
+                                        {fmtDate(c.startDate)} – {fmtDate(c.endDate)}
+                                        {cType === 'RECURRING' && c.operatingDays && ` (${fmtOperatingDays(c.operatingDays)})`}
+                                    </div>
+                                    <b>Chỉ tiêu: {c.targetDonations} túi</b>
+                                    {c.slots && c.slots.length > 0 && (
+                                        <div className="ds-muted ds-small">{slotsText(c.slots)}</div>
+                                    )}
+                                </div>
+                                <div>
+                                    <b>{c.createdByName ?? 'Nhân viên'}</b>
+                                    <div className="ds-muted ds-small">{fmtDateTime(c.createdAt)}</div>
+                                </div>
+                                <Button
+                                    className="ds-review-btn"
+                                    onClick={() => setReviewId(c.campaignId)}
+                                >
+                                    Xem &amp; duyệt
+                                </Button>
                             </div>
-                            <div>
-                                <b>{c.createdByName ?? 'Nhân viên'}</b>
-                                <div className="ds-muted ds-small">{fmtDateTime(c.createdAt)}</div>
-                            </div>
-                            <Button
-                                className="ds-review-btn"
-                                onClick={() => setReviewId(c.campaignId)}
-                            >
-                                Xem &amp; duyệt
-                            </Button>
-                        </div>
-                    ))}
+                        )
+                    })}
                 </div>
             )}
 

@@ -33,6 +33,8 @@ import {
     CAMPAIGN_TYPE_LABEL,
     fmtDate,
     fmtOperatingDays,
+    normalizeCampaignStatus,
+    normalizeCampaignType,
 } from '../format'
 import type { CampaignListItem, CampaignStatus } from '../types'
 import { parseApiError } from '@/services/apiError'
@@ -92,25 +94,28 @@ export default function MyCampaigns({ onOpenDetail }: Props) {
         {
             title: 'CHIẾN DỊCH / ĐIỂM HIẾN',
             width: 280,
-            render: (_, c) => (
-                <div>
-                    <a
-                        style={{ fontWeight: 600, color: 'inherit' }}
-                        onClick={() => onOpenDetail?.(c.campaignId)}
-                    >
-                        {c.campaignName}
-                    </a>
-                    <div className="ds-muted ds-small">{c.locationName}</div>
-                    <Space size={4} orientation="horizontal" style={{ marginTop: 4 }}>
-                        <Tag color={c.campaignType === 'EVENT' ? 'blue' : 'orange'}>
-                            {CAMPAIGN_TYPE_LABEL[c.campaignType]}
-                        </Tag>
-                        {c.campaignType === 'RECURRING' && c.operatingDays && (
-                            <span className="ds-muted ds-small">({fmtOperatingDays(c.operatingDays)})</span>
-                        )}
-                    </Space>
-                </div>
-            ),
+            render: (_, c) => {
+                const cType = normalizeCampaignType(c.campaignType)
+                return (
+                    <div>
+                        <a
+                            style={{ fontWeight: 600, color: 'inherit' }}
+                            onClick={() => onOpenDetail?.(c.campaignId)}
+                        >
+                            {c.campaignName}
+                        </a>
+                        <div className="ds-muted ds-small">{c.locationName}</div>
+                        <Space size={4} orientation="horizontal" style={{ marginTop: 4 }}>
+                            <Tag color={cType === 'EVENT' ? 'blue' : 'orange'}>
+                                {CAMPAIGN_TYPE_LABEL[cType]}
+                            </Tag>
+                            {cType === 'RECURRING' && c.operatingDays && (
+                                <span className="ds-muted ds-small">({fmtOperatingDays(c.operatingDays)})</span>
+                            )}
+                        </Space>
+                    </div>
+                )
+            },
         },
         {
             title: 'THỜI GIAN',
@@ -125,33 +130,42 @@ export default function MyCampaigns({ onOpenDetail }: Props) {
         {
             title: 'TIẾN ĐỘ THU GOM',
             width: 170,
-            render: (_, c) => (
-                <div>
+            render: (_, c) => {
+                const cStatus = normalizeCampaignStatus(c.status)
+                if (cStatus === 'REJECTED' || cStatus === 'CANCELLED') {
+                    return <span className="ds-muted ds-small">Không tiếp nhận đăng ký</span>
+                }
+                return (
                     <div>
-                        <b>{c.totalRegistered}</b> / {c.targetDonations} đăng ký
+                        <div>
+                            <b>{c.totalRegistered}</b> / {c.targetDonations} đăng ký
+                        </div>
+                        <div className="ds-muted ds-small">
+                            Đã thu gom: <b>{c.totalCollected}</b> túi
+                        </div>
                     </div>
-                    <div className="ds-muted ds-small">
-                        Đã thu gom: <b>{c.totalCollected}</b> túi
-                    </div>
-                </div>
-            ),
+                )
+            },
         },
         {
             title: 'TRẠNG THÁI',
             dataIndex: 'status',
             width: 160,
-            render: (s: CampaignStatus) => (
-                <div>
-                    <Tag color={CAMPAIGN_STATUS_COLOR[s]}>
-                        {CAMPAIGN_STATUS_LABEL[s]}
-                    </Tag>
-                    {s === 'REJECTED' && (
-                        <div className="ds-reason">
-                            Đã bị từ chối
-                        </div>
-                    )}
-                </div>
-            ),
+            render: (s: unknown) => {
+                const cStatus = normalizeCampaignStatus(s)
+                return (
+                    <div>
+                        <Tag color={CAMPAIGN_STATUS_COLOR[cStatus]} style={{ fontWeight: 600 }}>
+                            {CAMPAIGN_STATUS_LABEL[cStatus]}
+                        </Tag>
+                        {cStatus === 'REJECTED' && (
+                            <div className="ds-reason">
+                                Đã bị từ chối
+                            </div>
+                        )}
+                    </div>
+                )
+            },
         },
         {
             title: 'THAO TÁC',

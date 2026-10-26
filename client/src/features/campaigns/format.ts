@@ -22,7 +22,56 @@ export const CAMPAIGN_STATUS_COLOR: Record<CampaignStatus, string> = {
     IN_PROGRESS: 'success',
     COMPLETED: 'purple',
     CANCELLED: 'error',
-    REJECTED: 'warning',
+    REJECTED: 'error',
+}
+
+const STATUS_NUMBER_MAP: Record<number, CampaignStatus> = {
+    0: 'DRAFT',
+    1: 'PENDING_APPROVAL',
+    2: 'APPROVED',
+    3: 'REJECTED',
+    4: 'IN_PROGRESS',
+    5: 'COMPLETED',
+    6: 'CANCELLED',
+}
+
+const TYPE_NUMBER_MAP: Record<number, CampaignType> = {
+    0: 'EVENT',
+    1: 'RECURRING',
+}
+
+export const normalizeCampaignStatus = (status: unknown): CampaignStatus => {
+    if (typeof status === 'number') {
+        return STATUS_NUMBER_MAP[status] ?? 'DRAFT'
+    }
+    if (typeof status === 'string') {
+        const num = Number(status)
+        if (!Number.isNaN(num) && num in STATUS_NUMBER_MAP) {
+            return STATUS_NUMBER_MAP[num]
+        }
+        const upper = status.toUpperCase().replace(/\s+/g, '_') as CampaignStatus
+        if (upper in CAMPAIGN_STATUS_LABEL) {
+            return upper
+        }
+    }
+    return 'DRAFT'
+}
+
+export const normalizeCampaignType = (type: unknown): CampaignType => {
+    if (typeof type === 'number') {
+        return TYPE_NUMBER_MAP[type] ?? 'EVENT'
+    }
+    if (typeof type === 'string') {
+        const num = Number(type)
+        if (!Number.isNaN(num) && num in TYPE_NUMBER_MAP) {
+            return TYPE_NUMBER_MAP[num]
+        }
+        const upper = type.toUpperCase().replace(/\s+/g, '_') as CampaignType
+        if (upper in CAMPAIGN_TYPE_LABEL) {
+            return upper
+        }
+    }
+    return 'EVENT'
 }
 
 const pad = (n: number) => String(n).padStart(2, '0')
