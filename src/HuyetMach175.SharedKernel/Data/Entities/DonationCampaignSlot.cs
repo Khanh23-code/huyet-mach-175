@@ -3,16 +3,15 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HuyetMach175.Api.Data.Entities;
 
-/// <summary>Khung giờ + sức chứa mỗi slot của một điểm hiến.</summary>
-[Table("donation_site_slots")]
-public class DonationSiteSlot
+[Table("donation_campaign_slots")]
+public class DonationCampaignSlot
 {
     [Key]
     [Column("slot_id")]
     public int SlotId { get; set; }
 
-    [Column("site_id")]
-    public int SiteId { get; set; }
+    [Column("campaign_id")]
+    public int CampaignId { get; set; }
 
     [Column("start_time")]
     public TimeOnly StartTime { get; set; }
@@ -21,8 +20,10 @@ public class DonationSiteSlot
     public TimeOnly EndTime { get; set; }
 
     [Column("capacity")]
-    public int Capacity { get; set; }
+    public int Capacity { get; set; } = 20;
 
-    [ForeignKey(nameof(SiteId))]
-    public DonationSite? Site { get; set; }
+    [ForeignKey(nameof(CampaignId))]
+    public DonationCampaign? Campaign { get; set; }
+
+    public ICollection<DonationAppointment> Appointments { get; set; } = new List<DonationAppointment>();
 }

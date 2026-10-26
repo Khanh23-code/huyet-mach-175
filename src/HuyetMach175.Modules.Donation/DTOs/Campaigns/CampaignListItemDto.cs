@@ -6,10 +6,14 @@ public class CampaignListItemDto
 {
     public int CampaignId { get; set; }
     public string CampaignName { get; set; } = string.Empty;
+    public string? Description { get; set; }
     public string LocationName { get; set; } = string.Empty;
+    public CampaignType CampaignType { get; set; } = CampaignType.EVENT;
+    public string? OperatingDays { get; set; }
     public DateOnly StartDate { get; set; }
     public DateOnly EndDate { get; set; }
     public int TargetDonations { get; set; }
+    public int? MaxCapacity { get; set; }
     public CampaignStatus Status { get; set; }
     public int TotalRegistered { get; set; }
     public int TotalCollected { get; set; }

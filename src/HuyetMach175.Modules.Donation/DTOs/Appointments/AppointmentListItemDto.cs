@@ -15,6 +15,7 @@ public class AppointmentListItemDto
     public RhFactor? DonorRhFactor { get; set; }
     public int? CampaignId { get; set; }
     public string? CampaignName { get; set; }
+    public int? SlotId { get; set; }
     public DateOnly AppointmentDate { get; set; }
     public string TimeSlot { get; set; } = string.Empty;
     public string QrCodeToken { get; set; } = string.Empty;
@@ -27,4 +28,3 @@ public class AppointmentListItemDto
     public int? SurveyRiskScore { get; set; }
     public bool? SurveyHasRisk { get; set; }
 }
-

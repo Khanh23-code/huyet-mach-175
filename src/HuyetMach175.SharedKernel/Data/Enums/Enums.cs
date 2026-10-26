@@ -11,6 +11,12 @@ public enum CampaignStatus
     CANCELLED
 }
 
+public enum CampaignType
+{
+    EVENT,
+    RECURRING
+}
+
 public enum BloodType
 {
     A,

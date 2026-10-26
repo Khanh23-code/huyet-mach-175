@@ -125,7 +125,7 @@ public class AppointmentsService : IAppointmentsService
             throw new HttpException(StatusCodes.Status400BadRequest, "Ngày hẹn không được nằm trong quá khứ.");
         }
 
-        await _validator.ValidateCampaignAsync(request.CampaignId, request.AppointmentDate);
+        await _validator.ValidateCampaignAsync(request.CampaignId, request.AppointmentDate, request.TimeSlot, request.SlotId);
         _validator.ValidateEligibility(donor, request.AppointmentDate);
         await _validator.ValidateNoDuplicateBookingAsync(request.DonorId, request.AppointmentDate);
 
@@ -135,6 +135,7 @@ public class AppointmentsService : IAppointmentsService
         {
             DonorId = request.DonorId,
             CampaignId = request.CampaignId,
+            SlotId = request.SlotId,
             AppointmentDate = request.AppointmentDate,
             TimeSlot = request.TimeSlot.Trim(),
             QrCodeToken = qrToken,

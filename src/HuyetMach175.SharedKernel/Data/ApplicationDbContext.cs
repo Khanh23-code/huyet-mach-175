@@ -19,13 +19,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     public DbSet<DonationCampaign> DonationCampaigns => Set<DonationCampaign>();
+    public DbSet<DonationCampaignSlot> DonationCampaignSlots => Set<DonationCampaignSlot>();
     public DbSet<Donor> Donors => Set<Donor>();
     public DbSet<DonationAppointment> DonationAppointments => Set<DonationAppointment>();
     public DbSet<PreScreeningSurvey> PreScreeningSurveys => Set<PreScreeningSurvey>();
     public DbSet<DonationSession> DonationSessions => Set<DonationSession>();
-    public DbSet<DonationSite> DonationSites => Set<DonationSite>();
-    public DbSet<DonationSiteSlot> DonationSiteSlots => Set<DonationSiteSlot>();
-    public DbSet<SiteProposal> SiteProposals => Set<SiteProposal>();
 
     public DbSet<BloodComponentType> BloodComponentTypes => Set<BloodComponentType>();
     public DbSet<StorageLocation> StorageLocations => Set<StorageLocation>();

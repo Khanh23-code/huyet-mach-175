@@ -20,6 +20,7 @@ public class AppointmentDetailDto
     public int? CampaignId { get; set; }
     public string? CampaignName { get; set; }
     public string? CampaignLocation { get; set; }
+    public int? SlotId { get; set; }
 
     public DateOnly AppointmentDate { get; set; }
     public string TimeSlot { get; set; } = string.Empty;
@@ -37,4 +38,3 @@ public class AppointmentDetailDto
     public string? SurveyAnswers { get; set; }
     public DateTime? SurveySubmittedAt { get; set; }
 }
-

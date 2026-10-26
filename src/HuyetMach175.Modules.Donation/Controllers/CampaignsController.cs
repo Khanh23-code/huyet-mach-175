@@ -45,6 +45,30 @@ public class CampaignsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("mine")]
+    [HasPermission("CAMPAIGN_VIEW")]
+    [EndpointSummary("Lấy danh sách các đợt hiến máu / đề xuất do người dùng hiện tại tạo")]
+    [EndpointDescription(
+        "Trả về danh sách các đợt hiến máu / đề xuất do chính tài khoản đang đăng nhập tạo (CreatedBy).\n\n" +
+        "Hỗ trợ phân trang, tìm kiếm theo từ khóa tên hoặc địa điểm, lọc theo trạng thái và khoảng thời gian.\n\n" +
+        "Thường dùng cho nhân viên Ngân hàng máu (BBNK) hoặc Lãnh đạo (MGT) để theo dõi các đề xuất của bản thân.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **CAMPAIGN_VIEW**.\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Trả về danh sách đợt hiến máu của tôi theo cấu trúc phân trang.\n" +
+        "- 400 BadRequest: Dữ liệu phân trang hoặc khoảng thời gian không hợp lệ.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền truy cập CAMPAIGN_VIEW.")]
+    [ProducesResponseType(typeof(PagedResult<CampaignListItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetMyCampaigns([FromQuery] CampaignFilterDto filter)
+    {
+        var userId = User.GetUserId();
+        var result = await _campaignsService.GetMyCampaignsAsync(filter, userId);
+        return Ok(result);
+    }
+
     [HttpGet("{id:int}")]
     [HasPermission("CAMPAIGN_VIEW")]
     [EndpointSummary("Xem chi tiết đợt hiến máu và thống kê tiến độ")]

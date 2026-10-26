@@ -1,60 +1,73 @@
 import { useState } from 'react'
 import { Breadcrumb } from 'antd'
-import ProposalForm from '../components/ProposalForm'
-import MyProposals from '../components/MyProposals'
-import { useMyProposals } from '../hooks'
-import type { ProposalType } from '../types'
+import CampaignForm from '../components/CampaignForm'
+import MyCampaigns from '../components/MyCampaigns'
+import CampaignDetailModal from '../components/CampaignDetailModal'
+import { useMyCampaigns } from '../hooks'
+import type { CampaignType } from '../types'
 import './CampaignPage.css'
 
-const TABS: { key: ProposalType; label: string }[] = [
-    { key: 'NEW_SITE', label: 'Điểm hiến mới' },
-    { key: 'UPDATE_SCHEDULE', label: 'Đổi lịch & sức chứa' },
-]
-
 export default function ProposalPage() {
-    const [mode, setMode] = useState<ProposalType>('NEW_SITE')
-    const pending = useMyProposals({ status: 'PENDING', pageNumber: 1, pageSize: 1 })
-    const pendingTotal = pending.data?.total ?? 0
+    const [campaignType, setCampaignType] = useState<CampaignType>('EVENT')
+    const [detailId, setDetailId] = useState<number | null>(null)
+
+    const pendingQuery = useMyCampaigns({ status: 'PENDING_APPROVAL', pageNumber: 1, pageSize: 1 })
+    const pendingTotal = pendingQuery.data?.totalCount ?? 0
 
     return (
         <div className="ds">
-            <Breadcrumb items={[{ title: 'Khoa Truyền máu' }, { title: 'Đề xuất lịch & điểm hiến' }]} />
+            <Breadcrumb items={[{ title: 'Khoa Truyền máu' }, { title: 'Đề xuất & Quản lý đợt hiến máu' }]} />
 
             <div className="ds-title">
                 <div>
-                    <h1>Đề xuất lịch &amp; điểm hiến</h1>
-                    <p>Tạo đề xuất để Quản trị hệ thống duyệt trước khi cấu hình được kích hoạt trên lịch đặt hẹn.</p>
+                    <h1>Đề xuất &amp; Quản lý đợt hiến máu</h1>
+                    <p>
+                        Khởi tạo đợt hiến máu mới (Chiến dịch sự kiện hoặc Điểm hiến định kỳ), cấu hình khung giờ và gửi Ban Giám đốc phê duyệt.
+                    </p>
                 </div>
-                {pendingTotal > 0 && <span className="ds-badge"><i />{pendingTotal} đang chờ duyệt</span>}
+                {pendingTotal > 0 && (
+                    <span className="ds-badge">
+                        <i />
+                        {pendingTotal} đợt đang chờ duyệt
+                    </span>
+                )}
             </div>
 
             <section className="ds-card">
                 <div className="ds-card__head ds-card__head--row">
                     <div>
-                        <h3>Tạo đề xuất cấu hình</h3>
-                        <p>Mọi thay đổi chỉ có hiệu lực sau khi SYS phê duyệt.</p>
+                        <h3>Tạo đề xuất đợt hiến máu mới</h3>
+                        <p>Đợt hiến máu sẽ được lưu ở trạng thái Bản nháp (DRAFT) trước khi gửi phê duyệt.</p>
                     </div>
                     <div className="ds-tabs" role="tablist">
-                        {TABS.map((t) => (
-                            <button
-                                key={t.key}
-                                type="button"
-                                role="tab"
-                                aria-selected={mode === t.key}
-                                className={mode === t.key ? 'is-active' : ''}
-                                onClick={() => setMode(t.key)}
-                            >
-                                {t.label}
-                            </button>
-                        ))}
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={campaignType === 'EVENT'}
+                            className={campaignType === 'EVENT' ? 'is-active' : ''}
+                            onClick={() => setCampaignType('EVENT')}
+                        >
+                            Chiến dịch sự kiện
+                        </button>
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={campaignType === 'RECURRING'}
+                            className={campaignType === 'RECURRING' ? 'is-active' : ''}
+                            onClick={() => setCampaignType('RECURRING')}
+                        >
+                            Điểm hiến định kỳ
+                        </button>
                     </div>
                 </div>
                 <div className="ds-card__body">
-                    <ProposalForm key={mode} mode={mode} />
+                    <CampaignForm key={campaignType} defaultType={campaignType} />
                 </div>
             </section>
 
-            <MyProposals />
+            <MyCampaigns onOpenDetail={setDetailId} />
+
+            <CampaignDetailModal campaignId={detailId} onClose={() => setDetailId(null)} />
         </div>
     )
 }

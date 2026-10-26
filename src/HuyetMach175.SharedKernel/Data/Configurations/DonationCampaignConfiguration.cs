@@ -11,6 +11,14 @@ public class DonationCampaignConfiguration : IEntityTypeConfiguration<DonationCa
         builder.Property(c => c.Status)
             .HasConversion<string>();
 
+        builder.Property(c => c.CampaignType)
+            .HasConversion<string>();
+
+        builder.HasMany(c => c.Slots)
+            .WithOne(s => s.Campaign)
+            .HasForeignKey(s => s.CampaignId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasOne(c => c.CreatedByUser)
             .WithMany(u => u.CreatedCampaigns)
             .HasForeignKey(c => c.CreatedBy)

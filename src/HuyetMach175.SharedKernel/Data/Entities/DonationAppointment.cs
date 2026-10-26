@@ -17,6 +17,9 @@ public class DonationAppointment
     [Column("campaign_id")]
     public int? CampaignId { get; set; }
 
+    [Column("slot_id")]
+    public int? SlotId { get; set; }
+
     [Column("appointment_date")]
     public DateOnly AppointmentDate { get; set; }
 
@@ -47,6 +50,9 @@ public class DonationAppointment
 
     [ForeignKey(nameof(CampaignId))]
     public DonationCampaign? Campaign { get; set; }
+
+    [ForeignKey(nameof(SlotId))]
+    public DonationCampaignSlot? CampaignSlot { get; set; }
 
     public PreScreeningSurvey? PreScreeningSurvey { get; set; }
     public DonationSession? DonationSession { get; set; }

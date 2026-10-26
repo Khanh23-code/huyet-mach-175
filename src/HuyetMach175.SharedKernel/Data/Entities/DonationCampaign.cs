@@ -16,10 +16,20 @@ public class DonationCampaign
     [Column("campaign_name")]
     public string CampaignName { get; set; } = string.Empty;
 
+    [Column("description")]
+    public string? Description { get; set; }
+
     [Required]
     [MaxLength(255)]
     [Column("location_name")]
     public string LocationName { get; set; } = string.Empty;
+
+    [Column("campaign_type")]
+    public CampaignType CampaignType { get; set; } = CampaignType.EVENT;
+
+    [MaxLength(50)]
+    [Column("operating_days")]
+    public string? OperatingDays { get; set; }
 
     [Column("start_date")]
     public DateOnly StartDate { get; set; }
@@ -29,6 +39,9 @@ public class DonationCampaign
 
     [Column("target_donations")]
     public int TargetDonations { get; set; } = 100;
+
+    [Column("max_capacity")]
+    public int? MaxCapacity { get; set; }
 
     [Column("status")]
     public CampaignStatus Status { get; set; } = CampaignStatus.DRAFT;
@@ -65,4 +78,5 @@ public class DonationCampaign
     public User? CancelledByUser { get; set; }
 
     public ICollection<DonationAppointment> Appointments { get; set; } = new List<DonationAppointment>();
+    public ICollection<DonationCampaignSlot> Slots { get; set; } = new List<DonationCampaignSlot>();
 }
