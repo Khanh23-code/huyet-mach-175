@@ -21,7 +21,7 @@ public class CampaignsService : ICampaignsService
         _validator = validator;
     }
 
-    public async Task<PagedResult<CampaignListItemDto>> GetCampaignsAsync(CampaignFilterDto filter)
+    public async Task<PagedResult<CampaignListItemDto>> GetCampaignsAsync(CampaignFilterDto filter, int? createdBy = null)
     {
         if (filter.PageNumber < 1)
         {
@@ -41,6 +41,11 @@ public class CampaignsService : ICampaignsService
         }
 
         var query = _context.DonationCampaigns.AsNoTracking();
+
+        if (createdBy.HasValue)
+        {
+            query = query.Where(c => c.CreatedBy == createdBy.Value);
+        }
 
         if (filter.Status.HasValue)
         {
@@ -66,7 +71,7 @@ public class CampaignsService : ICampaignsService
         var totalCount = await query.CountAsync();
 
         var items = await query
-            .OrderBy(c => c.CampaignId)
+            .OrderByDescending(c => c.CreatedAt)
             .Skip((filter.PageNumber - 1) * filter.PageSize)
             .Take(filter.PageSize)
             .Select(CampaignMappings.ProjectToListItem)
@@ -79,6 +84,16 @@ public class CampaignsService : ICampaignsService
             PageNumber = filter.PageNumber,
             PageSize = filter.PageSize
         };
+    }
+
+    public Task<PagedResult<CampaignListItemDto>> GetMyCampaignsAsync(CampaignFilterDto filter, int userId)
+    {
+        if (userId <= 0)
+        {
+            throw new HttpException(StatusCodes.Status401Unauthorized, "Người dùng không hợp lệ.");
+        }
+
+        return GetCampaignsAsync(filter, createdBy: userId);
     }
 
     public async Task<CampaignDetailDto> GetCampaignByIdAsync(int id)
