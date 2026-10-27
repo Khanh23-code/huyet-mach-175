@@ -65,7 +65,7 @@ public static class AppointmentMappings
         SurveyRiskScore = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.RiskScore : null,
         SurveyHasRisk = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.HasRisk : null,
         SurveyAnswers = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.SurveyAnswers : null,
-        SurveySubmittedAt = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.SubmittedAt : null
+        SurveySubmittedAt = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.SurveySubmittedAt : null
     };
 
     public static AppointmentDetailDto ToDetailDto(this DonationAppointment appointment)
@@ -103,7 +103,7 @@ public static class AppointmentMappings
             SurveyRiskScore = appointment.PreScreeningSurvey?.RiskScore,
             SurveyHasRisk = appointment.PreScreeningSurvey?.HasRisk,
             SurveyAnswers = appointment.PreScreeningSurvey?.SurveyAnswers,
-            SurveySubmittedAt = appointment.PreScreeningSurvey?.SubmittedAt
+            SurveySubmittedAt = appointment.PreScreeningSurvey?.SurveySubmittedAt
         };
     }
 }
