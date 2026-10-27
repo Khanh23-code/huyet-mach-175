@@ -2,6 +2,7 @@ using HuyetMach175.Modules.Donation.DTOs.Common;
 using HuyetMach175.Modules.Donation.DTOs.Sessions;
 using HuyetMach175.Modules.Donation.Services;
 using HuyetMach175.SharedKernel.Authorization;
+using HuyetMach175.SharedKernel.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -71,6 +72,36 @@ public class DonationSessionsController : ControllerBase
     public async Task<IActionResult> GetSessionById([FromRoute] int id)
     {
         var result = await _sessionsService.GetSessionByIdAsync(id);
+        return Ok(result);
+    }
+
+    [HttpPut("{id:int}/collection")]
+    [HasPermission("SESSION_EDIT")]
+    [EndpointSummary("Cập nhật kết quả thu gom máu và đóng phiên")]
+    [EndpointDescription(
+        "KTV cập nhật thể tích máu thực tế thu được, ghi nhận sự cố (nếu có) và đóng phiên hiến máu.\n\n" +
+        "**Quy tắc nghiệp vụ:**\n" +
+        "- Trích xuất phlebotomist_id từ JWT Token và cập nhật completedAt = CURRENT_TIMESTAMP.\n" +
+        "- Nếu status == COMPLETED: Bắt buộc nhập thể tích máu thực tế (actualVolumeMl). Bảng donors tự động tăng total_donations += 1 và cập nhật last_donation_date. Đồng thời tự động tạo một túi máu mới trong bảng blood_bags với trạng thái NEWLY_COLLECTED phục vụ chuyển sang Module Kho & Xét nghiệm (W2).\n" +
+        "- Nếu status == ABORTED: Bắt buộc ghi nhận lý do sự cố (collectionIncident), không tăng số lần hiến và không tạo túi máu.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **SESSION_EDIT**.\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Đóng phiên lấy máu thành công.\n" +
+        "- 400 BadRequest: Dữ liệu không hợp lệ hoặc phiên đã đóng trước đó.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền truy cập SESSION_EDIT.\n" +
+        "- 404 NotFound: Không tìm thấy phiên lấy máu.")]
+    [ProducesResponseType(typeof(CollectionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CompleteCollection(
+        [FromRoute] int id,
+        [FromBody] UpdateCollectionRequest request)
+    {
+        var phlebotomistId = User.GetUserId();
+        var result = await _sessionsService.CompleteCollectionAsync(id, request, phlebotomistId);
         return Ok(result);
     }
 }

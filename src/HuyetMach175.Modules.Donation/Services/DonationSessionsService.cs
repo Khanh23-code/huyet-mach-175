@@ -1,4 +1,5 @@
 using HuyetMach175.Api.Data;
+using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
 using HuyetMach175.Modules.Donation.DTOs.Common;
 using HuyetMach175.Modules.Donation.DTOs.Sessions;
@@ -106,5 +107,132 @@ public class DonationSessionsService : IDonationSessionsService
         }
 
         return session.ToDetailDto();
+    }
+
+    public async Task<CollectionResponse> CompleteCollectionAsync(int sessionId, UpdateCollectionRequest request, int phlebotomistId)
+    {
+        if (sessionId <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "ID phiên lấy máu không hợp lệ.");
+        }
+
+        if (phlebotomistId <= 0)
+        {
+            throw new HttpException(StatusCodes.Status401Unauthorized, "Không tìm thấy thông tin Kỹ thuật viên thực hiện lấy máu.");
+        }
+
+        if (request.Status == SessionStatus.WAITING_COLLECTION)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Trạng thái đóng phiên phải là Hoàn tất (COMPLETED) hoặc Hủy/Sự cố (ABORTED).");
+        }
+
+        if (request.Status == SessionStatus.COMPLETED)
+        {
+            if (!request.ActualVolumeMl.HasValue || request.ActualVolumeMl.Value <= 0)
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, "Bắt buộc phải nhập thể tích máu thực tế thu được (actualVolumeMl) khi hoàn tất phiên lấy máu.");
+            }
+        }
+        else if (request.Status == SessionStatus.ABORTED)
+        {
+            if (string.IsNullOrWhiteSpace(request.CollectionIncident))
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, "Bắt buộc phải ghi nhận lý do sự cố (collectionIncident) khi hủy hoặc dừng phiên lấy máu.");
+            }
+        }
+
+        var session = await _context.DonationSessions
+            .Include(s => s.Appointment)
+                .ThenInclude(a => a!.Donor)
+            .Include(s => s.BloodBags)
+            .FirstOrDefaultAsync(s => s.SessionId == sessionId);
+
+        if (session == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy phiên lấy máu với ID {sessionId}.");
+        }
+
+        if (session.Status == SessionStatus.COMPLETED)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Phiên lấy máu này đã hoàn tất trước đó, không thể chỉnh sửa.");
+        }
+
+        if (session.Status == SessionStatus.ABORTED)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Phiên lấy máu này đã bị hủy trước đó.");
+        }
+
+        var now = DateTime.UtcNow;
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        session.PhlebotomistId = phlebotomistId;
+        session.ActualVolumeMl = request.Status == SessionStatus.COMPLETED ? request.ActualVolumeMl : null;
+        session.CollectionIncident = request.CollectionIncident;
+        session.Status = request.Status;
+        session.CompletedAt = now;
+
+        string? bloodBagBarcode = null;
+
+        if (request.Status == SessionStatus.COMPLETED)
+        {
+            var donor = session.Appointment?.Donor;
+            if (donor != null)
+            {
+                donor.TotalDonations += 1;
+                donor.LastDonationDate = DateOnly.FromDateTime(DateTime.Today);
+            }
+
+            var wbComponent = await _context.BloodComponentTypes
+                .FirstOrDefaultAsync(ct => ct.TypeCode == ComponentCode.WB);
+
+            if (wbComponent == null)
+            {
+                wbComponent = new BloodComponentType
+                {
+                    TypeCode = ComponentCode.WB,
+                    TypeName = "Máu toàn phần",
+                    LifeDays = 35,
+                    StorageTemperature = "2°C - 6°C",
+                    Description = "Máu toàn phần thu gom từ người hiến máu tình nguyện"
+                };
+                _context.BloodComponentTypes.Add(wbComponent);
+                await _context.SaveChangesAsync();
+            }
+
+            bloodBagBarcode = $"BAG-{now:yyyyMMdd}-{session.SessionId:D5}";
+
+            var bloodBag = new BloodBag
+            {
+                Barcode = bloodBagBarcode,
+                SessionId = session.SessionId,
+                ComponentTypeId = wbComponent.ComponentTypeId,
+                BloodType = donor?.BloodType ?? BloodType.O,
+                RhFactor = donor?.RhFactor ?? RhFactor.POSITIVE,
+                VolumeMl = request.ActualVolumeMl!.Value,
+                CollectedAt = now,
+                ExpiredAt = now.AddDays(wbComponent.LifeDays),
+                Status = BagStatus.NEWLY_COLLECTED,
+                CreatedAt = now
+            };
+            _context.BloodBags.Add(bloodBag);
+        }
+
+        await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
+
+        string message = request.Status == SessionStatus.COMPLETED
+            ? "Thu gom máu thành công. Túi máu mới đã được khởi tạo để chờ xét nghiệm và nhập kho."
+            : "Đã ghi nhận sự cố và hủy phiên lấy máu.";
+
+        return new CollectionResponse
+        {
+            SessionId = session.SessionId,
+            Status = session.Status.ToString(),
+            ActualVolumeMl = session.ActualVolumeMl,
+            CompletedAt = now,
+            BloodBagId = bloodBagBarcode,
+            Message = message
+        };
     }
 }
