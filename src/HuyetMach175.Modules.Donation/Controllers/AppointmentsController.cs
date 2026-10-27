@@ -29,9 +29,9 @@ public class AppointmentsController : ControllerBase
     [HasPermission("APPOINTMENTS_VIEW")]
     [EndpointSummary("Lấy danh sách lịch hẹn hiến máu")]
     [EndpointDescription(
-        "Lấy danh sách lịch hẹn hiến máu có hỗ trợ lọc theo ngày (date), chiến dịch (campaignId), " +
-        "trạng thái (status: BOOKED, CHECKED_IN, CANCELLED, NO_SHOW), khung giờ (timeSlot), loại tiếp nhận (isWalkIn) " +
-        "và tìm kiếm nhanh theo họ tên, CCCD hoặc số điện thoại của người hiến.\n\n" +
+        "Lấy danh sách lịch hẹn hiến máu có hỗ trợ lọc theo ngày (date), chiến dịch (campaignId), khung giờ chiến dịch (slotId), " +
+        "trạng thái (status: BOOKED, CHECKED_IN, CANCELLED, NO_SHOW), loại tiếp nhận (isWalkIn) " +
+        "và tìm kiếm nhanh theo họ tên, CCCD, số điện thoại hoặc mã QR của người hiến.\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **APPOINTMENTS_VIEW** (các vai trò như DON, CLIN, MGT).\n\n" +
         "**HTTP Response:**\n" +
         "- 200 OK: Trả về danh sách lịch hẹn theo cấu trúc phân trang PagedResult.\n" +
@@ -52,7 +52,7 @@ public class AppointmentsController : ControllerBase
     [HasPermission("APPOINTMENTS_VIEW")]
     [EndpointSummary("Lấy thông tin chi tiết một lịch hẹn")]
     [EndpointDescription(
-        "Trả về thông tin chi tiết của một lịch hẹn bao gồm dữ liệu người hiến, chiến dịch, trạng thái check-in " +
+        "Trả về thông tin chi tiết của một lịch hẹn bao gồm dữ liệu người hiến, khung giờ và chiến dịch (thông qua `slotId`), trạng thái check-in " +
         "và kết quả phiếu khảo sát sàng lọc trước (nếu có).\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **APPOINTMENTS_VIEW** (các vai trò như DON, CLIN, MGT).\n\n" +
         "**HTTP Response:**\n" +
@@ -74,23 +74,23 @@ public class AppointmentsController : ControllerBase
 
     [HttpPost]
     [HasPermission("APPOINTMENTS_EDIT")]
-    [EndpointSummary("Tạo lịch hẹn hiến máu mới (đặt trước)")]
+    [EndpointSummary("Tạo lịch hẹn hiến máu mới (đặt trước theo slotId)")]
     [EndpointDescription(
-        "Tạo lịch hẹn hiến máu mới khi người hiến đăng ký qua ứng dụng hoặc do Lễ tân đặt lịch hộ.\n\n" +
+        "Tạo lịch hẹn hiến máu mới khi người hiến đăng ký qua ứng dụng hoặc do Lễ tân đặt lịch hộ theo khung giờ (`slotId` thuộc bảng `donation_campaign_slots`).\n\n" +
         "**Quy tắc nghiệp vụ & Kiểm tra:**\n" +
-        "- Người hiến phải tồn tại trong hệ thống.\n" +
+        "- Người hiến (`donorId`) và khung giờ chiến dịch (`slotId`) phải tồn tại trong hệ thống.\n" +
         "- Ngày hẹn không được nằm trong quá khứ.\n" +
-        "- Chiến dịch (nếu có) phải ở trạng thái APPROVED hoặc IN_PROGRESS, ngày hẹn phải thuộc thời gian diễn ra chiến dịch.\n" +
+        "- Chiến dịch tương ứng của `slotId` phải ở trạng thái APPROVED hoặc IN_PROGRESS, ngày hẹn phải thuộc thời gian diễn ra chiến dịch và chưa vượt quá sức chứa của slot.\n" +
         "- Khoảng cách so với lần hiến máu gần nhất phải đủ tối thiểu 84 ngày tính đến ngày hẹn.\n" +
         "- Người hiến không được có lịch hẹn nào khác đang ở trạng thái BOOKED trong cùng ngày.\n" +
         "- Backend tự động sinh mã token QR bảo mật độc nhất (`HM175-{guid}`) và khởi tạo trạng thái `BOOKED`.\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **APPOINTMENTS_EDIT** (các vai trò như DON, REC, CLIN, MGT).\n\n" +
         "**HTTP Response:**\n" +
         "- 201 Created: Tạo lịch hẹn thành công, trả về thông tin chi tiết kèm mã token QR.\n" +
-        "- 400 BadRequest: Dữ liệu không hợp lệ, không đủ khoảng cách 84 ngày hoặc trùng lịch hẹn trong ngày.\n" +
+        "- 400 BadRequest: Dữ liệu không hợp lệ, không đủ khoảng cách 84 ngày, hết chỗ hoặc trùng lịch hẹn trong ngày.\n" +
         "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
         "- 403 Forbidden: Không có quyền truy cập APPOINTMENTS_EDIT.\n" +
-        "- 404 NotFound: Không tìm thấy người hiến hoặc chiến dịch.")]
+        "- 404 NotFound: Không tìm thấy người hiến hoặc khung giờ chiến dịch.")]
     [ProducesResponseType(typeof(AppointmentDetailDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -106,7 +106,7 @@ public class AppointmentsController : ControllerBase
     [HasPermission("APPOINTMENTS_EDIT")]
     [EndpointSummary("Tiếp nhận người hiến máu vãng lai tại bàn tiếp tân")]
     [EndpointDescription(
-        "Tạo lịch hẹn tiếp nhận trực tiếp cho người hiến máu vãng lai tại bàn tiếp đón. " +
+        "Tạo lịch hẹn tiếp nhận trực tiếp cho người hiến máu vãng lai tại bàn tiếp đón (gắn với `slotId` tùy chọn). " +
         "Lịch hẹn sẽ được gắn cờ `isWalkIn = true` và tự động chuyển ngay sang trạng thái `CHECKED_IN` với thời điểm tiếp nhận hiện tại.\n\n" +
         "**Quy tắc nghiệp vụ:**\n" +
         "- Người hiến phải đủ điều kiện khoảng cách hiến máu tối thiểu 84 ngày tính đến hôm nay.\n" +
@@ -119,7 +119,7 @@ public class AppointmentsController : ControllerBase
         "- 400 BadRequest: Dữ liệu không hợp lệ, chưa đủ 84 ngày hoặc đã có lịch hẹn / check-in hôm nay.\n" +
         "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
         "- 403 Forbidden: Không có quyền truy cập APPOINTMENTS_EDIT.\n" +
-        "- 404 NotFound: Không tìm thấy người hiến hoặc chiến dịch.")]
+        "- 404 NotFound: Không tìm thấy người hiến hoặc khung giờ chiến dịch.")]
     [ProducesResponseType(typeof(AppointmentDetailDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

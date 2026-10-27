@@ -6,6 +6,7 @@ public class SurveyQueueItemDto
 {
     public int AppointmentId { get; set; }
     public DateOnly AppointmentDate { get; set; }
+    public int? SlotId { get; set; }
     public string TimeSlot { get; set; } = string.Empty;
     public string QrCodeToken { get; set; } = string.Empty;
     public bool IsWalkIn { get; set; }

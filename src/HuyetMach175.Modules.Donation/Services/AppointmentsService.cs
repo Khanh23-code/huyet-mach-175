@@ -34,7 +34,12 @@ public class AppointmentsService : IAppointmentsService
         }
 
         var query = _context.DonationAppointments
-            .AsNoTracking();
+            .AsNoTracking()
+            .Include(a => a.Donor)
+            .Include(a => a.CampaignSlot)
+                .ThenInclude(s => s!.Campaign)
+            .Include(a => a.PreScreeningSurvey)
+            .AsQueryable();
 
         if (filter.Date.HasValue)
         {
@@ -43,18 +48,17 @@ public class AppointmentsService : IAppointmentsService
 
         if (filter.CampaignId.HasValue)
         {
-            query = query.Where(a => a.CampaignId == filter.CampaignId.Value);
+            query = query.Where(a => a.CampaignSlot != null && a.CampaignSlot.CampaignId == filter.CampaignId.Value);
+        }
+
+        if (filter.SlotId.HasValue)
+        {
+            query = query.Where(a => a.SlotId == filter.SlotId.Value);
         }
 
         if (filter.Status.HasValue)
         {
             query = query.Where(a => a.Status == filter.Status.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(filter.TimeSlot))
-        {
-            var slot = filter.TimeSlot.Trim();
-            query = query.Where(a => a.TimeSlot == slot);
         }
 
         if (filter.IsWalkIn.HasValue)
@@ -76,14 +80,15 @@ public class AppointmentsService : IAppointmentsService
 
         var totalCount = await query.CountAsync();
 
-        var items = await query
+        var entities = await query
             .OrderBy(a => a.AppointmentDate)
-            .ThenBy(a => a.TimeSlot)
+            .ThenBy(a => a.SlotId)
             .ThenBy(a => a.AppointmentId)
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
-            .Select(AppointmentMappings.ProjectToListItem)
             .ToListAsync();
+
+        var items = entities.Select(a => a.ToListItemDto()).ToList();
 
         return new PagedResult<AppointmentListItemDto>
         {
@@ -103,16 +108,18 @@ public class AppointmentsService : IAppointmentsService
 
         var appointment = await _context.DonationAppointments
             .AsNoTracking()
-            .Where(a => a.AppointmentId == id)
-            .Select(AppointmentMappings.ProjectToDetail)
-            .FirstOrDefaultAsync();
+            .Include(a => a.Donor)
+            .Include(a => a.CampaignSlot)
+                .ThenInclude(s => s!.Campaign)
+            .Include(a => a.PreScreeningSurvey)
+            .FirstOrDefaultAsync(a => a.AppointmentId == id);
 
         if (appointment == null)
         {
             throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy lịch hẹn với ID {id}.");
         }
 
-        return appointment;
+        return appointment.ToDetailDto();
     }
 
     public async Task<AppointmentDetailDto> CreateAppointmentAsync(CreateAppointmentRequest request)
@@ -125,7 +132,7 @@ public class AppointmentsService : IAppointmentsService
             throw new HttpException(StatusCodes.Status400BadRequest, "Ngày hẹn không được nằm trong quá khứ.");
         }
 
-        await _validator.ValidateCampaignAsync(request.CampaignId, request.AppointmentDate, request.TimeSlot, request.SlotId);
+        await _validator.ValidateSlotAsync(request.SlotId, request.AppointmentDate);
         _validator.ValidateEligibility(donor, request.AppointmentDate);
         await _validator.ValidateNoDuplicateBookingAsync(request.DonorId, request.AppointmentDate);
 
@@ -134,10 +141,8 @@ public class AppointmentsService : IAppointmentsService
         var appointment = new DonationAppointment
         {
             DonorId = request.DonorId,
-            CampaignId = request.CampaignId,
             SlotId = request.SlotId,
             AppointmentDate = request.AppointmentDate,
-            TimeSlot = request.TimeSlot.Trim(),
             QrCodeToken = qrToken,
             Status = AppointmentStatus.BOOKED,
             IsWalkIn = false,

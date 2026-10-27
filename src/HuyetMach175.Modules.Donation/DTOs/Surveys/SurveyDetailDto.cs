@@ -7,6 +7,7 @@ public class SurveyDetailDto
 {
     public int AppointmentId { get; set; }
     public DateOnly AppointmentDate { get; set; }
+    public int? SlotId { get; set; }
     public string TimeSlot { get; set; } = string.Empty;
     public string QrCodeToken { get; set; } = string.Empty;
     public AppointmentStatus AppointmentStatus { get; set; }

@@ -34,11 +34,15 @@ public class SurveysService : ISurveysService
 
         var query = _context.DonationAppointments
             .AsNoTracking()
+            .Include(a => a.Donor)
+            .Include(a => a.CampaignSlot)
+                .ThenInclude(s => s!.Campaign)
+            .Include(a => a.PreScreeningSurvey)
             .Where(a => a.Status == AppointmentStatus.CHECKED_IN && a.AppointmentDate == targetDate);
 
         if (filter.CampaignId.HasValue)
         {
-            query = query.Where(a => a.CampaignId == filter.CampaignId.Value);
+            query = query.Where(a => a.CampaignSlot != null && a.CampaignSlot.CampaignId == filter.CampaignId.Value);
         }
 
         if (filter.ScreeningStatus.HasValue)
@@ -72,18 +76,14 @@ public class SurveysService : ISurveysService
 
         var totalCount = await query.CountAsync();
 
-        var items = await query
+        var entities = await query
             .OrderBy(a => a.CheckedInAt ?? a.CreatedAt)
             .ThenBy(a => a.AppointmentId)
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
-            .Select(SurveyMappings.ProjectToQueueItem)
             .ToListAsync();
 
-        foreach (var item in items)
-        {
-            item.DonorCode = $"NH{item.DonorId:D5}";
-        }
+        var items = entities.Select(a => a.ToQueueItemDto()).ToList();
 
         return new PagedResult<SurveyQueueItemDto>
         {
@@ -104,7 +104,8 @@ public class SurveysService : ISurveysService
         var appointment = await _context.DonationAppointments
             .AsNoTracking()
             .Include(a => a.Donor)
-            .Include(a => a.Campaign)
+            .Include(a => a.CampaignSlot)
+                .ThenInclude(s => s!.Campaign)
             .Include(a => a.PreScreeningSurvey)
                 .ThenInclude(s => s!.Doctor)
             .Include(a => a.DonationSession)

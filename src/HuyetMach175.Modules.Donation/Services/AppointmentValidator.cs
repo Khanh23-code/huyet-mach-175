@@ -46,17 +46,28 @@ public class AppointmentValidator : IAppointmentValidator
         }
     }
 
-    public async Task ValidateCampaignAsync(int? campaignId, DateOnly appointmentDate, string? timeSlot = null, int? slotId = null)
+    public async Task<DonationCampaignSlot?> ValidateSlotAsync(int? slotId, DateOnly appointmentDate)
     {
-        if (!campaignId.HasValue) return;
+        if (!slotId.HasValue) return null;
 
-        var campaign = await _context.DonationCampaigns
-            .Include(c => c.Slots)
-            .FirstOrDefaultAsync(c => c.CampaignId == campaignId.Value);
+        if (slotId.Value <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Mã khung giờ (slotId) không hợp lệ.");
+        }
 
+        var slot = await _context.DonationCampaignSlots
+            .Include(s => s.Campaign)
+            .FirstOrDefaultAsync(s => s.SlotId == slotId.Value);
+
+        if (slot == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy khung giờ chiến dịch với ID {slotId.Value}.");
+        }
+
+        var campaign = slot.Campaign;
         if (campaign == null)
         {
-            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy chiến dịch hiến máu với ID {campaignId.Value}.");
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy chiến dịch hiến máu tương ứng với khung giờ #{slotId.Value}.");
         }
 
         if (campaign.Status != CampaignStatus.APPROVED && campaign.Status != CampaignStatus.IN_PROGRESS)
@@ -71,7 +82,6 @@ public class AppointmentValidator : IAppointmentValidator
                 $"Ngày hẹn ({appointmentDate:dd/MM/yyyy}) nằm ngoài thời gian diễn ra chiến dịch ({campaign.StartDate:dd/MM/yyyy} - {campaign.EndDate:dd/MM/yyyy}).");
         }
 
-        // Kiểm tra ngày hoạt động trong tuần nếu là RECURRING
         if (campaign.CampaignType == CampaignType.RECURRING && !string.IsNullOrWhiteSpace(campaign.OperatingDays))
         {
             var dow = appointmentDate.DayOfWeek.ToString().ToUpperInvariant().Substring(0, 3);
@@ -83,11 +93,13 @@ public class AppointmentValidator : IAppointmentValidator
             }
         }
 
-        // Kiểm tra sức chứa tối đa của cả campaign (nếu có cấu hình)
         if (campaign.MaxCapacity.HasValue && campaign.MaxCapacity.Value > 0)
         {
             var totalActiveBookings = await _context.DonationAppointments
-                .CountAsync(a => a.CampaignId == campaign.CampaignId && a.Status != AppointmentStatus.CANCELLED);
+                .CountAsync(a =>
+                    a.CampaignSlot != null &&
+                    a.CampaignSlot.CampaignId == campaign.CampaignId &&
+                    a.Status != AppointmentStatus.CANCELLED);
 
             if (totalActiveBookings >= campaign.MaxCapacity.Value)
             {
@@ -96,25 +108,21 @@ public class AppointmentValidator : IAppointmentValidator
             }
         }
 
-        // Kiểm tra sức chứa tối đa theo từng khung giờ (Slot Capacity)
-        var slot = campaign.Slots.FirstOrDefault(s =>
-            (slotId.HasValue && s.SlotId == slotId.Value) ||
-            (!string.IsNullOrWhiteSpace(timeSlot) && $"{s.StartTime:HH\\:mm}-{s.EndTime:HH\\:mm}" == timeSlot.Trim()));
-
-        if (slot != null && slot.Capacity > 0)
+        if (slot.Capacity > 0)
         {
             var slotBooked = await _context.DonationAppointments.CountAsync(a =>
-                a.CampaignId == campaign.CampaignId &&
+                a.SlotId == slot.SlotId &&
                 a.AppointmentDate == appointmentDate &&
-                (a.SlotId == slot.SlotId || (!string.IsNullOrWhiteSpace(timeSlot) && a.TimeSlot == timeSlot.Trim())) &&
                 a.Status != AppointmentStatus.CANCELLED);
 
             if (slotBooked >= slot.Capacity)
             {
                 throw new HttpException(StatusCodes.Status400BadRequest,
-                    $"Khung giờ {timeSlot ?? $"{slot.StartTime:HH\\:mm}-{slot.EndTime:HH\\:mm}"} ngày {appointmentDate:dd/MM/yyyy} đã đủ số lượng người đăng ký (sức chứa tối đa: {slot.Capacity} người). Vui lòng chọn khung giờ khác.");
+                    $"Khung giờ {slot.StartTime:HH\\:mm}-{slot.EndTime:HH\\:mm} ngày {appointmentDate:dd/MM/yyyy} đã đủ số lượng người đăng ký (sức chứa tối đa: {slot.Capacity} người). Vui lòng chọn khung giờ khác.");
             }
         }
+
+        return slot;
     }
 
     public async Task ValidateNoDuplicateBookingAsync(int donorId, DateOnly appointmentDate)

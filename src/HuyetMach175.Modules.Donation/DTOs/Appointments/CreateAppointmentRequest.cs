@@ -8,14 +8,10 @@ public class CreateAppointmentRequest
     [Range(1, int.MaxValue, ErrorMessage = "Mã người hiến máu phải lớn hơn 0.")]
     public int DonorId { get; set; }
 
-    public int? CampaignId { get; set; }
-
-    public int? SlotId { get; set; }
+    [Required(ErrorMessage = "Mã khung giờ chiến dịch (slotId) là bắt buộc.")]
+    [Range(1, int.MaxValue, ErrorMessage = "Mã khung giờ (slotId) phải lớn hơn 0.")]
+    public int SlotId { get; set; }
 
     [Required(ErrorMessage = "Ngày hẹn (appointmentDate) là bắt buộc.")]
     public DateOnly AppointmentDate { get; set; }
-
-    [Required(ErrorMessage = "Khung giờ hẹn (timeSlot) là bắt buộc.")]
-    [MaxLength(20, ErrorMessage = "Khung giờ hẹn không được vượt quá 20 ký tự.")]
-    public string TimeSlot { get; set; } = string.Empty;
 }

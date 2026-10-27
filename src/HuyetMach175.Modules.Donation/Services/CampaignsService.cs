@@ -109,8 +109,8 @@ public class CampaignsService : ICampaignsService
             .Include(c => c.ApprovedByUser)
             .Include(c => c.CancelledByUser)
             .Include(c => c.Slots)
-            .Include(c => c.Appointments)
-                .ThenInclude(a => a.DonationSession)
+                .ThenInclude(s => s.Appointments)
+                    .ThenInclude(a => a.DonationSession)
             .FirstOrDefaultAsync(c => c.CampaignId == id);
 
         if (campaign == null)
@@ -342,8 +342,8 @@ public class CampaignsService : ICampaignsService
         }
 
         var campaign = await _context.DonationCampaigns
-            .Include(c => c.Appointments)
             .Include(c => c.Slots)
+                .ThenInclude(s => s.Appointments)
             .FirstOrDefaultAsync(c => c.CampaignId == id);
 
         if (campaign == null)
