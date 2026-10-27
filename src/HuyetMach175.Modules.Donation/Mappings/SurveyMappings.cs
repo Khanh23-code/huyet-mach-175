@@ -31,7 +31,6 @@ public static class SurveyMappings
         var slot = appointment.CampaignSlot;
         var campaign = slot?.Campaign;
         var survey = appointment.PreScreeningSurvey;
-        var session = appointment.DonationSession;
 
         var referenceDate = appointment.AppointmentDate != default
             ? appointment.AppointmentDate
@@ -47,20 +46,23 @@ public static class SurveyMappings
             }
         }
 
-        DateOnly? nextEligibleDate = null;
-        int daysRemaining = 0;
         bool isEligible84Days = true;
-
         if (donor != null && donor.TotalDonations > 0 && donor.LastDonationDate.HasValue)
         {
-            nextEligibleDate = donor.LastDonationDate.Value.AddDays(84);
-            var diff = nextEligibleDate.Value.DayNumber - referenceDate.DayNumber;
-            if (diff > 0)
+            var nextEligibleDate = donor.LastDonationDate.Value.AddDays(84);
+            if (nextEligibleDate > referenceDate)
             {
-                daysRemaining = diff;
                 isEligible84Days = false;
             }
         }
+
+        string? bloodTypeStr = donor?.BloodType?.ToString();
+        string? rhFactorStr = donor?.RhFactor switch
+        {
+            RhFactor.POSITIVE => "Rh+",
+            RhFactor.NEGATIVE => "Rh-",
+            _ => null
+        };
 
         JsonElement? parsedAnswers = null;
         bool hasSubmittedSurvey = false;
@@ -87,15 +89,10 @@ public static class SurveyMappings
         {
             AppointmentId = appointment.AppointmentId,
             AppointmentDate = appointment.AppointmentDate,
-            SlotId = appointment.SlotId,
-            TimeSlot = slot != null ? $"{slot.StartTime:HH\\:mm}-{slot.EndTime:HH\\:mm}" : string.Empty,
-            QrCodeToken = appointment.QrCodeToken,
-            AppointmentStatus = appointment.Status,
+            TimeSlot = slot != null ? $"{slot.StartTime:HH\\:mm} - {slot.EndTime:HH\\:mm}" : string.Empty,
             IsWalkIn = appointment.IsWalkIn,
             CheckedInAt = appointment.CheckedInAt,
-            CampaignId = slot?.CampaignId,
             CampaignName = campaign?.CampaignName,
-            CampaignLocation = campaign?.LocationName,
 
             Donor = new SurveyDonorSummaryDto
             {
@@ -107,42 +104,40 @@ public static class SurveyMappings
                 Age = age,
                 Gender = donor?.Gender ?? string.Empty,
                 PhoneNumber = donor?.PhoneNumber ?? string.Empty,
-                Email = donor?.Email,
-                BloodType = donor?.BloodType,
-                RhFactor = donor?.RhFactor,
+                BloodType = bloodTypeStr,
+                RhFactor = rhFactorStr,
                 TotalDonations = donor?.TotalDonations ?? 0,
                 LastDonationDate = donor?.LastDonationDate,
-                NextEligibleDate = nextEligibleDate,
-                DaysRemaining = daysRemaining,
                 IsEligible84Days = isEligible84Days
             },
 
-            SurveyId = survey?.SurveyId,
+            Survey = new SurveyOnlineDetailDto
+            {
+                SurveyId = survey?.SurveyId,
+                HasSubmittedSurvey = hasSubmittedSurvey,
+                SurveySubmittedAt = survey?.SurveySubmittedAt,
+                RiskScore = survey?.RiskScore ?? 0,
+                HasRisk = survey?.HasRisk ?? false,
+                SurveyAnswers = parsedAnswers
+            },
 
-            HasSubmittedSurvey = hasSubmittedSurvey,
-            SurveyAnswers = parsedAnswers,
-            RiskScore = survey?.RiskScore ?? 0,
-            HasRisk = survey?.HasRisk ?? false,
-            SurveySubmittedAt = survey?.SurveySubmittedAt,
-
-            WeightKg = survey?.WeightKg,
-            SystolicBloodPressure = survey?.SystolicBloodPressure,
-            DiastolicBloodPressure = survey?.DiastolicBloodPressure,
-            Pulse = survey?.Pulse,
-            HemoglobinLevel = survey?.HemoglobinLevel,
-            BodyTemp = survey?.BodyTemp,
-            RapidHbsAgNegative = survey?.RapidHbsAgNegative,
-            ClinicalNotes = survey?.ClinicalNotes,
-
-            DoctorId = survey?.DoctorId,
-            DoctorName = survey?.Doctor?.FullName,
-            ScreeningStatus = survey?.ScreeningStatus ?? ScreeningStatus.PENDING,
-            DeferralReason = survey?.DeferralReason,
-            TargetVolumeMl = survey?.TargetVolumeMl,
-            ScreenedAt = survey?.ScreenedAt,
-
-            SessionId = session?.SessionId,
-            SessionStatus = session?.Status
+            Clinical = new SurveyClinicalDetailDto
+            {
+                WeightKg = survey?.WeightKg,
+                SystolicBloodPressure = survey?.SystolicBloodPressure,
+                DiastolicBloodPressure = survey?.DiastolicBloodPressure,
+                Pulse = survey?.Pulse,
+                HemoglobinLevel = survey?.HemoglobinLevel,
+                BodyTemp = survey?.BodyTemp,
+                RapidHbsAgNegative = survey?.RapidHbsAgNegative,
+                ClinicalNotes = survey?.ClinicalNotes,
+                ScreeningStatus = survey != null ? survey.ScreeningStatus.ToString() : nameof(ScreeningStatus.PENDING),
+                DeferralReason = survey?.DeferralReason,
+                TargetVolumeMl = survey?.TargetVolumeMl?.ToString(),
+                DoctorId = survey?.DoctorId,
+                DoctorName = survey?.Doctor?.FullName,
+                ScreenedAt = survey?.ScreenedAt
+            }
         };
     }
 }
