@@ -57,7 +57,7 @@ public class User
     public ICollection<DonationCampaign> CreatedCampaigns { get; set; } = new List<DonationCampaign>();
     public ICollection<DonationCampaign> ApprovedCampaigns { get; set; } = new List<DonationCampaign>();
     public ICollection<DonationCampaign> CancelledCampaigns { get; set; } = new List<DonationCampaign>();
-    public ICollection<DonationSession> DoctorSessions { get; set; } = new List<DonationSession>();
+    public ICollection<PreScreeningSurvey> DoctorScreenings { get; set; } = new List<PreScreeningSurvey>();
     public ICollection<DonationSession> PhlebotomistSessions { get; set; } = new List<DonationSession>();
     public ICollection<BloodTestResult> TestResults { get; set; } = new List<BloodTestResult>();
     public ICollection<BloodRequest> DoctorRequests { get; set; } = new List<BloodRequest>();

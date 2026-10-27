@@ -43,13 +43,16 @@ public enum AppointmentStatus
     NO_SHOW
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ScreeningStatus
 {
+    PENDING,
     QUALIFIED,
     DEFERRED,
     UNQUALIFIED
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum TargetVolume
 {
     VOL_250,
@@ -57,13 +60,12 @@ public enum TargetVolume
     VOL_450
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum SessionStatus
 {
-    PENDING,
-    QUALIFIED,
-    ABORTED,
+    WAITING_COLLECTION,
     COMPLETED,
-    REFERRED
+    ABORTED
 }
 
 public enum ComponentCode

@@ -119,8 +119,8 @@ public class DonorsService : IDonorsService
                         IsWalkIn = a.IsWalkIn,
                         ActualVolumeMl = a.DonationSession != null ? a.DonationSession.ActualVolumeMl : null,
                         SessionStatus = a.DonationSession != null ? a.DonationSession.Status : null,
-                        ScreeningStatus = a.DonationSession != null ? a.DonationSession.ScreeningStatus : null,
-                        DeferralReason = a.DonationSession != null ? a.DonationSession.DeferralReason : null,
+                        ScreeningStatus = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.ScreeningStatus : null,
+                        DeferralReason = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.DeferralReason : null,
                         CompletedAt = a.DonationSession != null ? a.DonationSession.CompletedAt : null
                     })
                     .ToList()
@@ -187,11 +187,11 @@ public class DonorsService : IDonorsService
             {
                 age--;
             }
+        }
 
-            if (age < 18 || age > 60)
-            {
-                isAgeQualified = false;
-            }
+        if (age < 18 || age > 60)
+        {
+            isAgeQualified = false;
         }
 
         bool hasDonatedBefore = donor.TotalDonations > 0 && donor.LastDonationDate.HasValue;

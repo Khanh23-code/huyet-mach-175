@@ -14,51 +14,30 @@ public class DonationSession
     [Column("appointment_id")]
     public int AppointmentId { get; set; }
 
-    [Column("doctor_id")]
-    public int DoctorId { get; set; }
-
     [Column("phlebotomist_id")]
     public int? PhlebotomistId { get; set; }
 
-    [Column("weight_kg")]
-    public decimal WeightKg { get; set; }
-
-    [Required]
-    [MaxLength(20)]
-    [Column("blood_pressure")]
-    public string BloodPressure { get; set; } = string.Empty;
-
-    [Column("hemoglobin_level")]
-    public decimal? HemoglobinLevel { get; set; }
-
-    [Column("screening_status")]
-    public ScreeningStatus ScreeningStatus { get; set; }
-
-    [MaxLength(255)]
-    [Column("deferral_reason")]
-    public string? DeferralReason { get; set; }
-
     [Column("target_volume_ml")]
-    public TargetVolume? TargetVolumeMl { get; set; }
+    public TargetVolume TargetVolumeMl { get; set; }
 
     [Column("actual_volume_ml")]
     public int? ActualVolumeMl { get; set; }
 
-    [MaxLength(255)]
+    [MaxLength(500)]
     [Column("collection_incident")]
     public string? CollectionIncident { get; set; }
 
     [Column("status")]
-    public SessionStatus Status { get; set; } = SessionStatus.PENDING;
+    public SessionStatus Status { get; set; } = SessionStatus.WAITING_COLLECTION;
+
+    [Column("created_at")]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     [Column("completed_at")]
     public DateTime? CompletedAt { get; set; }
 
     [ForeignKey(nameof(AppointmentId))]
     public DonationAppointment? Appointment { get; set; }
-
-    [ForeignKey(nameof(DoctorId))]
-    public User? Doctor { get; set; }
 
     [ForeignKey(nameof(PhlebotomistId))]
     public User? Phlebotomist { get; set; }
