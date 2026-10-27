@@ -74,4 +74,50 @@ public class SurveysController : ControllerBase
         var result = await _surveysService.GetSurveyByAppointmentIdAsync(appointmentId);
         return Ok(result);
     }
+
+    [HttpPost("online")]
+    [HasPermission("SURVEY_EDIT")]
+    [EndpointSummary("Nộp bảng hỏi tiền sử sức khỏe trực tuyến")]
+    [EndpointDescription(
+        "Người hiến máu nộp kết quả bảng hỏi tiền sử sức khỏe trực tuyến tại nhà qua ứng dụng Mobile (hoặc nhân viên hỗ trợ nhập tại quầy tiếp đón).\n\n" +
+        "**Quy tắc nghiệp vụ:**\n" +
+        "- Kiểm tra lịch hẹn (`appointmentId`) tồn tại, chưa bị hủy và chưa quá hạn khám.\n" +
+        "- Duyệt qua các câu trả lời trong `surveyAnswers` (các câu từ q2 đến q9).\n" +
+        "- Nếu có bất kỳ câu nào là `true` -> Hệ thống tự động tính điểm `riskScore` tương ứng và gắn cờ cảnh báo `hasRisk = true`.\n" +
+        "- Nếu tất cả đều `false` -> `riskScore = 0`, `hasRisk = false`.\n" +
+        "- Lưu vào bảng `pre_screening_surveys`, cập nhật `survey_submitted_at = CURRENT_TIMESTAMP`, giữ nguyên `screening_status = PENDING`.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **SURVEY_EDIT**.\n\n" +
+        "**Mẫu Request Body:**\n" +
+        "```json\n" +
+        "{\n" +
+        "  \"appointmentId\": 101,\n" +
+        "  \"surveyAnswers\": {\n" +
+        "    \"q1_previous_donation\": true,\n" +
+        "    \"q2_chronic_diseases\": false,\n" +
+        "    \"q3_last_12_months\": false,\n" +
+        "    \"q4_last_6_months\": false,\n" +
+        "    \"q5_last_14_days\": false,\n" +
+        "    \"q6_last_7_days\": false,\n" +
+        "    \"q7_infectious_risk\": false,\n" +
+        "    \"q8_unexplained_symptoms\": false,\n" +
+        "    \"q9_female_specific\": false\n" +
+        "  }\n" +
+        "}\n" +
+        "```\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Nộp bảng khảo sát thành công.\n" +
+        "- 400 BadRequest: Dữ liệu không hợp lệ, lịch hẹn bị hủy/quá hạn hoặc đã hoàn tất khám sàng lọc.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền SURVEY_EDIT.\n" +
+        "- 404 NotFound: Không tìm thấy lịch hẹn.")]
+    [ProducesResponseType(typeof(SubmitOnlineSurveyResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SubmitOnlineSurvey([FromBody] SubmitOnlineSurveyRequest request)
+    {
+        var result = await _surveysService.SubmitOnlineSurveyAsync(request);
+        return Ok(result);
+    }
 }

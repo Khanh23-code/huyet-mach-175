@@ -1,4 +1,6 @@
+using System.Text.Json;
 using HuyetMach175.Api.Data;
+using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
 using HuyetMach175.Modules.Donation.DTOs.Common;
 using HuyetMach175.Modules.Donation.DTOs.Surveys;
@@ -120,5 +122,99 @@ public class SurveysService : ISurveysService
         }
 
         return appointment.ToSurveyDetailDto();
+    }
+
+    public async Task<SubmitOnlineSurveyResponse> SubmitOnlineSurveyAsync(SubmitOnlineSurveyRequest request)
+    {
+        if (request.AppointmentId <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "ID lịch hẹn không hợp lệ.");
+        }
+
+        if (request.SurveyAnswers.ValueKind != JsonValueKind.Object)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Dữ liệu câu trả lời khảo sát phải là một JSON object hợp lệ.");
+        }
+
+        var appointment = await _context.DonationAppointments
+            .Include(a => a.PreScreeningSurvey)
+            .FirstOrDefaultAsync(a => a.AppointmentId == request.AppointmentId);
+
+        if (appointment == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy lịch hẹn với ID {request.AppointmentId}.");
+        }
+
+        if (appointment.Status == AppointmentStatus.CANCELLED)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Lịch hẹn này đã bị hủy, không thể nộp bảng khảo sát.");
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        if (appointment.AppointmentDate < today)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Lịch hẹn đã quá hạn khám, không thể nộp bảng khảo sát.");
+        }
+
+        if (appointment.PreScreeningSurvey != null &&
+            appointment.PreScreeningSurvey.ScreeningStatus != ScreeningStatus.PENDING)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Lịch hẹn này đã hoàn tất khám sàng lọc, không thể nộp lại bảng khảo sát trực tuyến.");
+        }
+
+        int riskScore = 0;
+        foreach (var property in request.SurveyAnswers.EnumerateObject())
+        {
+            if (string.Equals(property.Name, "q1_previous_donation", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (property.Value.ValueKind == JsonValueKind.True ||
+                (property.Value.ValueKind == JsonValueKind.String &&
+                 bool.TryParse(property.Value.GetString(), out var boolVal) && boolVal))
+            {
+                riskScore++;
+            }
+        }
+
+        bool hasRisk = riskScore > 0;
+        var now = DateTime.UtcNow;
+
+        PreScreeningSurvey survey;
+        if (appointment.PreScreeningSurvey == null)
+        {
+            survey = new PreScreeningSurvey
+            {
+                AppointmentId = appointment.AppointmentId,
+                SurveyAnswers = request.SurveyAnswers.GetRawText(),
+                RiskScore = riskScore,
+                HasRisk = hasRisk,
+                SurveySubmittedAt = now,
+                ScreeningStatus = ScreeningStatus.PENDING
+            };
+            _context.PreScreeningSurveys.Add(survey);
+        }
+        else
+        {
+            survey = appointment.PreScreeningSurvey;
+            survey.SurveyAnswers = request.SurveyAnswers.GetRawText();
+            survey.RiskScore = riskScore;
+            survey.HasRisk = hasRisk;
+            survey.SurveySubmittedAt = now;
+            survey.ScreeningStatus = ScreeningStatus.PENDING;
+        }
+
+        await _context.SaveChangesAsync();
+
+        return new SubmitOnlineSurveyResponse
+        {
+            SurveyId = survey.SurveyId,
+            AppointmentId = appointment.AppointmentId,
+            HasRisk = hasRisk,
+            RiskScore = riskScore,
+            SubmittedAt = now,
+            Message = "Nộp bảng khảo sát sức khỏe thành công"
+        };
     }
 }
