@@ -100,34 +100,30 @@ public static class DbInitializer
 
         var defaultPermissions = new List<Permission>
         {
-            // CAMPAIGN
             new Permission { PermissionCode = "CAMPAIGN_VIEW", PermissionName = "Xem Đợt hiến máu", ModuleCode = "CAMPAIGN", ModuleName = "Đợt hiến máu", ActionType = PermissionAction.VIEW, Description = "Quản lý Đợt hiến máu" },
             new Permission { PermissionCode = "CAMPAIGN_EDIT", PermissionName = "Tạo đơn Đề xuất & Sửa Đợt hiến máu", ModuleCode = "CAMPAIGN", ModuleName = "Đợt hiến máu", ActionType = PermissionAction.EDIT, Description = "Quản lý Đợt hiến máu" },
             new Permission { PermissionCode = "CAMPAIGN_APPROVE", PermissionName = "Duyệt đơn Đề xuất Đợt hiến máu", ModuleCode = "CAMPAIGN", ModuleName = "Đợt hiến máu", ActionType = PermissionAction.APPROVE, Description = "Quản lý Đợt hiến máu" },
             new Permission { PermissionCode = "CAMPAIGN_CANCEL", PermissionName = "Từ chối đơn Đề xuất Đợt hiến máu", ModuleCode = "CAMPAIGN", ModuleName = "Đợt hiến máu", ActionType = PermissionAction.CANCEL, Description = "Quản lý Đợt hiến máu" },
 
-            // DONORS
             new Permission { PermissionCode = "DONORS_VIEW", PermissionName = "Xem thông tin Người hiến máu", ModuleCode = "DONORS", ModuleName = "Người hiến máu", ActionType = PermissionAction.VIEW, Description = "Quản lý thông tin người hiến máu" },
             new Permission { PermissionCode = "DONORS_EDIT", PermissionName = "Tạo mới / Sửa thông tin Người hiến máu", ModuleCode = "DONORS", ModuleName = "Người hiến máu", ActionType = PermissionAction.EDIT, Description = "Quản lý thông tin người hiến máu" },
 
-            // APPOINTMENTS
             new Permission { PermissionCode = "APPOINTMENTS_VIEW", PermissionName = "Xem danh sách Lịch hẹn", ModuleCode = "APPOINTMENTS", ModuleName = "Lịch hẹn", ActionType = PermissionAction.VIEW, Description = "Quản lý lịch hẹn" },
             new Permission { PermissionCode = "APPOINTMENTS_EDIT", PermissionName = "Tạo mới / Check-in cho Lịch hẹn", ModuleCode = "APPOINTMENTS", ModuleName = "Lịch hẹn", ActionType = PermissionAction.EDIT, Description = "Quản lý lịch hẹn" },
             new Permission { PermissionCode = "APPOINTMENTS_CANCEL", PermissionName = "Hủy Lịch hẹn khi người hiến máu không đến", ModuleCode = "APPOINTMENTS", ModuleName = "Lịch hẹn", ActionType = PermissionAction.CANCEL, Description = "Quản lý lịch hẹn" },
 
-            // SURVEY
             new Permission { PermissionCode = "SURVEY_VIEW", PermissionName = "Xem Bảng hỏi Online của Người hiến máu", ModuleCode = "SURVEY", ModuleName = "Khảo sát", ActionType = PermissionAction.VIEW, Description = "Quản lý khảo sát" },
             new Permission { PermissionCode = "SURVEY_EDIT", PermissionName = "Duyệt kết quả Bảng hỏi", ModuleCode = "SURVEY", ModuleName = "Khảo sát", ActionType = PermissionAction.EDIT, Description = "Quản lý khảo sát" },
 
-            // SCREENING
             new Permission { PermissionCode = "SCREENING_VIEW", PermissionName = "Xem Danh sách chờ Khám lâm sàng / Phiếu khám chi tiết", ModuleCode = "SCREENING", ModuleName = "Khám lâm sàng", ActionType = PermissionAction.VIEW, Description = "Quản lý khám lâm sàng và sàng lọc người hiến máu" },
             new Permission { PermissionCode = "SCREENING_EDIT", PermissionName = "Ghi nhận, gửi kết quả Khám lâm sàng", ModuleCode = "SCREENING", ModuleName = "Khám lâm sàng", ActionType = PermissionAction.EDIT, Description = "Quản lý khám lâm sàng và sàng lọc người hiến máu" },
 
-            // USERS (quản trị hệ thống)
+            new Permission { PermissionCode = "SESSION_VIEW", PermissionName = "Xem danh sách và chi tiết Phiên lấy máu", ModuleCode = "SESSIONS", ModuleName = "Thu gom máu", ActionType = PermissionAction.VIEW, Description = "Quản lý phiên lấy máu và thu gom" },
+            new Permission { PermissionCode = "SESSION_EDIT", PermissionName = "Thực hiện thu gom và đóng Phiên lấy máu", ModuleCode = "SESSIONS", ModuleName = "Thu gom máu", ActionType = PermissionAction.EDIT, Description = "Quản lý phiên lấy máu và thu gom" },
+
             new Permission { PermissionCode = "USERS_VIEW", PermissionName = "Xem danh sách Người dùng", ModuleCode = "USERS", ModuleName = "Người dùng", ActionType = PermissionAction.VIEW, Description = "Quản lý tài khoản nhân viên" },
             new Permission { PermissionCode = "USERS_EDIT", PermissionName = "Tạo mới / Sửa / Khóa Người dùng", ModuleCode = "USERS", ModuleName = "Người dùng", ActionType = PermissionAction.EDIT, Description = "Quản lý tài khoản nhân viên" },
 
-            // ROLES (vai trò & ma trận phân quyền)
             new Permission { PermissionCode = "ROLES_VIEW", PermissionName = "Xem Vai trò và Ma trận phân quyền", ModuleCode = "ROLES", ModuleName = "Vai trò & Phân quyền", ActionType = PermissionAction.VIEW, Description = "Quản lý vai trò và phân quyền" },
             new Permission { PermissionCode = "ROLES_EDIT", PermissionName = "Tạo / Sửa Vai trò và Phân quyền", ModuleCode = "ROLES", ModuleName = "Vai trò & Phân quyền", ActionType = PermissionAction.EDIT, Description = "Quản lý vai trò và phân quyền" },
         };
@@ -166,7 +162,6 @@ public static class DbInitializer
         var allDbPermissions = await context.Permissions.ToListAsync();
         var permMap = allDbPermissions.ToDictionary(p => p.PermissionCode, p => p.PermissionId);
 
-        // Clean up any business/clinical permissions mistakenly assigned to SYS (SYS manages system only, not clinical operations)
         var sysRole = await context.Roles.FirstOrDefaultAsync(r => r.RoleCode == "SYS");
         if (sysRole != null)
         {
@@ -190,14 +185,14 @@ public static class DbInitializer
             ["MGT"] = new[]
             {
                 "CAMPAIGN_VIEW", "CAMPAIGN_APPROVE", "CAMPAIGN_CANCEL",
-                "DONORS_VIEW", "APPOINTMENTS_VIEW", "SURVEY_VIEW", "SCREENING_VIEW"
+                "DONORS_VIEW", "APPOINTMENTS_VIEW", "SURVEY_VIEW", "SCREENING_VIEW", "SESSION_VIEW"
             },
             ["CLIN"] = new[]
             {
                 "SCREENING_VIEW", "SCREENING_EDIT",
                 "SURVEY_VIEW", "SURVEY_EDIT",
                 "DONORS_VIEW", "DONORS_EDIT",
-                "APPOINTMENTS_VIEW"
+                "APPOINTMENTS_VIEW", "SESSION_VIEW"
             },
             ["DON"] = new[]
             {
@@ -205,11 +200,11 @@ public static class DbInitializer
                 "DONORS_VIEW", "DONORS_EDIT",
                 "SURVEY_VIEW", "SURVEY_EDIT",
                 "SCREENING_VIEW", "SCREENING_EDIT",
-                "CAMPAIGN_VIEW"
+                "CAMPAIGN_VIEW", "SESSION_VIEW", "SESSION_EDIT"
             },
             ["BBNK"] = new[]
             {
-                "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "DONORS_VIEW", "SCREENING_VIEW"
+                "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "DONORS_VIEW", "SCREENING_VIEW", "SESSION_VIEW"
             }
         };
 
