@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.AddScoped<IAppointmentsService, AppointmentsService>();
         services.AddScoped<ICheckInService, CheckInService>();
         services.AddScoped<ISurveysService, SurveysService>();
+        services.AddScoped<IDonationSessionsService, DonationSessionsService>();
 
         services.AddControllers()
             .AddApplicationPart(typeof(DependencyInjection).Assembly);
