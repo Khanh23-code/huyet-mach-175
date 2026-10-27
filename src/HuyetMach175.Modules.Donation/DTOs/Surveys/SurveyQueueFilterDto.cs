@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using HuyetMach175.Api.Data.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HuyetMach175.Modules.Donation.DTOs.Surveys;
@@ -10,7 +9,7 @@ public class SurveyQueueFilterDto
     public DateOnly? Date { get; set; }
 
     [FromQuery(Name = "screeningStatus")]
-    public ScreeningStatus? ScreeningStatus { get; set; }
+    public string? ScreeningStatus { get; set; }
 
     [FromQuery(Name = "campaignId")]
     public int? CampaignId { get; set; }

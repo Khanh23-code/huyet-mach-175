@@ -9,42 +9,19 @@ public static class SurveyMappings
 {
     public static SurveyQueueItemDto ToQueueItemDto(this DonationAppointment a)
     {
-        var slot = a.CampaignSlot;
-        var campaign = slot?.Campaign;
-
         return new SurveyQueueItemDto
         {
             AppointmentId = a.AppointmentId,
-            AppointmentDate = a.AppointmentDate,
-            SlotId = a.SlotId,
-            TimeSlot = slot != null ? $"{slot.StartTime:HH\\:mm}-{slot.EndTime:HH\\:mm}" : string.Empty,
-            QrCodeToken = a.QrCodeToken,
-            IsWalkIn = a.IsWalkIn,
-            CheckedInAt = a.CheckedInAt,
-
-            CampaignId = slot?.CampaignId,
-            CampaignName = campaign?.CampaignName,
-
             DonorId = a.DonorId,
-            DonorCode = $"NH{a.DonorId:D5}",
-            DonorName = a.Donor != null ? a.Donor.FullName : string.Empty,
-            DonorCitizenId = a.Donor != null ? a.Donor.CitizenId : string.Empty,
-            DonorPhoneNumber = a.Donor != null ? a.Donor.PhoneNumber : string.Empty,
-            DonorDateOfBirth = a.Donor != null ? a.Donor.DateOfBirth : default,
-            DonorGender = a.Donor != null ? a.Donor.Gender : string.Empty,
-            DonorBloodType = a.Donor != null ? a.Donor.BloodType : null,
-            DonorRhFactor = a.Donor != null ? a.Donor.RhFactor : null,
-            TotalDonations = a.Donor != null ? a.Donor.TotalDonations : 0,
-            LastDonationDate = a.Donor != null ? a.Donor.LastDonationDate : null,
-
-            SurveyId = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.SurveyId : null,
-            HasSubmittedSurvey = a.PreScreeningSurvey != null && a.PreScreeningSurvey.SurveySubmittedAt != null,
-            RiskScore = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.RiskScore : 0,
-            HasRisk = a.PreScreeningSurvey != null && a.PreScreeningSurvey.HasRisk,
-            SurveySubmittedAt = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.SurveySubmittedAt : null,
-            ScreeningStatus = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.ScreeningStatus : ScreeningStatus.PENDING,
-            TargetVolumeMl = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.TargetVolumeMl : null,
-            ScreenedAt = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.ScreenedAt : null
+            DonorCode = $"NH-{a.DonorId:D6}",
+            DonorName = a.Donor?.FullName ?? string.Empty,
+            CheckedInAt = a.CheckedInAt,
+            IsWalkIn = a.IsWalkIn,
+            HasSubmittedSurvey = a.PreScreeningSurvey?.SurveySubmittedAt != null,
+            HasRisk = a.PreScreeningSurvey?.HasRisk ?? false,
+            ScreeningStatus = a.PreScreeningSurvey != null
+                ? a.PreScreeningSurvey.ScreeningStatus.ToString()
+                : nameof(ScreeningStatus.PENDING)
         };
     }
 
@@ -123,7 +100,7 @@ public static class SurveyMappings
             Donor = new SurveyDonorSummaryDto
             {
                 DonorId = appointment.DonorId,
-                DonorCode = $"NH{appointment.DonorId:D5}",
+                DonorCode = $"NH-{appointment.DonorId:D6}",
                 FullName = donor?.FullName ?? string.Empty,
                 CitizenId = donor?.CitizenId ?? string.Empty,
                 DateOfBirth = donor?.DateOfBirth ?? default,

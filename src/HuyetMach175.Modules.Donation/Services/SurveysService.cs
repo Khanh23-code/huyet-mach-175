@@ -45,20 +45,23 @@ public class SurveysService : ISurveysService
             query = query.Where(a => a.CampaignSlot != null && a.CampaignSlot.CampaignId == filter.CampaignId.Value);
         }
 
-        if (filter.ScreeningStatus.HasValue)
+        if (!string.IsNullOrWhiteSpace(filter.ScreeningStatus))
         {
-            var status = filter.ScreeningStatus.Value;
-            if (status == ScreeningStatus.PENDING)
+            var statusStr = filter.ScreeningStatus.Trim().ToUpperInvariant();
+            if (Enum.TryParse<ScreeningStatus>(statusStr, true, out var status))
             {
-                query = query.Where(a =>
-                    a.PreScreeningSurvey == null ||
-                    a.PreScreeningSurvey.ScreeningStatus == ScreeningStatus.PENDING);
-            }
-            else
-            {
-                query = query.Where(a =>
-                    a.PreScreeningSurvey != null &&
-                    a.PreScreeningSurvey.ScreeningStatus == status);
+                if (status == ScreeningStatus.PENDING)
+                {
+                    query = query.Where(a =>
+                        a.PreScreeningSurvey == null ||
+                        a.PreScreeningSurvey.ScreeningStatus == ScreeningStatus.PENDING);
+                }
+                else
+                {
+                    query = query.Where(a =>
+                        a.PreScreeningSurvey != null &&
+                        a.PreScreeningSurvey.ScreeningStatus == status);
+                }
             }
         }
 
