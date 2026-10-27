@@ -8,4 +8,5 @@ public interface ISurveysService
     Task<PagedResult<SurveyQueueItemDto>> GetScreeningQueueAsync(SurveyQueueFilterDto filter);
     Task<SurveyDetailDto> GetSurveyByAppointmentIdAsync(int appointmentId);
     Task<SubmitOnlineSurveyResponse> SubmitOnlineSurveyAsync(SubmitOnlineSurveyRequest request);
+    Task<ClinicalScreeningResponse> UpdateClinicalScreeningAsync(int appointmentId, UpdateClinicalScreeningRequest request, int doctorId);
 }

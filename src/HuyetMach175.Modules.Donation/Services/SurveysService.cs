@@ -162,23 +162,7 @@ public class SurveysService : ISurveysService
             throw new HttpException(StatusCodes.Status400BadRequest, "Lịch hẹn này đã hoàn tất khám sàng lọc, không thể nộp lại bảng khảo sát trực tuyến.");
         }
 
-        int riskScore = 0;
-        foreach (var property in request.SurveyAnswers.EnumerateObject())
-        {
-            if (string.Equals(property.Name, "q1_previous_donation", StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            if (property.Value.ValueKind == JsonValueKind.True ||
-                (property.Value.ValueKind == JsonValueKind.String &&
-                 bool.TryParse(property.Value.GetString(), out var boolVal) && boolVal))
-            {
-                riskScore++;
-            }
-        }
-
-        bool hasRisk = riskScore > 0;
+        var (riskScore, hasRisk) = CalculateSurveyRisk(request.SurveyAnswers);
         var now = DateTime.UtcNow;
 
         PreScreeningSurvey survey;
@@ -216,5 +200,190 @@ public class SurveysService : ISurveysService
             SubmittedAt = now,
             Message = "Nộp bảng khảo sát sức khỏe thành công"
         };
+    }
+
+    public async Task<ClinicalScreeningResponse> UpdateClinicalScreeningAsync(
+        int appointmentId,
+        UpdateClinicalScreeningRequest request,
+        int doctorId)
+    {
+        if (appointmentId <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "ID lịch hẹn không hợp lệ.");
+        }
+
+        if (doctorId <= 0)
+        {
+            throw new HttpException(StatusCodes.Status401Unauthorized, "Không tìm thấy thông tin Bác sĩ thực hiện khám.");
+        }
+
+        if (request.ScreeningStatus == ScreeningStatus.PENDING)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Kết luận sàng lọc phải là Đạt tiêu chuẩn (QUALIFIED), Tạm hoãn (DEFERRED) hoặc Không đạt (UNQUALIFIED).");
+        }
+
+        if (request.ScreeningStatus == ScreeningStatus.QUALIFIED)
+        {
+            if (request.RapidHbsAgNegative != true)
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, "Người hiến có kết quả xét nghiệm nhanh HBsAg dương tính hoặc chưa có kết quả, không đủ điều kiện hiến máu.");
+            }
+
+            if (!request.TargetVolumeMl.HasValue)
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, "Bắt buộc phải chỉ định lượng máu hiến (targetVolumeMl) khi kết luận Đạt tiêu chuẩn.");
+            }
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(request.DeferralReason))
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, "Bắt buộc phải nhập lý do (deferralReason) khi kết luận Tạm hoãn hoặc Không đạt.");
+            }
+        }
+
+        var appointment = await _context.DonationAppointments
+            .Include(a => a.PreScreeningSurvey)
+            .Include(a => a.DonationSession)
+            .FirstOrDefaultAsync(a => a.AppointmentId == appointmentId);
+
+        if (appointment == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy lịch hẹn với ID {appointmentId}.");
+        }
+
+        if (appointment.Status == AppointmentStatus.CANCELLED)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Lịch hẹn này đã bị hủy, không thể thực hiện khám sàng lọc.");
+        }
+
+        if (appointment.Status != AppointmentStatus.CHECKED_IN)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Người hiến chưa hoàn tất thủ tục tiếp nhận (Check-in), chưa thể khám sàng lọc.");
+        }
+
+        if (appointment.DonationSession != null &&
+            appointment.DonationSession.Status == SessionStatus.COMPLETED)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Phiên hiến máu đã hoàn thành, không thể sửa kết luận khám sàng lọc.");
+        }
+
+        var now = DateTime.UtcNow;
+
+        if (appointment.PreScreeningSurvey == null)
+        {
+            appointment.PreScreeningSurvey = new PreScreeningSurvey
+            {
+                AppointmentId = appointment.AppointmentId,
+                SurveyAnswers = "{}",
+                ScreeningStatus = ScreeningStatus.PENDING
+            };
+            _context.PreScreeningSurveys.Add(appointment.PreScreeningSurvey);
+        }
+
+        var survey = appointment.PreScreeningSurvey;
+
+        if (request.SurveyAnswers.HasValue && request.SurveyAnswers.Value.ValueKind == JsonValueKind.Object)
+        {
+            var (riskScore, hasRisk) = CalculateSurveyRisk(request.SurveyAnswers.Value);
+
+            survey.SurveyAnswers = request.SurveyAnswers.Value.GetRawText();
+            survey.RiskScore = riskScore;
+            survey.HasRisk = hasRisk;
+            survey.SurveySubmittedAt ??= now;
+        }
+        else if (string.IsNullOrWhiteSpace(survey.SurveyAnswers) || survey.SurveyAnswers == "{}")
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Người hiến chưa có thông tin bảng hỏi tiền sử sức khỏe. Vui lòng gửi kèm surveyAnswers đối với khách vãng lai.");
+        }
+
+        survey.DoctorId = doctorId;
+        survey.WeightKg = request.WeightKg;
+        survey.SystolicBloodPressure = request.SystolicBloodPressure;
+        survey.DiastolicBloodPressure = request.DiastolicBloodPressure;
+        survey.Pulse = request.Pulse;
+        survey.HemoglobinLevel = request.HemoglobinLevel;
+        survey.BodyTemp = request.BodyTemp;
+        survey.RapidHbsAgNegative = request.RapidHbsAgNegative;
+        survey.ClinicalNotes = request.ClinicalNotes;
+        survey.ScreeningStatus = request.ScreeningStatus;
+        survey.DeferralReason = request.ScreeningStatus == ScreeningStatus.QUALIFIED ? null : request.DeferralReason;
+        survey.TargetVolumeMl = request.ScreeningStatus == ScreeningStatus.QUALIFIED ? request.TargetVolumeMl : null;
+        survey.ScreenedAt = now;
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        DonationSession? session = appointment.DonationSession;
+
+        if (request.ScreeningStatus == ScreeningStatus.QUALIFIED)
+        {
+            if (session == null)
+            {
+                session = new DonationSession
+                {
+                    AppointmentId = appointment.AppointmentId,
+                    TargetVolumeMl = request.TargetVolumeMl!.Value,
+                    Status = SessionStatus.WAITING_COLLECTION,
+                    CreatedAt = now
+                };
+                _context.DonationSessions.Add(session);
+            }
+            else
+            {
+                session.TargetVolumeMl = request.TargetVolumeMl!.Value;
+                session.Status = SessionStatus.WAITING_COLLECTION;
+            }
+        }
+        else
+        {
+            if (session != null && session.Status == SessionStatus.WAITING_COLLECTION)
+            {
+                _context.DonationSessions.Remove(session);
+                session = null;
+            }
+        }
+
+        await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
+
+        string message = request.ScreeningStatus switch
+        {
+            ScreeningStatus.QUALIFIED => "Đã lưu kết quả khám. Người hiến đủ điều kiện và đã chuyển sang phòng lấy máu.",
+            ScreeningStatus.DEFERRED => "Đã lưu kết quả khám. Người hiến thuộc diện tạm hoãn hiến máu.",
+            ScreeningStatus.UNQUALIFIED => "Đã lưu kết quả khám. Người hiến không đạt tiêu chuẩn hiến máu.",
+            _ => "Đã lưu kết quả khám sàng lọc thành công."
+        };
+
+        return new ClinicalScreeningResponse
+        {
+            AppointmentId = appointment.AppointmentId,
+            ScreeningStatus = request.ScreeningStatus.ToString(),
+            SessionId = session?.SessionId,
+            SessionStatus = session != null ? session.Status.ToString() : null,
+            TargetVolumeMl = request.ScreeningStatus == ScreeningStatus.QUALIFIED ? request.TargetVolumeMl?.ToString() : null,
+            ScreenedAt = now,
+            Message = message
+        };
+    }
+
+    private static (int RiskScore, bool HasRisk) CalculateSurveyRisk(JsonElement answers)
+    {
+        int riskScore = 0;
+        foreach (var property in answers.EnumerateObject())
+        {
+            if (string.Equals(property.Name, "q1_previous_donation", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (property.Value.ValueKind == JsonValueKind.True ||
+                (property.Value.ValueKind == JsonValueKind.String &&
+                 bool.TryParse(property.Value.GetString(), out var boolVal) && boolVal))
+            {
+                riskScore++;
+            }
+        }
+
+        return (riskScore, riskScore > 0);
     }
 }

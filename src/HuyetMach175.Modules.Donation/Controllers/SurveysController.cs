@@ -2,6 +2,7 @@ using HuyetMach175.Modules.Donation.DTOs.Common;
 using HuyetMach175.Modules.Donation.DTOs.Surveys;
 using HuyetMach175.Modules.Donation.Services;
 using HuyetMach175.SharedKernel.Authorization;
+using HuyetMach175.SharedKernel.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -118,6 +119,37 @@ public class SurveysController : ControllerBase
     public async Task<IActionResult> SubmitOnlineSurvey([FromBody] SubmitOnlineSurveyRequest request)
     {
         var result = await _surveysService.SubmitOnlineSurveyAsync(request);
+        return Ok(result);
+    }
+
+    [HttpPut("appointment/{appointmentId:int}/clinical")]
+    [HasPermission("SCREENING_EDIT")]
+    [EndpointSummary("Cập nhật kết quả khám lâm sàng và kết luận sàng lọc")]
+    [EndpointDescription(
+        "Bác sĩ ghi nhận các chỉ số sinh tồn và đưa ra kết luận sàng lọc cuối cùng (Đạt tiêu chuẩn, Tạm hoãn hoặc Không đạt). Hỗ trợ truyền kèm surveyAnswers nếu là khách vãng lai chưa làm khảo sát online trước đó.\n\n" +
+        "**Quy tắc nghiệp vụ:**\n" +
+        "- Lấy doctorId từ JWT Token và cập nhật screenedAt = CURRENT_TIMESTAMP.\n" +
+        "- Cập nhật các chỉ số sinh tồn và kết luận vào bảng pre_screening_surveys. Nếu có surveyAnswers, tự động tính toán hasRisk, riskScore và lưu đồng thời.\n" +
+        "- Nếu screeningStatus == QUALIFIED: Bắt buộc test nhanh HBsAg âm tính và phải chỉ định thể tích máu (targetVolumeMl). Hệ thống tự động tạo mới/cập nhật bản ghi trong donation_sessions với trạng thái WAITING_COLLECTION để chuyển sang phòng lấy máu.\n" +
+        "- Nếu screeningStatus != QUALIFIED: Bắt buộc nhập lý do (deferralReason), đóng quy trình khám và không tạo phiên hiến máu trong donation_sessions.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **SCREENING_EDIT**.\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Cập nhật kết quả khám lâm sàng thành công.\n" +
+        "- 400 BadRequest: Dữ liệu không hợp lệ, người hiến chưa check-in hoặc vi phạm an toàn y tế.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền SCREENING_EDIT.\n" +
+        "- 404 NotFound: Không tìm thấy lịch hẹn.")]
+    [ProducesResponseType(typeof(ClinicalScreeningResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateClinicalScreening(
+        [FromRoute] int appointmentId,
+        [FromBody] UpdateClinicalScreeningRequest request)
+    {
+        var doctorId = User.GetUserId();
+        var result = await _surveysService.UpdateClinicalScreeningAsync(appointmentId, request, doctorId);
         return Ok(result);
     }
 }
