@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddScoped<IAppointmentValidator, AppointmentValidator>();
         services.AddScoped<IAppointmentsService, AppointmentsService>();
         services.AddScoped<ICheckInService, CheckInService>();
+        services.AddScoped<ISurveysService, SurveysService>();
 
         services.AddControllers()
             .AddApplicationPart(typeof(DependencyInjection).Assembly);
