@@ -8,6 +8,7 @@ import UserManagementPage from '@/features/users/pages/UserManagementPage'
 import ProfilePage from '@/features/account/pages/ProfilePage'
 import SiteMonitorPage from '@/features/campaigns/pages/SiteMonitorPage'
 import ProposalPage from '@/features/campaigns/pages/ProposalPage'
+import ReceptionQueuePage from '@/features/reception/pages/ReceptionQueuePage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import RouteErrorBoundary from '@/components/RouteErrorBoundary'
 import { findRouteItem } from '@/config/routeConfig'
@@ -16,6 +17,7 @@ import { findRouteItem } from '@/config/routeConfig'
 const usersRoute = findRouteItem('users')
 const siteListRoute = findRouteItem('site-list')
 const proposalsRoute = findRouteItem('site-proposals')
+const queueRoute = findRouteItem('queue')
 
 export const router = createBrowserRouter([
     {
@@ -54,6 +56,11 @@ export const router = createBrowserRouter([
                     {
                         element: <ProtectedRoute requiredPermission={proposalsRoute.requiredPermission} />,
                         children: [{ path: proposalsRoute.path, element: <ProposalPage /> }],
+                    },
+                    // Tiếp nhận & Sàng lọc
+                    {
+                        element: <ProtectedRoute requiredPermission={queueRoute.requiredPermission} />,
+                        children: [{ path: queueRoute.path, element: <ReceptionQueuePage /> }],
                     },
                     // Bắt tất cả các đường dẫn chưa có giao diện bên trong AppLayout
                     { path: '*', element: <NotFoundPage /> },
