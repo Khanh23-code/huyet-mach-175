@@ -9,6 +9,8 @@ public static class DbInitializer
 {
     public static async Task SeedAsync(ApplicationDbContext context, IPasswordHasher passwordHasher)
     {
+        await EnsureSchemaUpdatedAsync(context);
+
         var defaultDepartments = new[]
         {
             new { DepartmentCode = "DEP_ADMIN", DepartmentName = "Trung tâm Công nghệ Thông tin" },
@@ -107,20 +109,15 @@ public static class DbInitializer
             // DONORS
             new Permission { PermissionCode = "DONORS_VIEW", PermissionName = "Xem thông tin Người hiến máu", ModuleCode = "DONORS", ModuleName = "Người hiến máu", ActionType = PermissionAction.VIEW, Description = "Quản lý thông tin người hiến máu" },
             new Permission { PermissionCode = "DONORS_EDIT", PermissionName = "Tạo mới / Sửa thông tin Người hiến máu", ModuleCode = "DONORS", ModuleName = "Người hiến máu", ActionType = PermissionAction.EDIT, Description = "Quản lý thông tin người hiến máu" },
-            // new Permission { PermissionCode = "DONORS_APPROVE", PermissionName = "Duyệt Người hiến máu", ModuleCode = "DONORS", ModuleName = "Người hiến máu", ActionType = PermissionAction.APPROVE, Description = "Quản lý thông tin người hiến máu" },
-            // new Permission { PermissionCode = "DONORS_CANCEL", PermissionName = "Hủy / Xóa Người hiến máu", ModuleCode = "DONORS", ModuleName = "Người hiến máu", ActionType = PermissionAction.CANCEL, Description = "Quản lý thông tin người hiến máu" },
 
             // APPOINTMENTS
             new Permission { PermissionCode = "APPOINTMENTS_VIEW", PermissionName = "Xem danh sách Lịch hẹn", ModuleCode = "APPOINTMENTS", ModuleName = "Lịch hẹn", ActionType = PermissionAction.VIEW, Description = "Quản lý lịch hẹn" },
             new Permission { PermissionCode = "APPOINTMENTS_EDIT", PermissionName = "Tạo mới / Check-in cho Lịch hẹn", ModuleCode = "APPOINTMENTS", ModuleName = "Lịch hẹn", ActionType = PermissionAction.EDIT, Description = "Quản lý lịch hẹn" },
-            // new Permission { PermissionCode = "APPOINTMENTS_APPROVE", PermissionName = "Duyệt Lịch hẹn", ModuleCode = "APPOINTMENTS", ModuleName = "Lịch hẹn", ActionType = PermissionAction.APPROVE, Description = "Quản lý lịch hẹn" },
             new Permission { PermissionCode = "APPOINTMENTS_CANCEL", PermissionName = "Hủy Lịch hẹn khi người hiến máu không đến", ModuleCode = "APPOINTMENTS", ModuleName = "Lịch hẹn", ActionType = PermissionAction.CANCEL, Description = "Quản lý lịch hẹn" },
 
             // SURVEY
             new Permission { PermissionCode = "SURVEY_VIEW", PermissionName = "Xem Bảng hỏi Online của Người hiến máu", ModuleCode = "SURVEY", ModuleName = "Khảo sát", ActionType = PermissionAction.VIEW, Description = "Quản lý khảo sát" },
             new Permission { PermissionCode = "SURVEY_EDIT", PermissionName = "Duyệt kết quả Bảng hỏi", ModuleCode = "SURVEY", ModuleName = "Khảo sát", ActionType = PermissionAction.EDIT, Description = "Quản lý khảo sát" },
-            // new Permission { PermissionCode = "SURVEY_APPROVE", PermissionName = "Duyệt Khảo sát", ModuleCode = "SURVEY", ModuleName = "Khảo sát", ActionType = PermissionAction.APPROVE, Description = "Quản lý khảo sát" },
-            // new Permission { PermissionCode = "SURVEY_CANCEL", PermissionName = "Hủy / Xóa Khảo sát", ModuleCode = "SURVEY", ModuleName = "Khảo sát", ActionType = PermissionAction.CANCEL, Description = "Quản lý khảo sát" },
 
             // SCREENING
             new Permission { PermissionCode = "SCREENING_VIEW", PermissionName = "Xem Danh sách chờ Khám lâm sàng / Phiếu khám chi tiết", ModuleCode = "SCREENING", ModuleName = "Khám lâm sàng", ActionType = PermissionAction.VIEW, Description = "Quản lý khám lâm sàng và sàng lọc người hiến máu" },
@@ -206,7 +203,9 @@ public static class DbInitializer
             {
                 "APPOINTMENTS_VIEW", "APPOINTMENTS_EDIT", "APPOINTMENTS_CANCEL",
                 "DONORS_VIEW", "DONORS_EDIT",
-                "SURVEY_VIEW", "CAMPAIGN_VIEW"
+                "SURVEY_VIEW", "SURVEY_EDIT",
+                "SCREENING_VIEW", "SCREENING_EDIT",
+                "CAMPAIGN_VIEW"
             },
             ["BBNK"] = new[]
             {
@@ -362,6 +361,254 @@ public static class DbInitializer
                 });
                 await context.SaveChangesAsync();
             }
+        }
+
+        await SeedAppointmentsAndSurveysAsync(context);
+    }
+
+    private static async Task EnsureSchemaUpdatedAsync(ApplicationDbContext context)
+    {
+        const string sql = @"
+            ALTER TABLE donation_appointments ADD COLUMN IF NOT EXISTS slot_id integer NULL;
+
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_constraint WHERE conname = 'FK_donation_appointments_donation_campaign_slots_slot_id'
+                ) THEN
+                    ALTER TABLE donation_appointments
+                    ADD CONSTRAINT ""FK_donation_appointments_donation_campaign_slots_slot_id""
+                    FOREIGN KEY (slot_id) REFERENCES donation_campaign_slots(slot_id) ON DELETE SET NULL;
+                END IF;
+            END $$;
+
+            CREATE INDEX IF NOT EXISTS ""IX_donation_appointments_slot_id"" ON donation_appointments(slot_id);
+
+            DELETE FROM pre_screening_surveys
+            WHERE appointment_id IN (SELECT appointment_id FROM donation_appointments WHERE slot_id IS NULL);
+
+            DELETE FROM donation_sessions
+            WHERE appointment_id IN (SELECT appointment_id FROM donation_appointments WHERE slot_id IS NULL)
+              AND session_id NOT IN (SELECT session_id FROM blood_bags WHERE session_id IS NOT NULL);
+
+            DELETE FROM donation_appointments
+            WHERE slot_id IS NULL
+              AND appointment_id NOT IN (SELECT appointment_id FROM donation_sessions);
+
+            ALTER TABLE donation_appointments DROP CONSTRAINT IF EXISTS ""FK_donation_appointments_donation_campaigns_campaign_id"";
+            DROP INDEX IF EXISTS ""IX_donation_appointments_campaign_id"";
+            ALTER TABLE donation_appointments DROP COLUMN IF EXISTS campaign_id;
+            ALTER TABLE donation_appointments DROP COLUMN IF EXISTS time_slot;
+
+            ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS survey_submitted_at timestamp with time zone NULL;
+            ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS doctor_id integer NULL;
+            ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS weight_kg numeric(5,2) NULL;
+            ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS systolic_blood_pressure integer NULL;
+            ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS diastolic_blood_pressure integer NULL;
+            ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS pulse integer NULL;
+            ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS hemoglobin_level numeric(5,2) NULL;
+            ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS body_temp numeric(4,1) NULL;
+            ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS rapid_hbsag_negative boolean NULL;
+            ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS clinical_notes character varying(500) NULL;
+            ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS screening_status text NOT NULL DEFAULT 'PENDING';
+            ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS deferral_reason character varying(500) NULL;
+            ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS target_volume_ml text NULL;
+            ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS screened_at timestamp with time zone NULL;
+            ALTER TABLE pre_screening_surveys ALTER COLUMN submitted_at DROP NOT NULL;
+
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_constraint WHERE conname = 'FK_pre_screening_surveys_users_doctor_id'
+                ) THEN
+                    ALTER TABLE pre_screening_surveys
+                    ADD CONSTRAINT ""FK_pre_screening_surveys_users_doctor_id""
+                    FOREIGN KEY (doctor_id) REFERENCES users(user_id) ON DELETE RESTRICT;
+                END IF;
+            END $$;
+
+            ALTER TABLE donation_sessions ADD COLUMN IF NOT EXISTS created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP;
+            ALTER TABLE donation_sessions ALTER COLUMN collection_incident TYPE character varying(500);
+            ALTER TABLE donation_sessions DROP CONSTRAINT IF EXISTS ""FK_donation_sessions_users_doctor_id"";
+            ALTER TABLE donation_sessions DROP COLUMN IF EXISTS doctor_id;
+            ALTER TABLE donation_sessions DROP COLUMN IF EXISTS weight_kg;
+            ALTER TABLE donation_sessions DROP COLUMN IF EXISTS blood_pressure;
+            ALTER TABLE donation_sessions DROP COLUMN IF EXISTS hemoglobin_level;
+            ALTER TABLE donation_sessions DROP COLUMN IF EXISTS screening_status;
+            ALTER TABLE donation_sessions DROP COLUMN IF EXISTS deferral_reason;
+        ";
+
+        await context.Database.ExecuteSqlRawAsync(sql);
+    }
+
+    private static async Task SeedAppointmentsAndSurveysAsync(ApplicationDbContext context)
+    {
+        if (await context.DonationAppointments.AnyAsync(da => da.QrCodeToken.StartsWith("HM175-SEED-")))
+        {
+            return;
+        }
+
+        var donorIds = await context.Donors
+            .Where(d => d.DonorId >= 1 && d.DonorId <= 13)
+            .OrderBy(d => d.DonorId)
+            .Select(d => d.DonorId)
+            .ToListAsync();
+
+        var slotIds = await context.DonationCampaignSlots
+            .Where(s => s.SlotId >= 3 && s.SlotId <= 8)
+            .OrderBy(s => s.SlotId)
+            .Select(s => s.SlotId)
+            .ToListAsync();
+
+        if (donorIds.Count == 0 || slotIds.Count == 0)
+        {
+            return;
+        }
+
+        var doctorId = await context.Users
+            .Where(u => u.Username == "doctor")
+            .Select(u => (int?)u.UserId)
+            .FirstOrDefaultAsync();
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var nowUtc = DateTime.UtcNow;
+
+        const string safeSurveyJson = @"{""q1_previous_donation"":true,""q2_chronic_diseases"":false,""q3_last_12_months"":false,""q4_last_6_months"":false,""q5_last_14_days"":false,""q6_last_7_days"":false,""q7_infectious_risk"":false,""q8_unexplained_symptoms"":false,""q9_female_specific"":false}";
+        const string riskSurveyJson1 = @"{""q1_previous_donation"":true,""q2_chronic_diseases"":false,""q3_last_12_months"":false,""q4_last_6_months"":false,""q5_last_14_days"":true,""q6_last_7_days"":false,""q7_infectious_risk"":false,""q8_unexplained_symptoms"":false,""q9_female_specific"":false}";
+        const string riskSurveyJson2 = @"{""q1_previous_donation"":false,""q2_chronic_diseases"":false,""q3_last_12_months"":false,""q4_last_6_months"":true,""q5_last_14_days"":false,""q6_last_7_days"":true,""q7_infectious_risk"":false,""q8_unexplained_symptoms"":false,""q9_female_specific"":false}";
+
+        for (int i = 0; i < donorIds.Count; i++)
+        {
+            var donorId = donorIds[i];
+            var slotId = slotIds[i % slotIds.Count];
+            var index1Based = i + 1;
+
+            var status = AppointmentStatus.CHECKED_IN;
+            var isWalkIn = false;
+            DateTime? checkedInAt = nowUtc.AddMinutes(-90 + i * 5);
+
+            if (index1Based is 7 or 8)
+            {
+                isWalkIn = true;
+            }
+            else if (index1Based is 11 or 12)
+            {
+                status = AppointmentStatus.BOOKED;
+                checkedInAt = null;
+            }
+            else if (index1Based == 13)
+            {
+                status = AppointmentStatus.CANCELLED;
+                checkedInAt = null;
+            }
+
+            var appointment = new DonationAppointment
+            {
+                DonorId = donorId,
+                SlotId = slotId,
+                AppointmentDate = today,
+                QrCodeToken = $"HM175-SEED-{donorId:D4}-{slotId:D2}",
+                Status = status,
+                IsWalkIn = isWalkIn,
+                CheckedInAt = checkedInAt,
+                CreatedAt = nowUtc.AddHours(-3)
+            };
+
+            context.DonationAppointments.Add(appointment);
+            await context.SaveChangesAsync();
+
+            if (index1Based is >= 1 and <= 4 or 11 or 12)
+            {
+                context.PreScreeningSurveys.Add(new PreScreeningSurvey
+                {
+                    AppointmentId = appointment.AppointmentId,
+                    SurveyAnswers = safeSurveyJson,
+                    RiskScore = 0,
+                    HasRisk = false,
+                    SurveySubmittedAt = nowUtc.AddHours(-2),
+                    ScreeningStatus = ScreeningStatus.PENDING
+                });
+            }
+            else if (index1Based == 5)
+            {
+                context.PreScreeningSurveys.Add(new PreScreeningSurvey
+                {
+                    AppointmentId = appointment.AppointmentId,
+                    SurveyAnswers = riskSurveyJson1,
+                    RiskScore = 1,
+                    HasRisk = true,
+                    SurveySubmittedAt = nowUtc.AddHours(-2),
+                    ScreeningStatus = ScreeningStatus.PENDING
+                });
+            }
+            else if (index1Based == 6)
+            {
+                context.PreScreeningSurveys.Add(new PreScreeningSurvey
+                {
+                    AppointmentId = appointment.AppointmentId,
+                    SurveyAnswers = riskSurveyJson2,
+                    RiskScore = 2,
+                    HasRisk = true,
+                    SurveySubmittedAt = nowUtc.AddHours(-2),
+                    ScreeningStatus = ScreeningStatus.PENDING
+                });
+            }
+            else if (index1Based == 9)
+            {
+                context.PreScreeningSurveys.Add(new PreScreeningSurvey
+                {
+                    AppointmentId = appointment.AppointmentId,
+                    SurveyAnswers = safeSurveyJson,
+                    RiskScore = 0,
+                    HasRisk = false,
+                    SurveySubmittedAt = nowUtc.AddHours(-2),
+                    DoctorId = doctorId,
+                    WeightKg = 68.5m,
+                    SystolicBloodPressure = 120,
+                    DiastolicBloodPressure = 78,
+                    Pulse = 74,
+                    HemoglobinLevel = 142.0m,
+                    BodyTemp = 36.6m,
+                    RapidHbsAgNegative = true,
+                    ClinicalNotes = "Tỉnh táo, huyết động ổn định, đủ điều kiện hiến máu 350ml.",
+                    ScreeningStatus = ScreeningStatus.QUALIFIED,
+                    TargetVolumeMl = TargetVolume.VOL_350,
+                    ScreenedAt = nowUtc.AddMinutes(-20)
+                });
+
+                context.DonationSessions.Add(new DonationSession
+                {
+                    AppointmentId = appointment.AppointmentId,
+                    TargetVolumeMl = TargetVolume.VOL_350,
+                    Status = SessionStatus.WAITING_COLLECTION,
+                    CreatedAt = nowUtc.AddMinutes(-20)
+                });
+            }
+            else if (index1Based == 10)
+            {
+                context.PreScreeningSurveys.Add(new PreScreeningSurvey
+                {
+                    AppointmentId = appointment.AppointmentId,
+                    SurveyAnswers = riskSurveyJson1,
+                    RiskScore = 1,
+                    HasRisk = true,
+                    SurveySubmittedAt = nowUtc.AddHours(-2),
+                    DoctorId = doctorId,
+                    WeightKg = 58.0m,
+                    SystolicBloodPressure = 152,
+                    DiastolicBloodPressure = 96,
+                    Pulse = 92,
+                    HemoglobinLevel = 130.0m,
+                    BodyTemp = 36.9m,
+                    RapidHbsAgNegative = true,
+                    ClinicalNotes = "Huyết áp cao tại thời điểm khám, mới khỏi cảm cúm.",
+                    ScreeningStatus = ScreeningStatus.DEFERRED,
+                    DeferralReason = "Huyết áp tâm thu cao (152/96 mmHg) và mới khỏi cảm cúm trong 14 ngày.",
+                    ScreenedAt = nowUtc.AddMinutes(-15)
+                });
+            }
+
+            await context.SaveChangesAsync();
         }
     }
 }

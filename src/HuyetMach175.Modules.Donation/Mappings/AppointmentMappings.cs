@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Modules.Donation.DTOs.Appointments;
 
@@ -6,70 +5,43 @@ namespace HuyetMach175.Modules.Donation.Mappings;
 
 public static class AppointmentMappings
 {
-    public static readonly Expression<Func<DonationAppointment, AppointmentListItemDto>> ProjectToListItem = a => new AppointmentListItemDto
+    public static AppointmentListItemDto ToListItemDto(this DonationAppointment a)
     {
-        AppointmentId = a.AppointmentId,
-        DonorId = a.DonorId,
-        DonorName = a.Donor != null ? a.Donor.FullName : string.Empty,
-        DonorCitizenId = a.Donor != null ? a.Donor.CitizenId : string.Empty,
-        DonorPhoneNumber = a.Donor != null ? a.Donor.PhoneNumber : string.Empty,
-        DonorDateOfBirth = a.Donor != null ? a.Donor.DateOfBirth : default,
-        DonorGender = a.Donor != null ? a.Donor.Gender : string.Empty,
-        DonorBloodType = a.Donor != null ? a.Donor.BloodType : null,
-        DonorRhFactor = a.Donor != null ? a.Donor.RhFactor : null,
-        CampaignId = a.CampaignId,
-        CampaignName = a.Campaign != null ? a.Campaign.CampaignName : null,
-        SlotId = a.SlotId,
-        AppointmentDate = a.AppointmentDate,
-        TimeSlot = a.TimeSlot,
-        QrCodeToken = a.QrCodeToken,
-        Status = a.Status,
-        IsWalkIn = a.IsWalkIn,
-        CheckedInAt = a.CheckedInAt,
-        CreatedAt = a.CreatedAt,
-        HasPreScreeningSurvey = a.PreScreeningSurvey != null,
-        SurveyRiskScore = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.RiskScore : null,
-        SurveyHasRisk = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.HasRisk : null
-    };
+        var slot = a.CampaignSlot;
+        var campaign = slot?.Campaign;
 
-    public static readonly Expression<Func<DonationAppointment, AppointmentDetailDto>> ProjectToDetail = a => new AppointmentDetailDto
-    {
-        AppointmentId = a.AppointmentId,
-        DonorId = a.DonorId,
-        DonorName = a.Donor != null ? a.Donor.FullName : string.Empty,
-        DonorCitizenId = a.Donor != null ? a.Donor.CitizenId : string.Empty,
-        DonorPhoneNumber = a.Donor != null ? a.Donor.PhoneNumber : string.Empty,
-        DonorEmail = a.Donor != null ? a.Donor.Email : null,
-        DonorDateOfBirth = a.Donor != null ? a.Donor.DateOfBirth : default,
-        DonorGender = a.Donor != null ? a.Donor.Gender : string.Empty,
-        DonorBloodType = a.Donor != null ? a.Donor.BloodType : null,
-        DonorRhFactor = a.Donor != null ? a.Donor.RhFactor : null,
-        TotalDonations = a.Donor != null ? a.Donor.TotalDonations : 0,
-        LastDonationDate = a.Donor != null ? a.Donor.LastDonationDate : null,
-
-        CampaignId = a.CampaignId,
-        CampaignName = a.Campaign != null ? a.Campaign.CampaignName : null,
-        CampaignLocation = a.Campaign != null ? a.Campaign.LocationName : null,
-        SlotId = a.SlotId,
-
-        AppointmentDate = a.AppointmentDate,
-        TimeSlot = a.TimeSlot,
-        QrCodeToken = a.QrCodeToken,
-        Status = a.Status,
-        IsWalkIn = a.IsWalkIn,
-        CheckedInAt = a.CheckedInAt,
-        CreatedAt = a.CreatedAt,
-
-        HasPreScreeningSurvey = a.PreScreeningSurvey != null,
-        SurveyId = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.SurveyId : null,
-        SurveyRiskScore = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.RiskScore : null,
-        SurveyHasRisk = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.HasRisk : null,
-        SurveyAnswers = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.SurveyAnswers : null,
-        SurveySubmittedAt = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.SurveySubmittedAt : null
-    };
+        return new AppointmentListItemDto
+        {
+            AppointmentId = a.AppointmentId,
+            DonorId = a.DonorId,
+            DonorName = a.Donor?.FullName ?? string.Empty,
+            DonorCitizenId = a.Donor?.CitizenId ?? string.Empty,
+            DonorPhoneNumber = a.Donor?.PhoneNumber ?? string.Empty,
+            DonorDateOfBirth = a.Donor?.DateOfBirth ?? default,
+            DonorGender = a.Donor?.Gender ?? string.Empty,
+            DonorBloodType = a.Donor?.BloodType,
+            DonorRhFactor = a.Donor?.RhFactor,
+            CampaignId = slot?.CampaignId,
+            CampaignName = campaign?.CampaignName,
+            SlotId = a.SlotId,
+            AppointmentDate = a.AppointmentDate,
+            TimeSlot = slot != null ? $"{slot.StartTime:HH\\:mm}-{slot.EndTime:HH\\:mm}" : string.Empty,
+            QrCodeToken = a.QrCodeToken,
+            Status = a.Status,
+            IsWalkIn = a.IsWalkIn,
+            CheckedInAt = a.CheckedInAt,
+            CreatedAt = a.CreatedAt,
+            HasPreScreeningSurvey = a.PreScreeningSurvey != null,
+            SurveyRiskScore = a.PreScreeningSurvey?.RiskScore,
+            SurveyHasRisk = a.PreScreeningSurvey?.HasRisk
+        };
+    }
 
     public static AppointmentDetailDto ToDetailDto(this DonationAppointment appointment)
     {
+        var slot = appointment.CampaignSlot;
+        var campaign = slot?.Campaign;
+
         return new AppointmentDetailDto
         {
             AppointmentId = appointment.AppointmentId,
@@ -85,13 +57,13 @@ public static class AppointmentMappings
             TotalDonations = appointment.Donor?.TotalDonations ?? 0,
             LastDonationDate = appointment.Donor?.LastDonationDate,
 
-            CampaignId = appointment.CampaignId,
-            CampaignName = appointment.Campaign?.CampaignName,
-            CampaignLocation = appointment.Campaign?.LocationName,
+            CampaignId = slot?.CampaignId,
+            CampaignName = campaign?.CampaignName,
+            CampaignLocation = campaign?.LocationName,
             SlotId = appointment.SlotId,
 
             AppointmentDate = appointment.AppointmentDate,
-            TimeSlot = appointment.TimeSlot,
+            TimeSlot = slot != null ? $"{slot.StartTime:HH\\:mm}-{slot.EndTime:HH\\:mm}" : string.Empty,
             QrCodeToken = appointment.QrCodeToken,
             Status = appointment.Status,
             IsWalkIn = appointment.IsWalkIn,

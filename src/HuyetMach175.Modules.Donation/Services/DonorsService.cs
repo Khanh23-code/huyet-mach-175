@@ -89,50 +89,55 @@ public class DonorsService : IDonorsService
             throw new HttpException(StatusCodes.Status400BadRequest, "ID người hiến máu không hợp lệ.");
         }
 
-        var donor = await _context.Donors
+        var donorEntity = await _context.Donors
             .AsNoTracking()
-            .Where(d => d.DonorId == id)
-            .Select(d => new DonorDetailDto
-            {
-                DonorId = d.DonorId,
-                CitizenId = d.CitizenId,
-                FullName = d.FullName,
-                DateOfBirth = d.DateOfBirth,
-                Gender = d.Gender,
-                PhoneNumber = d.PhoneNumber,
-                Email = d.Email,
-                BloodType = d.BloodType,
-                RhFactor = d.RhFactor,
-                TotalDonations = d.TotalDonations,
-                LastDonationDate = d.LastDonationDate,
-                DonationHistory = d.Appointments
-                    .OrderByDescending(a => a.AppointmentDate)
-                    .ThenByDescending(a => a.AppointmentId)
-                    .Select(a => new DonorHistoryItemDto
-                    {
-                        AppointmentId = a.AppointmentId,
-                        AppointmentDate = a.AppointmentDate,
-                        TimeSlot = a.TimeSlot,
-                        CampaignId = a.CampaignId,
-                        CampaignName = a.Campaign != null ? a.Campaign.CampaignName : "Hiến tại bệnh viện",
-                        Status = a.Status,
-                        IsWalkIn = a.IsWalkIn,
-                        ActualVolumeMl = a.DonationSession != null ? a.DonationSession.ActualVolumeMl : null,
-                        SessionStatus = a.DonationSession != null ? a.DonationSession.Status : null,
-                        ScreeningStatus = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.ScreeningStatus : null,
-                        DeferralReason = a.PreScreeningSurvey != null ? a.PreScreeningSurvey.DeferralReason : null,
-                        CompletedAt = a.DonationSession != null ? a.DonationSession.CompletedAt : null
-                    })
-                    .ToList()
-            })
-            .FirstOrDefaultAsync();
+            .Include(d => d.Appointments)
+                .ThenInclude(a => a.CampaignSlot)
+                    .ThenInclude(s => s!.Campaign)
+            .Include(d => d.Appointments)
+                .ThenInclude(a => a.DonationSession)
+            .Include(d => d.Appointments)
+                .ThenInclude(a => a.PreScreeningSurvey)
+            .FirstOrDefaultAsync(d => d.DonorId == id);
 
-        if (donor == null)
+        if (donorEntity == null)
         {
             throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy người hiến máu với mã #{id}.");
         }
 
-        return donor;
+        return new DonorDetailDto
+        {
+            DonorId = donorEntity.DonorId,
+            CitizenId = donorEntity.CitizenId,
+            FullName = donorEntity.FullName,
+            DateOfBirth = donorEntity.DateOfBirth,
+            Gender = donorEntity.Gender,
+            PhoneNumber = donorEntity.PhoneNumber,
+            Email = donorEntity.Email,
+            BloodType = donorEntity.BloodType,
+            RhFactor = donorEntity.RhFactor,
+            TotalDonations = donorEntity.TotalDonations,
+            LastDonationDate = donorEntity.LastDonationDate,
+            DonationHistory = donorEntity.Appointments
+                .OrderByDescending(a => a.AppointmentDate)
+                .ThenByDescending(a => a.AppointmentId)
+                .Select(a => new DonorHistoryItemDto
+                {
+                    AppointmentId = a.AppointmentId,
+                    AppointmentDate = a.AppointmentDate,
+                    TimeSlot = a.CampaignSlot != null ? $"{a.CampaignSlot.StartTime:HH\\:mm}-{a.CampaignSlot.EndTime:HH\\:mm}" : string.Empty,
+                    CampaignId = a.CampaignSlot?.CampaignId,
+                    CampaignName = a.CampaignSlot?.Campaign?.CampaignName ?? "Hiến tại bệnh viện",
+                    Status = a.Status,
+                    IsWalkIn = a.IsWalkIn,
+                    ActualVolumeMl = a.DonationSession?.ActualVolumeMl,
+                    SessionStatus = a.DonationSession?.Status,
+                    ScreeningStatus = a.PreScreeningSurvey?.ScreeningStatus,
+                    DeferralReason = a.PreScreeningSurvey?.DeferralReason,
+                    CompletedAt = a.DonationSession?.CompletedAt
+                })
+                .ToList()
+        };
     }
 
     public async Task<DonorEligibilityDto> CheckEligibilityAsync(string citizenId)

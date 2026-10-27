@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using HuyetMach175.Api.Data;
 using HuyetMach175.SharedKernel.Authorization;
 using HuyetMach175.SharedKernel.Services;
@@ -13,7 +14,8 @@ using Microsoft.OpenApi;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
 builder.Services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddAuthModule(builder.Configuration);
@@ -102,19 +104,29 @@ app.MapScalarApiReference(options =>
            .WithDefaultHttpClient(ScalarTarget.JavaScript, ScalarClient.Axios);
 });
 
-try
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
-    await dbContext.Database.MigrateAsync();
-    await DbInitializer.SeedAsync(dbContext, passwordHasher);
-}
-catch (Exception ex)
-{
-    var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogError(ex, "Lỗi xảy ra trong quá trình Migrate hoặc Seed Database.");
+    try
+    {
+        await dbContext.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Lỗi xảy ra trong quá trình Migrate Database.");
+    }
+
+    try
+    {
+        await DbInitializer.SeedAsync(dbContext, passwordHasher);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Lỗi xảy ra trong quá trình Seed Database.");
+    }
 }
 
 app.UseHttpsRedirection();

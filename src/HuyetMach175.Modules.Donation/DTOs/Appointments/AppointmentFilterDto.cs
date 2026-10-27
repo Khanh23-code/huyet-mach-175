@@ -12,12 +12,11 @@ public class AppointmentFilterDto
     [FromQuery(Name = "campaignId")]
     public int? CampaignId { get; set; }
 
+    [FromQuery(Name = "slotId")]
+    public int? SlotId { get; set; }
+
     [FromQuery(Name = "status")]
     public AppointmentStatus? Status { get; set; }
-
-    [FromQuery(Name = "timeSlot")]
-    [MaxLength(20, ErrorMessage = "Khung giờ (timeSlot) không được vượt quá 20 ký tự.")]
-    public string? TimeSlot { get; set; }
 
     [FromQuery(Name = "isWalkIn")]
     public bool? IsWalkIn { get; set; }
@@ -34,4 +33,3 @@ public class AppointmentFilterDto
     [Range(1, 100, ErrorMessage = "Kích thước trang (pageSize) phải nằm trong khoảng từ 1 đến 100.")]
     public int PageSize { get; set; } = 20;
 }
-

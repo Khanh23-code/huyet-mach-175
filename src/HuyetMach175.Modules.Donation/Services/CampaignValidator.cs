@@ -142,7 +142,7 @@ public class CampaignValidator : ICampaignValidator
                 $"Chỉ có thể xóa đợt hiến máu ở trạng thái Bản nháp (DRAFT). Trạng thái hiện tại: '{campaign.Status}'. Vui lòng sử dụng tính năng Hủy (CANCELLED) nếu muốn dừng đợt hiến.");
         }
 
-        if (campaign.Appointments.Any())
+        if (campaign.Slots.Any(s => s.Appointments.Any()))
         {
             throw new HttpException(
                 StatusCodes.Status400BadRequest,

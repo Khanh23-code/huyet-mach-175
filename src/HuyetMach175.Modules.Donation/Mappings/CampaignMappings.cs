@@ -20,8 +20,8 @@ public static class CampaignMappings
         TargetDonations = c.TargetDonations,
         MaxCapacity = c.MaxCapacity,
         Status = c.Status,
-        TotalRegistered = c.Appointments.Count(a => a.Status != AppointmentStatus.CANCELLED),
-        TotalCollected = c.Appointments.Count(a => a.DonationSession != null && a.DonationSession.Status == SessionStatus.COMPLETED),
+        TotalRegistered = c.Slots.SelectMany(s => s.Appointments).Count(a => a.Status != AppointmentStatus.CANCELLED),
+        TotalCollected = c.Slots.SelectMany(s => s.Appointments).Count(a => a.DonationSession != null && a.DonationSession.Status == SessionStatus.COMPLETED),
         RejectionReason = c.RejectionReason,
         CancellationReason = c.CancellationReason,
         CreatedBy = c.CreatedBy,
@@ -31,9 +31,10 @@ public static class CampaignMappings
 
     public static CampaignDetailDto ToDetailDto(this DonationCampaign campaign)
     {
-        var totalRegistered = campaign.Appointments.Count(a => a.Status != AppointmentStatus.CANCELLED);
-        var totalCheckedIn = campaign.Appointments.Count(a => a.CheckedInAt != null || a.Status == AppointmentStatus.CHECKED_IN);
-        var totalCollected = campaign.Appointments.Count(a => a.DonationSession != null && a.DonationSession.Status == SessionStatus.COMPLETED);
+        var appointments = campaign.Slots.SelectMany(s => s.Appointments).ToList();
+        var totalRegistered = appointments.Count(a => a.Status != AppointmentStatus.CANCELLED);
+        var totalCheckedIn = appointments.Count(a => a.CheckedInAt != null || a.Status == AppointmentStatus.CHECKED_IN);
+        var totalCollected = appointments.Count(a => a.DonationSession != null && a.DonationSession.Status == SessionStatus.COMPLETED);
         var completionRate = campaign.TargetDonations > 0
             ? Math.Round((double)totalCollected / campaign.TargetDonations * 100, 2)
             : 0;

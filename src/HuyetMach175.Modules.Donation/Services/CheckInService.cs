@@ -66,11 +66,15 @@ public class CheckInService : ICheckInService
 
         await _context.SaveChangesAsync();
 
-        return await _context.DonationAppointments
+        var updated = await _context.DonationAppointments
             .AsNoTracking()
-            .Where(a => a.AppointmentId == appointment.AppointmentId)
-            .Select(AppointmentMappings.ProjectToDetail)
-            .FirstAsync();
+            .Include(a => a.Donor)
+            .Include(a => a.CampaignSlot)
+                .ThenInclude(s => s!.Campaign)
+            .Include(a => a.PreScreeningSurvey)
+            .FirstAsync(a => a.AppointmentId == appointment.AppointmentId);
+
+        return updated.ToDetailDto();
     }
 
     public async Task<AppointmentDetailDto> CreateWalkInAsync(CreateWalkInAppointmentRequest request)
@@ -78,17 +82,21 @@ public class CheckInService : ICheckInService
         var donor = await _validator.ValidateDonorAsync(request.DonorId);
         var today = DateOnly.FromDateTime(DateTime.Today);
 
-        await _validator.ValidateCampaignAsync(request.CampaignId, today);
+        await _validator.ValidateSlotAsync(request.SlotId, today);
         _validator.ValidateEligibility(donor, today);
 
         var existingBooked = await _context.DonationAppointments
+            .Include(a => a.CampaignSlot)
             .FirstOrDefaultAsync(a => a.DonorId == request.DonorId &&
                                        a.AppointmentDate == today &&
                                        a.Status == AppointmentStatus.BOOKED);
         if (existingBooked != null)
         {
+            var slotText = existingBooked.CampaignSlot != null
+                ? $"{existingBooked.CampaignSlot.StartTime:HH\\:mm}-{existingBooked.CampaignSlot.EndTime:HH\\:mm}"
+                : $"Slot #{existingBooked.SlotId}";
             throw new HttpException(StatusCodes.Status400BadRequest,
-                $"Người hiến đã có lịch hẹn đặt trước trong ngày hôm nay (Mã lịch hẹn: #{existingBooked.AppointmentId}, khung giờ: {existingBooked.TimeSlot}). Vui lòng thực hiện Check-in thay vì tạo tiếp nhận vãng lai.");
+                $"Người hiến đã có lịch hẹn đặt trước trong ngày hôm nay (Mã lịch hẹn: #{existingBooked.AppointmentId}, khung giờ: {slotText}). Vui lòng thực hiện Check-in thay vì tạo tiếp nhận vãng lai.");
         }
 
         var alreadyCheckedIn = await _context.DonationAppointments
@@ -101,24 +109,12 @@ public class CheckInService : ICheckInService
                 "Người hiến này đã được tiếp nhận (CHECKED_IN) trong ngày hôm nay.");
         }
 
-        string slot;
-        if (!string.IsNullOrWhiteSpace(request.TimeSlot))
-        {
-            slot = request.TimeSlot.Trim();
-        }
-        else
-        {
-            var now = DateTime.Now;
-            slot = $"{now:HH}:00-{(now.Hour + 1) % 24:D2}:00";
-        }
-
         var nowUtc = DateTime.UtcNow;
         var appointment = new DonationAppointment
         {
             DonorId = request.DonorId,
-            CampaignId = request.CampaignId,
+            SlotId = request.SlotId,
             AppointmentDate = today,
-            TimeSlot = slot,
             QrCodeToken = $"HM175-{Guid.NewGuid():N}",
             Status = AppointmentStatus.CHECKED_IN,
             IsWalkIn = true,
@@ -129,11 +125,14 @@ public class CheckInService : ICheckInService
         _context.DonationAppointments.Add(appointment);
         await _context.SaveChangesAsync();
 
-        return await _context.DonationAppointments
+        var created = await _context.DonationAppointments
             .AsNoTracking()
-            .Where(a => a.AppointmentId == appointment.AppointmentId)
-            .Select(AppointmentMappings.ProjectToDetail)
-            .FirstAsync();
+            .Include(a => a.Donor)
+            .Include(a => a.CampaignSlot)
+                .ThenInclude(s => s!.Campaign)
+            .Include(a => a.PreScreeningSurvey)
+            .FirstAsync(a => a.AppointmentId == appointment.AppointmentId);
+
+        return created.ToDetailDto();
     }
 }
-

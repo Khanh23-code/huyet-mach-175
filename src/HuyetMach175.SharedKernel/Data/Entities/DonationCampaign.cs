@@ -81,6 +81,5 @@ public class DonationCampaign
     [ForeignKey(nameof(CancelledBy))]
     public User? CancelledByUser { get; set; }
 
-    public ICollection<DonationAppointment> Appointments { get; set; } = new List<DonationAppointment>();
     public ICollection<DonationCampaignSlot> Slots { get; set; } = new List<DonationCampaignSlot>();
 }
