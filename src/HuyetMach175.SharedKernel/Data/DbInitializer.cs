@@ -409,7 +409,6 @@ public static class DbInitializer
             ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS deferral_reason character varying(500) NULL;
             ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS target_volume_ml text NULL;
             ALTER TABLE pre_screening_surveys ADD COLUMN IF NOT EXISTS screened_at timestamp with time zone NULL;
-            ALTER TABLE pre_screening_surveys ALTER COLUMN submitted_at DROP NOT NULL;
 
             DO $$
             BEGIN
