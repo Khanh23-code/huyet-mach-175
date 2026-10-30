@@ -20,6 +20,9 @@ public class CheckInService : ICheckInService
         _validator = validator;
     }
 
+    /// <summary>Giờ Việt Nam (UTC+7), không phụ thuộc múi giờ của server.</summary>
+    private static DateTime VietnamNow() => DateTime.UtcNow.AddHours(7);
+
     public async Task<AppointmentDetailDto> CheckInAsync(CheckInAppointmentRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.QrCodeToken))
@@ -29,6 +32,8 @@ public class CheckInService : ICheckInService
 
         var token = request.QrCodeToken.Trim();
         var appointment = await _context.DonationAppointments
+            .Include(a => a.CampaignSlot)
+                .ThenInclude(s => s!.Campaign)
             .FirstOrDefaultAsync(a => a.QrCodeToken == token);
 
         if (appointment == null)
@@ -61,6 +66,34 @@ public class CheckInService : ICheckInService
                 $"Trạng thái lịch hẹn không hợp lệ để check-in (Trạng thái hiện tại: {appointment.Status}).");
         }
 
+        // Lịch hẹn phải thuộc đúng đợt hiến máu đang làm việc
+        if (request.CampaignId.HasValue)
+        {
+            var slot = appointment.CampaignSlot;
+            if (slot == null || slot.CampaignId != request.CampaignId.Value)
+            {
+                var other = slot?.Campaign != null ? $" (lịch hẹn thuộc đợt \"{slot.Campaign.CampaignName}\")" : string.Empty;
+                throw new HttpException(StatusCodes.Status400BadRequest,
+                    $"Lịch hẹn này không thuộc đợt hiến máu #{request.CampaignId.Value} đang làm việc{other}.");
+            }
+
+            var campaign = slot.Campaign;
+            if (campaign == null ||
+                (campaign.Status != CampaignStatus.APPROVED && campaign.Status != CampaignStatus.IN_PROGRESS))
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest,
+                    "Đợt hiến máu hiện không ở trạng thái mở tiếp nhận (cần APPROVED hoặc IN_PROGRESS).");
+            }
+        }
+
+        // Chỉ check-in lịch hẹn của hôm nay
+        var today = DateOnly.FromDateTime(VietnamNow());
+        if (appointment.AppointmentDate != today)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Lịch hẹn này dành cho ngày {appointment.AppointmentDate:dd/MM/yyyy}, không phải hôm nay ({today:dd/MM/yyyy}).");
+        }
+
         appointment.Status = AppointmentStatus.CHECKED_IN;
         appointment.CheckedInAt = DateTime.UtcNow;
 
@@ -80,9 +113,17 @@ public class CheckInService : ICheckInService
     public async Task<AppointmentDetailDto> CreateWalkInAsync(CreateWalkInAppointmentRequest request)
     {
         var donor = await _validator.ValidateDonorAsync(request.DonorId);
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = DateOnly.FromDateTime(VietnamNow());
 
-        await _validator.ValidateSlotAsync(request.SlotId, today);
+        var slotId = request.SlotId ?? await ResolveSlotForCampaignAsync(request.CampaignId);
+        var slot = await _validator.ValidateSlotAsync(slotId, today);
+
+        if (request.CampaignId.HasValue && slot != null && slot.CampaignId != request.CampaignId.Value)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Khung giờ #{slot.SlotId} không thuộc đợt hiến máu #{request.CampaignId.Value} đang làm việc.");
+        }
+
         _validator.ValidateEligibility(donor, today);
 
         var existingBooked = await _context.DonationAppointments
@@ -113,7 +154,7 @@ public class CheckInService : ICheckInService
         var appointment = new DonationAppointment
         {
             DonorId = request.DonorId,
-            SlotId = request.SlotId,
+            SlotId = slotId,
             AppointmentDate = today,
             QrCodeToken = $"HM175-{Guid.NewGuid():N}",
             Status = AppointmentStatus.CHECKED_IN,
@@ -134,5 +175,32 @@ public class CheckInService : ICheckInService
             .FirstAsync(a => a.AppointmentId == appointment.AppointmentId);
 
         return created.ToDetailDto();
+    }
+
+    /// <summary>
+    /// Chọn khung giờ của đợt để gắn walk-in: khung đang diễn ra, nếu không có thì khung sắp tới, sau cùng là khung muộn nhất.
+    /// </summary>
+    private async Task<int?> ResolveSlotForCampaignAsync(int? campaignId)
+    {
+        if (!campaignId.HasValue) return null;
+
+        var slots = await _context.DonationCampaignSlots
+            .AsNoTracking()
+            .Where(s => s.CampaignId == campaignId.Value)
+            .OrderBy(s => s.StartTime)
+            .ToListAsync();
+
+        if (slots.Count == 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Đợt hiến máu #{campaignId.Value} chưa có khung giờ nào hoặc không tồn tại, không thể tiếp nhận vãng lai.");
+        }
+
+        var now = TimeOnly.FromDateTime(VietnamNow());
+        var chosen = slots.FirstOrDefault(s => s.StartTime <= now && now <= s.EndTime)
+                     ?? slots.FirstOrDefault(s => s.StartTime > now)
+                     ?? slots[^1];
+
+        return chosen.SlotId;
     }
 }
