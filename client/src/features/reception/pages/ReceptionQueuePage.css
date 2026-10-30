@@ -17,7 +17,23 @@
 .rq-name small { display: block; color: var(--c-text-muted); }
 .rq-wait { color: var(--c-warning); font-weight: 600; }
 .rq-foot { display: flex; justify-content: space-between; padding: 14px 20px; color: var(--c-text-muted); font-size: 13px; border-top: 1px solid var(--c-border); }
+
+/* Đợt hiến máu đang làm việc */
+.rq-campaign { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 20px; margin-bottom: 16px; background: var(--c-primary-soft); border: 1px solid var(--c-border); border-radius: var(--radius-md); }
+.rq-campaign small { display: block; color: var(--c-text-muted); font-size: 12px; }
+.rq-campaign b { display: block; }
+.rq-campaign span { color: var(--c-text-muted); font-size: 13px; }
+
+/* Chặn nhập mã đợt hiến máu */
+.rq-gate { max-width: 520px; margin: 48px auto; padding: 32px; text-align: center; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-md); }
+.rq-gate-icon { font-size: 28px; color: var(--c-primary); background: var(--c-primary-soft); border-radius: 50%; width: 64px; height: 64px; display: grid; place-items: center; margin: 0 auto 16px; }
+.rq-gate-title { margin: 0 0 8px; font-size: 22px; font-weight: 500; }
+.rq-gate-desc { color: var(--c-text-muted); margin: 0 0 24px; }
+.rq-gate-form { display: flex; gap: 12px; }
+.rq-gate-form .ant-input-affix-wrapper, .rq-gate-form .ant-input { flex: 1; }
+
 @media (max-width: 768px) {
     .rq-quick { flex-direction: column; align-items: flex-start; }
     .rq-toolbar { flex-direction: column; align-items: stretch; }
+    .rq-gate-form { flex-direction: column; }
 }

@@ -1,6 +1,7 @@
 ﻿import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { AuthUser } from '@/types/auth'
+import { useWorkCampaignStore } from '@/features/reception/workCampaignStore'
 
 interface AuthState {
     accessToken: string | null
@@ -23,8 +24,11 @@ export const useAuthStore = create<AuthState>()(
             setTokens: (accessToken, refreshToken) => set({ accessToken, refreshToken }),
             setUser: (user) => set({ user }),
             markPermissionsSynced: () => set({ permissionsSynced: true }),
-            logout: () =>
-                set({ accessToken: null, refreshToken: null, user: null, permissionsSynced: false }),
+            logout: () => {
+                // Đăng nhập lại phải nhập lại mã đợt hiến máu
+                useWorkCampaignStore.getState().clear()
+                set({ accessToken: null, refreshToken: null, user: null, permissionsSynced: false })
+            },
         }),
         {
             name: 'auth-storage',

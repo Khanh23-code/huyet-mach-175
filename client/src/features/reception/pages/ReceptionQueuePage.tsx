@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { App, Avatar, Button, Input, Table, Tabs, Tag } from 'antd'
+import { Avatar, Button, Input, Table, Tabs, Tag } from 'antd'
 import { QrcodeOutlined, RightOutlined, SearchOutlined } from '@ant-design/icons'
 import Can from '@/features/auth/components/Can'
 import { PERMISSIONS } from '@/config/permissions'
@@ -8,19 +8,34 @@ import WalkInRegistration from '@/features/donors/components/WalkInRegistration'
 import { fmtDate, initials } from '@/features/donors/format'
 import { useAppointments } from '../hooks'
 import { fmtTime, normalizeStatus, STATUS_COLOR, STATUS_LABEL, todayIso, waitingMinutes } from '../format'
+import { useWorkCampaign } from '../useWorkCampaign'
+import CampaignGate from '../components/CampaignGate'
+import ScanCheckInModal from '../components/ScanCheckInModal'
 import type { AppointmentListItem, AppointmentStatus } from '../types'
 import './ReceptionQueuePage.css'
 
 type Row = Omit<AppointmentListItem, 'status'> & { status: AppointmentStatus }
 type TabKey = 'ALL' | 'BOOKED' | 'CHECKED_IN' | 'CLOSED'
 
+const REFRESH_MS = 15_000
+
 export default function ReceptionQueuePage() {
-    const { message } = App.useApp()
     const today = useMemo(todayIso, [])
     const [tab, setTab] = useState<TabKey>('ALL')
     const [keyword, setKeyword] = useState('')
     const [walkInOpen, setWalkInOpen] = useState(false)
+    const [scanOpen, setScanOpen] = useState(false)
     const [detailDonorId, setDetailDonorId] = useState<number | null>(null)
+
+    // Người có quyền thao tác (APPOINTMENTS_EDIT) bắt buộc làm việc trong 1 đợt hiến máu.
+    // Người chỉ có quyền xem (MGT, CLIN) vẫn xem toàn bộ như trước.
+    const {
+        requireCampaign,
+        campaign: workCampaign,
+        campaignId,
+        blocked,
+        clear: clearCampaign,
+    } = useWorkCampaign()
 
     // Tìm kiếm phía server (họ tên / CCCD / SĐT), debounce 400ms
     const [search, setSearch] = useState('')
@@ -29,12 +44,16 @@ export default function ReceptionQueuePage() {
         return () => clearTimeout(t)
     }, [keyword])
 
-    const { data, isLoading } = useAppointments({
-        date: today,
-        search: search || undefined,
-        page: 1,
-        pageSize: 100,
-    })
+    const { data, isLoading } = useAppointments(
+        {
+            date: today,
+            campaignId,
+            search: search || undefined,
+            page: 1,
+            pageSize: 100,
+        },
+        { enabled: !blocked, refetchInterval: REFRESH_MS },
+    )
 
     const rows: Row[] = useMemo(
         () => (data?.items ?? []).map((i) => ({ ...i, status: normalizeStatus(i.status) })),
@@ -62,18 +81,43 @@ export default function ReceptionQueuePage() {
         .filter((m): m is number => m !== null)
     const avgWait = waits.length ? Math.round(waits.reduce((a, b) => a + b, 0) / waits.length) : null
 
+    const head = (
+        <div className="rq-head">
+            <div>
+                <h1 className="rq-title">Hàng chờ tiếp nhận</h1>
+                <p className="rq-sub">Theo dõi và tiếp nhận người hiến máu theo lịch hẹn hôm nay.</p>
+            </div>
+            <div className="rq-date">
+                <small>Hôm nay</small>
+                <b>{fmtDate(today)}</b>
+            </div>
+        </div>
+    )
+
+    // Chưa nhập mã đợt: giao diện rỗng, chỉ có ô nhập mã
+    if (blocked) {
+        return (
+            <div>
+                {head}
+                <CampaignGate />
+            </div>
+        )
+    }
+
     return (
         <div>
-            <div className="rq-head">
-                <div>
-                    <h1 className="rq-title">Hàng chờ tiếp nhận</h1>
-                    <p className="rq-sub">Theo dõi và tiếp nhận người hiến máu theo lịch hẹn hôm nay.</p>
+            {head}
+
+            {requireCampaign && workCampaign && (
+                <div className="rq-campaign">
+                    <div>
+                        <small>Đợt hiến máu đang làm việc</small>
+                        <b>#{workCampaign.id} · {workCampaign.name}</b>
+                        <span>{workCampaign.locationName}</span>
+                    </div>
+                    <Button onClick={clearCampaign}>Đổi đợt</Button>
                 </div>
-                <div className="rq-date">
-                    <small>Hôm nay</small>
-                    <b>{fmtDate(today)}</b>
-                </div>
-            </div>
+            )}
 
             <div className="rq-quick">
                 <div className="rq-quick-icon"><QrcodeOutlined /></div>
@@ -90,12 +134,13 @@ export default function ReceptionQueuePage() {
                             type="primary"
                             size="large"
                             icon={<QrcodeOutlined />}
-                            onClick={() => message.info('Quét QR check-in sẽ làm ở task sau')}
+                            onClick={() => setScanOpen(true)}
                         >
                             Mở máy quét
                         </Button>
                     </Can>
-                    <Can do={PERMISSIONS.DONORS_EDIT}>
+                    {/* Tạo lịch walk-in cần cả hai quyền: tạo hồ sơ người hiến + tạo lịch hẹn */}
+                    <Can do={[PERMISSIONS.DONORS_EDIT, PERMISSIONS.APPOINTMENTS_EDIT]} all>
                         <Button size="large" onClick={() => setWalkInOpen(true)}>
                             Đăng ký tại chỗ
                         </Button>
@@ -104,7 +149,7 @@ export default function ReceptionQueuePage() {
             </div>
 
             {walkInOpen && (
-                <Can do={PERMISSIONS.DONORS_EDIT}>
+                <Can do={[PERMISSIONS.DONORS_EDIT, PERMISSIONS.APPOINTMENTS_EDIT]} all>
                     <WalkInRegistration onClose={() => setWalkInOpen(false)} />
                 </Can>
             )}
@@ -152,7 +197,7 @@ export default function ReceptionQueuePage() {
                                 </div>
                             ),
                         },
-                        { title: 'Giờ hẹn', render: (_, r) => <b>{r.isWalkIn ? 'Vãng lai' : r.timeSlot}</b> },
+                        { title: 'Giờ hẹn', render: (_, r) => <b>{r.isWalkIn ? 'Vãng lai' : r.timeSlot || '—'}</b> },
                         { title: 'Giờ check-in', render: (_, r) => fmtTime(r.checkedInAt) },
                         {
                             title: 'Thời gian chờ',
@@ -187,6 +232,14 @@ export default function ReceptionQueuePage() {
                     <span>Thời gian chờ trung bình: <b>{avgWait === null ? '—' : `${avgWait} phút`}</b></span>
                 </div>
             </div>
+
+            {requireCampaign && workCampaign && (
+                <ScanCheckInModal
+                    open={scanOpen}
+                    campaignId={workCampaign.id}
+                    onClose={() => setScanOpen(false)}
+                />
+            )}
 
             <DonorDetailModal donorId={detailDonorId} onClose={() => setDetailDonorId(null)} />
         </div>

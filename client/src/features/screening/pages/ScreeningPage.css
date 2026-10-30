@@ -1,0 +1,75 @@
+.sc-title { margin: 8px 0 20px; }
+.sc-title h1 { margin: 0 0 4px; font-size: 32px; font-weight: 500; }
+.sc-title p { margin: 0; color: var(--c-text-muted); }
+
+.sc-layout { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 24px; align-items: start; }
+.sc-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-md); }
+.sc-muted { color: var(--c-text-muted); font-size: 13px; }
+.sc-empty { padding: 24px; text-align: center; color: var(--c-text-muted); }
+.sc-req { color: var(--c-danger); font-size: 12px; }
+.sc-ok { display: block; color: var(--c-primary); font-size: 13px; font-weight: 600; }
+.sc-warn { display: block; color: var(--c-warning); font-size: 13px; font-weight: 600; }
+.sc-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--c-primary); margin-inline-end: 6px; }
+
+.sc-avatar { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-weight: 600; color: var(--c-primary); background: var(--c-primary-soft); }
+.sc-avatar--lg { width: 72px; height: 72px; font-size: 22px; color: var(--c-on-primary); background: var(--c-primary); }
+
+/* Hàng chờ */
+.sc-queue-head { padding: 16px 20px 8px; }
+.sc-queue-title { font-size: 20px; }
+.sc-queue-tools { display: grid; gap: 8px; padding: 8px 16px 12px; border-bottom: 1px solid var(--c-border); }
+.sc-queue-list { max-height: 560px; overflow-y: auto; padding: 8px; }
+.sc-queue-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; text-align: left; font: inherit; color: inherit; background: transparent; border: 1px solid transparent; border-radius: var(--radius-md); cursor: pointer; }
+.sc-queue-item:hover { background: var(--c-primary-soft); }
+.sc-queue-item.is-active { background: var(--c-primary-soft); border-color: var(--c-primary); }
+.sc-queue-item:focus-visible { outline: 2px solid var(--c-primary); outline-offset: 2px; }
+.sc-queue-no { width: 20px; color: var(--c-text-muted); font-size: 13px; }
+.sc-queue-body { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.sc-queue-body small { color: var(--c-text-muted); }
+.sc-queue-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.sc-queue-tags:empty { display: none; }
+.sc-queue-arrow { color: var(--c-text-muted); }
+.sc-queue-foot { padding: 12px 20px; border-top: 1px solid var(--c-border); color: var(--c-text-muted); font-size: 12px; }
+
+/* Hồ sơ người hiến */
+.sc-donor { display: flex; align-items: center; gap: 20px; padding: 24px; }
+.sc-donor-main { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.sc-eyebrow { color: var(--c-primary); font-weight: 700; font-size: 13px; letter-spacing: .08em; }
+.sc-donor-name { margin: 0; font-size: 26px; font-weight: 500; }
+.sc-blood { color: var(--c-blood); }
+.sc-donor-stats { display: flex; gap: 24px; padding-inline-start: 24px; border-inline-start: 1px solid var(--c-border); text-align: right; }
+.sc-donor-stats small { display: block; color: var(--c-text-muted); font-size: 12px; }
+.sc-donor-stats b { display: block; font-size: 18px; }
+
+/* Lưới nội dung */
+.sc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; align-items: start; }
+.sc-panel { padding: 20px; }
+.sc-panel-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.sc-panel-title { flex: 1; display: grid; }
+.sc-panel-title small { color: var(--c-text-muted); }
+.sc-icon { flex: none; width: 40px; height: 40px; border-radius: var(--radius-md); display: grid; place-items: center; font-size: 18px; color: var(--c-primary); background: var(--c-primary-soft); }
+
+.sc-qa-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--c-border); }
+.sc-qa-ok { color: var(--c-primary); }
+.sc-qa-risk { color: var(--c-warning); }
+.sc-note { display: flex; gap: 8px; margin-top: 16px; padding: 12px; font-size: 13px; color: var(--c-warning); background: var(--c-warning-soft); border-radius: var(--radius-md); }
+
+.sc-form-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
+.sc-field { margin-bottom: 16px; display: grid; gap: 6px; align-content: start; }
+.sc-field label { font-size: 13px; font-weight: 600; }
+.sc-err { color: var(--c-danger); font-size: 12px; }
+
+.sc-conclusion { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px; }
+.sc-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.sc-btn-warning.ant-btn { background: var(--c-warning); }
+
+@media (max-width: 1100px) {
+    .sc-layout { grid-template-columns: 1fr; }
+    .sc-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+    .sc-donor { flex-direction: column; align-items: flex-start; }
+    .sc-donor-stats { padding: 0; border: 0; text-align: left; }
+    .sc-form-grid { grid-template-columns: 1fr; }
+    .sc-conclusion { flex-direction: column; align-items: stretch; }
+}

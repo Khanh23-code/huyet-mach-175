@@ -1,5 +1,12 @@
 import { axiosClient } from '@/services/axiosClient'
-import type { AppointmentFilterQuery, AppointmentListItem, CreateWalkInRequest, PagedResult } from './types'
+import type {
+    AppointmentDetail,
+    AppointmentFilterQuery,
+    AppointmentListItem,
+    CheckInRequest,
+    CreateWalkInRequest,
+    PagedResult,
+} from './types'
 
 export const appointmentsApi = {
     list: (params?: AppointmentFilterQuery) =>
@@ -11,5 +18,11 @@ export const appointmentsApi = {
     createWalkIn: (body: CreateWalkInRequest) =>
         axiosClient
             .post<{ appointmentId: number }>('/api/appointments/walk-in', body)
+            .then((r) => r.data),
+
+    /** Quét mã QR: BOOKED -> CHECKED_IN. Lỗi 400/404 có message tiếng Việt từ BE. */
+    checkIn: (body: CheckInRequest) =>
+        axiosClient
+            .post<AppointmentDetail>('/api/appointments/check-in', body)
             .then((r) => r.data),
 }

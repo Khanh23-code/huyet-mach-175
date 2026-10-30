@@ -9,4 +9,6 @@ public class CreateWalkInAppointmentRequest
     public int DonorId { get; set; }
 
     public int? SlotId { get; set; }
+
+    public int? CampaignId { get; set; }
 }
