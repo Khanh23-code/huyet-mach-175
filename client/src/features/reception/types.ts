@@ -8,19 +8,24 @@ export interface AppointmentListItem {
     donorName: string
     donorCitizenId: string
     donorPhoneNumber: string
+    campaignId?: number | null
+    campaignName?: string | null
+    slotId?: number | null
     appointmentDate: string // "YYYY-MM-DD"
-    timeSlot: string
+    timeSlot: string // "HH:mm-HH:mm", rỗng nếu không có slot
+    qrCodeToken: string
     status: AppointmentStatus | number
     isWalkIn: boolean
     checkedInAt?: string | null
+    hasPreScreeningSurvey: boolean
 }
 
 /** AppointmentFilterDto */
 export interface AppointmentFilterQuery {
     date?: string // "YYYY-MM-DD"
     campaignId?: number
+    slotId?: number
     status?: number // AppointmentStatus dạng số
-    timeSlot?: string
     isWalkIn?: boolean
     search?: string
     page?: number
@@ -35,9 +40,28 @@ export interface PagedResult<T> {
     totalPages?: number
 }
 
-/** CreateWalkInAppointmentRequest */
+/** CreateWalkInAppointmentRequest: không truyền slotId thì BE tự chọn khung giờ của đợt */
 export interface CreateWalkInRequest {
     donorId: number
     campaignId?: number
-    timeSlot?: string
+    slotId?: number
+}
+
+/** CheckInAppointmentRequest */
+export interface CheckInRequest {
+    qrCodeToken: string
+    campaignId?: number
+}
+
+/** AppointmentDetailDto (chỉ lấy field FE đang dùng) */
+export interface AppointmentDetail {
+    appointmentId: number
+    donorId: number
+    donorName: string
+    donorCitizenId: string
+    campaignId?: number | null
+    campaignName?: string | null
+    timeSlot: string
+    status: AppointmentStatus | number
+    checkedInAt?: string | null
 }
