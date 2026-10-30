@@ -9,6 +9,7 @@ import { useCheckEligibility, useCreateDonor } from '../hooks'
 import { walkInSchema, type WalkInForm } from '../donorSchema'
 import { fmtDate, GENDER_OPTIONS } from '../format'
 import type { DonorDetail, DonorEligibility } from '../types'
+import { useWorkCampaignStore } from '@/features/reception/workCampaignStore'
 
 interface Props {
     onClose: () => void
@@ -30,6 +31,7 @@ export default function WalkInRegistration({ onClose }: Props) {
     const check = useCheckEligibility()
     const create = useCreateDonor()
     const walkIn = useCreateWalkIn()
+    const campaignId = useWorkCampaignStore((s) => s.campaign?.id)
 
     const {
         control,
@@ -72,7 +74,7 @@ export default function WalkInRegistration({ onClose }: Props) {
             setCreated(donor)
             // Đưa vào hàng chờ ngay (tạo lịch hẹn walk-in -> CHECKED_IN)
             try {
-                await walkIn.mutateAsync({ donorId: donor.donorId })
+                await walkIn.mutateAsync({ donorId: donor.donorId, campaignId })
                 setQueueError(null)
             } catch (err) {
                 setQueueError(parseApiError(err).message)
@@ -88,7 +90,7 @@ export default function WalkInRegistration({ onClose }: Props) {
     const handleQueueExisting = async () => {
         if (!lookup?.donorId) return
         try {
-            await walkIn.mutateAsync({ donorId: lookup.donorId })
+            await walkIn.mutateAsync({ donorId: lookup.donorId, campaignId })
             message.success('Đã thêm người hiến vào hàng chờ tiếp nhận')
             onClose()
         } catch (e) {
