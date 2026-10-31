@@ -52,6 +52,18 @@
 .ds-site__top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .ds-site h4 { margin: 0; font-size: 17px; font-weight: 600; }
 .ds-site__addr { margin: 0; font-size: 13px; color: var(--ds-muted); }
+.ds-code {
+    display: inline-block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ds-green);
+    background: var(--c-primary-soft, #e9f5ed);
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+.ds-site > .ds-code { align-self: flex-start; }
+.ds-code--title { margin-left: 10px; vertical-align: middle; }
 .ds-site__meta { font-size: 13px; color: var(--ds-muted); margin: 4px 0 8px; }
 .ds-progress-wrap { margin-top: 8px; margin-bottom: 8px; }
 .ds-progress-labels { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; color: var(--ds-muted); }

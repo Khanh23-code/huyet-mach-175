@@ -44,7 +44,8 @@ export default function PendingProposals() {
                                     </Tag>
                                 </div>
                                 <div>
-                                    <b>{c.campaignName}</b>
+                                    <span className="ds-code">ID: {c.campaignId}</span>
+                                    <div><b>{c.campaignName}</b></div>
                                     <div className="ds-muted ds-small">{c.locationName}</div>
                                 </div>
                                 <div>
