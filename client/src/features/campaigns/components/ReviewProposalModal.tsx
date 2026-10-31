@@ -152,6 +152,9 @@ export default function ReviewProposalModal({ campaignId, proposalId, onClose }:
                         const cStatus = normalizeCampaignStatus(campaign.status)
                         return (
                             <Descriptions column={2} size="small" bordered style={{ marginBottom: 16 }}>
+                                <Descriptions.Item label="Campaign ID" span={2}>
+                                    <b>{campaign.campaignId}</b>
+                                </Descriptions.Item>
                                 <Descriptions.Item label="Tên chiến dịch" span={2}>
                                     <b>{campaign.campaignName}</b>
                                 </Descriptions.Item>
@@ -199,7 +202,7 @@ export default function ReviewProposalModal({ campaignId, proposalId, onClose }:
                         <ConfigCard
                             label="Khung giờ & Sức chứa ca hiến"
                             title="Các slot tiếp nhận người hiến"
-                            subtitle={`Tổng ${campaign.slots?.length ?? 0} khung giờ`}
+                            subtitle={`Campaign ID: ${campaign.campaignId} · Tổng ${campaign.slots?.length ?? 0} khung giờ`}
                             slots={campaign.slots}
                             highlight
                         />

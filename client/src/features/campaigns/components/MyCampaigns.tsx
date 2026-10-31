@@ -105,6 +105,12 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
 
     const columns: TableColumnsType<CampaignListItem> = [
         {
+            title: 'STT',
+            width: 60,
+            align: 'center',
+            render: (_, __, index) => (page - 1) * PAGE_SIZE + index + 1,
+        },
+        {
             title: 'CHIẾN DỊCH / ĐIỂM HIẾN',
             width: 280,
             render: (_, c) => {
@@ -129,6 +135,11 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
                     </div>
                 )
             },
+        },
+        {
+            title: 'ID',
+            dataIndex: 'campaignId',
+            width: 70,
         },
         {
             title: 'THỜI GIAN',
@@ -345,7 +356,7 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
                 columns={columns}
                 dataSource={data?.items ?? []}
                 loading={isLoading || isFetching}
-                scroll={{ x: 960 }}
+                scroll={{ x: 1090 }}
                 locale={{ emptyText: 'Chưa có đợt hiến máu nào' }}
                 pagination={{
                     current: page,

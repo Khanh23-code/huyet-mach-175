@@ -62,6 +62,7 @@ export default function CampaignCard({ campaign, onOpen }: Props) {
             </div>
 
 
+            <div className="ds-code" title="campaign_id">ID: {campaign.campaignId}</div>
             <h4>{campaign.campaignName}</h4>
             <p className="ds-site__addr">{campaign.locationName}</p>
 

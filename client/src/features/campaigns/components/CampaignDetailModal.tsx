@@ -67,7 +67,12 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
 
     return (
         <Modal
-            title="Chi tiết đợt hiến máu"
+            title={
+                <>
+                    Chi tiết đợt hiến máu
+                    {id !== null && <span className="ds-code ds-code--title">ID: {id}</span>}
+                </>
+            }
             open={id !== null}
             onCancel={onClose}
             style={{ top: 24, paddingBottom: 24 }}
@@ -185,6 +190,9 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                     </Card>
 
                     <Descriptions column={2} size="small" bordered style={{ marginBottom: 16 }}>
+                        <Descriptions.Item label="Campaign ID" span={2}>
+                            <b>{detail.campaignId}</b>
+                        </Descriptions.Item>
                         <Descriptions.Item label="Tên chiến dịch" span={2}>
                             <b>{detail.campaignName}</b>
                         </Descriptions.Item>
@@ -261,7 +269,7 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                     <ConfigCard
                         label="Khung giờ & Sức chứa ca hiến"
                         title="Các slot tiếp nhận người hiến"
-                        subtitle={`Tổng ${detail.slots?.length ?? 0} khung giờ`}
+                        subtitle={`Campaign ID: ${detail.campaignId} · Tổng ${detail.slots?.length ?? 0} khung giờ`}
                         slots={detail.slots}
                         highlight
                     />
