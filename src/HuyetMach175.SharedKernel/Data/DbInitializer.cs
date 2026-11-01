@@ -184,7 +184,7 @@ public static class DbInitializer
             },
             ["MGT"] = new[]
             {
-                "CAMPAIGN_VIEW", "CAMPAIGN_APPROVE", "CAMPAIGN_CANCEL",
+                "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "CAMPAIGN_APPROVE", "CAMPAIGN_CANCEL",
                 "DONORS_VIEW", "APPOINTMENTS_VIEW", "SURVEY_VIEW", "SCREENING_VIEW", "SESSION_VIEW"
             },
             ["CLIN"] = new[]

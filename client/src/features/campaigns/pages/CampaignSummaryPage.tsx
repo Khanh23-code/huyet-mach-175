@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import {
     Alert,
@@ -25,6 +25,7 @@ import {
     EnvironmentOutlined,
     ExperimentOutlined,
     FallOutlined,
+    FileExcelOutlined,
     MedicineBoxOutlined,
     PrinterOutlined,
     ReloadOutlined,
@@ -32,6 +33,9 @@ import {
     TeamOutlined,
     UserOutlined,
 } from '@ant-design/icons'
+import ImportDonorsModal from '../components/ImportDonorsModal'
+import Can from '@/features/auth/components/Can'
+import { PERMISSIONS } from '@/config/permissions'
 import { useCampaignSummary } from '../hooks'
 import {
     CAMPAIGN_STATUS_COLOR,
@@ -51,6 +55,7 @@ export default function CampaignSummaryPage() {
     const navigate = useNavigate()
     const campaignId = id ? Number(id) : null
 
+    const [isImportOpen, setIsImportOpen] = useState(false)
     const { data: summary, isLoading, error, refetch, isFetching } = useCampaignSummary(campaignId)
 
     const status = summary ? normalizeCampaignStatus(summary.status) : 'DRAFT'
@@ -266,6 +271,16 @@ export default function CampaignSummaryPage() {
                     </div>
 
                     <div className="summary-actions no-print">
+                        <Can do={PERMISSIONS.CAMPAIGN_EDIT}>
+                            {(status === 'IN_PROGRESS' || status === 'APPROVED') && (
+                                <Button
+                                    icon={<FileExcelOutlined />}
+                                    onClick={() => setIsImportOpen(true)}
+                                >
+                                    Nhập danh sách Excel
+                                </Button>
+                            )}
+                        </Can>
                         <Button
                             icon={<ReloadOutlined />}
                             onClick={() => refetch()}
@@ -605,6 +620,13 @@ export default function CampaignSummaryPage() {
                     ]}
                 />
             </Card>
+
+            <ImportDonorsModal
+                campaignId={campaignId}
+                campaignName={summary.campaignName}
+                open={isImportOpen}
+                onClose={() => setIsImportOpen(false)}
+            />
         </div>
     )
 }

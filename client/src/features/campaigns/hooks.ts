@@ -136,3 +136,19 @@ export const useDeleteCampaign = () => {
         },
     })
 }
+
+export const useImportDonors = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ campaignId, file }: { campaignId: number; file: File }) =>
+            campaignsApi.importDonors(campaignId, file),
+        onSuccess: async (_, variables) => {
+            await Promise.all([
+                qc.invalidateQueries({ queryKey: ['campaigns'] }),
+                qc.invalidateQueries({ queryKey: ['campaigns', 'detail', variables.campaignId] }),
+                qc.invalidateQueries({ queryKey: ['campaigns', 'summary', variables.campaignId] }),
+                qc.invalidateQueries({ queryKey: ['appointments'] }),
+            ])
+        },
+    })
+}

@@ -302,6 +302,7 @@ public class DonorImportService : IDonorImportService
                 break;
             }
 
+            var stt = ParseStt(row.Cell(1), rowNumber - 4);
             var fullName = row.Cell(2).GetString()?.Trim();
             var citizenIdRaw = row.Cell(3).GetString()?.Trim();
 
@@ -325,6 +326,7 @@ public class DonorImportService : IDonorImportService
                 result.Errors.Add(new DonorImportRowErrorDto
                 {
                     RowNumber = rowNumber,
+                    Stt = stt,
                     CitizenId = citizenIdRaw,
                     FullName = fullName,
                     ErrorMessage = "Họ và tên không được để trống."
@@ -340,6 +342,7 @@ public class DonorImportService : IDonorImportService
                 result.Errors.Add(new DonorImportRowErrorDto
                 {
                     RowNumber = rowNumber,
+                    Stt = stt,
                     CitizenId = citizenIdRaw,
                     FullName = fullName,
                     ErrorMessage = "Số CCCD không hợp lệ. Số CCCD phải gồm đúng 12 chữ số."
@@ -354,6 +357,7 @@ public class DonorImportService : IDonorImportService
                 result.Errors.Add(new DonorImportRowErrorDto
                 {
                     RowNumber = rowNumber,
+                    Stt = stt,
                     CitizenId = citizenId,
                     FullName = fullName,
                     ErrorMessage = "Số CCCD bị trùng lặp nhiều lần trong file Excel này."
@@ -368,6 +372,7 @@ public class DonorImportService : IDonorImportService
                 result.Errors.Add(new DonorImportRowErrorDto
                 {
                     RowNumber = rowNumber,
+                    Stt = stt,
                     CitizenId = citizenId,
                     FullName = fullName,
                     ErrorMessage = "Người hiến này đã đăng ký lịch hẹn trong đợt hiến máu này rồi."
@@ -383,6 +388,7 @@ public class DonorImportService : IDonorImportService
                 result.Errors.Add(new DonorImportRowErrorDto
                 {
                     RowNumber = rowNumber,
+                    Stt = stt,
                     CitizenId = citizenId,
                     FullName = fullName,
                     ErrorMessage = "Ngày sinh không hợp lệ. Vui lòng nhập theo định dạng DD/MM/YYYY."
@@ -400,6 +406,7 @@ public class DonorImportService : IDonorImportService
                 result.Errors.Add(new DonorImportRowErrorDto
                 {
                     RowNumber = rowNumber,
+                    Stt = stt,
                     CitizenId = citizenId,
                     FullName = fullName,
                     ErrorMessage = "Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại gồm 10-11 chữ số."
@@ -649,5 +656,29 @@ public class DonorImportService : IDonorImportService
         }
 
         return (riskScore, riskScore > 0);
+    }
+
+    private static int ParseStt(IXLCell cell, int defaultStt)
+    {
+        try
+        {
+            if (cell.TryGetValue(out int intVal) && intVal > 0)
+            {
+                return intVal;
+            }
+            if (cell.TryGetValue(out double dblVal) && dblVal > 0)
+            {
+                return (int)Math.Round(dblVal);
+            }
+            var text = cell.GetString()?.Trim();
+            if (!string.IsNullOrWhiteSpace(text) && int.TryParse(text, out var parsed) && parsed > 0)
+            {
+                return parsed;
+            }
+        }
+        catch
+        {
+        }
+        return defaultStt;
     }
 }

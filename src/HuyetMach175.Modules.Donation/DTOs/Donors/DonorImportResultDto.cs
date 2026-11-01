@@ -17,6 +17,7 @@ public class DonorImportResultDto
 public class DonorImportRowErrorDto
 {
     public int RowNumber { get; set; }
+    public int Stt { get; set; }
     public string? CitizenId { get; set; }
     public string? FullName { get; set; }
     public string ErrorMessage { get; set; } = string.Empty;

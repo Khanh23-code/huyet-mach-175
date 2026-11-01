@@ -11,9 +11,9 @@ export type CampaignStatus =
 
 export interface CampaignSlot {
     slotId?: number
-    startTime: string // Định dạng "HH:mm:ss" hoặc "HH:mm"
-    endTime: string   // Định dạng "HH:mm:ss" hoặc "HH:mm"
-    capacity: number  // Sức chứa tối đa trong khung giờ này
+    startTime: string
+    endTime: string
+    capacity: number
 }
 
 export interface CampaignListItem {
@@ -22,9 +22,9 @@ export interface CampaignListItem {
     description?: string | null
     locationName: string
     campaignType: CampaignType
-    operatingDays?: string | null // Ví dụ: "2,4,6" khi campaignType = RECURRING
-    startDate: string // "YYYY-MM-DD"
-    endDate: string   // "YYYY-MM-DD"
+    operatingDays?: string | null
+    startDate: string
+    endDate: string
     targetDonations: number
     maxCapacity?: number | null
     status: CampaignStatus
@@ -195,4 +195,25 @@ export interface CampaignSummary {
     bloodTypeBreakdown: CampaignBloodTypeStat[]
     rhBreakdown: CampaignRhStat[]
     slots: CampaignSlotSummary[]
+}
+
+export interface DonorImportRowError {
+    rowNumber: number
+    stt?: number
+    citizenId?: string | null
+    fullName?: string | null
+    errorMessage: string
+}
+
+export interface DonorImportResult {
+    campaignId: number
+    campaignName: string
+    totalRows: number
+    successCount: number
+    createdDonorsCount: number
+    reusedDonorsCount: number
+    createdAppointmentsCount: number
+    surveysIncludedCount: number
+    errorsCount: number
+    errors: DonorImportRowError[]
 }

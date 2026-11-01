@@ -19,11 +19,13 @@ import {
     BarChartOutlined,
     CheckCircleOutlined,
     CloseCircleOutlined,
+    FileExcelOutlined,
     PlayCircleOutlined,
 } from '@ant-design/icons'
 import ConfigCard from './ConfigCard'
 import CancelCampaignModal from './CancelCampaignModal'
-import Can from '@/features/auth/components/Can'
+import ImportDonorsModal from './ImportDonorsModal'
+import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { useCampaignDetail, useUpdateCampaignStatus } from '../hooks'
 import {
@@ -51,12 +53,22 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
     const navigate = useNavigate()
     const { message } = App.useApp()
     const [isCancelOpen, setIsCancelOpen] = useState(false)
+    const [isImportOpen, setIsImportOpen] = useState(false)
     const { data: detail, isLoading } = useCampaignDetail(id)
     const updateStatusMutation = useUpdateCampaignStatus()
 
     const status = detail ? normalizeCampaignStatus(detail.status) : 'DRAFT'
     const campaignType = detail ? normalizeCampaignType(detail.campaignType) : 'EVENT'
     const isClosed = status === 'REJECTED' || status === 'CANCELLED'
+
+    const { canAccess } = usePermission()
+    const canViewSummary = canAccess(PERMISSIONS.CAMPAIGN_VIEW) && (status === 'IN_PROGRESS' || status === 'COMPLETED' || status === 'CANCELLED')
+    const canImportExcel = canAccess(PERMISSIONS.CAMPAIGN_EDIT) && (status === 'APPROVED' || status === 'IN_PROGRESS' || status === 'DRAFT')
+    const hasTopActions = canViewSummary || canImportExcel
+
+    const canStart = canAccess(PERMISSIONS.CAMPAIGN_EDIT) && status === 'APPROVED'
+    const canComplete = canAccess(PERMISSIONS.CAMPAIGN_EDIT) && status === 'IN_PROGRESS'
+    const canCancel = canAccess(PERMISSIONS.CAMPAIGN_CANCEL) && (status === 'APPROVED' || status === 'IN_PROGRESS')
 
     const handleUpdateStatus = async (newStatus: CampaignStatus, label: string) => {
         if (!id) return
@@ -88,10 +100,10 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
             }}
             footer={
                 detail ? (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Space>
-                            <Can do={PERMISSIONS.CAMPAIGN_VIEW}>
-                                {(status === 'IN_PROGRESS' || status === 'COMPLETED' || status === 'CANCELLED') && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+                        {hasTopActions && (
+                            <div style={{ display: 'flex', justifyContent: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
+                                {canViewSummary && (
                                     <Button
                                         icon={<BarChartOutlined />}
                                         onClick={() => {
@@ -102,9 +114,19 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                                         Báo cáo tổng kết
                                     </Button>
                                 )}
-                            </Can>
-                            <Can do={PERMISSIONS.CAMPAIGN_EDIT}>
-                                {status === 'APPROVED' && (
+                                {canImportExcel && (
+                                    <Button
+                                        icon={<FileExcelOutlined />}
+                                        onClick={() => setIsImportOpen(true)}
+                                    >
+                                        Nhập Excel
+                                    </Button>
+                                )}
+                            </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                            <Space>
+                                {canStart && (
                                     <Button
                                         type="primary"
                                         icon={<PlayCircleOutlined />}
@@ -114,7 +136,7 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                                         Bắt đầu diễn ra
                                     </Button>
                                 )}
-                                {status === 'IN_PROGRESS' && (
+                                {canComplete && (
                                     <Button
                                         type="primary"
                                         icon={<CheckCircleOutlined />}
@@ -125,9 +147,7 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                                         Hoàn thành chiến dịch
                                     </Button>
                                 )}
-                            </Can>
-                            <Can do={PERMISSIONS.CAMPAIGN_CANCEL}>
-                                {(status === 'APPROVED' || status === 'IN_PROGRESS') && (
+                                {canCancel && (
                                     <Button
                                         danger
                                         icon={<CloseCircleOutlined />}
@@ -136,9 +156,9 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                                         Hủy đợt hiến
                                     </Button>
                                 )}
-                            </Can>
-                        </Space>
-                        <Button onClick={onClose}>Đóng</Button>
+                            </Space>
+                            <Button onClick={onClose}>Đóng</Button>
+                        </div>
                     </div>
                 ) : null
             }
@@ -295,6 +315,13 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                 campaign={detail ?? null}
                 open={isCancelOpen}
                 onClose={() => setIsCancelOpen(false)}
+            />
+
+            <ImportDonorsModal
+                campaignId={id}
+                campaignName={detail?.campaignName}
+                open={isImportOpen}
+                onClose={() => setIsImportOpen(false)}
             />
         </Modal>
     )
