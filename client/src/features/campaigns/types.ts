@@ -102,3 +102,97 @@ export interface CancelCampaignRequest {
 export interface UpdateCampaignStatusRequest {
     status: CampaignStatus
 }
+
+export interface CampaignDeferralReasonStat {
+    reason: string
+    count: number
+}
+
+export interface CampaignIncident {
+    sessionId: number
+    appointmentId: number
+    donorName: string
+    donorCitizenId: string
+    targetVolumeMl: string
+    actualVolumeMl?: number | null
+    incidentDescription: string
+    completedAt?: string | null
+}
+
+export interface CampaignVolumeStat {
+    volumeType: string
+    volumeMl: number
+    count: number
+    totalMl: number
+}
+
+export interface CampaignBloodTypeStat {
+    bloodType: string
+    count: number
+    percentage: number
+}
+
+export interface CampaignRhStat {
+    rhFactor: string
+    count: number
+    percentage: number
+}
+
+export interface CampaignSlotSummary {
+    slotId: number
+    startTime: string
+    endTime: string
+    capacity: number
+    totalRegistered: number
+    totalCheckedIn: number
+    totalCollected: number
+    totalVolumeMl: number
+}
+
+export interface CampaignSummary {
+    campaignId: number
+    campaignName: string
+    description?: string | null
+    locationName: string
+    campaignType: CampaignType
+    operatingDays?: string | null
+    startDate: string
+    endDate: string
+    status: CampaignStatus
+    createdByName: string
+
+    targetDonations: number
+    totalCollectedUnits: number
+    shortfallUnits: number
+    exceededUnits: number
+    completionRate: number
+    totalVolumeMl: number
+
+    totalRegistered: number
+    totalCheckedIn: number
+    scheduledCheckedIn: number
+    walkInCheckedIn: number
+    pendingArrival: number
+    noShowCount: number
+    cancelledCount: number
+    attendanceRate: number
+
+    totalScreened: number
+    qualifiedCount: number
+    deferredCount: number
+    unqualifiedCount: number
+    pendingScreeningCount: number
+    topDeferralReasons: CampaignDeferralReasonStat[]
+
+    totalSessions: number
+    completedSessions: number
+    abortedSessions: number
+    waitingCollectionSessions: number
+    incidentCount: number
+    incidents: CampaignIncident[]
+
+    volumeBreakdown: CampaignVolumeStat[]
+    bloodTypeBreakdown: CampaignBloodTypeStat[]
+    rhBreakdown: CampaignRhStat[]
+    slots: CampaignSlotSummary[]
+}

@@ -29,6 +29,13 @@ export const useCampaignDetail = (id: number | null) =>
         enabled: id !== null && id > 0,
     })
 
+export const useCampaignSummary = (id: number | null) =>
+    useQuery({
+        queryKey: ['campaigns', 'summary', id],
+        queryFn: () => campaignsApi.summary(id as number),
+        enabled: id !== null && id > 0,
+    })
+
 export const usePendingCampaigns = (enabled = true) =>
     useQuery({
         queryKey: ['campaigns', 'pending'],
@@ -55,6 +62,7 @@ export const useUpdateCampaign = () => {
             await Promise.all([
                 qc.invalidateQueries({ queryKey: ['campaigns'] }),
                 qc.invalidateQueries({ queryKey: ['campaigns', 'detail', variables.id] }),
+                qc.invalidateQueries({ queryKey: ['campaigns', 'summary', variables.id] }),
             ])
         },
     })
@@ -68,6 +76,7 @@ export const useSubmitApproval = () => {
             await Promise.all([
                 qc.invalidateQueries({ queryKey: ['campaigns'] }),
                 qc.invalidateQueries({ queryKey: ['campaigns', 'detail', id] }),
+                qc.invalidateQueries({ queryKey: ['campaigns', 'summary', id] }),
             ])
         },
     })
@@ -82,6 +91,7 @@ export const useApproveCampaign = () => {
             await Promise.all([
                 qc.invalidateQueries({ queryKey: ['campaigns'] }),
                 qc.invalidateQueries({ queryKey: ['campaigns', 'detail', variables.id] }),
+                qc.invalidateQueries({ queryKey: ['campaigns', 'summary', variables.id] }),
             ])
         },
     })
@@ -96,6 +106,7 @@ export const useUpdateCampaignStatus = () => {
             await Promise.all([
                 qc.invalidateQueries({ queryKey: ['campaigns'] }),
                 qc.invalidateQueries({ queryKey: ['campaigns', 'detail', variables.id] }),
+                qc.invalidateQueries({ queryKey: ['campaigns', 'summary', variables.id] }),
             ])
         },
     })
@@ -110,6 +121,7 @@ export const useCancelCampaign = () => {
             await Promise.all([
                 qc.invalidateQueries({ queryKey: ['campaigns'] }),
                 qc.invalidateQueries({ queryKey: ['campaigns', 'detail', variables.id] }),
+                qc.invalidateQueries({ queryKey: ['campaigns', 'summary', variables.id] }),
             ])
         },
     })

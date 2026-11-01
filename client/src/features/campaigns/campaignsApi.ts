@@ -5,6 +5,7 @@ import type {
     CampaignFilterQuery,
     CampaignListItem,
     CampaignStatus,
+    CampaignSummary,
     CampaignType,
     CreateCampaignRequest,
     PagedResult,
@@ -39,6 +40,9 @@ export const campaignsApi = {
 
     get: (id: number) =>
         axiosClient.get<CampaignDetail>(`/api/campaigns/${id}`).then((r) => r.data),
+
+    summary: (id: number) =>
+        axiosClient.get<CampaignSummary>(`/api/campaigns/${id}/summary`).then((r) => r.data),
 
     create: (body: CreateCampaignRequest) => {
         const payload = {

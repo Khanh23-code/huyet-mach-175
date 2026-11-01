@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from 'react'
-import { Progress, Tag } from 'antd'
-import { CalendarOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
+import { Button, Progress, Tag } from 'antd'
+import { BarChartOutlined, CalendarOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons'
 import SlotsTable from './SlotsTable'
 import {
     CAMPAIGN_STATUS_COLOR,
@@ -19,6 +20,8 @@ interface Props {
 }
 
 export default function CampaignCard({ campaign, onOpen }: Props) {
+    const navigate = useNavigate()
+
     const onKey = (e: KeyboardEvent) => {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault()
@@ -28,8 +31,6 @@ export default function CampaignCard({ campaign, onOpen }: Props) {
 
     const status = normalizeCampaignStatus(campaign.status)
     const campaignType = normalizeCampaignType(campaign.campaignType)
-
-    // REJECTED hoặc CANCELLED: không cho phép đăng ký -> gắn badge đỏ và ẩn thanh progress bar
     const isClosed = status === 'REJECTED' || status === 'CANCELLED'
 
     const percent = campaign.targetDonations > 0
@@ -44,7 +45,6 @@ export default function CampaignCard({ campaign, onOpen }: Props) {
             onClick={() => onOpen(campaign)}
             onKeyDown={onKey}
         >
-
             <div className="ds-site__top">
                 <Tag className="campaign-tag">
                     {CAMPAIGN_TYPE_LABEL[campaignType]}
@@ -60,7 +60,6 @@ export default function CampaignCard({ campaign, onOpen }: Props) {
                     {CAMPAIGN_STATUS_LABEL[status]}
                 </Tag>
             </div>
-
 
             <div className="ds-code" title="campaign_id">ID: {campaign.campaignId}</div>
             <h4>{campaign.campaignName}</h4>
@@ -79,7 +78,6 @@ export default function CampaignCard({ campaign, onOpen }: Props) {
                 )}
             </div>
 
-            {/* Với các campaign REJECTED hoặc CANCELLED: ẩn progress bar và hiển thị thông báo đã dừng đăng ký */}
             {isClosed ? (
                 <div className="ds-closed-alert">
                     <CloseCircleOutlined style={{ color: '#c4261b' }} />
@@ -109,6 +107,22 @@ export default function CampaignCard({ campaign, onOpen }: Props) {
 
             {campaign.slots && campaign.slots.length > 0 && (
                 <SlotsTable slots={campaign.slots} />
+            )}
+
+            {(status === 'IN_PROGRESS' || status === 'COMPLETED' || status === 'CANCELLED') && (
+                <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--ds-border)' }}>
+                    <Button
+                        size="small"
+                        icon={<BarChartOutlined />}
+                        style={{ width: '100%' }}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            navigate(`/campaigns/${campaign.campaignId}/summary`)
+                        }}
+                    >
+                        Xem báo cáo tổng kết
+                    </Button>
+                </div>
             )}
         </div>
     )

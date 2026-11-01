@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
     App,
     Button,
@@ -15,6 +16,7 @@ import {
     Tag,
 } from 'antd'
 import {
+    BarChartOutlined,
     CheckCircleOutlined,
     CloseCircleOutlined,
     PlayCircleOutlined,
@@ -40,12 +42,13 @@ import type { CampaignListItem, CampaignStatus } from '../types'
 interface Props {
     campaignId?: number | null
     campaign?: CampaignListItem | null
-    site?: any // fallback compatibility
+    site?: any
     onClose: () => void
 }
 
 export default function CampaignDetailModal({ campaignId, campaign, site, onClose }: Props) {
     const id = campaignId ?? campaign?.campaignId ?? site?.siteId ?? null
+    const navigate = useNavigate()
     const { message } = App.useApp()
     const [isCancelOpen, setIsCancelOpen] = useState(false)
     const { data: detail, isLoading } = useCampaignDetail(id)
@@ -87,6 +90,19 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                 detail ? (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Space>
+                            <Can do={PERMISSIONS.CAMPAIGN_VIEW}>
+                                {(status === 'IN_PROGRESS' || status === 'COMPLETED' || status === 'CANCELLED') && (
+                                    <Button
+                                        icon={<BarChartOutlined />}
+                                        onClick={() => {
+                                            onClose()
+                                            navigate(`/campaigns/${id}/summary`)
+                                        }}
+                                    >
+                                        Báo cáo tổng kết
+                                    </Button>
+                                )}
+                            </Can>
                             <Can do={PERMISSIONS.CAMPAIGN_EDIT}>
                                 {status === 'APPROVED' && (
                                     <Button
@@ -133,7 +149,6 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                 <Skeleton active paragraph={{ rows: 8 }} />
             ) : (
                 <>
-                    {/* Thống kê tiến độ */}
                     <Card size="small" style={{ marginBottom: 16, background: '#f8fafc' }}>
                         <Row gutter={[16, 16]}>
                             <Col span={6}>

@@ -7,6 +7,7 @@ import ForbiddenPage from '@/pages/ForbiddenPage'
 import UserManagementPage from '@/features/users/pages/UserManagementPage'
 import ProfilePage from '@/features/account/pages/ProfilePage'
 import SiteMonitorPage from '@/features/campaigns/pages/SiteMonitorPage'
+import CampaignSummaryPage from '@/features/campaigns/pages/CampaignSummaryPage'
 import ProposalPage from '@/features/campaigns/pages/ProposalPage'
 import ReceptionQueuePage from '@/features/reception/pages/ReceptionQueuePage'
 import ScreeningPage from '@/features/screening/pages/ScreeningPage'
@@ -14,7 +15,6 @@ import NotFoundPage from '@/pages/NotFoundPage'
 import RouteErrorBoundary from '@/components/RouteErrorBoundary'
 import { findRouteItem } from '@/config/routeConfig'
 
-// Quyền của từng route lấy từ routeConfig (cùng nguồn với Sidebar)
 const usersRoute = findRouteItem('users')
 const siteListRoute = findRouteItem('site-list')
 const proposalsRoute = findRouteItem('site-proposals')
@@ -32,7 +32,6 @@ export const router = createBrowserRouter([
         element: <ForbiddenPage />,
         errorElement: <RouteErrorBoundary />,
     },
-    // Đường dẫn cũ
     { path: '/403', element: <Navigate to="/403-forbidden" replace /> },
     {
         element: <ProtectedRoute />,
@@ -42,24 +41,23 @@ export const router = createBrowserRouter([
                 element: <AppLayout />,
                 children: [
                     { path: '/', element: <DashboardPage /> },
-                    // Dùng chung cho mọi tài khoản đã đăng nhập
                     { path: '/account/profile', element: <ProfilePage /> },
                     {
-                        // Route theo quyền: phải nằm trong AppLayout (nơi đồng bộ permissions)
                         element: <ProtectedRoute requiredPermission={usersRoute.requiredPermission} />,
                         children: [{ path: usersRoute.path, element: <UserManagementPage /> }],
                     },
-                    // Điểm hiến & lịch slot
                     { path: '/campaigns', element: <Navigate to={siteListRoute.path} replace /> },
                     {
                         element: <ProtectedRoute requiredPermission={siteListRoute.requiredPermission} />,
-                        children: [{ path: siteListRoute.path, element: <SiteMonitorPage /> }],
+                        children: [
+                            { path: siteListRoute.path, element: <SiteMonitorPage /> },
+                            { path: '/campaigns/:id/summary', element: <CampaignSummaryPage /> },
+                        ],
                     },
                     {
                         element: <ProtectedRoute requiredPermission={proposalsRoute.requiredPermission} />,
                         children: [{ path: proposalsRoute.path, element: <ProposalPage /> }],
                     },
-                    // Tiếp nhận & Sàng lọc
                     {
                         element: <ProtectedRoute requiredPermission={queueRoute.requiredPermission} />,
                         children: [{ path: queueRoute.path, element: <ReceptionQueuePage /> }],
@@ -68,13 +66,11 @@ export const router = createBrowserRouter([
                         element: <ProtectedRoute requiredPermission={screeningRoute.requiredPermission} />,
                         children: [{ path: screeningRoute.path, element: <ScreeningPage /> }],
                     },
-                    // Bắt tất cả các đường dẫn chưa có giao diện bên trong AppLayout
                     { path: '*', element: <NotFoundPage /> },
                 ],
             },
         ],
     },
-    // Bắt các đường dẫn không xác định ở cấp ngoài cùng
     {
         path: '*',
         element: <NotFoundPage />,
