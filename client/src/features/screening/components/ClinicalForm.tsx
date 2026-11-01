@@ -110,7 +110,7 @@ export default function ClinicalForm({ detail, editable, sendAnswers, answers, o
                 <div className="sc-panel-head">
                     <span className="sc-icon"><HeartOutlined /></span>
                     <div className="sc-panel-title">
-                        <b>Chỉ số sinh tồn</b>
+                        <b>Sinh hiệu</b>
                         <small>{editable ? 'Nhập kết quả đo trực tiếp' : 'Kết quả đã ghi nhận'}</small>
                     </div>
                     {editable && <span className="sc-req">* Bắt buộc khi kết luận Đạt tiêu chuẩn</span>}
@@ -123,32 +123,32 @@ export default function ClinicalForm({ detail, editable, sendAnswers, answers, o
                     <Field label="Thân nhiệt" required error={errors.bodyTemp}>{num('bodyTemp', '°C')}</Field>
                     <Field label="Cân nặng" required error={errors.weightKg}>{num('weightKg', 'kg')}</Field>
                     <Field label="Hemoglobin" required error={errors.hemoglobin}>{num('hemoglobin', 'g/L')}</Field>
-
-                    <Field label="Test nhanh HBsAg" required error={errors.hbsag}>
-                        <Radio.Group
-                            optionType="button"
-                            buttonStyle="solid"
-                            disabled={!editable}
-                            value={v.hbsag || undefined}
-                            onChange={(e) => set('hbsag', e.target.value)}
-                            options={[
-                                { label: 'Âm tính', value: 'NEG' },
-                                { label: 'Dương tính', value: 'POS' },
-                            ]}
-                        />
-                    </Field>
-                    <Field label="Thể tích máu chỉ định" required error={errors.targetVolume}>
-                        <Select
-                            size="large"
-                            placeholder="Chọn thể tích"
-                            disabled={!editable}
-                            options={VOLUME_OPTIONS}
-                            value={v.targetVolume || undefined}
-                            status={errors.targetVolume ? 'error' : undefined}
-                            onChange={(val) => set('targetVolume', val)}
-                        />
-                    </Field>
                 </div>
+
+                <Field label="Test nhanh HBsAg" required error={errors.hbsag}>
+                    <Radio.Group
+                        optionType="button"
+                        buttonStyle="solid"
+                        disabled={!editable}
+                        value={v.hbsag || undefined}
+                        onChange={(e) => set('hbsag', e.target.value)}
+                        options={[
+                            { label: 'Âm tính', value: 'NEG' },
+                            { label: 'Dương tính', value: 'POS' },
+                        ]}
+                    />
+                </Field>
+                <Field label="Thể tích máu chỉ định" required error={errors.targetVolume}>
+                    <Select
+                        size="large"
+                        placeholder="Chọn thể tích"
+                        disabled={!editable}
+                        options={VOLUME_OPTIONS}
+                        value={v.targetVolume || undefined}
+                        status={errors.targetVolume ? 'error' : undefined}
+                        onChange={(val) => set('targetVolume', val)}
+                    />
+                </Field>
 
                 <Field label="Ghi chú khám lâm sàng" error={errors.notes}>
                     <Input.TextArea
@@ -179,7 +179,7 @@ export default function ClinicalForm({ detail, editable, sendAnswers, answers, o
                 <div>
                     <b>Kết luận sàng lọc</b>
                     <div className="sc-muted">
-                        {editable ? 'Chọn một quyết định để hoàn tất hồ sơ.' : 'Hồ sơ đã có kết luận.'}
+                        {editable ? 'Đưa ra quyết định để hoàn tất hồ sơ.' : 'Hồ sơ đã có kết luận.'}
                     </div>
                 </div>
 

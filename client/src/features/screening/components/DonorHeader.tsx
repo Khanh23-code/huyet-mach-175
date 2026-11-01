@@ -36,7 +36,7 @@ export default function DonorHeader({ detail }: { detail: SurveyDetail }) {
                         <span className="sc-ok">✓ Đủ 84 ngày</span>
                     ) : (
                         <span className="sc-warn">
-                            Chưa đủ 84 ngày{nextEligible ? ` · từ ${fmtDate(nextEligible)}` : ''}
+                            Chưa đủ 84 ngày{nextEligible ? ` · đến ${fmtDate(nextEligible)}` : ''}
                         </span>
                     )}
                 </div>
