@@ -23,50 +23,11 @@ public class CampaignsService : ICampaignsService
 
     public async Task<PagedResult<CampaignListItemDto>> GetCampaignsAsync(CampaignFilterDto filter, int? createdBy = null)
     {
-        if (filter.PageNumber < 1)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "Số trang (PageNumber) phải lớn hơn hoặc bằng 1.");
-        }
+        filter.Validate();
 
-        if (filter.PageSize < 1 || filter.PageSize > 100)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "Kích thước trang (PageSize) phải nằm trong khoảng từ 1 đến 100.");
-        }
-
-        if (filter.FromDate.HasValue && filter.ToDate.HasValue && filter.FromDate.Value > filter.ToDate.Value)
-        {
-            throw new HttpException(
-                StatusCodes.Status400BadRequest,
-                "Khoảng thời gian không hợp lệ: 'Từ ngày' (FromDate) phải nhỏ hơn hoặc bằng 'Đến ngày' (ToDate).");
-        }
-
-        var query = _context.DonationCampaigns.AsNoTracking();
-
-        if (createdBy.HasValue)
-        {
-            query = query.Where(c => c.CreatedBy == createdBy.Value);
-        }
-
-        if (filter.Status.HasValue)
-        {
-            query = query.Where(c => c.Status == filter.Status.Value);
-        }
-
-        if (filter.FromDate.HasValue)
-        {
-            query = query.Where(c => c.EndDate >= filter.FromDate.Value);
-        }
-
-        if (filter.ToDate.HasValue)
-        {
-            query = query.Where(c => c.StartDate <= filter.ToDate.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(filter.Keyword))
-        {
-            var kw = filter.Keyword.Trim();
-            query = query.Where(c => EF.Functions.ILike(c.CampaignName, $"%{kw}%") || EF.Functions.ILike(c.LocationName, $"%{kw}%"));
-        }
+        var query = _context.DonationCampaigns
+            .AsNoTracking()
+            .ApplyFilter(filter, createdBy);
 
         var totalCount = await query.CountAsync();
 
@@ -98,10 +59,7 @@ public class CampaignsService : ICampaignsService
 
     public async Task<CampaignDetailDto> GetCampaignByIdAsync(int id)
     {
-        if (id <= 0)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
-        }
+        ValidateId(id);
 
         var campaign = await _context.DonationCampaigns
             .AsNoTracking()
@@ -121,16 +79,41 @@ public class CampaignsService : ICampaignsService
         return campaign.ToDetailDto();
     }
 
+    public async Task<CampaignSummaryDto> GetCampaignSummaryAsync(int id)
+    {
+        ValidateId(id);
+
+        var campaign = await _context.DonationCampaigns
+            .AsNoTracking()
+            .Include(c => c.CreatedByUser)
+            .Include(c => c.Slots)
+            .FirstOrDefaultAsync(c => c.CampaignId == id);
+
+        if (campaign == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
+        }
+
+        _validator.ValidateSummarizable(campaign);
+
+        var appointments = await _context.DonationAppointments
+            .AsNoTracking()
+            .Include(a => a.Donor)
+            .Include(a => a.PreScreeningSurvey)
+            .Include(a => a.DonationSession)
+            .Include(a => a.CampaignSlot)
+            .Where(a => a.CampaignSlot != null && a.CampaignSlot.CampaignId == id)
+            .ToListAsync();
+
+        return CampaignSummaryCalculator.CalculateSummary(campaign, appointments);
+    }
+
     public async Task<CampaignDetailDto> CreateCampaignAsync(CreateCampaignRequest request, int userId)
     {
         _validator.ValidateDates(request.StartDate, request.EndDate, isNew: true);
         _validator.ValidateTargetDonations(request.TargetDonations);
 
-        var user = await _context.Users.FindAsync(userId);
-        if (user == null || !user.IsActive)
-        {
-            throw new HttpException(StatusCodes.Status401Unauthorized, "Người dùng không hợp lệ hoặc đã bị vô hiệu hóa.");
-        }
+        await EnsureActiveUserAsync(userId, "Người dùng không hợp lệ hoặc đã bị vô hiệu hóa.");
 
         var campaign = new DonationCampaign
         {
@@ -169,10 +152,7 @@ public class CampaignsService : ICampaignsService
 
     public async Task<CampaignDetailDto> UpdateCampaignAsync(int id, UpdateCampaignRequest request)
     {
-        if (id <= 0)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
-        }
+        ValidateId(id);
 
         var campaign = await _context.DonationCampaigns
             .Include(c => c.Slots)
@@ -219,16 +199,7 @@ public class CampaignsService : ICampaignsService
 
     public async Task<CampaignDetailDto> SubmitForApprovalAsync(int id)
     {
-        if (id <= 0)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
-        }
-
-        var campaign = await _context.DonationCampaigns.FindAsync(id);
-        if (campaign == null)
-        {
-            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
-        }
+        var campaign = await FindCampaignAsync(id);
 
         _validator.ValidateSubmittable(campaign);
 
@@ -242,24 +213,10 @@ public class CampaignsService : ICampaignsService
 
     public async Task<CampaignDetailDto> ApproveCampaignAsync(int id, ApproveCampaignRequest request, int userId)
     {
-        if (id <= 0)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
-        }
-
-        var campaign = await _context.DonationCampaigns.FindAsync(id);
-        if (campaign == null)
-        {
-            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
-        }
+        var campaign = await FindCampaignAsync(id);
 
         _validator.ValidateApprovable(campaign, request.IsApproved, request.RejectionReason);
-
-        var user = await _context.Users.FindAsync(userId);
-        if (user == null || !user.IsActive)
-        {
-            throw new HttpException(StatusCodes.Status401Unauthorized, "Người duyệt không hợp lệ hoặc đã bị vô hiệu hóa.");
-        }
+        await EnsureActiveUserAsync(userId, "Người duyệt không hợp lệ hoặc đã bị vô hiệu hóa.");
 
         if (request.IsApproved)
         {
@@ -283,24 +240,10 @@ public class CampaignsService : ICampaignsService
 
     public async Task<CampaignDetailDto> CancelCampaignAsync(int id, CancelCampaignRequest request, int userId)
     {
-        if (id <= 0)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
-        }
-
-        var campaign = await _context.DonationCampaigns.FindAsync(id);
-        if (campaign == null)
-        {
-            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
-        }
+        var campaign = await FindCampaignAsync(id);
 
         _validator.ValidateCancellable(campaign, request.Reason);
-
-        var user = await _context.Users.FindAsync(userId);
-        if (user == null || !user.IsActive)
-        {
-            throw new HttpException(StatusCodes.Status401Unauthorized, "Người thực hiện không hợp lệ hoặc đã bị vô hiệu hóa.");
-        }
+        await EnsureActiveUserAsync(userId, "Người thực hiện không hợp lệ hoặc đã bị vô hiệu hóa.");
 
         campaign.Status = CampaignStatus.CANCELLED;
         campaign.CancelledBy = userId;
@@ -314,16 +257,7 @@ public class CampaignsService : ICampaignsService
 
     public async Task<CampaignDetailDto> UpdateCampaignStatusAsync(int id, UpdateCampaignStatusRequest request, int userId)
     {
-        if (id <= 0)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
-        }
-
-        var campaign = await _context.DonationCampaigns.FindAsync(id);
-        if (campaign == null)
-        {
-            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
-        }
+        var campaign = await FindCampaignAsync(id);
 
         _validator.ValidateStatusTransition(campaign, request.Status);
 
@@ -336,10 +270,7 @@ public class CampaignsService : ICampaignsService
 
     public async Task DeleteCampaignAsync(int id)
     {
-        if (id <= 0)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
-        }
+        ValidateId(id);
 
         var campaign = await _context.DonationCampaigns
             .Include(c => c.Slots)
@@ -356,5 +287,35 @@ public class CampaignsService : ICampaignsService
         _context.DonationCampaignSlots.RemoveRange(campaign.Slots);
         _context.DonationCampaigns.Remove(campaign);
         await _context.SaveChangesAsync();
+    }
+
+    private static void ValidateId(int id)
+    {
+        if (id <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
+        }
+    }
+
+    private async Task<DonationCampaign> FindCampaignAsync(int id)
+    {
+        ValidateId(id);
+
+        var campaign = await _context.DonationCampaigns.FindAsync(id);
+        if (campaign == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy đợt hiến máu với mã #{id}.");
+        }
+
+        return campaign;
+    }
+
+    private async Task EnsureActiveUserAsync(int userId, string errorMessage)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null || !user.IsActive)
+        {
+            throw new HttpException(StatusCodes.Status401Unauthorized, errorMessage);
+        }
     }
 }

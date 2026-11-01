@@ -13,4 +13,5 @@ public interface ICampaignValidator
     void ValidateCancellable(DonationCampaign campaign, string reason);
     void ValidateStatusTransition(DonationCampaign campaign, CampaignStatus targetStatus);
     void ValidateDeletable(DonationCampaign campaign);
+    void ValidateSummarizable(DonationCampaign campaign);
 }

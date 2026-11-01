@@ -98,6 +98,35 @@ public class CampaignsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id:int}/summary")]
+    [HasPermission("CAMPAIGN_VIEW")]
+    [EndpointSummary("Báo cáo tổng kết đợt hiến máu")]
+    [EndpointDescription(
+        "Tổng hợp toàn diện các chỉ số và kết quả của đợt hiến máu từ khi bắt đầu (IN_PROGRESS) cho đến khi kết thúc (COMPLETED) hoặc bị hủy (CANCELLED):\n" +
+        "- Kết quả thực tế so với chỉ tiêu (Target, Collected, Shortfall, CompletionRate, TotalVolumeMl).\n" +
+        "- Thống kê lịch hẹn và tiếp đón (Check-in, vãng lai, đặt trước, chưa đến, vắng mặt, hủy, tỷ lệ có mặt).\n" +
+        "- Thống kê kết quả khám sàng lọc lâm sàng và lý do tạm hoãn.\n" +
+        "- Thống kê phiên lấy máu, số ca thành công, số ca sự cố kèm chi tiết sự cố lâm sàng.\n" +
+        "- Cơ cấu phân bổ thể tích túi máu (250ml, 350ml, 450ml) và nhóm máu.\n" +
+        "- Thống kê chi tiết tiến độ theo từng khung giờ (Slot).\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **CAMPAIGN_VIEW** (các vai trò như BBNK, MGT, DON, CLIN).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Trả về báo cáo tổng kết chi tiết của đợt hiến máu.\n" +
+        "- 400 BadRequest: ID không hợp lệ hoặc đợt hiến máu chưa bắt đầu (DRAFT, PENDING_APPROVAL).\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền truy cập CAMPAIGN_VIEW.\n" +
+        "- 404 NotFound: Không tìm thấy đợt hiến máu với ID chỉ định.")]
+    [ProducesResponseType(typeof(CampaignSummaryDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetCampaignSummary(int id)
+    {
+        var result = await _campaignsService.GetCampaignSummaryAsync(id);
+        return Ok(result);
+    }
+
     [HttpPost]
     [HasPermission("CAMPAIGN_EDIT")]
     [EndpointSummary("Tạo mới đề xuất đợt hiến máu")]

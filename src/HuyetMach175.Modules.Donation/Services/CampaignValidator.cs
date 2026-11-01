@@ -149,4 +149,16 @@ public class CampaignValidator : ICampaignValidator
                 "Không thể xóa đợt hiến máu đã có người hiến đăng ký lịch hẹn.");
         }
     }
+
+    public void ValidateSummarizable(DonationCampaign campaign)
+    {
+        if (campaign.Status != CampaignStatus.IN_PROGRESS &&
+            campaign.Status != CampaignStatus.COMPLETED &&
+            campaign.Status != CampaignStatus.CANCELLED)
+        {
+            throw new HttpException(
+                StatusCodes.Status400BadRequest,
+                $"Báo cáo tổng kết chỉ khả dụng khi đợt hiến máu đang diễn ra hoặc đã kết thúc (IN_PROGRESS, COMPLETED, CANCELLED). Trạng thái hiện tại: '{campaign.Status}'.");
+        }
+    }
 }
