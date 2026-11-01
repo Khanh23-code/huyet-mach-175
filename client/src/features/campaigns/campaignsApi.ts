@@ -5,8 +5,10 @@ import type {
     CampaignFilterQuery,
     CampaignListItem,
     CampaignStatus,
+    CampaignSummary,
     CampaignType,
     CreateCampaignRequest,
+    DonorImportResult,
     PagedResult,
     UpdateCampaignRequest,
 } from './types'
@@ -39,6 +41,33 @@ export const campaignsApi = {
 
     get: (id: number) =>
         axiosClient.get<CampaignDetail>(`/api/campaigns/${id}`).then((r) => r.data),
+
+    summary: (id: number) =>
+        axiosClient.get<CampaignSummary>(`/api/campaigns/${id}/summary`).then((r) => r.data),
+
+    downloadTemplate: async (id: number) => {
+        const response = await axiosClient.get(`/api/campaigns/${id}/donors/import-template`, {
+            responseType: 'blob',
+        })
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', `Mau_Danh_Sach_Hien_Mau_Campaign_${id}.xlsx`)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.URL.revokeObjectURL(url)
+    },
+
+    importDonors: (id: number, file: File) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        return axiosClient
+            .post<DonorImportResult>(`/api/campaigns/${id}/donors/import`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            })
+            .then((r) => r.data)
+    },
 
     create: (body: CreateCampaignRequest) => {
         const payload = {

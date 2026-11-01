@@ -11,9 +11,9 @@ export type CampaignStatus =
 
 export interface CampaignSlot {
     slotId?: number
-    startTime: string // Định dạng "HH:mm:ss" hoặc "HH:mm"
-    endTime: string   // Định dạng "HH:mm:ss" hoặc "HH:mm"
-    capacity: number  // Sức chứa tối đa trong khung giờ này
+    startTime: string
+    endTime: string
+    capacity: number
 }
 
 export interface CampaignListItem {
@@ -22,9 +22,9 @@ export interface CampaignListItem {
     description?: string | null
     locationName: string
     campaignType: CampaignType
-    operatingDays?: string | null // Ví dụ: "2,4,6" khi campaignType = RECURRING
-    startDate: string // "YYYY-MM-DD"
-    endDate: string   // "YYYY-MM-DD"
+    operatingDays?: string | null
+    startDate: string
+    endDate: string
     targetDonations: number
     maxCapacity?: number | null
     status: CampaignStatus
@@ -101,4 +101,119 @@ export interface CancelCampaignRequest {
 
 export interface UpdateCampaignStatusRequest {
     status: CampaignStatus
+}
+
+export interface CampaignDeferralReasonStat {
+    reason: string
+    count: number
+}
+
+export interface CampaignIncident {
+    sessionId: number
+    appointmentId: number
+    donorName: string
+    donorCitizenId: string
+    targetVolumeMl: string
+    actualVolumeMl?: number | null
+    incidentDescription: string
+    completedAt?: string | null
+}
+
+export interface CampaignVolumeStat {
+    volumeType: string
+    volumeMl: number
+    count: number
+    totalMl: number
+}
+
+export interface CampaignBloodTypeStat {
+    bloodType: string
+    count: number
+    percentage: number
+}
+
+export interface CampaignRhStat {
+    rhFactor: string
+    count: number
+    percentage: number
+}
+
+export interface CampaignSlotSummary {
+    slotId: number
+    startTime: string
+    endTime: string
+    capacity: number
+    totalRegistered: number
+    totalCheckedIn: number
+    totalCollected: number
+    totalVolumeMl: number
+}
+
+export interface CampaignSummary {
+    campaignId: number
+    campaignName: string
+    description?: string | null
+    locationName: string
+    campaignType: CampaignType
+    operatingDays?: string | null
+    startDate: string
+    endDate: string
+    status: CampaignStatus
+    createdByName: string
+
+    targetDonations: number
+    totalCollectedUnits: number
+    shortfallUnits: number
+    exceededUnits: number
+    completionRate: number
+    totalVolumeMl: number
+
+    totalRegistered: number
+    totalCheckedIn: number
+    scheduledCheckedIn: number
+    walkInCheckedIn: number
+    pendingArrival: number
+    noShowCount: number
+    cancelledCount: number
+    attendanceRate: number
+
+    totalScreened: number
+    qualifiedCount: number
+    deferredCount: number
+    unqualifiedCount: number
+    pendingScreeningCount: number
+    topDeferralReasons: CampaignDeferralReasonStat[]
+
+    totalSessions: number
+    completedSessions: number
+    abortedSessions: number
+    waitingCollectionSessions: number
+    incidentCount: number
+    incidents: CampaignIncident[]
+
+    volumeBreakdown: CampaignVolumeStat[]
+    bloodTypeBreakdown: CampaignBloodTypeStat[]
+    rhBreakdown: CampaignRhStat[]
+    slots: CampaignSlotSummary[]
+}
+
+export interface DonorImportRowError {
+    rowNumber: number
+    stt?: number
+    citizenId?: string | null
+    fullName?: string | null
+    errorMessage: string
+}
+
+export interface DonorImportResult {
+    campaignId: number
+    campaignName: string
+    totalRows: number
+    successCount: number
+    createdDonorsCount: number
+    reusedDonorsCount: number
+    createdAppointmentsCount: number
+    surveysIncludedCount: number
+    errorsCount: number
+    errors: DonorImportRowError[]
 }

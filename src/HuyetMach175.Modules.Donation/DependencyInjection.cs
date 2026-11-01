@@ -10,6 +10,7 @@ public static class DependencyInjection
         services.AddScoped<ICampaignValidator, CampaignValidator>();
         services.AddScoped<ICampaignsService, CampaignsService>();
         services.AddScoped<IDonorsService, DonorsService>();
+        services.AddScoped<IDonorImportService, DonorImportService>();
         services.AddScoped<IAppointmentValidator, AppointmentValidator>();
         services.AddScoped<IAppointmentsService, AppointmentsService>();
         services.AddScoped<ICheckInService, CheckInService>();
