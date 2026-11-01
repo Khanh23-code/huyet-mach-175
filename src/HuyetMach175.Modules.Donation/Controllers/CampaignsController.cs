@@ -1,5 +1,6 @@
 using HuyetMach175.Modules.Donation.DTOs.Campaigns;
 using HuyetMach175.Modules.Donation.DTOs.Common;
+using HuyetMach175.Modules.Donation.DTOs.Donors;
 using HuyetMach175.Modules.Donation.Services;
 using HuyetMach175.SharedKernel.Authorization;
 using HuyetMach175.SharedKernel.Extensions;
@@ -16,10 +17,12 @@ namespace HuyetMach175.Modules.Donation.Controllers;
 public class CampaignsController : ControllerBase
 {
     private readonly ICampaignsService _campaignsService;
+    private readonly IDonorImportService _donorImportService;
 
-    public CampaignsController(ICampaignsService campaignsService)
+    public CampaignsController(ICampaignsService campaignsService, IDonorImportService donorImportService)
     {
         _campaignsService = campaignsService;
+        _donorImportService = donorImportService;
     }
 
     [HttpGet]
@@ -47,15 +50,13 @@ public class CampaignsController : ControllerBase
 
     [HttpGet("mine")]
     [HasPermission("CAMPAIGN_VIEW")]
-    [EndpointSummary("Lấy danh sách các đợt hiến máu / đề xuất do người dùng hiện tại tạo")]
+    [EndpointSummary("Lấy danh sách đợt hiến máu do chính mình tạo")]
     [EndpointDescription(
-        "Trả về danh sách các đợt hiến máu / đề xuất do chính tài khoản đang đăng nhập tạo (CreatedBy).\n\n" +
-        "Hỗ trợ phân trang, tìm kiếm theo từ khóa tên hoặc địa điểm, lọc theo trạng thái và khoảng thời gian.\n\n" +
-        "Thường dùng cho nhân viên Ngân hàng máu (BBNK) hoặc Lãnh đạo (MGT) để theo dõi các đề xuất của bản thân.\n\n" +
-        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **CAMPAIGN_VIEW**.\n\n" +
+        "Trả về danh sách các đợt hiến máu do tài khoản hiện tại khởi tạo, hỗ trợ phân trang và bộ lọc như danh sách chung.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **CAMPAIGN_VIEW** (các vai trò như BBNK, MGT).\n\n" +
         "**HTTP Response:**\n" +
-        "- 200 OK: Trả về danh sách đợt hiến máu của tôi theo cấu trúc phân trang.\n" +
-        "- 400 BadRequest: Dữ liệu phân trang hoặc khoảng thời gian không hợp lệ.\n" +
+        "- 200 OK: Trả về danh sách đợt hiến máu do chính mình tạo theo cấu trúc phân trang.\n" +
+        "- 400 BadRequest: Dữ liệu phân trang không hợp lệ.\n" +
         "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
         "- 403 Forbidden: Không có quyền truy cập CAMPAIGN_VIEW.")]
     [ProducesResponseType(typeof(PagedResult<CampaignListItemDto>), StatusCodes.Status200OK)]
@@ -127,6 +128,56 @@ public class CampaignsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{id:int}/donors/import-template")]
+    [HasPermission("CAMPAIGN_VIEW")]
+    [EndpointSummary("Tải file Excel mẫu danh sách đăng ký hiến máu")]
+    [EndpointDescription(
+        "Tải về file Excel mẫu chuẩn (.xlsx) chứa thông tin của đợt hiến máu, cấu trúc cột thông tin người hiến, " +
+        "khung giờ tiếp nhận tương ứng và 9 câu hỏi khảo sát online.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **CAMPAIGN_VIEW** (BBNK, MGT, DON, CLIN).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Trả về file Excel dạng binary stream.\n" +
+        "- 400 BadRequest: ID đợt hiến máu không hợp lệ.\n" +
+        "- 404 NotFound: Không tìm thấy đợt hiến máu với ID chỉ định.")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DownloadImportTemplate(int id)
+    {
+        var (content, fileName) = await _donorImportService.GenerateTemplateAsync(id);
+        return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpPost("{id:int}/donors/import")]
+    [HasPermission("CAMPAIGN_EDIT")]
+    [Consumes("multipart/form-data")]
+    [EndpointSummary("Nhập danh sách người hiến máu từ file Excel")]
+    [EndpointDescription(
+        "Nhập danh sách người hiến máu từ file Excel theo mẫu của đợt hiến máu:\n" +
+        "- Kiểm tra và tạo mới hoặc liên kết hồ sơ người hiến (Donor).\n" +
+        "- Tự động tạo lịch hẹn (DonationAppointment) theo đúng khung giờ (Slot).\n" +
+        "- Tự động lưu bảng hỏi khảo sát (PreScreeningSurvey) nếu có câu trả lời.\n" +
+        "- Trả về báo cáo tổng kết gồm số lượng thành công và chi tiết các dòng bị lỗi (nếu có).\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **CAMPAIGN_EDIT** (BBNK hoặc MGT).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Nhập file hoàn tất, trả về báo cáo kết quả chi tiết.\n" +
+        "- 400 BadRequest: File không hợp lệ hoặc đợt hiến máu đã kết thúc / đã hủy.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền CAMPAIGN_EDIT.\n" +
+        "- 404 NotFound: Không tìm thấy đợt hiến máu với ID chỉ định.")]
+    [ProducesResponseType(typeof(DonorImportResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ImportDonors(int id, IFormFile file)
+    {
+        var result = await _donorImportService.ImportDonorsAsync(id, file);
+        return Ok(result);
+    }
+
     [HttpPost]
     [HasPermission("CAMPAIGN_EDIT")]
     [EndpointSummary("Tạo mới đề xuất đợt hiến máu")]
@@ -155,12 +206,14 @@ public class CampaignsController : ControllerBase
     [HasPermission("CAMPAIGN_EDIT")]
     [EndpointSummary("Cập nhật thông tin đợt hiến máu")]
     [EndpointDescription(
-        "Chỉnh sửa thông tin cơ bản của đợt hiến máu (tên chiến dịch, địa điểm, ngày bắt đầu, ngày kết thúc, chỉ tiêu thu gom).\n\n" +
-        "**Quy tắc nghiệp vụ:** Chỉ được phép chỉnh sửa khi đợt hiến máu đang ở trạng thái Bản nháp (**DRAFT**) hoặc Bị từ chối (**REJECTED**).\n\n" +
+        "Chỉnh sửa thông tin chi tiết một đợt hiến máu đã có.\n\n" +
+        "**Quy tắc nghiệp vụ:** Chỉ cho phép chỉnh sửa khi đợt hiến máu đang ở trạng thái Bản nháp (**DRAFT**) " +
+        "hoặc Bị từ chối (**REJECTED**). Các trạng thái khác (PENDING_APPROVAL, APPROVED, IN_PROGRESS, COMPLETED, CANCELLED) " +
+        "sẽ bị chặn để bảo đảm tính toàn vẹn dữ liệu.\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **CAMPAIGN_EDIT** (vai trò BBNK hoặc MGT).\n\n" +
         "**HTTP Response:**\n" +
-        "- 200 OK: Cập nhật đợt hiến máu thành công, trả về chi tiết đợt hiến máu sau khi cập nhật.\n" +
-        "- 400 BadRequest: Đợt hiến máu không ở trạng thái DRAFT hoặc REJECTED, hoặc khoảng ngày/chỉ tiêu không hợp lệ.\n" +
+        "- 200 OK: Cập nhật thành công, trả về chi tiết đợt hiến máu sau khi cập nhật.\n" +
+        "- 400 BadRequest: Đợt hiến máu không ở trạng thái DRAFT/REJECTED hoặc dữ liệu ngày/chỉ tiêu không hợp lệ.\n" +
         "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
         "- 403 Forbidden: Không có quyền CAMPAIGN_EDIT.\n" +
         "- 404 NotFound: Không tìm thấy đợt hiến máu với ID chỉ định.")]
@@ -177,15 +230,15 @@ public class CampaignsController : ControllerBase
 
     [HttpPatch("{id:int}/submit-approval")]
     [HasPermission("CAMPAIGN_EDIT")]
-    [EndpointSummary("Gửi đợt hiến máu lên Ban Giám đốc phê duyệt")]
+    [EndpointSummary("Gửi đề xuất đợt hiến máu lên Lãnh đạo phê duyệt")]
     [EndpointDescription(
-        "Gửi đề xuất đợt hiến máu lên Ban Giám đốc / Trưởng khoa xét duyệt. Trạng thái sẽ được chuyển sang Chờ phê duyệt (**PENDING_APPROVAL**).\n\n" +
-        "**Quy tắc nghiệp vụ:** Chỉ áp dụng khi đợt hiến máu đang ở trạng thái Bản nháp (**DRAFT**) hoặc Bị từ chối (**REJECTED**). " +
-        "Lý do từ chối cũ (nếu có) sẽ được tự động xóa để bắt đầu vòng xét duyệt mới.\n\n" +
+        "Nhân viên Ngân hàng máu (BBNK) chuyển trạng thái đợt hiến máu từ Bản nháp (**DRAFT**) " +
+        "hoặc Bị từ chối (**REJECTED**) sang Chờ phê duyệt (**PENDING_APPROVAL**) để Lãnh đạo bệnh viện xem xét.\n\n" +
+        "**Quy tắc nghiệp vụ:** Không thể gửi duyệt các đợt hiến máu có ngày kết thúc nằm trong quá khứ.\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **CAMPAIGN_EDIT** (vai trò BBNK hoặc MGT).\n\n" +
         "**HTTP Response:**\n" +
-        "- 200 OK: Gửi phê duyệt thành công, trả về chi tiết đợt hiến máu với trạng thái PENDING_APPROVAL.\n" +
-        "- 400 BadRequest: Đợt hiến máu không ở trạng thái DRAFT hoặc REJECTED, hoặc đợt hiến máu đã quá hạn (ngày kết thúc trong quá khứ).\n" +
+        "- 200 OK: Gửi duyệt thành công, trả về chi tiết đợt hiến máu với trạng thái PENDING_APPROVAL.\n" +
+        "- 400 BadRequest: Đợt hiến máu không ở trạng thái DRAFT/REJECTED hoặc đã quá hạn.\n" +
         "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
         "- 403 Forbidden: Không có quyền CAMPAIGN_EDIT.\n" +
         "- 404 NotFound: Không tìm thấy đợt hiến máu với ID chỉ định.")]
