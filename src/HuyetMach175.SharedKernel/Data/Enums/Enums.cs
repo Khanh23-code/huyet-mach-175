@@ -21,6 +21,7 @@ public enum CampaignType
     RECURRING
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum BloodType
 {
     A,
@@ -29,12 +30,14 @@ public enum BloodType
     O
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum RhFactor
 {
     POSITIVE,
     NEGATIVE
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AppointmentStatus
 {
     BOOKED,
@@ -68,6 +71,7 @@ public enum SessionStatus
     ABORTED
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ComponentCode
 {
     WB,
@@ -76,6 +80,7 @@ public enum ComponentCode
     PLT
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum BagStatus
 {
     NEWLY_COLLECTED,
@@ -86,27 +91,32 @@ public enum BagStatus
     RESERVED,
     ISSUED,
     TRANSFUSED,
-    DISCARDED
+    DISCARDED,
+    PROCESSED
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum TestResult
 {
     NEGATIVE,
     POSITIVE
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum OverallConclusion
 {
     PASSED,
     FAILED
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum UrgencyLevel
 {
     ROUTINE,
     URGENT
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum RequestStatus
 {
     PENDING,
@@ -115,6 +125,7 @@ public enum RequestStatus
     COMPLETED
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AllocationStatus
 {
     RESERVED,
@@ -123,12 +134,14 @@ public enum AllocationStatus
     RETURNED
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ReturnFinalAction
 {
     RESTOCK,
     DISCARD
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ActionType
 {
     INSERT,
@@ -137,6 +150,7 @@ public enum ActionType
     STATUS_CHANGE
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum NotificationType
 {
     INFO,
@@ -145,6 +159,7 @@ public enum NotificationType
     RECALL
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum NotificationReferenceType
 {
     BLOOD_REQUEST,
@@ -152,6 +167,7 @@ public enum NotificationReferenceType
     DONATION_SESSION
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum PermissionAction
 {
     VIEW,
