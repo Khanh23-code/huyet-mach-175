@@ -8,6 +8,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInventoryModule(this IServiceCollection services)
     {
         services.AddScoped<IStorageLocationsService, StorageLocationsService>();
+        services.AddScoped<IBloodBagsService, BloodBagsService>();
 
         services.AddControllers()
             .AddApplicationPart(typeof(DependencyInjection).Assembly);
