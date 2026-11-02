@@ -3,6 +3,7 @@ using HuyetMach175.Api.Data;
 using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
 using HuyetMach175.Modules.Inventory.DTOs.BloodBags;
+using HuyetMach175.Modules.Inventory.DTOs.Common;
 using HuyetMach175.SharedKernel.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -122,6 +123,139 @@ public class BloodBagsService : IBloodBagsService
             ReceivedAt = now,
             ReceivedBy = userId,
             Message = $"Tiếp nhận túi máu {bloodBag.Barcode} thành công. Trạng thái chuyển sang READY_TESTING sẵn sàng xét nghiệm."
+        };
+    }
+
+    public async Task<PagedResult<BloodBagDto>> GetBloodBagsAsync(BloodBagFilterDto filter)
+    {
+        if (filter.PageNumber < 1)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Số trang (pageNumber) phải lớn hơn hoặc bằng 1.");
+        }
+
+        if (filter.PageSize < 1 || filter.PageSize > 100)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Kích thước trang (pageSize) phải nằm trong khoảng từ 1 đến 100.");
+        }
+
+        var query = _context.BloodBags
+            .AsNoTracking()
+            .Include(b => b.ComponentType)
+            .Include(b => b.Location)
+            .Include(b => b.ParentBag)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(filter.Status))
+        {
+            var statusStr = filter.Status.Trim().ToUpperInvariant();
+            if (statusStr == "TESTING")
+            {
+                query = query.Where(b => b.Status == BagStatus.READY_TESTING);
+            }
+            else if (Enum.TryParse<BagStatus>(statusStr, true, out var parsedStatus))
+            {
+                query = query.Where(b => b.Status == parsedStatus);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.BloodType))
+        {
+            var btStr = filter.BloodType.Trim().ToUpperInvariant();
+            if (Enum.TryParse<BloodType>(btStr, true, out var parsedBloodType))
+            {
+                query = query.Where(b => b.BloodType == parsedBloodType);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.RhFactor))
+        {
+            var rhStr = filter.RhFactor.Trim().ToUpperInvariant();
+            if (rhStr is "+" or "POS" or "POSITIVE")
+            {
+                query = query.Where(b => b.RhFactor == RhFactor.POSITIVE);
+            }
+            else if (rhStr is "-" or "NEG" or "NEGATIVE")
+            {
+                query = query.Where(b => b.RhFactor == RhFactor.NEGATIVE);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.ComponentType))
+        {
+            var ctStr = filter.ComponentType.Trim().ToUpperInvariant();
+            if (ctStr is "WHOLE_BLOOD" or "WB")
+            {
+                query = query.Where(b => b.ComponentType != null && b.ComponentType.TypeCode == ComponentCode.WB);
+            }
+            else if (ctStr is "PACKED_RED_BLOOD_CELLS" or "PRBC")
+            {
+                query = query.Where(b => b.ComponentType != null && b.ComponentType.TypeCode == ComponentCode.PRBC);
+            }
+            else if (ctStr is "FRESH_FROZEN_PLASMA" or "FFP")
+            {
+                query = query.Where(b => b.ComponentType != null && b.ComponentType.TypeCode == ComponentCode.FFP);
+            }
+            else if (ctStr is "PLATELETS" or "PLT")
+            {
+                query = query.Where(b => b.ComponentType != null && b.ComponentType.TypeCode == ComponentCode.PLT);
+            }
+            else if (Enum.TryParse<ComponentCode>(ctStr, true, out var parsedCode))
+            {
+                query = query.Where(b => b.ComponentType != null && b.ComponentType.TypeCode == parsedCode);
+            }
+            else
+            {
+                query = query.Where(b => b.ComponentType != null && EF.Functions.ILike(b.ComponentType.TypeName, $"%{filter.ComponentType.Trim()}%"));
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var kw = filter.Search.Trim();
+            query = query.Where(b => EF.Functions.ILike(b.Barcode, $"%{kw}%"));
+        }
+
+        if (filter.LocationId.HasValue)
+        {
+            query = query.Where(b => b.LocationId == filter.LocationId.Value);
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var entities = await query
+            .OrderByDescending(b => b.CollectedAt)
+            .ThenByDescending(b => b.BagId)
+            .Skip((filter.PageNumber - 1) * filter.PageSize)
+            .Take(filter.PageSize)
+            .ToListAsync();
+
+        var items = entities.Select(b => new BloodBagDto
+        {
+            BagId = b.BagId,
+            Barcode = b.Barcode,
+            ParentBagId = b.ParentBagId,
+            ParentBarcode = b.ParentBag?.Barcode,
+            ComponentTypeId = b.ComponentTypeId,
+            ComponentTypeCode = b.ComponentType?.TypeCode.ToString() ?? string.Empty,
+            ComponentTypeName = b.ComponentType?.TypeName ?? string.Empty,
+            BloodType = b.BloodType.ToString(),
+            RhFactor = b.RhFactor.ToString(),
+            BloodGroup = $"{(b.BloodType == BloodType.AB ? "AB" : b.BloodType.ToString())}{(b.RhFactor == RhFactor.POSITIVE ? "+" : "-")}",
+            VolumeMl = b.VolumeMl,
+            Status = b.Status.ToString(),
+            StorageLocationId = b.LocationId,
+            StorageLocationName = b.Location != null ? $"{b.Location.RefrigeratorName} - {b.Location.ShelfNumber}" : null,
+            CollectedAt = b.CollectedAt,
+            ExpiredAt = b.ExpiredAt,
+            CreatedAt = b.CreatedAt
+        }).ToList();
+
+        return new PagedResult<BloodBagDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageNumber = filter.PageNumber,
+            PageSize = filter.PageSize
         };
     }
 }

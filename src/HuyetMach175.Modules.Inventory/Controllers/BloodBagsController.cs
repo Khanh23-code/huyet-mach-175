@@ -1,4 +1,5 @@
 using HuyetMach175.Modules.Inventory.DTOs.BloodBags;
+using HuyetMach175.Modules.Inventory.DTOs.Common;
 using HuyetMach175.Modules.Inventory.Services;
 using HuyetMach175.SharedKernel.Authorization;
 using HuyetMach175.SharedKernel.Extensions;
@@ -19,6 +20,34 @@ public class BloodBagsController : ControllerBase
     public BloodBagsController(IBloodBagsService bloodBagsService)
     {
         _bloodBagsService = bloodBagsService;
+    }
+
+    [HttpGet]
+    [HasPermission("INVENTORY_VIEW")]
+    [EndpointSummary("Lấy danh sách túi máu trong kho hoặc chờ xét nghiệm, điều chế")]
+    [EndpointDescription(
+        "Lấy danh sách túi máu có phân trang và bộ lọc linh hoạt phục vụ công tác xét nghiệm, điều chế và quản lý kho.\n\n" +
+        "**Quy tắc nghiệp vụ:**\n" +
+        "- Hỗ trợ lọc theo trạng thái (`status`): ví dụ `NEWLY_COLLECTED`, `READY_TESTING` (hoặc alias `TESTING`), `TESTED_PASSED`, `AVAILABLE`, ...\n" +
+        "- Hỗ trợ lọc theo nhóm máu ABO (`bloodType`): `A`, `B`, `AB`, `O`.\n" +
+        "- Hỗ trợ lọc theo yếu tố Rh (`rhFactor`): `POSITIVE`, `NEGATIVE`, `+`, `-`.\n" +
+        "- Hỗ trợ lọc theo loại chế phẩm (`componentType`): `WHOLE_BLOOD`, `WB`, `PRBC`, `FFP`, `PLT` hoặc tên chế phẩm.\n" +
+        "- Hỗ trợ tìm kiếm theo mã vạch (`search`) và lọc theo vị trí lưu trữ (`locationId`).\n" +
+        "- Kết quả sắp xếp theo ngày thu gom mới nhất giảm dần.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **INVENTORY_VIEW** (các vai trò như BBNK, MGT, LAB, CLIN).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Trả về danh sách túi máu phân trang.\n" +
+        "- 400 BadRequest: Tham số phân trang không hợp lệ.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền truy cập INVENTORY_VIEW.")]
+    [ProducesResponseType(typeof(PagedResult<BloodBagDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetBloodBags([FromQuery] BloodBagFilterDto filter)
+    {
+        var result = await _bloodBagsService.GetBloodBagsAsync(filter);
+        return Ok(result);
     }
 
     [HttpPost("receive")]
