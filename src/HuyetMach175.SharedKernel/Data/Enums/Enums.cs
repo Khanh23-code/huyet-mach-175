@@ -91,7 +91,8 @@ public enum BagStatus
     RESERVED,
     ISSUED,
     TRANSFUSED,
-    DISCARDED
+    DISCARDED,
+    PROCESSED
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]

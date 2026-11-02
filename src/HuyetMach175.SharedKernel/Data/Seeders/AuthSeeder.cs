@@ -122,6 +122,8 @@ public static class AuthSeeder
             new Permission { PermissionCode = "INVENTORY_EDIT", PermissionName = "Tiếp nhận túi máu về Viện", ModuleCode = "INVENTORY", ModuleName = "Kho máu", ActionType = PermissionAction.EDIT, Description = "Tiếp nhận và lưu trữ túi máu sau thu gom" },
             new Permission { PermissionCode = "LAB_VIEW", PermissionName = "Xem Hàng chờ và Kết quả xét nghiệm", ModuleCode = "LAB", ModuleName = "Xét nghiệm", ActionType = PermissionAction.VIEW, Description = "Quản lý hàng chờ và kết quả xét nghiệm túi máu" },
             new Permission { PermissionCode = "LAB_EDIT", PermissionName = "Ghi nhận kết quả xét nghiệm túi máu", ModuleCode = "LAB", ModuleName = "Xét nghiệm", ActionType = PermissionAction.EDIT, Description = "Nhập và xác nhận kết quả xét nghiệm vi sinh và nhóm máu" },
+            new Permission { PermissionCode = "PROCESSING_VIEW", PermissionName = "Xem Hàng chờ điều chế máu", ModuleCode = "PROCESSING", ModuleName = "Điều chế máu", ActionType = PermissionAction.VIEW, Description = "Quản lý danh sách túi máu chờ điều chế tách thành phần" },
+            new Permission { PermissionCode = "PROCESSING_EDIT", PermissionName = "Thực hiện phân tách chế phẩm máu", ModuleCode = "PROCESSING", ModuleName = "Điều chế máu", ActionType = PermissionAction.EDIT, Description = "Ghi nhận phân tách túi máu thành các chế phẩm con" },
 
             new Permission { PermissionCode = "USERS_VIEW", PermissionName = "Xem danh sách Người dùng", ModuleCode = "USERS", ModuleName = "Người dùng", ActionType = PermissionAction.VIEW, Description = "Quản lý tài khoản nhân viên" },
             new Permission { PermissionCode = "USERS_EDIT", PermissionName = "Tạo mới / Sửa / Khóa Người dùng", ModuleCode = "USERS", ModuleName = "Người dùng", ActionType = PermissionAction.EDIT, Description = "Quản lý tài khoản nhân viên" },
@@ -187,7 +189,7 @@ public static class AuthSeeder
             ["MGT"] = new[]
             {
                 "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "CAMPAIGN_APPROVE", "CAMPAIGN_CANCEL",
-                "DONORS_VIEW", "APPOINTMENTS_VIEW", "SURVEY_VIEW", "SCREENING_VIEW", "SESSION_VIEW", "INVENTORY_VIEW", "LAB_VIEW"
+                "DONORS_VIEW", "APPOINTMENTS_VIEW", "SURVEY_VIEW", "SCREENING_VIEW", "SESSION_VIEW", "INVENTORY_VIEW", "LAB_VIEW", "PROCESSING_VIEW"
             },
             ["CLIN"] = new[]
             {
@@ -206,7 +208,7 @@ public static class AuthSeeder
             },
             ["BBNK"] = new[]
             {
-                "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "DONORS_VIEW", "SCREENING_VIEW", "SESSION_VIEW", "INVENTORY_VIEW", "INVENTORY_EDIT", "LAB_VIEW", "LAB_EDIT"
+                "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "DONORS_VIEW", "SCREENING_VIEW", "SESSION_VIEW", "INVENTORY_VIEW", "INVENTORY_EDIT", "LAB_VIEW", "LAB_EDIT", "PROCESSING_VIEW", "PROCESSING_EDIT"
             }
         };
 
