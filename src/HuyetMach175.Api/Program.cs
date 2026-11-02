@@ -7,6 +7,7 @@ using HuyetMach175.SharedKernel.Services;
 
 using HuyetMach175.Modules.Auth;
 using HuyetMach175.Modules.Donation;
+using HuyetMach175.Modules.Inventory;
 
 using Scalar.AspNetCore;
 using Microsoft.OpenApi;
@@ -20,6 +21,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddDonationModule();
+builder.Services.AddInventoryModule();
 builder.Services.AddPermissionAuthorization();
 
 builder.Services.AddCors(options =>

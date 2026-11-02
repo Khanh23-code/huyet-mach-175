@@ -120,6 +120,8 @@ public static class DbInitializer
 
             new Permission { PermissionCode = "SESSION_VIEW", PermissionName = "Xem danh sách và chi tiết Phiên lấy máu", ModuleCode = "SESSIONS", ModuleName = "Thu gom máu", ActionType = PermissionAction.VIEW, Description = "Quản lý phiên lấy máu và thu gom" },
             new Permission { PermissionCode = "SESSION_EDIT", PermissionName = "Thực hiện thu gom và đóng Phiên lấy máu", ModuleCode = "SESSIONS", ModuleName = "Thu gom máu", ActionType = PermissionAction.EDIT, Description = "Quản lý phiên lấy máu và thu gom" },
+            new Permission { PermissionCode = "INVENTORY_VIEW", PermissionName = "Xem danh sách Túi máu và Vị trí kho", ModuleCode = "INVENTORY", ModuleName = "Kho máu", ActionType = PermissionAction.VIEW, Description = "Quản lý tồn kho túi máu và vị trí lưu trữ" },
+            new Permission { PermissionCode = "INVENTORY_EDIT", PermissionName = "Tiếp nhận túi máu về Viện", ModuleCode = "INVENTORY", ModuleName = "Kho máu", ActionType = PermissionAction.EDIT, Description = "Tiếp nhận và lưu trữ túi máu sau thu gom" },
 
             new Permission { PermissionCode = "USERS_VIEW", PermissionName = "Xem danh sách Người dùng", ModuleCode = "USERS", ModuleName = "Người dùng", ActionType = PermissionAction.VIEW, Description = "Quản lý tài khoản nhân viên" },
             new Permission { PermissionCode = "USERS_EDIT", PermissionName = "Tạo mới / Sửa / Khóa Người dùng", ModuleCode = "USERS", ModuleName = "Người dùng", ActionType = PermissionAction.EDIT, Description = "Quản lý tài khoản nhân viên" },
@@ -185,7 +187,7 @@ public static class DbInitializer
             ["MGT"] = new[]
             {
                 "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "CAMPAIGN_APPROVE", "CAMPAIGN_CANCEL",
-                "DONORS_VIEW", "APPOINTMENTS_VIEW", "SURVEY_VIEW", "SCREENING_VIEW", "SESSION_VIEW"
+                "DONORS_VIEW", "APPOINTMENTS_VIEW", "SURVEY_VIEW", "SCREENING_VIEW", "SESSION_VIEW", "INVENTORY_VIEW"
             },
             ["CLIN"] = new[]
             {
@@ -204,7 +206,7 @@ public static class DbInitializer
             },
             ["BBNK"] = new[]
             {
-                "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "DONORS_VIEW", "SCREENING_VIEW", "SESSION_VIEW"
+                "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "DONORS_VIEW", "SCREENING_VIEW", "SESSION_VIEW", "INVENTORY_VIEW", "INVENTORY_EDIT"
             }
         };
 
@@ -359,6 +361,7 @@ public static class DbInitializer
         }
 
         await SeedAppointmentsAndSurveysAsync(context);
+        await SeedStorageLocationsAsync(context);
     }
 
     private static async Task EnsureSchemaUpdatedAsync(ApplicationDbContext context)
@@ -604,5 +607,60 @@ public static class DbInitializer
 
             await context.SaveChangesAsync();
         }
+    }
+
+    private static async Task SeedStorageLocationsAsync(ApplicationDbContext context)
+    {
+        if (await context.StorageLocations.AnyAsync())
+        {
+            return;
+        }
+
+        var locations = new[]
+        {
+            new StorageLocation
+            {
+                RefrigeratorName = "Tủ lạnh bảo quản máu toàn phần 1",
+                ShelfNumber = "Ngăn A1",
+                TargetTemperature = 4.0m,
+                IsFull = false,
+                IsActive = true
+            },
+            new StorageLocation
+            {
+                RefrigeratorName = "Tủ lạnh bảo quản máu toàn phần 1",
+                ShelfNumber = "Ngăn A2",
+                TargetTemperature = 4.0m,
+                IsFull = false,
+                IsActive = true
+            },
+            new StorageLocation
+            {
+                RefrigeratorName = "Tủ lạnh bảo quản khối hồng cầu 1",
+                ShelfNumber = "Ngăn B1",
+                TargetTemperature = 4.0m,
+                IsFull = false,
+                IsActive = true
+            },
+            new StorageLocation
+            {
+                RefrigeratorName = "Tủ đông huyết tương 1",
+                ShelfNumber = "Ngăn C1",
+                TargetTemperature = -25.0m,
+                IsFull = false,
+                IsActive = true
+            },
+            new StorageLocation
+            {
+                RefrigeratorName = "Tủ lắc tiểu cầu 1",
+                ShelfNumber = "Kệ T1",
+                TargetTemperature = 22.0m,
+                IsFull = false,
+                IsActive = true
+            }
+        };
+
+        context.StorageLocations.AddRange(locations);
+        await context.SaveChangesAsync();
     }
 }
