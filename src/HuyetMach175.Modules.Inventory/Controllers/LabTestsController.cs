@@ -77,4 +77,30 @@ public class LabTestsController : ControllerBase
         var result = await _labTestsService.RecordLabTestAsync(request, userId, ipAddress);
         return Ok(result);
     }
+
+    [HttpGet("bag/{identifier}")]
+    [HasPermission("LAB_VIEW")]
+    [EndpointSummary("Xem chi tiết kết quả xét nghiệm của 1 túi máu")]
+    [EndpointDescription(
+        "Tra cứu toàn bộ kết quả xét nghiệm sàng lọc 5 bệnh truyền nhiễm, nhóm máu khẳng định ABO/Rh, tên KTV thực hiện và kết luận tổng thể của túi máu theo mã vạch barcode hoặc bagId.\n\n" +
+        "**Quy tắc nghiệp vụ:**\n" +
+        "- Tìm kiếm linh hoạt theo chuỗi `barcode` (mã vạch túi máu) hoặc `bagId` (ID số nguyên).\n" +
+        "- Trả về đầy đủ 5 chỉ số: HIV, HBV, HCV, Giang mai, Kháng thể bất thường, cùng nhóm máu khẳng định và thông tin KTV.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **LAB_VIEW** (các vai trò như BBNK, MGT, CLIN).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Trả về chi tiết kết quả xét nghiệm.\n" +
+        "- 400 BadRequest: Mã định danh không hợp lệ.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền truy cập LAB_VIEW.\n" +
+        "- 404 NotFound: Không tìm thấy túi máu hoặc túi máu chưa có kết quả xét nghiệm.")]
+    [ProducesResponseType(typeof(LabTestResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetLabTestByBagIdentifier([FromRoute] string identifier)
+    {
+        var result = await _labTestsService.GetLabTestByBagIdentifierAsync(identifier);
+        return Ok(result);
+    }
 }

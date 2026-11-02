@@ -105,7 +105,6 @@ public class LabTestsService : ILabTestsService
         }
 
         var antibodyResult = request.IrregularAntibody ?? request.MalariaResult ?? TestResult.NEGATIVE;
-
         int? numericId = int.TryParse(identifier, out var parsedId) ? parsedId : null;
 
         var bloodBag = await _context.BloodBags
@@ -256,6 +255,62 @@ public class LabTestsService : ILabTestsService
             TechnicianName = technicianName,
             TestedAt = now,
             Message = userMessage
+        };
+    }
+
+    public async Task<LabTestResultDto> GetLabTestByBagIdentifierAsync(string identifier)
+    {
+        if (string.IsNullOrWhiteSpace(identifier))
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Mã định danh túi máu (barcode hoặc bagId) không được để trống.");
+        }
+
+        var trimmed = identifier.Trim();
+        int? numericId = int.TryParse(trimmed, out var parsedId) ? parsedId : null;
+
+        var bloodBag = await _context.BloodBags
+            .AsNoTracking()
+            .Include(b => b.TestResults)
+                .ThenInclude(tr => tr.Technician)
+            .FirstOrDefaultAsync(b => b.Barcode == trimmed || (numericId.HasValue && b.BagId == numericId.Value));
+
+        if (bloodBag == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy túi máu với mã '{trimmed}'.");
+        }
+
+        var testResult = bloodBag.TestResults
+            .OrderByDescending(tr => tr.TestedAt)
+            .FirstOrDefault();
+
+        if (testResult == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Túi máu '{bloodBag.Barcode}' hiện chưa có kết quả xét nghiệm.");
+        }
+
+        var confirmedGroup = $"{(testResult.ConfirmedBloodType == BloodType.AB ? "AB" : testResult.ConfirmedBloodType.ToString())}{(testResult.ConfirmedRh == RhFactor.POSITIVE ? "+" : "-")}";
+        var technicianName = testResult.Technician?.FullName ?? $"KTV #{testResult.TechnicianId}";
+
+        return new LabTestResultDto
+        {
+            TestId = testResult.TestId,
+            BagId = bloodBag.BagId,
+            Barcode = bloodBag.Barcode,
+            HivResult = testResult.HivResult.ToString(),
+            HbvResult = testResult.HbvResult.ToString(),
+            HcvResult = testResult.HcvResult.ToString(),
+            SyphilisResult = testResult.SyphilisResult.ToString(),
+            IrregularAntibody = testResult.IrregularAntibody.ToString(),
+            ConfirmedBloodType = testResult.ConfirmedBloodType.ToString(),
+            ConfirmedRhFactor = testResult.ConfirmedRh.ToString(),
+            ConfirmedBloodGroup = confirmedGroup,
+            OverallConclusion = testResult.OverallConclusion.ToString(),
+            NewBagStatus = bloodBag.Status.ToString(),
+            DiscardReason = bloodBag.DiscardReason,
+            TechnicianId = testResult.TechnicianId,
+            TechnicianName = technicianName,
+            TestedAt = testResult.TestedAt,
+            Message = $"Kết quả xét nghiệm túi máu {bloodBag.Barcode} ({testResult.OverallConclusion})."
         };
     }
 }
