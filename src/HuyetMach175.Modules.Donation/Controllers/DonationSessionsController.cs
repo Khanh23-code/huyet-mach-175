@@ -37,7 +37,8 @@ public class DonationSessionsController : ControllerBase
         "- 200 OK: Trả về danh sách phiên lấy máu phân trang.\n" +
         "- 400 BadRequest: Tham số phân trang không hợp lệ.\n" +
         "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
-        "- 403 Forbidden: Không có quyền truy cập SESSION_VIEW.")]
+        "- 403 Forbidden: Không có quyền truy cập SESSION_VIEW."
+    )]
     [ProducesResponseType(typeof(PagedResult<SessionQueueItemDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -63,7 +64,8 @@ public class DonationSessionsController : ControllerBase
         "- 400 BadRequest: ID phiên lấy máu không hợp lệ.\n" +
         "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
         "- 403 Forbidden: Không có quyền truy cập SESSION_VIEW.\n" +
-        "- 404 NotFound: Không tìm thấy phiên lấy máu với ID chỉ định.")]
+        "- 404 NotFound: Không tìm thấy phiên lấy máu với ID chỉ định."
+    )]
     [ProducesResponseType(typeof(SessionDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -90,7 +92,8 @@ public class DonationSessionsController : ControllerBase
         "- 400 BadRequest: Dữ liệu không hợp lệ hoặc phiên đã đóng trước đó.\n" +
         "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
         "- 403 Forbidden: Không có quyền truy cập SESSION_EDIT.\n" +
-        "- 404 NotFound: Không tìm thấy phiên lấy máu.")]
+        "- 404 NotFound: Không tìm thấy phiên lấy máu."
+    )]
     [ProducesResponseType(typeof(CollectionResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -101,7 +104,35 @@ public class DonationSessionsController : ControllerBase
         [FromBody] UpdateCollectionRequest request)
     {
         var phlebotomistId = User.GetUserId();
-        var result = await _sessionsService.CompleteCollectionAsync(id, request, phlebotomistId);
+        var result = await _sessionsService.CompleteCollectionAsync(
+            id, request, phlebotomistId);
+
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/start")]
+    [HasPermission("SESSION_EDIT")]
+    [EndpointSummary("Bắt đầu lấy máu và sinh túi máu (barcode)")]
+    [EndpointDescription(
+        "KTV bấm bắt đầu lấy máu: hệ thống tạo túi máu `NEWLY_COLLECTED` gắn với phiên và trả về barcode để in tem dán lên túi trước khi cắm kim.\n\n" +
+        "**Quy tắc nghiệp vụ:**\n" +
+        "- Chỉ phiên đang `WAITING_COLLECTION` mới được bắt đầu.\n" +
+        "- Idempotent: gọi lại sẽ trả về túi đã tạo (`isNewBag = false`), không tạo túi mới.\n" +
+        "- Thể tích ban đầu của túi = thể tích mục tiêu Bác sĩ chỉ định, được cập nhật thành thể tích thực tế khi hoàn tất.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **SESSION_EDIT**.\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Trả về thông tin túi máu và barcode.\n" +
+        "- 400 BadRequest: Phiên không còn ở trạng thái chờ lấy máu.\n" +
+        "- 401 Unauthorized / 403 Forbidden / 404 NotFound."
+    )]
+    [ProducesResponseType(typeof(StartCollectionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> StartCollection([FromRoute] int id)
+    {
+        var result = await _sessionsService.StartCollectionAsync(id, User.GetUserId());
         return Ok(result);
     }
 }

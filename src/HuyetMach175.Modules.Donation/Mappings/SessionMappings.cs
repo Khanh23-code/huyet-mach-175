@@ -1,5 +1,4 @@
 using HuyetMach175.Api.Data.Entities;
-using HuyetMach175.Api.Data.Enums;
 using HuyetMach175.Modules.Donation.DTOs.Sessions;
 
 namespace HuyetMach175.Modules.Donation.Mappings;
@@ -19,6 +18,8 @@ public static class SessionMappings
             AppointmentId = session.AppointmentId,
             DonorCode = donor != null ? $"NH-{donor.DonorId:D6}" : string.Empty,
             DonorName = donor?.FullName ?? string.Empty,
+            BloodType = donor?.BloodType?.ToString(),
+            RhFactor = BloodBagLabel.RhLabel(donor?.RhFactor),
             TargetVolumeMl = session.TargetVolumeMl.ToString(),
             Status = session.Status.ToString(),
             ScreenedAt = survey?.ScreenedAt,
@@ -33,20 +34,13 @@ public static class SessionMappings
         var survey = appointment?.PreScreeningSurvey;
         var doctor = survey?.Doctor;
         var phlebotomist = session.Phlebotomist;
-        var bloodBag = session.BloodBags.FirstOrDefault();
+        var bloodBag = session.BloodBags.OrderBy(b => b.BagId).FirstOrDefault();
 
         string? bloodPressure = null;
         if (survey?.SystolicBloodPressure != null && survey?.DiastolicBloodPressure != null)
         {
             bloodPressure = $"{survey.SystolicBloodPressure}/{survey.DiastolicBloodPressure}";
         }
-
-        string? rhFactorStr = donor?.RhFactor switch
-        {
-            RhFactor.POSITIVE => "Rh+",
-            RhFactor.NEGATIVE => "Rh-",
-            _ => null
-        };
 
         return new SessionDetailDto
         {
@@ -60,6 +54,15 @@ public static class SessionMappings
             PhlebotomistName = phlebotomist?.FullName,
             CompletedAt = session.CompletedAt,
             BloodBagBarcode = bloodBag?.Barcode,
+            BloodBag = bloodBag == null ? null : new SessionBloodBagDto
+            {
+                BagId = bloodBag.BagId,
+                Barcode = bloodBag.Barcode,
+                BloodGroup = BloodBagLabel.GroupLabel(bloodBag.BloodType, bloodBag.RhFactor),
+                VolumeMl = bloodBag.VolumeMl,
+                CollectedAt = bloodBag.CollectedAt,
+                Status = bloodBag.Status.ToString()
+            },
 
             Donor = new SessionDonorDto
             {
@@ -69,7 +72,7 @@ public static class SessionMappings
                 CitizenId = donor?.CitizenId ?? string.Empty,
                 Gender = donor?.Gender ?? string.Empty,
                 BloodType = donor?.BloodType?.ToString(),
-                RhFactor = rhFactorStr
+                RhFactor = BloodBagLabel.RhLabel(donor?.RhFactor)
             },
 
             ScreeningSummary = new SessionScreeningSummaryDto
