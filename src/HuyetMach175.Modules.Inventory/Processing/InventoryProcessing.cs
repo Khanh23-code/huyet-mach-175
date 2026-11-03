@@ -42,4 +42,11 @@ public static class InventoryProcessing
 
         return status.ToString();
     }
+
+    public static string FormatBloodGroup(BloodType bloodType, RhFactor rhFactor)
+    {
+        var typeStr = bloodType == BloodType.AB ? "AB" : bloodType.ToString();
+        var rhStr = rhFactor == RhFactor.POSITIVE ? "+" : "-";
+        return $"{typeStr}{rhStr}";
+    }
 }

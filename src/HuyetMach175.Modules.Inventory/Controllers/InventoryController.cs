@@ -1,3 +1,4 @@
+using HuyetMach175.Modules.Inventory.DTOs.Common;
 using HuyetMach175.Modules.Inventory.DTOs.Inventory;
 using HuyetMach175.Modules.Inventory.Services;
 using HuyetMach175.SharedKernel.Authorization;
@@ -39,6 +40,27 @@ public class InventoryController : ControllerBase
     public async Task<IActionResult> GetInventorySummary([FromQuery] InventorySummaryFilterDto filter)
     {
         var result = await _inventoryService.GetInventorySummaryAsync(filter);
+        return Ok(result);
+    }
+
+    [HttpGet("expiring-soon")]
+    [HasPermission("INVENTORY_VIEW")]
+    [EndpointSummary("Tra cứu túi máu sắp hết hạn (Cảnh báo cận hạn FEFO)")]
+    [EndpointDescription(
+        "Lấy danh sách các túi máu sắp hết hạn theo ngưỡng ngày (`daysThreshold`, mặc định ≤ 3 ngày).\n\n" +
+        "**Mục đích nghiệp vụ:** Hỗ trợ kỹ thuật viên và bác sĩ ưu tiên xuất kho theo nguyên tắc FEFO (First Expired, First Out) để tránh lãng phí máu.\n\n" +
+        "**Bộ lọc & Phân trang:**\n" +
+        "- `daysThreshold`: Số ngày cận hạn (mặc định 3 ngày).\n" +
+        "- `bloodType`, `rhFactor`, `componentType`: Lọc theo nhóm máu và loại chế phẩm.\n" +
+        "- `storageLocationId`: Lọc theo vị trí tủ/ngăn bảo quản.\n" +
+        "- `pageNumber`, `pageSize`: Hỗ trợ phân trang kết quả.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **INVENTORY_VIEW**.")]
+    [ProducesResponseType(typeof(PagedResult<ExpiringSoonBagDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetExpiringSoonBags([FromQuery] ExpiringSoonFilterDto filter)
+    {
+        var result = await _inventoryService.GetExpiringSoonBagsAsync(filter);
         return Ok(result);
     }
 }
