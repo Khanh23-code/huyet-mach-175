@@ -12,6 +12,7 @@ public static class DependencyInjection
         services.AddScoped<IBloodBagsService, BloodBagsService>();
         services.AddScoped<ILabTestsService, LabTestsService>();
         services.AddScoped<IBloodProcessingService, BloodProcessingService>();
+        services.AddScoped<IBloodDisposalsService, BloodDisposalsService>();
 
         services.AddControllers()
             .AddApplicationPart(typeof(DependencyInjection).Assembly);
