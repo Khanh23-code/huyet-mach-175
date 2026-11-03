@@ -21,4 +21,10 @@ public class StorageLocationDto
 
     [JsonPropertyName("isActive")]
     public bool IsActive { get; set; }
+
+    [JsonPropertyName("currentBagsCount")]
+    public int CurrentBagsCount { get; set; }
+
+    [JsonPropertyName("expiringSoonBagsCount")]
+    public int ExpiringSoonBagsCount { get; set; }
 }
