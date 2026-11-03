@@ -51,5 +51,11 @@ public class UpdateClinicalScreeningRequest
 
     [JsonPropertyName("targetVolumeMl")]
     public TargetVolume? TargetVolumeMl { get; set; }
+
+    [JsonPropertyName("bloodType")]
+    public BloodType? BloodType { get; set; }
+
+    [JsonPropertyName("rhFactor")]
+    public RhFactor? RhFactor { get; set; }
 }
 
