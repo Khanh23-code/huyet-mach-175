@@ -14,12 +14,14 @@ import ScreeningPage from '@/features/screening/pages/ScreeningPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import RouteErrorBoundary from '@/components/RouteErrorBoundary'
 import { findRouteItem } from '@/config/routeConfig'
+import SessionPage from '@/features/sessions/pages/SessionPage'
 
 const usersRoute = findRouteItem('users')
 const siteListRoute = findRouteItem('site-list')
 const proposalsRoute = findRouteItem('site-proposals')
 const queueRoute = findRouteItem('queue')
 const screeningRoute = findRouteItem('screening')
+const sessionsRoute = findRouteItem('sessions')
 
 export const router = createBrowserRouter([
     {
@@ -65,6 +67,10 @@ export const router = createBrowserRouter([
                     {
                         element: <ProtectedRoute requiredPermission={screeningRoute.requiredPermission} />,
                         children: [{ path: screeningRoute.path, element: <ScreeningPage /> }],
+                    },
+                    {
+                        element: <ProtectedRoute requiredPermission={sessionsRoute.requiredPermission} />,
+                        children: [{ path: sessionsRoute.path, element: <SessionPage /> }],
                     },
                     { path: '*', element: <NotFoundPage /> },
                 ],
