@@ -243,6 +243,7 @@ public class SurveysService : ISurveysService
         }
 
         var appointment = await _context.DonationAppointments
+            .Include(a => a.Donor)
             .Include(a => a.PreScreeningSurvey)
             .Include(a => a.DonationSession)
             .FirstOrDefaultAsync(a => a.AppointmentId == appointmentId);
@@ -266,6 +267,22 @@ public class SurveysService : ISurveysService
             appointment.DonationSession.Status == SessionStatus.COMPLETED)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Phiên hiến máu đã hoàn thành, không thể sửa kết luận khám sàng lọc.");
+        }
+
+        var donor = appointment.Donor;
+        BloodType? finalBloodType = null;
+        RhFactor? finalRh = null;
+
+        if (request.ScreeningStatus == ScreeningStatus.QUALIFIED)
+        {
+            // Ưu tiên giá trị bác sĩ vừa nhập, nếu không gửi thì dùng nhóm máu đã có trong hồ sơ.
+            finalBloodType = request.BloodType ?? donor?.BloodType;
+            finalRh = request.RhFactor ?? donor?.RhFactor;
+
+            if (finalBloodType is null || finalRh is null)
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, "Bắt buộc phải xác định nhóm máu (ABO và Rh) của người hiến khi kết luận Đạt tiêu chuẩn.");
+            }
         }
 
         var now = DateTime.UtcNow;
@@ -312,6 +329,37 @@ public class SurveysService : ISurveysService
         survey.ScreenedAt = now;
 
         await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        if (donor != null && finalBloodType.HasValue && finalRh.HasValue &&
+            (donor.BloodType != finalBloodType || donor.RhFactor != finalRh))
+        {
+            var hadBefore = donor.BloodType.HasValue || donor.RhFactor.HasValue;
+
+            _context.AuditLogs.Add(new AuditLog
+            {
+                TableName = "donors",
+                RecordId = donor.DonorId,
+                ActionType = ActionType.UPDATE,
+                OldState = JsonSerializer.Serialize(new
+                {
+                    bloodType = donor.BloodType?.ToString(),
+                    rhFactor = donor.RhFactor?.ToString()
+                }),
+                NewState = JsonSerializer.Serialize(new
+                {
+                    bloodType = finalBloodType.Value.ToString(),
+                    rhFactor = finalRh.Value.ToString()
+                }),
+                PerformedBy = doctorId,
+                ChangeReason = hadBefore
+                    ? "Bác sĩ hiệu chỉnh nhóm máu của người hiến tại bước khám sàng lọc."
+                    : "Bác sĩ xác nhận nhóm máu của người hiến tại bước khám sàng lọc.",
+                CreatedAt = now
+            });
+
+            donor.BloodType = finalBloodType;
+            donor.RhFactor = finalRh;
+        }
 
         DonationSession? session = appointment.DonationSession;
 

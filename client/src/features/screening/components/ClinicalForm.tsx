@@ -4,6 +4,8 @@ import { CheckOutlined, HeartOutlined } from '@ant-design/icons'
 import { parseApiError } from '@/services/apiError'
 import { useSaveClinical } from '../hooks'
 import {
+    ABO_OPTIONS,
+    RH_OPTIONS,
     validateClinical,
     valuesFromClinical,
     type ClinicalFormValues,
@@ -48,7 +50,7 @@ function Field({
 export default function ClinicalForm({ detail, editable, sendAnswers, answers, onSaved }: Props) {
     const { message, modal } = App.useApp()
     const save = useSaveClinical()
-    const [v, setV] = useState<ClinicalFormValues>(() => valuesFromClinical(detail.clinical))
+    const [v, setV] = useState<ClinicalFormValues>(() => valuesFromClinical(detail.clinical, detail.donor))
     const [errors, setErrors] = useState<FormErrors>({})
     const [pending, setPending] = useState<Conclusion | null>(null)
 
@@ -149,6 +151,37 @@ export default function ClinicalForm({ detail, editable, sendAnswers, answers, o
                         onChange={(val) => set('targetVolume', val)}
                     />
                 </Field>
+
+                <div className="sc-form-grid">
+                    <Field label="Nhóm máu (ABO)" required error={errors.bloodType}>
+                        <Select
+                            size="large"
+                            placeholder="Chọn nhóm máu"
+                            disabled={!editable}
+                            options={ABO_OPTIONS}
+                            value={v.bloodType || undefined}
+                            status={errors.bloodType ? 'error' : undefined}
+                            onChange={(val) => set('bloodType', val)}
+                        />
+                    </Field>
+                    <Field label="Yếu tố Rh" required error={errors.rhFactor}>
+                        <Select
+                            size="large"
+                            placeholder="Chọn Rh"
+                            disabled={!editable}
+                            options={RH_OPTIONS}
+                            value={v.rhFactor || undefined}
+                            status={errors.rhFactor ? 'error' : undefined}
+                            onChange={(val) => set('rhFactor', val)}
+                        />
+                    </Field>
+                </div>
+                {editable && detail.donor.bloodType && (
+                    <div className="sc-muted" style={{ marginBottom: 16 }}>
+                        Hồ sơ đang ghi nhóm máu {detail.donor.bloodType}
+                        {detail.donor.rhFactor ?? ''}. Nếu chỉnh sửa, thay đổi sẽ được ghi nhật ký.
+                    </div>
+                )}
 
                 <Field label="Ghi chú khám lâm sàng" error={errors.notes}>
                     <Input.TextArea

@@ -27,4 +27,10 @@ public class SessionQueueItemDto
 
     [JsonPropertyName("doctorName")]
     public string? DoctorName { get; set; }
+
+    [JsonPropertyName("bloodType")]
+    public string? BloodType { get; set; }
+
+    [JsonPropertyName("rhFactor")]
+    public string? RhFactor { get; set; }
 }

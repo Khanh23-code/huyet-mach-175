@@ -46,6 +46,7 @@ export const ROUTE_GROUPS: RouteGroup[] = [
         children: [
             { key: 'queue', label: 'Hàng chờ tiếp nhận', path: '/btd/queue', requiredPermission: PERMISSIONS.APPOINTMENTS_VIEW },
             { key: 'screening', label: 'Khám sàng lọc', path: '/btd/screening', requiredPermission: PERMISSIONS.SCREENING_VIEW },
+            { key: 'sessions', label: 'Phiên lấy máu', path: '/btd/sessions', requiredPermission: PERMISSIONS.SESSION_VIEW },
         ],
     },
     {
