@@ -109,6 +109,7 @@ public static class BloodDisposalMappings
     public static string FormatDisposalStatusText(DisposalStatus status) => status switch
     {
         DisposalStatus.PENDING_APPROVAL => "Chờ phê duyệt",
+        DisposalStatus.APPROVED => "Đã phê duyệt (Chờ tiêu hủy)",
         DisposalStatus.DISPOSED => "Đã tiêu hủy",
         DisposalStatus.REJECTED => "Từ chối tiêu hủy",
         DisposalStatus.CANCELLED => "Đã hủy yêu cầu",

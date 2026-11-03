@@ -28,7 +28,7 @@ public class BloodDisposalsController : ControllerBase
     [EndpointDescription(
         "Lấy danh sách các biên bản/hồ sơ đề xuất tiêu hủy lô túi máu có phân trang và bộ lọc theo trạng thái, lý do, từ khóa tìm kiếm và khoảng thời gian.\n\n" +
         "**Bộ lọc & Phân trang:**\n" +
-        "- `status`: Lọc theo trạng thái biên bản (`PENDING_APPROVAL`, `DISPOSED`, `REJECTED`, `CANCELLED`).\n" +
+        "- `status`: Lọc theo trạng thái biên bản (`PENDING_APPROVAL`, `APPROVED`, `DISPOSED`, `REJECTED`, `CANCELLED`).\n" +
         "- `reason`: Lọc theo lý do tiêu hủy (`EXPIRED`, `INFECTIOUS_POSITIVE`, `HEMOLYSIS`, `DAMAGED_BAG`, `OTHER`).\n" +
         "- `search`: Tìm kiếm theo mã biên bản (`disposalCode`) hoặc mã barcode túi máu con trong lô.\n" +
         "- `fromDate` / `toDate`: Lọc theo ngày tạo đề xuất (định dạng YYYY-MM-DD).\n" +
@@ -83,7 +83,7 @@ public class BloodDisposalsController : ControllerBase
         "**Quy tắc nghiệp vụ:**\n" +
         "- Chỉ định danh sách mã vạch `barcodes` của các túi máu trong lô (tối thiểu 1 túi).\n" +
         "- Tất cả túi máu phải tồn tại và không ở trạng thái đã truyền (TRANSFUSED), đã xuất (ISSUED) hoặc đã tiêu hủy (DISCARDED).\n" +
-        "- Không túi máu nào được nằm trong một biên bản tiêu hủy khác đang chờ duyệt (PENDING_APPROVAL).\n" +
+        "- Không túi máu nào được nằm trong một biên bản tiêu hủy khác đang chờ xử lý (PENDING_APPROVAL hoặc APPROVED).\n" +
         "- Khi lập biên bản thành công, trạng thái toàn bộ các túi máu trong lô được tự động chuyển sang tạm khóa (**LOCKED**) để tránh bị cấp phát hay điều chế trong lúc chờ duyệt.\n" +
         "- Tự động ghi vết vào nhật ký kiểm toán hệ thống (AuditLog).\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **DISPOSAL_EDIT** (vai trò BBNK).\n\n" +
@@ -133,6 +133,35 @@ public class BloodDisposalsController : ControllerBase
         var userId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var result = await _bloodDisposalsService.CancelDisposalAsync(id, request, userId, ipAddress);
+        return Ok(result);
+    }
+
+    [HttpPatch("{id:int}/approval")]
+    [HasPermission("DISPOSAL_APPROVE")]
+    [EndpointSummary("Phê duyệt hoặc từ chối biên bản tiêu hủy túi máu (Dành cho Lãnh đạo)")]
+    [EndpointDescription(
+        "Lãnh đạo bệnh viện (MGT) duyệt hoặc từ chối biên bản tiêu hủy túi máu đang ở trạng thái **PENDING_APPROVAL**:\n\n" +
+        "**Quy tắc nghiệp vụ:**\n" +
+        "- Nếu đồng ý (`isApproved: true`): Trạng thái biên bản chuyển sang **APPROVED** (Đã phê duyệt - chờ KTV thực thi tiêu hủy vật lý), các túi máu vẫn giữ trạng thái tạm khóa (`LOCKED`).\n" +
+        "- Nếu từ chối (`isApproved: false`): Bắt buộc phải có lý do từ chối (`rejectionReason`). Trạng thái chuyển sang **REJECTED**, toàn bộ túi máu trong lô được tự động mở khóa và khôi phục về trạng thái ban đầu.\n" +
+        "- Thông tin người duyệt (`approvedBy`) và thời điểm duyệt (`approvedAt`) được tự động lưu trữ kiểm toán.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **DISPOSAL_APPROVE** (vai trò MGT).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Xét duyệt thành công, trả về chi tiết biên bản sau khi cập nhật.\n" +
+        "- 400 BadRequest: Biên bản không ở trạng thái PENDING_APPROVAL hoặc thiếu lý do từ chối.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền truy cập DISPOSAL_APPROVE.\n" +
+        "- 404 NotFound: Không tìm thấy biên bản đề xuất tiêu hủy tương ứng.")]
+    [ProducesResponseType(typeof(DisposalDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ApproveDisposal([FromRoute] int id, [FromBody] ApproveDisposalRequest request)
+    {
+        var userId = User.GetUserId();
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var result = await _bloodDisposalsService.ApproveDisposalAsync(id, request, userId, ipAddress);
         return Ok(result);
     }
 }

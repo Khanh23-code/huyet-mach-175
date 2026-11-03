@@ -170,13 +170,14 @@ public class BloodDisposalsService : IBloodDisposalsService
         var pendingItems = await _context.BloodDisposalItems
             .Include(i => i.DisposalRecord)
             .Include(i => i.BloodBag)
-            .Where(i => bagIds.Contains(i.BagId) && i.DisposalRecord != null && i.DisposalRecord.Status == DisposalStatus.PENDING_APPROVAL)
+            .Where(i => bagIds.Contains(i.BagId) && i.DisposalRecord != null &&
+                        (i.DisposalRecord.Status == DisposalStatus.PENDING_APPROVAL || i.DisposalRecord.Status == DisposalStatus.APPROVED))
             .ToListAsync();
 
         if (pendingItems.Count > 0)
         {
             var conflictBarcodes = pendingItems.Select(i => i.BloodBag?.Barcode ?? i.BagId.ToString()).Distinct().ToList();
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Các túi máu sau hiện đã nằm trong biên bản tiêu hủy đang chờ duyệt: {string.Join(", ", conflictBarcodes)}.");
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Các túi máu sau hiện đã nằm trong biên bản tiêu hủy đang chờ xử lý: {string.Join(", ", conflictBarcodes)}.");
         }
 
         var todayPrefix = $"DSP-{DateTime.UtcNow:yyyyMMdd}-";
@@ -283,19 +284,10 @@ public class BloodDisposalsService : IBloodDisposalsService
             throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy phiếu đề xuất tiêu hủy với mã #{id}.");
         }
 
-        if (record.Status == DisposalStatus.CANCELLED)
+        if (record.Status != DisposalStatus.PENDING_APPROVAL)
         {
-            throw new HttpException(StatusCodes.Status400BadRequest, "Phiếu đề xuất tiêu hủy này đã được rút/hủy trước đó.");
-        }
-
-        if (record.Status == DisposalStatus.DISPOSED)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "Không thể rút phiếu tiêu hủy khi lô túi máu đã được phê duyệt và hoàn tất tiêu hủy.");
-        }
-
-        if (record.Status == DisposalStatus.REJECTED)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "Phiếu tiêu hủy này đã bị Lãnh đạo từ chối, không thể thực hiện thao tác rút đơn.");
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Chỉ có thể rút biên bản khi đang ở trạng thái chờ phê duyệt (PENDING_APPROVAL). Trạng thái hiện tại: {record.Status}.");
         }
 
         var now = DateTime.UtcNow;
@@ -347,6 +339,106 @@ public class BloodDisposalsService : IBloodDisposalsService
         _context.AuditLogs.Add(auditLog);
         await _context.SaveChangesAsync();
 
+        await transaction.CommitAsync();
+
+        return await GetDisposalByIdAsync(record.DisposalId);
+    }
+
+    public async Task<DisposalDetailDto> ApproveDisposalAsync(int id, ApproveDisposalRequest request, int userId, string? ipAddress)
+    {
+        if (id <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Mã biên bản đề xuất tiêu hủy không hợp lệ.");
+        }
+
+        var record = await _context.BloodDisposalRecords
+            .Include(r => r.Items)
+                .ThenInclude(i => i.BloodBag)
+            .FirstOrDefaultAsync(r => r.DisposalId == id);
+
+        if (record == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy biên bản đề xuất tiêu hủy với mã #{id}.");
+        }
+
+        if (record.Status != DisposalStatus.PENDING_APPROVAL)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Biên bản đang ở trạng thái '{record.Status}'. Chỉ có thể xét duyệt biên bản đang chờ phê duyệt (PENDING_APPROVAL).");
+        }
+
+        var now = DateTime.UtcNow;
+        using var transaction = await _context.Database.BeginTransactionAsync();
+
+        if (request.IsApproved)
+        {
+            record.Status = DisposalStatus.APPROVED;
+            record.ApprovedBy = userId;
+            record.ApprovedAt = now;
+            record.RejectionReason = null;
+
+            var auditLog = new AuditLog
+            {
+                TableName = "blood_disposal_records",
+                RecordId = record.DisposalId,
+                ActionType = ActionType.STATUS_CHANGE,
+                OldState = JsonSerializer.Serialize(new { status = DisposalStatus.PENDING_APPROVAL.ToString() }),
+                NewState = JsonSerializer.Serialize(new
+                {
+                    status = record.Status.ToString(),
+                    approvedBy = userId,
+                    totalBags = record.Items.Count
+                }),
+                PerformedBy = userId,
+                IpAddress = ipAddress,
+                ChangeReason = $"Lãnh đạo phê duyệt biên bản tiêu hủy {record.DisposalCode} cho lô {record.Items.Count} túi máu. Chuyển sang chờ tiêu hủy vật lý.",
+                CreatedAt = now
+            };
+            _context.AuditLogs.Add(auditLog);
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(request.RejectionReason))
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, "Vui lòng nhập lý do từ chối phê duyệt biên bản tiêu hủy.");
+            }
+
+            record.Status = DisposalStatus.REJECTED;
+            record.ApprovedBy = userId;
+            record.ApprovedAt = now;
+            record.RejectionReason = request.RejectionReason.Trim();
+
+            // Revert all bags back to previous status
+            foreach (var item in record.Items)
+            {
+                if (item.BloodBag != null)
+                {
+                    item.BloodBag.Status = item.PreviousStatus;
+                }
+            }
+
+            var auditLog = new AuditLog
+            {
+                TableName = "blood_disposal_records",
+                RecordId = record.DisposalId,
+                ActionType = ActionType.STATUS_CHANGE,
+                OldState = JsonSerializer.Serialize(new { status = DisposalStatus.PENDING_APPROVAL.ToString() }),
+                NewState = JsonSerializer.Serialize(new
+                {
+                    status = record.Status.ToString(),
+                    rejectionReason = record.RejectionReason,
+                    approvedBy = userId,
+                    revertedBags = record.Items.Count
+                }),
+                PerformedBy = userId,
+                IpAddress = ipAddress,
+                ChangeReason = $"Lãnh đạo từ chối biên bản tiêu hủy {record.DisposalCode}. Khôi phục trạng thái cho {record.Items.Count} túi máu. Lý do: {record.RejectionReason}",
+                CreatedAt = now
+            };
+            _context.AuditLogs.Add(auditLog);
+        }
+
+        await _context.SaveChangesAsync();
         await transaction.CommitAsync();
 
         return await GetDisposalByIdAsync(record.DisposalId);

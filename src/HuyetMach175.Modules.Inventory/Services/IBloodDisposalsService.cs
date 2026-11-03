@@ -9,4 +9,5 @@ public interface IBloodDisposalsService
     Task<DisposalDetailDto> GetDisposalByIdAsync(int id);
     Task<CreateDisposalResponse> CreateDisposalAsync(CreateDisposalRequest request, int userId, string? ipAddress);
     Task<DisposalDetailDto> CancelDisposalAsync(int id, CancelDisposalRequest? request, int userId, string? ipAddress);
+    Task<DisposalDetailDto> ApproveDisposalAsync(int id, ApproveDisposalRequest request, int userId, string? ipAddress);
 }
