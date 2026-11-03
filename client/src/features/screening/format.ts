@@ -47,15 +47,15 @@ export const VOLUME_OPTIONS = [
  * TODO: BE chưa trả nội dung câu hỏi. Đối chiếu nhãn dưới đây với bảng hỏi trên app người hiến.
  */
 export const QUESTIONS: { key: string; label: string; risk: boolean }[] = [
-    { key: 'q1_previous_donation', label: 'Đã từng hiến máu', risk: false },
-    { key: 'q2_chronic_diseases', label: 'Bệnh mãn tính / tiền sử bệnh lý', risk: true },
-    { key: 'q3_last_12_months', label: 'Vấn đề sức khỏe trong 12 tháng gần đây', risk: true },
-    { key: 'q4_last_6_months', label: 'Vấn đề sức khỏe trong 6 tháng gần đây', risk: true },
-    { key: 'q5_last_14_days', label: 'Vấn đề sức khỏe trong 14 ngày gần đây', risk: true },
-    { key: 'q6_last_7_days', label: 'Vấn đề sức khỏe trong 7 ngày gần đây', risk: true },
-    { key: 'q7_infectious_risk', label: 'Nguy cơ lây nhiễm', risk: true },
-    { key: 'q8_unexplained_symptoms', label: 'Triệu chứng bất thường chưa rõ nguyên nhân', risk: true },
-    { key: 'q9_female_specific', label: 'Câu hỏi dành riêng cho nữ giới', risk: true },
+    { key: 'q1_previous_donation', label: 'Anh/chị đã từng hiến máu chưa?', risk: false },
+    { key: 'q2_chronic_diseases', label: 'Anh/chị từng mắc các bệnh mãn tính hoặc nặng (Tim mạch, huyết áp, tiểu đường, ung thư, gan, thận, máu...)?', risk: true },
+    { key: 'q3_last_12_months', label: 'Trong 12 tháng gần đây: Có mắc sốt rét, giang mai, lao, phẫu thuật, được truyền máu, hoặc tiêm vắc-xin phòng dại?', risk: true },
+    { key: 'q4_last_6_months', label: 'Trong 06 tháng gần đây: Có xăm mình, bấm lỗ tai/mũi, châm cứu, nội soi, tiếp xúc máu người khác, hoặc sống chung với người bị viêm gan B?', risk: true },
+    { key: 'q5_last_14_days', label: 'Trong 14 ngày gần đây: Có bị cảm cúm, sốt, ho, đau họng, tiêu chảy, hoặc mới khỏi bệnh?', risk: true },
+    { key: 'q6_last_7_days', label: 'Trong 07 ngày gần đây: Có dùng thuốc kháng sinh, thuốc kháng viêm, Aspirin, Corticoid hoặc tiêm vắc-xin?', risk: true },
+    { key: 'q7_infectious_risk', label: 'Anh/chị có xét nghiệm HIV, Viêm gan B/C dương tính hoặc có hành vi quan hệ tình dục không an toàn, tiêm chích ma túy?', risk: true },
+    { key: 'q8_unexplained_symptoms', label: 'Gần đây có bị sụt cân nhanh không rõ nguyên nhân, nổi hạch kéo dài, xuất huyết bất thường?', risk: true },
+    { key: 'q9_female_specific', label: '(Dành riêng cho Nữ) Hiện có đang mang thai, nuôi con dưới 12 tháng tuổi, hoặc đang trong kỳ kinh nguyệt?', risk: true },
 ]
 
 export type Answers = Record<string, boolean>

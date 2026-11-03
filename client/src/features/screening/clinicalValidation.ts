@@ -1,5 +1,13 @@
 import type { Answers } from './format'
-import type { Conclusion, SurveyClinicalDetail, TargetVolume, UpdateClinicalRequest } from './types'
+import type {
+    AboGroup,
+    Conclusion,
+    RhValue,
+    SurveyClinicalDetail,
+    SurveyDonorSummary,
+    TargetVolume,
+    UpdateClinicalRequest,
+} from './types'
 
 /** Giá trị form để dạng chuỗi, chuyển sang số khi gửi. */
 export interface ClinicalFormValues {
@@ -11,6 +19,8 @@ export interface ClinicalFormValues {
     bodyTemp: string
     hbsag: '' | 'NEG' | 'POS'
     targetVolume: '' | TargetVolume
+    bloodType: '' | AboGroup
+    rhFactor: '' | RhValue
     notes: string
     deferralReason: string
 }
@@ -18,6 +28,12 @@ export interface ClinicalFormValues {
 export type FormErrors = Partial<Record<keyof ClinicalFormValues | '_form', string>>
 
 type NumField = 'weightKg' | 'systolic' | 'diastolic' | 'pulse' | 'hemoglobin' | 'bodyTemp'
+
+export const ABO_OPTIONS = (['A', 'B', 'AB', 'O'] as const).map((v) => ({ value: v, label: v }))
+export const RH_OPTIONS = [
+    { value: 'POSITIVE', label: 'Rh+ (dương)' },
+    { value: 'NEGATIVE', label: 'Rh- (âm)' },
+]
 
 // Khoảng hợp lệ lấy từ UpdateClinicalScreeningRequest ở BE
 const NUMERIC: { key: NumField; label: string; min: number; max: number; unit: string }[] = [
@@ -38,11 +54,22 @@ export const emptyValues = (): ClinicalFormValues => ({
     bodyTemp: '',
     hbsag: '',
     targetVolume: '',
+    bloodType: '',
+    rhFactor: '',
     notes: '',
     deferralReason: '',
 })
 
-export const valuesFromClinical = (c: SurveyClinicalDetail): ClinicalFormValues => ({
+const isAbo = (v?: string | null): v is AboGroup => v === 'A' || v === 'B' || v === 'AB' || v === 'O'
+
+/** donor.rhFactor từ BE là "Rh+" | "Rh-" */
+const rhFromDonor = (rh?: string | null): '' | RhValue =>
+    rh === 'Rh+' ? 'POSITIVE' : rh === 'Rh-' ? 'NEGATIVE' : ''
+
+export const valuesFromClinical = (
+    c: SurveyClinicalDetail,
+    donor?: Pick<SurveyDonorSummary, 'bloodType' | 'rhFactor'>,
+): ClinicalFormValues => ({
     weightKg: c.weightKg != null ? String(c.weightKg) : '',
     systolic: c.systolicBloodPressure != null ? String(c.systolicBloodPressure) : '',
     diastolic: c.diastolicBloodPressure != null ? String(c.diastolicBloodPressure) : '',
@@ -51,6 +78,8 @@ export const valuesFromClinical = (c: SurveyClinicalDetail): ClinicalFormValues 
     bodyTemp: c.bodyTemp != null ? String(c.bodyTemp) : '',
     hbsag: c.rapidHbsAgNegative == null ? '' : c.rapidHbsAgNegative ? 'NEG' : 'POS',
     targetVolume: c.targetVolumeMl ?? '',
+    bloodType: isAbo(donor?.bloodType) ? donor.bloodType : '',
+    rhFactor: rhFromDonor(donor?.rhFactor),
     notes: c.clinicalNotes ?? '',
     deferralReason: c.deferralReason ?? '',
 })
@@ -86,6 +115,8 @@ export function validateClinical(
         if (v.hbsag === '') errors.hbsag = 'Vui lòng chọn kết quả test nhanh HBsAg'
         else if (v.hbsag === 'POS') errors.hbsag = 'HBsAg dương tính, không thể kết luận Đạt tiêu chuẩn'
         if (v.targetVolume === '') errors.targetVolume = 'Vui lòng chọn thể tích máu chỉ định'
+        if (v.bloodType === '') errors.bloodType = 'Vui lòng chọn nhóm máu ABO'
+        if (v.rhFactor === '') errors.rhFactor = 'Vui lòng chọn yếu tố Rh'
     } else if (v.deferralReason.trim() === '') {
         errors.deferralReason = 'Vui lòng nhập lý do tạm hoãn / không đạt'
     }
@@ -106,8 +137,13 @@ export function validateClinical(
         rapidHbsAgNegative: v.hbsag === '' ? undefined : v.hbsag === 'NEG',
         clinicalNotes: v.notes.trim() || undefined,
     }
-    if (qualified) payload.targetVolumeMl = v.targetVolume as TargetVolume
-    else payload.deferralReason = v.deferralReason.trim()
+    if (qualified) {
+        payload.targetVolumeMl = v.targetVolume as TargetVolume
+        payload.bloodType = v.bloodType as AboGroup
+        payload.rhFactor = v.rhFactor as RhValue
+    } else {
+        payload.deferralReason = v.deferralReason.trim()
+    }
     if (ctx.sendAnswers) payload.surveyAnswers = ctx.answers
 
     return { ok: true, payload }
