@@ -175,3 +175,23 @@ public enum PermissionAction
     APPROVE,
     CANCEL
 }
+
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum DisposalReason
+{
+    EXPIRED,
+    INFECTIOUS_POSITIVE,
+    HEMOLYSIS,
+    DAMAGED_BAG,
+    OTHER
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum DisposalStatus
+{
+    PENDING_APPROVAL,
+    DISPOSED,
+    REJECTED,
+    CANCELLED
+}

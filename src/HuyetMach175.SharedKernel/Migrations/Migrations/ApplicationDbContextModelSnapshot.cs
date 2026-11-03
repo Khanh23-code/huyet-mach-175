@@ -272,6 +272,80 @@ namespace HuyetMach175.Api.Migrations
                     b.ToTable("blood_component_types");
                 });
 
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.BloodDisposalRecord", b =>
+                {
+                    b.Property<int>("DisposalId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("disposal_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DisposalId"));
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("approved_at");
+
+                    b.Property<int?>("ApprovedBy")
+                        .HasColumnType("integer")
+                        .HasColumnName("approved_by");
+
+                    b.Property<int>("BagId")
+                        .HasColumnType("integer")
+                        .HasColumnName("bag_id");
+
+                    b.Property<string>("DisposalCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("disposal_code");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("PreviousStatus")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("previous_status");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("rejection_reason");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("requested_at");
+
+                    b.Property<int>("RequestedBy")
+                        .HasColumnType("integer")
+                        .HasColumnName("requested_by");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.HasKey("DisposalId");
+
+                    b.HasIndex("ApprovedBy");
+
+                    b.HasIndex("BagId");
+
+                    b.HasIndex("DisposalCode")
+                        .IsUnique();
+
+                    b.HasIndex("RequestedBy");
+
+                    b.ToTable("blood_disposal_records");
+                });
+
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.BloodRequest", b =>
                 {
                     b.Property<int>("RequestId")
@@ -549,10 +623,6 @@ namespace HuyetMach175.Api.Migrations
                         .HasColumnType("date")
                         .HasColumnName("appointment_date");
 
-                    b.Property<int?>("CampaignId")
-                        .HasColumnType("integer")
-                        .HasColumnName("campaign_id");
-
                     b.Property<DateTime?>("CheckedInAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("checked_in_at");
@@ -584,15 +654,7 @@ namespace HuyetMach175.Api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("status");
 
-                    b.Property<string>("TimeSlot")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("time_slot");
-
                     b.HasKey("AppointmentId");
-
-                    b.HasIndex("CampaignId");
 
                     b.HasIndex("QrCodeToken")
                         .IsUnique();
@@ -757,42 +819,22 @@ namespace HuyetMach175.Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("appointment_id");
 
-                    b.Property<string>("BloodPressure")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("blood_pressure");
-
                     b.Property<string>("CollectionIncident")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("collection_incident");
 
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("completed_at");
 
-                    b.Property<string>("DeferralReason")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("deferral_reason");
-
-                    b.Property<int>("DoctorId")
-                        .HasColumnType("integer")
-                        .HasColumnName("doctor_id");
-
-                    b.Property<decimal?>("HemoglobinLevel")
-                        .HasColumnType("numeric")
-                        .HasColumnName("hemoglobin_level");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<int?>("PhlebotomistId")
                         .HasColumnType("integer")
                         .HasColumnName("phlebotomist_id");
-
-                    b.Property<string>("ScreeningStatus")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("screening_status");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -800,19 +842,14 @@ namespace HuyetMach175.Api.Migrations
                         .HasColumnName("status");
 
                     b.Property<string>("TargetVolumeMl")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("target_volume_ml");
-
-                    b.Property<decimal>("WeightKg")
-                        .HasColumnType("numeric")
-                        .HasColumnName("weight_kg");
 
                     b.HasKey("SessionId");
 
                     b.HasIndex("AppointmentId")
                         .IsUnique();
-
-                    b.HasIndex("DoctorId");
 
                     b.HasIndex("PhlebotomistId");
 
@@ -1025,27 +1062,84 @@ namespace HuyetMach175.Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("appointment_id");
 
+                    b.Property<decimal?>("BodyTemp")
+                        .HasColumnType("numeric(4,1)")
+                        .HasColumnName("body_temp");
+
+                    b.Property<string>("ClinicalNotes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("clinical_notes");
+
+                    b.Property<string>("DeferralReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("deferral_reason");
+
+                    b.Property<int?>("DiastolicBloodPressure")
+                        .HasColumnType("integer")
+                        .HasColumnName("diastolic_blood_pressure");
+
+                    b.Property<int?>("DoctorId")
+                        .HasColumnType("integer")
+                        .HasColumnName("doctor_id");
+
                     b.Property<bool>("HasRisk")
                         .HasColumnType("boolean")
                         .HasColumnName("has_risk");
+
+                    b.Property<decimal?>("HemoglobinLevel")
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("hemoglobin_level");
+
+                    b.Property<int?>("Pulse")
+                        .HasColumnType("integer")
+                        .HasColumnName("pulse");
+
+                    b.Property<bool?>("RapidHbsAgNegative")
+                        .HasColumnType("boolean")
+                        .HasColumnName("rapid_hbsag_negative");
 
                     b.Property<int>("RiskScore")
                         .HasColumnType("integer")
                         .HasColumnName("risk_score");
 
-                    b.Property<DateTime>("SubmittedAt")
+                    b.Property<DateTime?>("ScreenedAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("submitted_at");
+                        .HasColumnName("screened_at");
+
+                    b.Property<string>("ScreeningStatus")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("screening_status");
 
                     b.Property<string>("SurveyAnswers")
                         .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("survey_answers");
 
+                    b.Property<DateTime?>("SurveySubmittedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("survey_submitted_at");
+
+                    b.Property<int?>("SystolicBloodPressure")
+                        .HasColumnType("integer")
+                        .HasColumnName("systolic_blood_pressure");
+
+                    b.Property<string>("TargetVolumeMl")
+                        .HasColumnType("text")
+                        .HasColumnName("target_volume_ml");
+
+                    b.Property<decimal?>("WeightKg")
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("weight_kg");
+
                     b.HasKey("SurveyId");
 
                     b.HasIndex("AppointmentId")
                         .IsUnique();
+
+                    b.HasIndex("DoctorId");
 
                     b.ToTable("pre_screening_surveys");
                 });
@@ -1371,6 +1465,32 @@ namespace HuyetMach175.Api.Migrations
                     b.Navigation("Session");
                 });
 
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.BloodDisposalRecord", b =>
+                {
+                    b.HasOne("HuyetMach175.Api.Data.Entities.User", "ApprovedByUser")
+                        .WithMany()
+                        .HasForeignKey("ApprovedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HuyetMach175.Api.Data.Entities.BloodBag", "BloodBag")
+                        .WithMany("DisposalRecords")
+                        .HasForeignKey("BagId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HuyetMach175.Api.Data.Entities.User", "RequestedByUser")
+                        .WithMany()
+                        .HasForeignKey("RequestedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ApprovedByUser");
+
+                    b.Navigation("BloodBag");
+
+                    b.Navigation("RequestedByUser");
+                });
+
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.BloodRequest", b =>
                 {
                     b.HasOne("HuyetMach175.Api.Data.Entities.User", "Doctor")
@@ -1448,10 +1568,6 @@ namespace HuyetMach175.Api.Migrations
 
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.DonationAppointment", b =>
                 {
-                    b.HasOne("HuyetMach175.Api.Data.Entities.DonationCampaign", "Campaign")
-                        .WithMany("Appointments")
-                        .HasForeignKey("CampaignId");
-
                     b.HasOne("HuyetMach175.Api.Data.Entities.Donor", "Donor")
                         .WithMany("Appointments")
                         .HasForeignKey("DonorId")
@@ -1462,8 +1578,6 @@ namespace HuyetMach175.Api.Migrations
                         .WithMany("Appointments")
                         .HasForeignKey("SlotId")
                         .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Campaign");
 
                     b.Navigation("CampaignSlot");
 
@@ -1514,20 +1628,12 @@ namespace HuyetMach175.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("HuyetMach175.Api.Data.Entities.User", "Doctor")
-                        .WithMany("DoctorSessions")
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("HuyetMach175.Api.Data.Entities.User", "Phlebotomist")
                         .WithMany("PhlebotomistSessions")
                         .HasForeignKey("PhlebotomistId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Appointment");
-
-                    b.Navigation("Doctor");
 
                     b.Navigation("Phlebotomist");
                 });
@@ -1561,7 +1667,14 @@ namespace HuyetMach175.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("HuyetMach175.Api.Data.Entities.User", "Doctor")
+                        .WithMany("DoctorScreenings")
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Appointment");
+
+                    b.Navigation("Doctor");
                 });
 
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.RefreshToken", b =>
@@ -1635,6 +1748,8 @@ namespace HuyetMach175.Api.Migrations
 
                     b.Navigation("DerivedBags");
 
+                    b.Navigation("DisposalRecords");
+
                     b.Navigation("TestResults");
                 });
 
@@ -1668,8 +1783,6 @@ namespace HuyetMach175.Api.Migrations
 
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.DonationCampaign", b =>
                 {
-                    b.Navigation("Appointments");
-
                     b.Navigation("Slots");
                 });
 
@@ -1719,7 +1832,7 @@ namespace HuyetMach175.Api.Migrations
 
                     b.Navigation("DoctorRequests");
 
-                    b.Navigation("DoctorSessions");
+                    b.Navigation("DoctorScreenings");
 
                     b.Navigation("IssuedAllocations");
 
