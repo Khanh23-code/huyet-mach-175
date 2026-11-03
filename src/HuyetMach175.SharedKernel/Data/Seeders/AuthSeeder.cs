@@ -11,11 +11,11 @@ public static class AuthSeeder
     {
         var defaultDepartments = new[]
         {
-            new { DepartmentCode = "DEP_ADMIN", DepartmentName = "Trung tâm Công nghệ Thông tin" },
-            new { DepartmentCode = "DEP_BBNK", DepartmentName = "Khoa Huyết học" },
-            new { DepartmentCode = "DEP_DON", DepartmentName = "Trung tâm truyền máu" },
-            new { DepartmentCode = "DEP_CLIN", DepartmentName = "Khoa Cấp cứu" },
-            new { DepartmentCode = "DEP_MGT", DepartmentName = "Phòng Kế hoạch" }
+            new { DepartmentCode = "DEP_ADMIN", DepartmentName = "Trung tÃ¢m CÃ´ng nghá»‡ ThÃ´ng tin" },
+            new { DepartmentCode = "DEP_BBNK", DepartmentName = "Khoa Huyáº¿t há»c" },
+            new { DepartmentCode = "DEP_DON", DepartmentName = "Trung tÃ¢m truyá»n mÃ¡u" },
+            new { DepartmentCode = "DEP_CLIN", DepartmentName = "Khoa Cáº¥p cá»©u" },
+            new { DepartmentCode = "DEP_MGT", DepartmentName = "PhÃ²ng Káº¿ hoáº¡ch" }
         };
 
         foreach (var deptInfo in defaultDepartments)
@@ -128,8 +128,12 @@ public static class AuthSeeder
             new Permission { PermissionCode = "USERS_VIEW", PermissionName = "Xem danh sách Người dùng", ModuleCode = "USERS", ModuleName = "Người dùng", ActionType = PermissionAction.VIEW, Description = "Quản lý tài khoản nhân viên" },
             new Permission { PermissionCode = "USERS_EDIT", PermissionName = "Tạo mới / Sửa / Khóa Người dùng", ModuleCode = "USERS", ModuleName = "Người dùng", ActionType = PermissionAction.EDIT, Description = "Quản lý tài khoản nhân viên" },
 
-            new Permission { PermissionCode = "ROLES_VIEW", PermissionName = "Xem Vai trò và Ma trận phân quyền", ModuleCode = "ROLES", ModuleName = "Vai trò & Phân quyền", ActionType = PermissionAction.VIEW, Description = "Quản lý vai trò và phân quyền" },
+            new Permission { PermissionCode = "ROLES_VIEW", PermissionName = "Xem Vai trò và Mã quyền", ModuleCode = "ROLES", ModuleName = "Vai trò & Phân quyền", ActionType = PermissionAction.VIEW, Description = "Quản lý vai trò và phân quyền" },
             new Permission { PermissionCode = "ROLES_EDIT", PermissionName = "Tạo / Sửa Vai trò và Phân quyền", ModuleCode = "ROLES", ModuleName = "Vai trò & Phân quyền", ActionType = PermissionAction.EDIT, Description = "Quản lý vai trò và phân quyền" },
+
+            new Permission { PermissionCode = "DISPOSAL_VIEW", PermissionName = "Xem danh sách và chi tiết Phiếu tiêu hủy", ModuleCode = "DISPOSAL", ModuleName = "Tiêu hủy máu", ActionType = PermissionAction.VIEW, Description = "Quản lý và tra cứu phiếu tiêu hủy túi máu" },
+            new Permission { PermissionCode = "DISPOSAL_EDIT", PermissionName = "Lập và rút phiếu đề xuất tiêu hủy", ModuleCode = "DISPOSAL", ModuleName = "Tiêu hủy máu", ActionType = PermissionAction.EDIT, Description = "Lập phiếu đề xuất tiêu hủy và rút phiếu khi còn chờ duyệt" },
+            new Permission { PermissionCode = "DISPOSAL_APPROVE", PermissionName = "Phê duyệt / Từ chối tiêu hủy túi máu", ModuleCode = "DISPOSAL", ModuleName = "Tiêu hủy máu", ActionType = PermissionAction.APPROVE, Description = "Phê duyệt hoặc từ chối đề xuất tiêu hủy túi máu" },
         };
 
         foreach (var p in defaultPermissions)
@@ -189,7 +193,8 @@ public static class AuthSeeder
             ["MGT"] = new[]
             {
                 "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "CAMPAIGN_APPROVE", "CAMPAIGN_CANCEL",
-                "DONORS_VIEW", "APPOINTMENTS_VIEW", "SURVEY_VIEW", "SCREENING_VIEW", "SESSION_VIEW", "INVENTORY_VIEW", "LAB_VIEW", "PROCESSING_VIEW"
+                "DONORS_VIEW", "APPOINTMENTS_VIEW", "SURVEY_VIEW", "SCREENING_VIEW", "SESSION_VIEW", "INVENTORY_VIEW", "LAB_VIEW", "PROCESSING_VIEW",
+                "DISPOSAL_VIEW", "DISPOSAL_APPROVE"
             },
             ["CLIN"] = new[]
             {
@@ -208,7 +213,8 @@ public static class AuthSeeder
             },
             ["BBNK"] = new[]
             {
-                "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "DONORS_VIEW", "SCREENING_VIEW", "SESSION_VIEW", "INVENTORY_VIEW", "INVENTORY_EDIT", "LAB_VIEW", "LAB_EDIT", "PROCESSING_VIEW", "PROCESSING_EDIT"
+                "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "DONORS_VIEW", "SCREENING_VIEW", "SESSION_VIEW", "INVENTORY_VIEW", "INVENTORY_EDIT", "LAB_VIEW", "LAB_EDIT", "PROCESSING_VIEW", "PROCESSING_EDIT",
+                "DISPOSAL_VIEW", "DISPOSAL_EDIT"
             }
         };
 

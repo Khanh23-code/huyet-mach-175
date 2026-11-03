@@ -29,6 +29,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<StorageLocation> StorageLocations => Set<StorageLocation>();
     public DbSet<BloodBag> BloodBags => Set<BloodBag>();
     public DbSet<BloodTestResult> BloodTestResults => Set<BloodTestResult>();
+    public DbSet<BloodDisposalRecord> BloodDisposalRecords => Set<BloodDisposalRecord>();
 
     public DbSet<BloodRequest> BloodRequests => Set<BloodRequest>();
     public DbSet<BloodRequestItem> BloodRequestItems => Set<BloodRequestItem>();

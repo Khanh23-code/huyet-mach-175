@@ -73,6 +73,28 @@ public static class SchemaSeeder
             ALTER TABLE donation_sessions DROP COLUMN IF EXISTS hemoglobin_level;
             ALTER TABLE donation_sessions DROP COLUMN IF EXISTS screening_status;
             ALTER TABLE donation_sessions DROP COLUMN IF EXISTS deferral_reason;
+
+            CREATE TABLE IF NOT EXISTS blood_disposal_records (
+                disposal_id SERIAL PRIMARY KEY,
+                disposal_code character varying(30) NOT NULL,
+                bag_id integer NOT NULL,
+                reason text NOT NULL,
+                notes character varying(500) NULL,
+                status text NOT NULL DEFAULT 'PENDING_APPROVAL',
+                previous_status text NOT NULL,
+                requested_by integer NOT NULL,
+                requested_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                approved_by integer NULL,
+                approved_at timestamp with time zone NULL,
+                rejection_reason character varying(500) NULL,
+                CONSTRAINT ""FK_blood_disposal_records_blood_bags_bag_id"" FOREIGN KEY (bag_id) REFERENCES blood_bags(bag_id) ON DELETE RESTRICT,
+                CONSTRAINT ""FK_blood_disposal_records_users_requested_by"" FOREIGN KEY (requested_by) REFERENCES users(user_id) ON DELETE RESTRICT,
+                CONSTRAINT ""FK_blood_disposal_records_users_approved_by"" FOREIGN KEY (approved_by) REFERENCES users(user_id) ON DELETE RESTRICT
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS ""IX_blood_disposal_records_disposal_code"" ON blood_disposal_records(disposal_code);
+            CREATE INDEX IF NOT EXISTS ""IX_blood_disposal_records_bag_id"" ON blood_disposal_records(bag_id);
+            CREATE INDEX IF NOT EXISTS ""IX_blood_disposal_records_status"" ON blood_disposal_records(status);
         ";
 
         await context.Database.ExecuteSqlRawAsync(sql);
