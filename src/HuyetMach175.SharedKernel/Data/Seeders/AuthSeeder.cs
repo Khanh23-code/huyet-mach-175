@@ -11,11 +11,11 @@ public static class AuthSeeder
     {
         var defaultDepartments = new[]
         {
-            new { DepartmentCode = "DEP_ADMIN", DepartmentName = "Trung tÃ¢m CÃ´ng nghá»‡ ThÃ´ng tin" },
-            new { DepartmentCode = "DEP_BBNK", DepartmentName = "Khoa Huyáº¿t há»c" },
-            new { DepartmentCode = "DEP_DON", DepartmentName = "Trung tÃ¢m truyá»n mÃ¡u" },
-            new { DepartmentCode = "DEP_CLIN", DepartmentName = "Khoa Cáº¥p cá»©u" },
-            new { DepartmentCode = "DEP_MGT", DepartmentName = "PhÃ²ng Káº¿ hoáº¡ch" }
+            new { DepartmentCode = "DEP_ADMIN", DepartmentName = "Trung tâm Công nghệ Thông tin" },
+            new { DepartmentCode = "DEP_BBNK", DepartmentName = "Khoa Huyết học" },
+            new { DepartmentCode = "DEP_DON", DepartmentName = "Trung tâm truyền máu" },
+            new { DepartmentCode = "DEP_CLIN", DepartmentName = "Khoa Cấp cứu" },
+            new { DepartmentCode = "DEP_MGT", DepartmentName = "Phòng Kế hoạch" }
         };
 
         foreach (var deptInfo in defaultDepartments)
