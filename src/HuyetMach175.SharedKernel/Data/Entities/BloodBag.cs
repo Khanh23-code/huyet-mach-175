@@ -68,5 +68,5 @@ public class BloodBag
     public ICollection<BloodBag> DerivedBags { get; set; } = new List<BloodBag>();
     public ICollection<BloodTestResult> TestResults { get; set; } = new List<BloodTestResult>();
     public ICollection<BloodAllocation> Allocations { get; set; } = new List<BloodAllocation>();
-    public ICollection<BloodDisposalRecord> DisposalRecords { get; set; } = new List<BloodDisposalRecord>();
+    public ICollection<BloodDisposalItem> DisposalItems { get; set; } = new List<BloodDisposalItem>();
 }

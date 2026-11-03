@@ -272,6 +272,45 @@ namespace HuyetMach175.Api.Migrations
                     b.ToTable("blood_component_types");
                 });
 
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.BloodDisposalItem", b =>
+                {
+                    b.Property<int>("ItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("item_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ItemId"));
+
+                    b.Property<int>("BagId")
+                        .HasColumnType("integer")
+                        .HasColumnName("bag_id");
+
+                    b.Property<int>("DisposalId")
+                        .HasColumnType("integer")
+                        .HasColumnName("disposal_id");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_verified");
+
+                    b.Property<string>("PreviousStatus")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("previous_status");
+
+                    b.Property<DateTime?>("VerifiedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("verified_at");
+
+                    b.HasKey("ItemId");
+
+                    b.HasIndex("BagId");
+
+                    b.HasIndex("DisposalId");
+
+                    b.ToTable("blood_disposal_items");
+                });
+
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.BloodDisposalRecord", b =>
                 {
                     b.Property<int>("DisposalId")
@@ -289,10 +328,6 @@ namespace HuyetMach175.Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("approved_by");
 
-                    b.Property<int>("BagId")
-                        .HasColumnType("integer")
-                        .HasColumnName("bag_id");
-
                     b.Property<string>("DisposalCode")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -303,11 +338,6 @@ namespace HuyetMach175.Api.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("notes");
-
-                    b.Property<string>("PreviousStatus")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("previous_status");
 
                     b.Property<string>("Reason")
                         .IsRequired()
@@ -332,11 +362,13 @@ namespace HuyetMach175.Api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("status");
 
+                    b.Property<int>("TotalBags")
+                        .HasColumnType("integer")
+                        .HasColumnName("total_bags");
+
                     b.HasKey("DisposalId");
 
                     b.HasIndex("ApprovedBy");
-
-                    b.HasIndex("BagId");
 
                     b.HasIndex("DisposalCode")
                         .IsUnique();
@@ -1465,18 +1497,31 @@ namespace HuyetMach175.Api.Migrations
                     b.Navigation("Session");
                 });
 
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.BloodDisposalItem", b =>
+                {
+                    b.HasOne("HuyetMach175.Api.Data.Entities.BloodBag", "BloodBag")
+                        .WithMany("DisposalItems")
+                        .HasForeignKey("BagId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HuyetMach175.Api.Data.Entities.BloodDisposalRecord", "DisposalRecord")
+                        .WithMany("Items")
+                        .HasForeignKey("DisposalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BloodBag");
+
+                    b.Navigation("DisposalRecord");
+                });
+
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.BloodDisposalRecord", b =>
                 {
                     b.HasOne("HuyetMach175.Api.Data.Entities.User", "ApprovedByUser")
                         .WithMany()
                         .HasForeignKey("ApprovedBy")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("HuyetMach175.Api.Data.Entities.BloodBag", "BloodBag")
-                        .WithMany("DisposalRecords")
-                        .HasForeignKey("BagId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
 
                     b.HasOne("HuyetMach175.Api.Data.Entities.User", "RequestedByUser")
                         .WithMany()
@@ -1485,8 +1530,6 @@ namespace HuyetMach175.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("ApprovedByUser");
-
-                    b.Navigation("BloodBag");
 
                     b.Navigation("RequestedByUser");
                 });
@@ -1748,7 +1791,7 @@ namespace HuyetMach175.Api.Migrations
 
                     b.Navigation("DerivedBags");
 
-                    b.Navigation("DisposalRecords");
+                    b.Navigation("DisposalItems");
 
                     b.Navigation("TestResults");
                 });
@@ -1758,6 +1801,11 @@ namespace HuyetMach175.Api.Migrations
                     b.Navigation("BloodBags");
 
                     b.Navigation("RequestItems");
+                });
+
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.BloodDisposalRecord", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.BloodRequest", b =>
