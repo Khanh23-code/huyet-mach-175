@@ -320,6 +320,17 @@ public static class AuthSeeder
                 PhoneNumber = "0900000005",
                 DepartmentCode = "DEP_DON",
                 RoleCode = "DON"
+            },
+            new
+            {
+                Username = "disposal_tester",
+                StaffCode = "NV00099",
+                PasswordHash = defaultPasswordHash,
+                FullName = "Kiểm Thử Viên Tiêu Hủy Máu",
+                Email = "disposal_tester@huyetmach175.vn",
+                PhoneNumber = "0900000099",
+                DepartmentCode = "DEP_BBNK",
+                RoleCode = "BBNK"
             }
         };
 
