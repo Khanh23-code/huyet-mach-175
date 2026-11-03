@@ -6,11 +6,10 @@ namespace HuyetMach175.Modules.Inventory.DTOs.BloodDisposals;
 
 public class CreateDisposalRequest
 {
-    [JsonPropertyName("bagId")]
-    public int? BagId { get; set; }
-
-    [JsonPropertyName("barcode")]
-    public string? Barcode { get; set; }
+    [Required(ErrorMessage = "Danh sách mã vạch (barcode) túi máu cần tiêu hủy là bắt buộc.")]
+    [MinLength(1, ErrorMessage = "Phải chọn tối thiểu 1 túi máu để lập biên bản tiêu hủy.")]
+    [JsonPropertyName("barcodes")]
+    public List<string> Barcodes { get; set; } = new();
 
     [Required(ErrorMessage = "Lý do đề xuất tiêu hủy là bắt buộc.")]
     [JsonPropertyName("reason")]
@@ -20,4 +19,3 @@ public class CreateDisposalRequest
     [JsonPropertyName("notes")]
     public string? Notes { get; set; }
 }
-

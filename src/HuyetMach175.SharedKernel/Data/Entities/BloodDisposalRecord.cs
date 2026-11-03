@@ -16,9 +16,6 @@ public class BloodDisposalRecord
     [Column("disposal_code")]
     public string DisposalCode { get; set; } = string.Empty;
 
-    [Column("bag_id")]
-    public int BagId { get; set; }
-
     [Column("reason")]
     public DisposalReason Reason { get; set; }
 
@@ -29,8 +26,8 @@ public class BloodDisposalRecord
     [Column("status")]
     public DisposalStatus Status { get; set; } = DisposalStatus.PENDING_APPROVAL;
 
-    [Column("previous_status")]
-    public BagStatus PreviousStatus { get; set; }
+    [Column("total_bags")]
+    public int TotalBags { get; set; }
 
     [Column("requested_by")]
     public int RequestedBy { get; set; }
@@ -48,12 +45,11 @@ public class BloodDisposalRecord
     [Column("rejection_reason")]
     public string? RejectionReason { get; set; }
 
-    [ForeignKey(nameof(BagId))]
-    public BloodBag? BloodBag { get; set; }
-
     [ForeignKey(nameof(RequestedBy))]
     public User? RequestedByUser { get; set; }
 
     [ForeignKey(nameof(ApprovedBy))]
     public User? ApprovedByUser { get; set; }
+
+    public ICollection<BloodDisposalItem> Items { get; set; } = new List<BloodDisposalItem>();
 }

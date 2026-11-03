@@ -24,19 +24,19 @@ public class BloodDisposalsController : ControllerBase
 
     [HttpGet]
     [HasPermission("DISPOSAL_VIEW")]
-    [EndpointSummary("Lấy danh sách phiếu đề xuất tiêu hủy túi máu")]
+    [EndpointSummary("Lấy danh sách biên bản đề xuất tiêu hủy túi máu")]
     [EndpointDescription(
-        "Lấy danh sách các phiếu đề xuất tiêu hủy túi máu có phân trang và bộ lọc theo trạng thái, lý do, từ khóa tìm kiếm và khoảng thời gian.\n\n" +
+        "Lấy danh sách các biên bản/hồ sơ đề xuất tiêu hủy lô túi máu có phân trang và bộ lọc theo trạng thái, lý do, từ khóa tìm kiếm và khoảng thời gian.\n\n" +
         "**Bộ lọc & Phân trang:**\n" +
-        "- `status`: Lọc theo trạng thái phiếu (`PENDING_APPROVAL`, `DISPOSED`, `REJECTED`, `CANCELLED`).\n" +
+        "- `status`: Lọc theo trạng thái biên bản (`PENDING_APPROVAL`, `DISPOSED`, `REJECTED`, `CANCELLED`).\n" +
         "- `reason`: Lọc theo lý do tiêu hủy (`EXPIRED`, `INFECTIOUS_POSITIVE`, `HEMOLYSIS`, `DAMAGED_BAG`, `OTHER`).\n" +
-        "- `search`: Tìm kiếm theo mã phiếu (`disposalCode`) hoặc mã barcode túi máu (`barcode`).\n" +
+        "- `search`: Tìm kiếm theo mã biên bản (`disposalCode`) hoặc mã barcode túi máu con trong lô.\n" +
         "- `fromDate` / `toDate`: Lọc theo ngày tạo đề xuất (định dạng YYYY-MM-DD).\n" +
         "- `pageNumber`: Số thứ tự trang (mặc định 1).\n" +
         "- `pageSize`: Kích thước trang, tối đa 100 (mặc định 20).\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **DISPOSAL_VIEW** (vai trò BBNK hoặc MGT).\n\n" +
         "**HTTP Response:**\n" +
-        "- 200 OK: Trả về danh sách phiếu tiêu hủy phân trang.\n" +
+        "- 200 OK: Trả về danh sách biên bản tiêu hủy phân trang.\n" +
         "- 400 BadRequest: Tham số phân trang không hợp lệ.\n" +
         "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
         "- 403 Forbidden: Không có quyền truy cập DISPOSAL_VIEW.")]
@@ -52,18 +52,18 @@ public class BloodDisposalsController : ControllerBase
 
     [HttpGet("{id:int}")]
     [HasPermission("DISPOSAL_VIEW")]
-    [EndpointSummary("Lấy thông tin chi tiết một phiếu đề xuất tiêu hủy túi máu")]
+    [EndpointSummary("Lấy thông tin chi tiết một biên bản tiêu hủy kèm danh sách túi máu")]
     [EndpointDescription(
-        "Lấy toàn bộ thông tin chi tiết của một phiếu đề xuất tiêu hủy túi máu theo ID, bao gồm thông tin túi máu, vị trí lưu trữ, lý do tiêu hủy, người đề xuất và người phê duyệt.\n\n" +
+        "Lấy toàn bộ thông tin chi tiết của một biên bản đề xuất tiêu hủy túi máu theo ID, bao gồm thông tin biên bản, người đề xuất, người phê duyệt và danh sách toàn bộ các túi máu trong lô (`items`).\n\n" +
         "**Tham số đường dẫn:**\n" +
-        "- `id`: Mã định danh (disposalId) của phiếu tiêu hủy.\n\n" +
+        "- `id`: Mã định danh (disposalId) của biên bản tiêu hủy.\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **DISPOSAL_VIEW** (vai trò BBNK hoặc MGT).\n\n" +
         "**HTTP Response:**\n" +
-        "- 200 OK: Trả về chi tiết phiếu đề xuất tiêu hủy.\n" +
-        "- 400 BadRequest: ID phiếu không hợp lệ (nhỏ hơn hoặc bằng 0).\n" +
+        "- 200 OK: Trả về chi tiết biên bản đề xuất tiêu hủy kèm danh sách các túi máu.\n" +
+        "- 400 BadRequest: ID biên bản không hợp lệ (nhỏ hơn hoặc bằng 0).\n" +
         "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
         "- 403 Forbidden: Không có quyền truy cập DISPOSAL_VIEW.\n" +
-        "- 404 NotFound: Không tìm thấy phiếu đề xuất tiêu hủy tương ứng.")]
+        "- 404 NotFound: Không tìm thấy biên bản đề xuất tiêu hủy tương ứng.")]
     [ProducesResponseType(typeof(DisposalDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -77,23 +77,23 @@ public class BloodDisposalsController : ControllerBase
 
     [HttpPost]
     [HasPermission("DISPOSAL_EDIT")]
-    [EndpointSummary("Tạo phiếu đề xuất tiêu hủy túi máu")]
+    [EndpointSummary("Lập biên bản đề xuất tiêu hủy cho lô nhiều túi máu")]
     [EndpointDescription(
-        "Lập phiếu đề xuất tiêu hủy một túi máu (ví dụ: hết hạn, tán huyết, rò rỉ, dương tính bệnh truyền nhiễm...).\n\n" +
+        "Lập biên bản đề xuất tiêu hủy cho một lô nhiều túi máu (ví dụ: hết hạn, tán huyết, rò rỉ, dương tính bệnh truyền nhiễm...).\n\n" +
         "**Quy tắc nghiệp vụ:**\n" +
-        "- Xác định túi máu thông qua `bagId` hoặc mã `barcode`.\n" +
-        "- Túi máu không được ở trạng thái đã truyền (TRANSFUSED), đã xuất (ISSUED) hoặc đã tiêu hủy (DISCARDED).\n" +
-        "- Không thể tạo trùng lặp nếu túi máu đã có một phiếu đề xuất tiêu hủy đang chờ duyệt (PENDING_APPROVAL).\n" +
-        "- Khi lập đề xuất thành công, trạng thái túi máu được tự động chuyển sang tạm khóa (**LOCKED**) để tránh bị cấp phát hay điều chế trong lúc chờ duyệt.\n" +
+        "- Chỉ định danh sách mã vạch `barcodes` của các túi máu trong lô (tối thiểu 1 túi).\n" +
+        "- Tất cả túi máu phải tồn tại và không ở trạng thái đã truyền (TRANSFUSED), đã xuất (ISSUED) hoặc đã tiêu hủy (DISCARDED).\n" +
+        "- Không túi máu nào được nằm trong một biên bản tiêu hủy khác đang chờ duyệt (PENDING_APPROVAL).\n" +
+        "- Khi lập biên bản thành công, trạng thái toàn bộ các túi máu trong lô được tự động chuyển sang tạm khóa (**LOCKED**) để tránh bị cấp phát hay điều chế trong lúc chờ duyệt.\n" +
         "- Tự động ghi vết vào nhật ký kiểm toán hệ thống (AuditLog).\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **DISPOSAL_EDIT** (vai trò BBNK).\n\n" +
         "**HTTP Response:**\n" +
-        "- 201 Created: Tạo đề xuất tiêu hủy thành công.\n" +
+        "- 201 Created: Tạo biên bản tiêu hủy thành công (trả về tóm tắt thông tin biên bản).\n" +
         "- 400 BadRequest: Dữ liệu không hợp lệ hoặc trạng thái túi máu không cho phép tiêu hủy.\n" +
         "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
         "- 403 Forbidden: Không có quyền truy cập DISPOSAL_EDIT.\n" +
         "- 404 NotFound: Không tìm thấy túi máu.")]
-    [ProducesResponseType(typeof(DisposalDetailDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(CreateDisposalResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -108,21 +108,21 @@ public class BloodDisposalsController : ControllerBase
 
     [HttpPatch("{id:int}/cancel")]
     [HasPermission("DISPOSAL_EDIT")]
-    [EndpointSummary("Rút đơn / Hủy phiếu đề xuất tiêu hủy túi máu")]
+    [EndpointSummary("Rút đơn / Hủy biên bản đề xuất tiêu hủy")]
     [EndpointDescription(
-        "Người lập đề xuất hoặc nhân viên ngân hàng máu rút lại phiếu đề xuất tiêu hủy khi đang ở trạng thái **PENDING_APPROVAL**.\n\n" +
+        "Người lập đề xuất hoặc nhân viên ngân hàng máu rút lại biên bản đề xuất tiêu hủy khi đang ở trạng thái **PENDING_APPROVAL**.\n\n" +
         "**Quy tắc nghiệp vụ:**\n" +
-        "- Chỉ cho phép rút đơn khi phiếu đang ở trạng thái chờ duyệt (**PENDING_APPROVAL**).\n" +
-        "- Trạng thái phiếu được cập nhật sang **CANCELLED**.\n" +
-        "- Túi máu liên quan sẽ được tự động khôi phục lại trạng thái ban đầu (`previous_status`) trước khi bị khóa.\n" +
+        "- Chỉ cho phép rút đơn khi biên bản đang ở trạng thái chờ duyệt (**PENDING_APPROVAL**).\n" +
+        "- Trạng thái biên bản được cập nhật sang **CANCELLED**.\n" +
+        "- Toàn bộ các túi máu trong lô sẽ được tự động khôi phục lại trạng thái ban đầu (`previous_status`) trước khi bị khóa.\n" +
         "- Tự động ghi vết hoàn tác vào nhật ký kiểm toán hệ thống (AuditLog).\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **DISPOSAL_EDIT** (vai trò BBNK).\n\n" +
         "**HTTP Response:**\n" +
-        "- 200 OK: Rút đơn thành công, túi máu được hoàn trả trạng thái ban đầu.\n" +
-        "- 400 BadRequest: Phiếu đã hủy hoặc đã được phê duyệt/từ chối trước đó.\n" +
+        "- 200 OK: Rút đơn thành công, toàn bộ túi máu được hoàn trả trạng thái ban đầu.\n" +
+        "- 400 BadRequest: Biên bản đã hủy hoặc đã được phê duyệt/từ chối trước đó.\n" +
         "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
         "- 403 Forbidden: Không có quyền truy cập DISPOSAL_EDIT.\n" +
-        "- 404 NotFound: Không tìm thấy phiếu đề xuất tiêu hủy.")]
+        "- 404 NotFound: Không tìm thấy biên bản đề xuất tiêu hủy.")]
     [ProducesResponseType(typeof(DisposalDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

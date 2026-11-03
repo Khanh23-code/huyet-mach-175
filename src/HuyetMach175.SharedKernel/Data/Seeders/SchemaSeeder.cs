@@ -77,24 +77,41 @@ public static class SchemaSeeder
             CREATE TABLE IF NOT EXISTS blood_disposal_records (
                 disposal_id SERIAL PRIMARY KEY,
                 disposal_code character varying(30) NOT NULL,
-                bag_id integer NOT NULL,
                 reason text NOT NULL,
                 notes character varying(500) NULL,
                 status text NOT NULL DEFAULT 'PENDING_APPROVAL',
-                previous_status text NOT NULL,
+                total_bags integer NOT NULL DEFAULT 0,
                 requested_by integer NOT NULL,
                 requested_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 approved_by integer NULL,
                 approved_at timestamp with time zone NULL,
                 rejection_reason character varying(500) NULL,
-                CONSTRAINT ""FK_blood_disposal_records_blood_bags_bag_id"" FOREIGN KEY (bag_id) REFERENCES blood_bags(bag_id) ON DELETE RESTRICT,
                 CONSTRAINT ""FK_blood_disposal_records_users_requested_by"" FOREIGN KEY (requested_by) REFERENCES users(user_id) ON DELETE RESTRICT,
                 CONSTRAINT ""FK_blood_disposal_records_users_approved_by"" FOREIGN KEY (approved_by) REFERENCES users(user_id) ON DELETE RESTRICT
             );
 
+            ALTER TABLE blood_disposal_records ADD COLUMN IF NOT EXISTS total_bags integer NOT NULL DEFAULT 0;
+            ALTER TABLE blood_disposal_records DROP CONSTRAINT IF EXISTS ""FK_blood_disposal_records_blood_bags_bag_id"";
+            DROP INDEX IF EXISTS ""IX_blood_disposal_records_bag_id"";
+            ALTER TABLE blood_disposal_records DROP COLUMN IF EXISTS bag_id;
+            ALTER TABLE blood_disposal_records DROP COLUMN IF EXISTS previous_status;
+
             CREATE UNIQUE INDEX IF NOT EXISTS ""IX_blood_disposal_records_disposal_code"" ON blood_disposal_records(disposal_code);
-            CREATE INDEX IF NOT EXISTS ""IX_blood_disposal_records_bag_id"" ON blood_disposal_records(bag_id);
             CREATE INDEX IF NOT EXISTS ""IX_blood_disposal_records_status"" ON blood_disposal_records(status);
+
+            CREATE TABLE IF NOT EXISTS blood_disposal_items (
+                item_id SERIAL PRIMARY KEY,
+                disposal_id integer NOT NULL,
+                bag_id integer NOT NULL,
+                previous_status text NOT NULL,
+                is_verified boolean NOT NULL DEFAULT TRUE,
+                verified_at timestamp with time zone NULL,
+                CONSTRAINT ""FK_blood_disposal_items_blood_disposal_records_disposal_id"" FOREIGN KEY (disposal_id) REFERENCES blood_disposal_records(disposal_id) ON DELETE CASCADE,
+                CONSTRAINT ""FK_blood_disposal_items_blood_bags_bag_id"" FOREIGN KEY (bag_id) REFERENCES blood_bags(bag_id) ON DELETE RESTRICT
+            );
+
+            CREATE INDEX IF NOT EXISTS ""IX_blood_disposal_items_disposal_id"" ON blood_disposal_items(disposal_id);
+            CREATE INDEX IF NOT EXISTS ""IX_blood_disposal_items_bag_id"" ON blood_disposal_items(bag_id);
         ";
 
         await context.Database.ExecuteSqlRawAsync(sql);

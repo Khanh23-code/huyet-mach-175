@@ -9,24 +9,30 @@ public static class BloodDisposalMappings
 {
     public static DisposalRecordDto ToRecordDto(this BloodDisposalRecord r)
     {
+        var barcodes = r.Items
+            .Select(i => i.BloodBag?.Barcode)
+            .Where(b => !string.IsNullOrEmpty(b))
+            .ToList();
+
+        var barcodesSummary = barcodes.Count switch
+        {
+            0 => string.Empty,
+            1 => barcodes[0]!,
+            2 => $"{barcodes[0]}, {barcodes[1]}",
+            _ => $"{barcodes[0]}, {barcodes[1]} (+{barcodes.Count - 2} túi)"
+        };
+
         return new DisposalRecordDto
         {
             DisposalId = r.DisposalId,
             DisposalCode = r.DisposalCode,
-            BagId = r.BagId,
-            Barcode = r.BloodBag?.Barcode ?? string.Empty,
-            BloodType = r.BloodBag?.BloodType.ToString() ?? string.Empty,
-            RhFactor = r.BloodBag?.RhFactor.ToString() ?? string.Empty,
-            BloodGroup = r.BloodBag != null ? InventoryProcessing.FormatBloodGroup(r.BloodBag.BloodType, r.BloodBag.RhFactor) : string.Empty,
-            ComponentTypeCode = r.BloodBag?.ComponentType?.TypeCode.ToString() ?? string.Empty,
-            ComponentTypeName = r.BloodBag?.ComponentType?.TypeName ?? string.Empty,
-            VolumeMl = r.BloodBag?.VolumeMl ?? 0,
+            TotalBags = r.TotalBags > 0 ? r.TotalBags : r.Items.Count,
+            BarcodesSummary = barcodesSummary,
             Reason = r.Reason.ToString(),
             ReasonText = FormatDisposalReasonText(r.Reason),
             Notes = r.Notes,
             Status = r.Status.ToString(),
             StatusText = FormatDisposalStatusText(r.Status),
-            PreviousStatus = r.PreviousStatus.ToString(),
             RequestedBy = r.RequestedBy,
             RequestedByName = r.RequestedByUser?.FullName ?? string.Empty,
             RequestedAt = r.RequestedAt,
@@ -39,24 +45,17 @@ public static class BloodDisposalMappings
 
     public static DisposalDetailDto ToDetailDto(this BloodDisposalRecord r)
     {
-        return new DisposalDetailDto
+        var dto = new DisposalDetailDto
         {
             DisposalId = r.DisposalId,
             DisposalCode = r.DisposalCode,
-            BagId = r.BagId,
-            Barcode = r.BloodBag?.Barcode ?? string.Empty,
-            BloodType = r.BloodBag?.BloodType.ToString() ?? string.Empty,
-            RhFactor = r.BloodBag?.RhFactor.ToString() ?? string.Empty,
-            BloodGroup = r.BloodBag != null ? InventoryProcessing.FormatBloodGroup(r.BloodBag.BloodType, r.BloodBag.RhFactor) : string.Empty,
-            ComponentTypeCode = r.BloodBag?.ComponentType?.TypeCode.ToString() ?? string.Empty,
-            ComponentTypeName = r.BloodBag?.ComponentType?.TypeName ?? string.Empty,
-            VolumeMl = r.BloodBag?.VolumeMl ?? 0,
+            TotalBags = r.TotalBags > 0 ? r.TotalBags : r.Items.Count,
+            BarcodesSummary = string.Join(", ", r.Items.Select(i => i.BloodBag?.Barcode).Where(b => !string.IsNullOrEmpty(b))),
             Reason = r.Reason.ToString(),
             ReasonText = FormatDisposalReasonText(r.Reason),
             Notes = r.Notes,
             Status = r.Status.ToString(),
             StatusText = FormatDisposalStatusText(r.Status),
-            PreviousStatus = r.PreviousStatus.ToString(),
             RequestedBy = r.RequestedBy,
             RequestedByName = r.RequestedByUser?.FullName ?? string.Empty,
             RequestedAt = r.RequestedAt,
@@ -64,13 +63,36 @@ public static class BloodDisposalMappings
             ApprovedByName = r.ApprovedByUser?.FullName,
             ApprovedAt = r.ApprovedAt,
             RejectionReason = r.RejectionReason,
-            StorageLocationId = r.BloodBag?.LocationId,
-            StorageLocationName = r.BloodBag?.Location != null ? $"{r.BloodBag.Location.RefrigeratorName} - {r.BloodBag.Location.ShelfNumber}" : null,
-            CollectedAt = r.BloodBag?.CollectedAt,
-            ExpiredAt = r.BloodBag?.ExpiredAt,
-            CurrentBagStatus = r.BloodBag != null ? r.BloodBag.Status.ToString() : string.Empty,
-            CurrentBagStatusText = r.BloodBag != null ? FormatBagStatusText(r.BloodBag.Status) : string.Empty,
-            DiscardReason = r.BloodBag?.DiscardReason
+            Items = r.Items.Select(ToItemDto).ToList()
+        };
+
+        return dto;
+    }
+
+    public static DisposalItemDto ToItemDto(this BloodDisposalItem i)
+    {
+        var bag = i.BloodBag;
+        return new DisposalItemDto
+        {
+            ItemId = i.ItemId,
+            BagId = i.BagId,
+            Barcode = bag?.Barcode ?? string.Empty,
+            BloodType = bag?.BloodType.ToString() ?? string.Empty,
+            RhFactor = bag?.RhFactor.ToString() ?? string.Empty,
+            BloodGroup = bag != null ? InventoryProcessing.FormatBloodGroup(bag.BloodType, bag.RhFactor) : string.Empty,
+            ComponentTypeCode = bag?.ComponentType?.TypeCode.ToString() ?? string.Empty,
+            ComponentTypeName = bag?.ComponentType?.TypeName ?? string.Empty,
+            VolumeMl = bag?.VolumeMl ?? 0,
+            StorageLocationId = bag?.LocationId,
+            StorageLocationName = bag?.Location != null ? $"{bag.Location.RefrigeratorName} - {bag.Location.ShelfNumber}" : null,
+            CollectedAt = bag?.CollectedAt,
+            ExpiredAt = bag?.ExpiredAt,
+            PreviousStatus = i.PreviousStatus.ToString(),
+            PreviousStatusText = FormatBagStatusText(i.PreviousStatus),
+            CurrentBagStatus = bag != null ? bag.Status.ToString() : string.Empty,
+            CurrentBagStatusText = bag != null ? FormatBagStatusText(bag.Status) : string.Empty,
+            IsVerified = i.IsVerified,
+            VerifiedAt = i.VerifiedAt
         };
     }
 

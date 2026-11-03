@@ -10,29 +10,11 @@ public class DisposalRecordDto
     [JsonPropertyName("disposalCode")]
     public string DisposalCode { get; set; } = string.Empty;
 
-    [JsonPropertyName("bagId")]
-    public int BagId { get; set; }
+    [JsonPropertyName("totalBags")]
+    public int TotalBags { get; set; }
 
-    [JsonPropertyName("barcode")]
-    public string Barcode { get; set; } = string.Empty;
-
-    [JsonPropertyName("bloodType")]
-    public string BloodType { get; set; } = string.Empty;
-
-    [JsonPropertyName("rhFactor")]
-    public string RhFactor { get; set; } = string.Empty;
-
-    [JsonPropertyName("bloodGroup")]
-    public string BloodGroup { get; set; } = string.Empty;
-
-    [JsonPropertyName("componentTypeCode")]
-    public string ComponentTypeCode { get; set; } = string.Empty;
-
-    [JsonPropertyName("componentTypeName")]
-    public string ComponentTypeName { get; set; } = string.Empty;
-
-    [JsonPropertyName("volumeMl")]
-    public int VolumeMl { get; set; }
+    [JsonPropertyName("barcodesSummary")]
+    public string BarcodesSummary { get; set; } = string.Empty;
 
     [JsonPropertyName("reason")]
     public string Reason { get; set; } = string.Empty;
@@ -48,9 +30,6 @@ public class DisposalRecordDto
 
     [JsonPropertyName("statusText")]
     public string StatusText { get; set; } = string.Empty;
-
-    [JsonPropertyName("previousStatus")]
-    public string PreviousStatus { get; set; } = string.Empty;
 
     [JsonPropertyName("requestedBy")]
     public int RequestedBy { get; set; }
