@@ -24,4 +24,7 @@ public class StorageLocationDto
 
     [JsonPropertyName("currentBagsCount")]
     public int CurrentBagsCount { get; set; }
+
+    [JsonPropertyName("expiringSoonBagsCount")]
+    public int ExpiringSoonBagsCount { get; set; }
 }

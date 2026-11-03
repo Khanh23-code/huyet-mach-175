@@ -53,6 +53,9 @@ public class StorageLocationsService : IStorageLocationsService
         var pageNumber = filter.PageNumber > 0 ? filter.PageNumber : 1;
         var pageSize = filter.PageSize > 0 ? Math.Min(filter.PageSize, 100) : 20;
 
+        var now = DateTime.UtcNow;
+        var expiringThreshold = now.AddDays(3);
+
         var items = await query
             .OrderBy(l => l.RefrigeratorName)
             .ThenBy(l => l.ShelfNumber)
@@ -71,7 +74,15 @@ public class StorageLocationsService : IStorageLocationsService
                     b.Status == BagStatus.READY_TESTING ||
                     b.Status == BagStatus.TESTED_PASSED ||
                     b.Status == BagStatus.LOCKED ||
-                    b.Status == BagStatus.RESERVED)
+                    b.Status == BagStatus.RESERVED),
+                ExpiringSoonBagsCount = l.BloodBags.Count(b =>
+                    (b.Status == BagStatus.AVAILABLE ||
+                     b.Status == BagStatus.READY_TESTING ||
+                     b.Status == BagStatus.TESTED_PASSED ||
+                     b.Status == BagStatus.LOCKED ||
+                     b.Status == BagStatus.RESERVED) &&
+                    b.ExpiredAt >= now &&
+                    b.ExpiredAt <= expiringThreshold)
             })
             .ToListAsync();
 
@@ -86,6 +97,9 @@ public class StorageLocationsService : IStorageLocationsService
 
     public async Task<StorageLocationDto> GetStorageLocationByIdAsync(int id)
     {
+        var now = DateTime.UtcNow;
+        var expiringThreshold = now.AddDays(3);
+
         var location = await _context.StorageLocations
             .AsNoTracking()
             .Where(l => l.LocationId == id)
@@ -102,7 +116,15 @@ public class StorageLocationsService : IStorageLocationsService
                     b.Status == BagStatus.READY_TESTING ||
                     b.Status == BagStatus.TESTED_PASSED ||
                     b.Status == BagStatus.LOCKED ||
-                    b.Status == BagStatus.RESERVED)
+                    b.Status == BagStatus.RESERVED),
+                ExpiringSoonBagsCount = l.BloodBags.Count(b =>
+                    (b.Status == BagStatus.AVAILABLE ||
+                     b.Status == BagStatus.READY_TESTING ||
+                     b.Status == BagStatus.TESTED_PASSED ||
+                     b.Status == BagStatus.LOCKED ||
+                     b.Status == BagStatus.RESERVED) &&
+                    b.ExpiredAt >= now &&
+                    b.ExpiredAt <= expiringThreshold)
             })
             .FirstOrDefaultAsync();
 
@@ -169,7 +191,8 @@ public class StorageLocationsService : IStorageLocationsService
             TargetTemperature = location.TargetTemperature,
             IsFull = location.IsFull,
             IsActive = location.IsActive,
-            CurrentBagsCount = 0
+            CurrentBagsCount = 0,
+            ExpiringSoonBagsCount = 0
         };
     }
 
@@ -232,6 +255,9 @@ public class StorageLocationsService : IStorageLocationsService
         _context.AuditLogs.Add(auditLog);
         await _context.SaveChangesAsync();
 
+        var now = DateTime.UtcNow;
+        var expiringThreshold = now.AddDays(3);
+
         var currentBags = await _context.BloodBags.CountAsync(b =>
             b.LocationId == id &&
             (b.Status == BagStatus.AVAILABLE ||
@@ -239,6 +265,16 @@ public class StorageLocationsService : IStorageLocationsService
              b.Status == BagStatus.TESTED_PASSED ||
              b.Status == BagStatus.LOCKED ||
              b.Status == BagStatus.RESERVED));
+
+        var expiringSoonBags = await _context.BloodBags.CountAsync(b =>
+            b.LocationId == id &&
+            (b.Status == BagStatus.AVAILABLE ||
+             b.Status == BagStatus.READY_TESTING ||
+             b.Status == BagStatus.TESTED_PASSED ||
+             b.Status == BagStatus.LOCKED ||
+             b.Status == BagStatus.RESERVED) &&
+            b.ExpiredAt >= now &&
+            b.ExpiredAt <= expiringThreshold);
 
         return new StorageLocationDto
         {
@@ -248,7 +284,8 @@ public class StorageLocationsService : IStorageLocationsService
             TargetTemperature = location.TargetTemperature,
             IsFull = location.IsFull,
             IsActive = location.IsActive,
-            CurrentBagsCount = currentBags
+            CurrentBagsCount = currentBags,
+            ExpiringSoonBagsCount = expiringSoonBags
         };
     }
 
