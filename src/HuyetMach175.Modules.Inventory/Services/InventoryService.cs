@@ -1,8 +1,12 @@
+using System.Text.Json;
 using HuyetMach175.Api.Data;
+using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
 using HuyetMach175.Modules.Inventory.DTOs.Common;
 using HuyetMach175.Modules.Inventory.DTOs.Inventory;
 using HuyetMach175.Modules.Inventory.Processing;
+using HuyetMach175.SharedKernel.Exceptions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace HuyetMach175.Modules.Inventory.Services;
@@ -310,6 +314,119 @@ public class InventoryService : IInventoryService
             TotalCount = totalCount,
             PageNumber = pageNumber,
             PageSize = pageSize
+        };
+    }
+
+    public async Task<RelocateBloodBagResponse> RelocateBloodBagAsync(int bagId, RelocateBloodBagRequest request, int userId, string? ipAddress)
+    {
+        var bloodBag = await _context.BloodBags
+            .Include(b => b.ComponentType)
+            .Include(b => b.Location)
+            .FirstOrDefaultAsync(b => b.BagId == bagId);
+
+        if (bloodBag == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy túi máu với mã #{bagId}.");
+        }
+
+        if (bloodBag.Status == BagStatus.DISCARDED)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu '{bloodBag.Barcode}' đã bị tiêu hủy (DISCARDED), không thể điều chuyển.");
+        }
+
+        if (bloodBag.Status is BagStatus.TRANSFUSED or BagStatus.ISSUED)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu '{bloodBag.Barcode}' đã xuất kho hoặc đã truyền ({bloodBag.Status}), không còn lưu trữ trong kho.");
+        }
+
+        if (bloodBag.Status == BagStatus.PROCESSED)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu '{bloodBag.Barcode}' đã phân tách thành các chế phẩm con, không thể điều chuyển túi gốc.");
+        }
+
+        var newLocation = await _context.StorageLocations
+            .FirstOrDefaultAsync(l => l.LocationId == request.NewStorageLocationId);
+
+        if (newLocation == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy vị trí lưu trữ đích với mã #{request.NewStorageLocationId}.");
+        }
+
+        if (!newLocation.IsActive)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{newLocation.RefrigeratorName} - {newLocation.ShelfNumber}' đang bị vô hiệu hóa hoặc bảo trì.");
+        }
+
+        if (newLocation.IsFull)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{newLocation.RefrigeratorName} - {newLocation.ShelfNumber}' hiện đã đầy.");
+        }
+
+        if (bloodBag.LocationId == newLocation.LocationId)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu '{bloodBag.Barcode}' hiện đã ở tại vị trí '{newLocation.RefrigeratorName} - {newLocation.ShelfNumber}' rồi.");
+        }
+
+        var previousLocId = bloodBag.LocationId;
+        var previousLocName = bloodBag.Location != null
+            ? $"{bloodBag.Location.RefrigeratorName} - {bloodBag.Location.ShelfNumber}"
+            : "Chưa phân bổ vị trí";
+
+        var newLocName = $"{newLocation.RefrigeratorName} - {newLocation.ShelfNumber}";
+        var now = DateTime.UtcNow;
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        bloodBag.LocationId = newLocation.LocationId;
+
+        var noteTrimmed = request.Note?.Trim();
+        var changeReason = string.IsNullOrWhiteSpace(noteTrimmed)
+            ? $"Điều chuyển vị trí túi máu {bloodBag.Barcode} từ '{previousLocName}' sang '{newLocName}'."
+            : noteTrimmed;
+
+        var auditLog = new AuditLog
+        {
+            TableName = "blood_bags",
+            RecordId = bloodBag.BagId,
+            ActionType = ActionType.UPDATE,
+            OldState = JsonSerializer.Serialize(new
+            {
+                locationId = previousLocId,
+                locationName = previousLocName
+            }),
+            NewState = JsonSerializer.Serialize(new
+            {
+                locationId = newLocation.LocationId,
+                locationName = newLocName,
+                note = noteTrimmed
+            }),
+            PerformedBy = userId,
+            IpAddress = ipAddress,
+            ChangeReason = changeReason,
+            CreatedAt = now
+        };
+
+        _context.AuditLogs.Add(auditLog);
+        await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
+
+        var bloodGroup = InventoryProcessing.FormatBloodGroup(bloodBag.BloodType, bloodBag.RhFactor);
+        var componentName = bloodBag.ComponentType?.TypeName ?? bloodBag.ComponentType?.TypeCode.ToString() ?? "Máu toàn phần";
+
+        return new RelocateBloodBagResponse
+        {
+            BagId = bloodBag.BagId,
+            Barcode = bloodBag.Barcode,
+            BloodGroup = bloodGroup,
+            ComponentTypeName = componentName,
+            PreviousStorageLocationId = previousLocId,
+            PreviousStorageLocationName = previousLocName,
+            NewStorageLocationId = newLocation.LocationId,
+            NewStorageLocationName = newLocName,
+            Note = noteTrimmed,
+            RelocatedAt = now,
+            RelocatedBy = userId,
+            Message = $"Điều chuyển túi máu {bloodBag.Barcode} sang vị trí '{newLocName}' thành công."
         };
     }
 }

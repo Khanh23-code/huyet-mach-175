@@ -7,4 +7,5 @@ public interface IInventoryService
 {
     Task<InventorySummaryResponse> GetInventorySummaryAsync(InventorySummaryFilterDto filter);
     Task<PagedResult<ExpiringSoonBagDto>> GetExpiringSoonBagsAsync(ExpiringSoonFilterDto filter);
+    Task<RelocateBloodBagResponse> RelocateBloodBagAsync(int bagId, RelocateBloodBagRequest request, int userId, string? ipAddress);
 }

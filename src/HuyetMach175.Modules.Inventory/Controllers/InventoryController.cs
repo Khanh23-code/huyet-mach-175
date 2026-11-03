@@ -2,6 +2,7 @@ using HuyetMach175.Modules.Inventory.DTOs.Common;
 using HuyetMach175.Modules.Inventory.DTOs.Inventory;
 using HuyetMach175.Modules.Inventory.Services;
 using HuyetMach175.SharedKernel.Authorization;
+using HuyetMach175.SharedKernel.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -61,6 +62,32 @@ public class InventoryController : ControllerBase
     public async Task<IActionResult> GetExpiringSoonBags([FromQuery] ExpiringSoonFilterDto filter)
     {
         var result = await _inventoryService.GetExpiringSoonBagsAsync(filter);
+        return Ok(result);
+    }
+
+    [HttpPut("bags/{bagId:int}/storage-location")]
+    [HasPermission("INVENTORY_EDIT")]
+    [EndpointSummary("Điều chuyển vị trí ngăn tủ/hộc lưu trữ túi máu")]
+    [EndpointDescription(
+        "Cập nhật vị trí ngăn tủ bảo quản mới cho một túi máu và lưu vết lịch sử di chuyển vào nhật ký hệ thống (audit_logs).\n\n" +
+        "**Quy tắc nghiệp vụ:**\n" +
+        "- Kiểm tra sự tồn tại của túi máu và tính khả dụng của vị trí đích (phải đang hoạt động và chưa đầy).\n" +
+        "- Chặn điều chuyển nếu túi máu đã tiêu hủy, đã xuất kho hoặc đã hoàn tất truyền máu.\n" +
+        "- Chặn điều chuyển nếu vị trí mới trùng với vị trí hiện tại của túi máu.\n" +
+        "- Lưu vết chi tiết vị trí cũ, vị trí mới, người thực hiện và lý do/ghi chú điều chuyển.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **INVENTORY_EDIT**.")]
+    [ProducesResponseType(typeof(RelocateBloodBagResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RelocateBloodBag(
+        [FromRoute] int bagId,
+        [FromBody] RelocateBloodBagRequest request)
+    {
+        var userId = User.GetUserId();
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var result = await _inventoryService.RelocateBloodBagAsync(bagId, request, userId, ipAddress);
         return Ok(result);
     }
 }
