@@ -2,6 +2,7 @@ using System.Text.Json;
 using HuyetMach175.Api.Data;
 using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
+using HuyetMach175.Modules.Inventory.DTOs.Common;
 using HuyetMach175.Modules.Inventory.DTOs.StorageLocations;
 using HuyetMach175.SharedKernel.Exceptions;
 using Microsoft.AspNetCore.Http;
@@ -18,18 +19,45 @@ public class StorageLocationsService : IStorageLocationsService
         _context = context;
     }
 
-    public async Task<List<StorageLocationDto>> GetStorageLocationsAsync(bool? availableOnly = null)
+    public async Task<PagedResult<StorageLocationDto>> GetStorageLocationsAsync(StorageLocationFilterDto filter)
     {
         var query = _context.StorageLocations.AsNoTracking();
 
-        if (!availableOnly.HasValue || availableOnly.Value)
+        if (filter.AvailableOnly == true)
         {
             query = query.Where(l => l.IsActive && !l.IsFull);
         }
+        else
+        {
+            if (filter.IsActive.HasValue)
+            {
+                query = query.Where(l => l.IsActive == filter.IsActive.Value);
+            }
 
-        return await query
+            if (filter.IsFull.HasValue)
+            {
+                query = query.Where(l => l.IsFull == filter.IsFull.Value);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var search = filter.Search.Trim().ToLower();
+            query = query.Where(l =>
+                l.RefrigeratorName.ToLower().Contains(search) ||
+                l.ShelfNumber.ToLower().Contains(search));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var pageNumber = filter.PageNumber > 0 ? filter.PageNumber : 1;
+        var pageSize = filter.PageSize > 0 ? Math.Min(filter.PageSize, 100) : 20;
+
+        var items = await query
             .OrderBy(l => l.RefrigeratorName)
             .ThenBy(l => l.ShelfNumber)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .Select(l => new StorageLocationDto
             {
                 LocationId = l.LocationId,
@@ -46,6 +74,14 @@ public class StorageLocationsService : IStorageLocationsService
                     b.Status == BagStatus.RESERVED)
             })
             .ToListAsync();
+
+        return new PagedResult<StorageLocationDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
     }
 
     public async Task<StorageLocationDto> GetStorageLocationByIdAsync(int id)

@@ -1,3 +1,4 @@
+using HuyetMach175.Modules.Inventory.DTOs.Common;
 using HuyetMach175.Modules.Inventory.DTOs.StorageLocations;
 using HuyetMach175.Modules.Inventory.Services;
 using HuyetMach175.SharedKernel.Authorization;
@@ -25,21 +26,25 @@ public class StorageLocationsController : ControllerBase
     [HasPermission("INVENTORY_VIEW")]
     [EndpointSummary("Lấy danh sách các vị trí tủ bảo quản lưu trữ máu")]
     [EndpointDescription(
-        "Lấy danh sách các tủ lạnh và ngăn kệ lưu trữ trong kho máu phục vụ việc lựa chọn vị trí khi tiếp nhận túi máu.\n\n" +
-        "**Quy tắc nghiệp vụ:**\n" +
-        "- Mặc định (`availableOnly = true`): Chỉ trả về các vị trí đang hoạt động (`isActive = true`) và chưa đầy (`isFull = false`).\n" +
-        "- Khi truyền `availableOnly = false`: Trả về toàn bộ danh sách vị trí lưu trữ trong hệ thống kèm số lượng túi máu hiện tại.\n\n" +
+        "Lấy danh sách các tủ lạnh và ngăn kệ lưu trữ trong kho máu kèm hỗ trợ tìm kiếm và phân trang.\n\n" +
+        "**Bộ lọc & Phân trang:**\n" +
+        "- `search`: Tìm kiếm theo tên tủ, mã vị trí, mã vạch.\n" +
+        "- `availableOnly = true`: Chỉ lấy các vị trí đang hoạt động và chưa đầy.\n" +
+        "- `isFull`: Lọc theo trạng thái đã đầy hay chưa.\n" +
+        "- `isActive`: Lọc theo trạng thái đang sử dụng hay ngừng sử dụng.\n" +
+        "- `pageNumber` / `page`: Trang cần xem (mặc định 1).\n" +
+        "- `pageSize`: Số bản ghi trên mỗi trang (mặc định 20).\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **INVENTORY_VIEW** (các vai trò như BBNK, MGT).\n\n" +
         "**HTTP Response:**\n" +
-        "- 200 OK: Trả về danh sách vị trí lưu trữ.\n" +
+        "- 200 OK: Trả về danh sách vị trí lưu trữ phân trang.\n" +
         "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
         "- 403 Forbidden: Không có quyền truy cập INVENTORY_VIEW.")]
-    [ProducesResponseType(typeof(List<StorageLocationDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<StorageLocationDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetStorageLocations([FromQuery(Name = "availableOnly")] bool? availableOnly = true)
+    public async Task<IActionResult> GetStorageLocations([FromQuery] StorageLocationFilterDto filter)
     {
-        var result = await _storageLocationsService.GetStorageLocationsAsync(availableOnly);
+        var result = await _storageLocationsService.GetStorageLocationsAsync(filter);
         return Ok(result);
     }
 
