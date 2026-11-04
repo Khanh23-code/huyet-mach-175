@@ -4,6 +4,7 @@ import {
     HeartOutlined,
     SettingOutlined,
     TeamOutlined,
+    InboxOutlined,
 } from '@ant-design/icons'
 import { PERMISSIONS, type PermissionRequirement } from './permissions'
 
@@ -47,6 +48,18 @@ export const ROUTE_GROUPS: RouteGroup[] = [
             { key: 'queue', label: 'Hàng chờ tiếp nhận', path: '/btd/queue', requiredPermission: PERMISSIONS.APPOINTMENTS_VIEW },
             { key: 'screening', label: 'Khám sàng lọc', path: '/btd/screening', requiredPermission: PERMISSIONS.SCREENING_VIEW },
             { key: 'sessions', label: 'Phiên lấy máu', path: '/btd/sessions', requiredPermission: PERMISSIONS.SESSION_VIEW },
+        ],
+    },
+    {
+        // W2: Túi máu & Kho
+        key: 'inventory',
+        label: 'Túi máu & Kho',
+        icon: <InboxOutlined />,
+        defaultOpen: true,
+        children: [
+            { key: 'bag-intake', label: 'Khởi tạo mã định danh', path: '/inventory/intake', requiredPermission: PERMISSIONS.INVENTORY_EDIT },
+            { key: 'processing', label: 'Điều chế chế phẩm', path: '/inventory/processing', requiredPermission: PERMISSIONS.PROCESSING_VIEW },
+            // TODO: lifecycle scan, tồn kho & kiểm kê, hoàn trả, tiêu hủy, cận hạn: thêm khi có trang
         ],
     },
     {
