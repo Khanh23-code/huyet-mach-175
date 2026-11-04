@@ -81,6 +81,89 @@ public class BloodBagsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("scan/{barcode}")]
+    [HasPermission("INVENTORY_VIEW")]
+    [EndpointSummary("Quét / Tra cứu thông tin và vòng đời túi máu theo Barcode")]
+    [EndpointDescription(
+        "Tra cứu thông tin chi tiết của một túi máu theo mã vạch barcode (dành cho máy quét hoặc nhập tay trên trang Quét vòng đời).\n\n" +
+        "**Dữ liệu trả về:**\n" +
+        "- Thông tin cơ bản: mã vạch, nhóm máu ABO/Rh, loại chế phẩm, thể tích, vị trí lưu trữ hiện tại.\n" +
+        "- Trạng thái hiện tại (`currentStatus`, `currentStatusLabel`, `currentStep`).\n" +
+        "- Trạng thái gợi ý tiếp theo (`nextStatus`, `nextStatusLabel`, `nextStep`).\n" +
+        "- Các cờ cảnh báo: `isLocked` (đang tạm khóa), `isDiscarded` (đã hủy), `isExpired` (đã hết hạn sử dụng).\n" +
+        "- `timeline`: Mảng 7 bước tiến trình vòng đời từ Tiếp nhận -> Cách ly -> Xét nghiệm -> Nhập kho -> Giữ chỗ -> Cấp phát -> Đã truyền kèm cờ completed và thời điểm hoàn tất.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **INVENTORY_VIEW** (vai trò BBNK, MGT, LAB, CLIN).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Tìm thấy túi máu và trả về vòng đời chi tiết.\n" +
+        "- 400 BadRequest: Mã barcode không hợp lệ.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền truy cập INVENTORY_VIEW.\n" +
+        "- 404 NotFound: Không tìm thấy túi máu với mã barcode đã cho.")]
+    [ProducesResponseType(typeof(BloodBagScanResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ScanBloodBag([FromRoute] string barcode)
+    {
+        var result = await _bloodBagsService.ScanBloodBagAsync(barcode);
+        return Ok(result);
+    }
+
+    [HttpPost("transition-status")]
+    [HasPermission("INVENTORY_EDIT")]
+    [EndpointSummary("Chuyển đổi trạng thái vòng đời túi máu qua máy quét")]
+    [EndpointDescription(
+        "Chuyển trạng thái túi máu sang bước tiếp theo trong quy trình kho vận hoặc chuyển vào luồng tạm khóa khẩn cấp.\n\n" +
+        "**Quy tắc nghiệp vụ & Chốt chặn an toàn (Guardrails):**\n" +
+        "- Chặn chuyển sang `TESTED_PASSED` thủ công (bắt buộc phải qua kết quả xét nghiệm vi sinh /api/lab-tests).\n" +
+        "- Chặn chuyển sang `PROCESSED` thủ công (bắt buộc thực hiện tại quy trình ép tách chế phẩm /api/blood-processing/separate).\n" +
+        "- Chặn chuyển ngược về `NEWLY_COLLECTED`.\n" +
+        "- Chặn mọi thao tác nếu túi máu đã ở trạng thái tiêu hủy (`DISCARDED`) hoặc đã truyền (`TRANSFUSED`).\n" +
+        "- Chặn nhập kho (`AVAILABLE`) hoặc cấp phát (`ISSUED`) nếu túi máu đã hết hạn sử dụng (`expired_at <= now`).\n" +
+        "- Chặn mở khóa nếu túi máu đang nằm trong một biên bản đề xuất tiêu hủy đang chờ duyệt.\n" +
+        "- Tự động ghi kép vào cả 2 bảng nhật ký: `audit_logs` (kiểm toán tổng) và `blood_bag_status_logs` (nhật ký vòng đời).\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **INVENTORY_EDIT** (vai trò BBNK, MGT).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Chuyển trạng thái thành công, trả về trạng thái mới và vị trí lưu trữ.\n" +
+        "- 400 BadRequest: Vi phạm quy tắc máy trạng thái hoặc dữ liệu không hợp lệ.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền truy cập INVENTORY_EDIT.\n" +
+        "- 404 NotFound: Không tìm thấy túi máu hoặc vị trí tủ lưu trữ.")]
+    [ProducesResponseType(typeof(TransitionBagStatusResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> TransitionStatus([FromBody] TransitionBagStatusRequest request)
+    {
+        var userId = User.GetUserId();
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var result = await _bloodBagsService.TransitionStatusAsync(request, userId, ipAddress);
+        return Ok(result);
+    }
+
+    [HttpGet("audit-logs/recent")]
+    [HasPermission("INVENTORY_VIEW")]
+    [EndpointSummary("Lấy danh sách nhật ký chuyển trạng thái túi máu gần đây")]
+    [EndpointDescription(
+        "Lấy danh sách lịch sử chuyển trạng thái túi máu gần đây nhất phục vụ bảng 'Nhật ký gần đây' bên dưới màn hình quét barcode.\n\n" +
+        "**Tham số Query:**\n" +
+        "- `limit`: Số lượng bản ghi cần lấy (mặc định 10, tối đa 100).\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **INVENTORY_VIEW** (vai trò BBNK, MGT, LAB, CLIN).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Trả về danh sách nhật ký gần đây kèm thông tin người thao tác và thời điểm.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền truy cập INVENTORY_VIEW.")]
+    [ProducesResponseType(typeof(RecentStatusLogsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetRecentAuditLogs([FromQuery] int limit = 10)
+    {
+        var result = await _bloodBagsService.GetRecentStatusLogsAsync(limit);
+        return Ok(result);
+    }
+
     [HttpPost("external")]
     [HasPermission("INVENTORY_EDIT")]
     [EndpointSummary("Khởi tạo mã định danh cho túi máu tiếp nhận từ đơn vị ngoài")]

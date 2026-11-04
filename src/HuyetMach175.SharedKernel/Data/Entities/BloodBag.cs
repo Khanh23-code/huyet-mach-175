@@ -77,4 +77,5 @@ public class BloodBag
     public ICollection<BloodTestResult> TestResults { get; set; } = new List<BloodTestResult>();
     public ICollection<BloodAllocation> Allocations { get; set; } = new List<BloodAllocation>();
     public ICollection<BloodDisposalItem> DisposalItems { get; set; } = new List<BloodDisposalItem>();
+    public ICollection<BloodBagStatusLog> StatusLogs { get; set; } = new List<BloodBagStatusLog>();
 }
