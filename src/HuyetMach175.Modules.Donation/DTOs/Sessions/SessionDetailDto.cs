@@ -34,6 +34,9 @@ public class SessionDetailDto
     [JsonPropertyName("bloodBagBarcode")]
     public string? BloodBagBarcode { get; set; }
 
+    [JsonPropertyName("bloodBag")]
+    public SessionBloodBagDto? BloodBag { get; set; }
+
     [JsonPropertyName("donor")]
     public SessionDonorDto Donor { get; set; } = new();
 
@@ -87,4 +90,14 @@ public class SessionScreeningSummaryDto
 
     [JsonPropertyName("screenedAt")]
     public DateTime? ScreenedAt { get; set; }
+}
+
+public class SessionBloodBagDto
+{
+    [JsonPropertyName("bagId")] public int BagId { get; set; }
+    [JsonPropertyName("barcode")] public string Barcode { get; set; } = string.Empty;
+    [JsonPropertyName("bloodGroup")] public string BloodGroup { get; set; } = string.Empty;
+    [JsonPropertyName("volumeMl")] public int VolumeMl { get; set; }
+    [JsonPropertyName("collectedAt")] public DateTime CollectedAt { get; set; }
+    [JsonPropertyName("status")] public string Status { get; set; } = string.Empty;
 }

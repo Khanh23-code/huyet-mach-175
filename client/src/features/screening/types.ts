@@ -1,6 +1,8 @@
 export type ScreeningStatus = 'PENDING' | 'QUALIFIED' | 'DEFERRED' | 'UNQUALIFIED'
 export type Conclusion = Exclude<ScreeningStatus, 'PENDING'>
 export type TargetVolume = 'VOL_250' | 'VOL_350' | 'VOL_450'
+export type AboGroup = 'A' | 'B' | 'AB' | 'O'
+export type RhValue = 'POSITIVE' | 'NEGATIVE'
 
 /** SurveyQueueItemDto (ScreeningStatus là chuỗi) */
 export interface ScreeningQueueItem {
@@ -94,6 +96,8 @@ export interface UpdateClinicalRequest {
     screeningStatus: Conclusion
     deferralReason?: string
     targetVolumeMl?: TargetVolume
+    bloodType?: AboGroup
+    rhFactor?: RhValue
 }
 
 export interface ClinicalScreeningResponse {

@@ -38,6 +38,7 @@ public class BloodBagsService : IBloodBagsService
         var bloodBag = await _context.BloodBags
             .Include(b => b.ComponentType)
             .Include(b => b.Location)
+            .Include(b => b.Session)
             .FirstOrDefaultAsync(b => b.Barcode == normalizedBarcode);
 
         if (bloodBag == null)
@@ -51,7 +52,14 @@ public class BloodBagsService : IBloodBagsService
                 $"Túi máu đang ở trạng thái '{bloodBag.Status}'. Chỉ túi máu mới thu gom ('NEWLY_COLLECTED') mới có thể tiếp nhận vào Viện.");
         }
 
-        var location = await _context.StorageLocations.FirstOrDefaultAsync(l => l.LocationId == request.StorageLocationId);
+        if (bloodBag.Session != null && bloodBag.Session.Status != SessionStatus.COMPLETED)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Túi máu thuộc phiên lấy máu chưa hoàn tất, chưa thể tiếp nhận vào Viện.");
+        }
+
+        var location = await _context.StorageLocations
+            .FirstOrDefaultAsync(l => l.LocationId == request.StorageLocationId);
+
         if (location == null)
         {
             throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy vị trí lưu trữ với ID {request.StorageLocationId}.");
