@@ -50,6 +50,14 @@ public class BloodBag
     [Column("discard_reason")]
     public string? DiscardReason { get; set; }
 
+    [MaxLength(150)]
+    [Column("external_unit_name")]
+    public string? ExternalUnitName { get; set; }
+
+    [MaxLength(100)]
+    [Column("external_code")]
+    public string? ExternalCode { get; set; }
+
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
