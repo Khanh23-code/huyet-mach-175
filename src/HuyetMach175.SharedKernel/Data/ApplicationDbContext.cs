@@ -31,6 +31,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<BloodTestResult> BloodTestResults => Set<BloodTestResult>();
     public DbSet<BloodDisposalRecord> BloodDisposalRecords => Set<BloodDisposalRecord>();
     public DbSet<BloodDisposalItem> BloodDisposalItems => Set<BloodDisposalItem>();
+    public DbSet<BloodBagStatusLog> BloodBagStatusLogs => Set<BloodBagStatusLog>();
 
     public DbSet<BloodRequest> BloodRequests => Set<BloodRequest>();
     public DbSet<BloodRequestItem> BloodRequestItems => Set<BloodRequestItem>();
