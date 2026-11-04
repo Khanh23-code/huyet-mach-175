@@ -56,12 +56,14 @@ public class BloodProcessingController : ControllerBase
         "- Kiểm tra túi máu mẹ tồn tại và phải ở trạng thái `TESTED_PASSED`.\n" +
         "- Mã barcode túi con được tự động sinh theo chuẩn: `[Mã_Túi_Mẹ]-[Mã_Chế_Phẩm]` (ví dụ: BAG-20261101-00401-PRBC, BAG-20261101-00401-FFP, BAG-20261101-00401-PLT).\n" +
         "- Tự động tính hạn sử dụng (`expired_at`) dựa trên ngày thu gom của túi mẹ và chu kỳ bảo quản quy chuẩn:\n" +
-        "  + Khối hồng cầu (PRBC): Ngày thu gom + 35 ngày.\n" +
+        "  + Khối hồng cầu (PRBC): Ngày thu gom + 42 ngày (theo `life_days`).\n" +
         "  + Huyết tương đông lạnh (FFP): Ngày thu gom + 365 ngày.\n" +
         "  + Khối tiểu cầu (PLT): Ngày thu gom + 5 ngày.\n" +
         "- Các túi con được chuyển sang trạng thái `AVAILABLE` (Sẵn sàng cấp phát/lưu kho).\n" +
         "- Túi máu mẹ chuyển sang trạng thái `PROCESSED` (Đã hoàn tất điều chế) và giải phóng vị trí lưu trữ.\n" +
-        "- Tự động ghi nhật ký hệ thống `audit_logs` để theo dõi truy xuất nguồn gốc.\n\n" +
+        "- Tự động ghi nhật ký hệ thống `audit_logs` để theo dõi truy xuất nguồn gốc.\n" +
+        "- Từ chối (400) nếu: tổng thể tích con vượt thể tích túi mẹ, túi mẹ hoặc chế phẩm đã quá hạn, loại chế phẩm khai trùng, hoặc tủ lưu trữ sai nhiệt độ (PRBC 1 đến 10°C, FFP từ -18°C trở xuống, PLT 20 đến 24°C).\n" +
+        "- Trả 409 nếu túi mẹ vừa được điều chế bởi người khác.\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **PROCESSING_EDIT**.\n\n" +
         "**HTTP Response:**\n" +
         "- 200 OK: Điều chế thành công, trả về danh sách túi con kèm barcode, hạn dùng và vị trí lưu trữ.\n" +
@@ -74,11 +76,23 @@ public class BloodProcessingController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> SeparateBloodBag([FromBody] SeparateBloodBagRequest request)
     {
         var userId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var result = await _bloodProcessingService.SeparateBloodBagAsync(request, userId, ipAddress);
+        return Ok(result);
+    }
+
+    [HttpGet("component-types")]
+    [HasPermission("PROCESSING_VIEW")]
+    [EndpointSummary("Danh sách loại chế phẩm có thể điều chế (PRBC, FFP, PLT)")]
+    [EndpointDescription("Trả về loại chế phẩm kèm hạn dùng (`lifeDays`) và nhiệt độ bảo quản để giao diện hiển thị hạn dùng dự kiến. Yêu cầu quyền **PROCESSING_VIEW**.")]
+    [ProducesResponseType(typeof(List<ComponentTypeOptionDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetComponentTypes()
+    {
+        var result = await _bloodProcessingService.GetSeparableComponentTypesAsync();
         return Ok(result);
     }
 }
