@@ -80,4 +80,31 @@ public class BloodBagsController : ControllerBase
         var result = await _bloodBagsService.ReceiveBloodBagAsync(request, userId, ipAddress);
         return Ok(result);
     }
+
+    [HttpPost("external")]
+    [HasPermission("INVENTORY_EDIT")]
+    [EndpointSummary("Khởi tạo mã định danh cho túi máu tiếp nhận từ đơn vị ngoài")]
+    [EndpointDescription(
+        "Tạo túi máu toàn phần (WB) nhận từ đơn vị ngoài, sinh barcode `EXT-{yyyyMMdd}-{BagId:D6}`, lưu vào tủ và chuyển thẳng sang READY_TESTING.\n\n" +
+        "**Quy tắc nghiệp vụ:**\n" +
+        "- Bắt buộc: đơn vị cung cấp, mã túi gốc của đơn vị ngoài (chống nhận trùng theo cặp đơn vị + mã), nhóm máu, thể tích, thời gian thu thập, nhiệt độ tiếp nhận (2.0 đến 10.0°C), vị trí lưu trữ.\n" +
+        "- Hạn dùng = thời gian thu thập + `life_days` của WB. Từ chối nếu đã quá hạn.\n" +
+        "- Vị trí lưu trữ phải đang hoạt động, chưa đầy và có nhiệt độ mục tiêu phù hợp với WB.\n" +
+        "- Nhóm máu khai báo chỉ là dự kiến, xét nghiệm sẽ khẳng định lại.\n" +
+        "- Ghi `audit_logs` (INSERT).\n\n" +
+        "**Yêu cầu quyền truy cập:** **INVENTORY_EDIT**.\n\n" +
+        "**HTTP Response:** 200 OK, 400 dữ liệu không hợp lệ, 404 không thấy vị trí, 409 trùng mã túi ngoài.")]
+    [ProducesResponseType(typeof(RegisterExternalBloodBagResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RegisterExternalBloodBag([FromBody] RegisterExternalBloodBagRequest request)
+    {
+        var userId = User.GetUserId();
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var result = await _bloodBagsService.RegisterExternalBloodBagAsync(request, userId, ipAddress);
+        return Ok(result);
+    }
 }
