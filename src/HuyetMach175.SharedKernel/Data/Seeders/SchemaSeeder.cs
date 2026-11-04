@@ -112,6 +112,23 @@ public static class SchemaSeeder
 
             CREATE INDEX IF NOT EXISTS ""IX_blood_disposal_items_disposal_id"" ON blood_disposal_items(disposal_id);
             CREATE INDEX IF NOT EXISTS ""IX_blood_disposal_items_bag_id"" ON blood_disposal_items(bag_id);
+
+            CREATE TABLE IF NOT EXISTS blood_bag_status_logs (
+                log_id SERIAL PRIMARY KEY,
+                bag_id integer NOT NULL,
+                from_status character varying(50) NOT NULL,
+                to_status character varying(50) NOT NULL,
+                performed_by_id integer NULL,
+                audit_log_id bigint NULL,
+                notes character varying(255) NULL,
+                created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT ""FK_blood_bag_status_logs_blood_bags_bag_id"" FOREIGN KEY (bag_id) REFERENCES blood_bags(bag_id) ON DELETE CASCADE,
+                CONSTRAINT ""FK_blood_bag_status_logs_users_performed_by_id"" FOREIGN KEY (performed_by_id) REFERENCES users(user_id) ON DELETE SET NULL,
+                CONSTRAINT ""FK_blood_bag_status_logs_audit_logs_audit_log_id"" FOREIGN KEY (audit_log_id) REFERENCES audit_logs(log_id) ON DELETE SET NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_blood_bag_status_logs_bag_id ON blood_bag_status_logs(bag_id);
+            CREATE INDEX IF NOT EXISTS idx_blood_bag_status_logs_created_at ON blood_bag_status_logs(created_at DESC);
         ";
 
         await context.Database.ExecuteSqlRawAsync(sql);

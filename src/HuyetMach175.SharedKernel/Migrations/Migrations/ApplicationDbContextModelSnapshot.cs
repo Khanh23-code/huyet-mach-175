@@ -229,6 +229,63 @@ namespace HuyetMach175.Api.Migrations
                     b.ToTable("blood_bags");
                 });
 
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.BloodBagStatusLog", b =>
+                {
+                    b.Property<int>("LogId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("log_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("LogId"));
+
+                    b.Property<long?>("AuditLogId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("audit_log_id");
+
+                    b.Property<int>("BagId")
+                        .HasColumnType("integer")
+                        .HasColumnName("bag_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("FromStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("from_status");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("notes");
+
+                    b.Property<int?>("PerformedById")
+                        .HasColumnType("integer")
+                        .HasColumnName("performed_by_id");
+
+                    b.Property<string>("ToStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("to_status");
+
+                    b.HasKey("LogId");
+
+                    b.HasIndex("AuditLogId");
+
+                    b.HasIndex("BagId")
+                        .HasDatabaseName("idx_blood_bag_status_logs_bag_id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("idx_blood_bag_status_logs_created_at");
+
+                    b.HasIndex("PerformedById");
+
+                    b.ToTable("blood_bag_status_logs", (string)null);
+                });
+
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.BloodComponentType", b =>
                 {
                     b.Property<int>("ComponentTypeId")
@@ -1497,6 +1554,31 @@ namespace HuyetMach175.Api.Migrations
                     b.Navigation("Session");
                 });
 
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.BloodBagStatusLog", b =>
+                {
+                    b.HasOne("HuyetMach175.Api.Data.Entities.AuditLog", "AuditLog")
+                        .WithMany()
+                        .HasForeignKey("AuditLogId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("HuyetMach175.Api.Data.Entities.BloodBag", "BloodBag")
+                        .WithMany("StatusLogs")
+                        .HasForeignKey("BagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HuyetMach175.Api.Data.Entities.User", "PerformedByUser")
+                        .WithMany()
+                        .HasForeignKey("PerformedById")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("AuditLog");
+
+                    b.Navigation("BloodBag");
+
+                    b.Navigation("PerformedByUser");
+                });
+
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.BloodDisposalItem", b =>
                 {
                     b.HasOne("HuyetMach175.Api.Data.Entities.BloodBag", "BloodBag")
@@ -1792,6 +1874,8 @@ namespace HuyetMach175.Api.Migrations
                     b.Navigation("DerivedBags");
 
                     b.Navigation("DisposalItems");
+
+                    b.Navigation("StatusLogs");
 
                     b.Navigation("TestResults");
                 });
