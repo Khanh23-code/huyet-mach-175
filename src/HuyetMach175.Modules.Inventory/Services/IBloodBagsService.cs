@@ -10,4 +10,5 @@ public interface IBloodBagsService
     Task<BloodBagScanResponse> ScanBloodBagAsync(string barcode);
     Task<TransitionBagStatusResponse> TransitionStatusAsync(TransitionBagStatusRequest request, int userId, string? ipAddress);
     Task<RecentStatusLogsResponse> GetRecentStatusLogsAsync(int limit);
+    Task<RegisterExternalBloodBagResponse> RegisterExternalBloodBagAsync(RegisterExternalBloodBagRequest request, int userId, string? ipAddress);
 }

@@ -15,6 +15,8 @@ import NotFoundPage from '@/pages/NotFoundPage'
 import RouteErrorBoundary from '@/components/RouteErrorBoundary'
 import { findRouteItem } from '@/config/routeConfig'
 import SessionPage from '@/features/sessions/pages/SessionPage'
+import ExternalBagPage from '@/features/inventory/pages/ExternalBagPage'
+import ProcessingPage from '@/features/inventory/pages/ProcessingPage'
 
 const usersRoute = findRouteItem('users')
 const siteListRoute = findRouteItem('site-list')
@@ -22,6 +24,8 @@ const proposalsRoute = findRouteItem('site-proposals')
 const queueRoute = findRouteItem('queue')
 const screeningRoute = findRouteItem('screening')
 const sessionsRoute = findRouteItem('sessions')
+const bagIntakeRoute = findRouteItem('bag-intake')
+const processingRoute = findRouteItem('processing')
 
 export const router = createBrowserRouter([
     {
@@ -71,6 +75,14 @@ export const router = createBrowserRouter([
                     {
                         element: <ProtectedRoute requiredPermission={sessionsRoute.requiredPermission} />,
                         children: [{ path: sessionsRoute.path, element: <SessionPage /> }],
+                    },
+                    {
+                        element: <ProtectedRoute requiredPermission={bagIntakeRoute.requiredPermission} />,
+                        children: [{ path: bagIntakeRoute.path, element: <ExternalBagPage /> }],
+                    },
+                    {
+                        element: <ProtectedRoute requiredPermission={processingRoute.requiredPermission} />,
+                        children: [{ path: processingRoute.path, element: <ProcessingPage /> }],
                     },
                     { path: '*', element: <NotFoundPage /> },
                 ],

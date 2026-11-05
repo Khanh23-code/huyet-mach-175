@@ -8,6 +8,7 @@ using HuyetMach175.Modules.Inventory.Mappings;
 using HuyetMach175.SharedKernel.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using HuyetMach175.Modules.Inventory.Processing;
 
 namespace HuyetMach175.Modules.Inventory.Services;
 
@@ -119,6 +120,172 @@ public class BloodBagsService : IBloodBagsService
 
         return bloodBag.ToReceiveResponse(location, request.ReceivedTemperature, now, userId);
     }
+
+    public async Task<RegisterExternalBloodBagResponse> RegisterExternalBloodBagAsync(RegisterExternalBloodBagRequest request, int userId, string? ipAddress)
+    {
+        var unitName = request.ExternalUnitName.Trim();
+        var externalCode = request.ExternalCode.Trim();
+
+        if (unitName.Length == 0 || externalCode.Length == 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Đơn vị cung cấp và mã túi của đơn vị ngoài không được để trống.");
+        }
+
+        if (request.ReceivedTemperature < 2.0m || request.ReceivedTemperature > 10.0m)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Nhiệt độ tiếp nhận không đạt chuẩn an toàn ({request.ReceivedTemperature:0.#}°C). Phải nằm trong khoảng từ 2.0°C đến 10.0°C.");
+        }
+
+        var now = DateTime.UtcNow;
+        var collectedAt = ToUtc(request.CollectedAt);
+
+        if (collectedAt > now.AddMinutes(5))
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Thời gian thu thập không được ở tương lai.");
+        }
+
+        var wb = await _context.BloodComponentTypes
+            .FirstOrDefaultAsync(ct => ct.TypeCode == ComponentCode.WB);
+
+        if (wb == null)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Hệ thống chưa thiết lập loại chế phẩm máu toàn phần (WB).");
+        }
+
+        var expiredAt = collectedAt.AddDays(wb.LifeDays);
+        if (expiredAt <= now)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Túi máu đã quá hạn sử dụng theo thời gian thu thập, không thể tiếp nhận.");
+        }
+
+        var location = await _context.StorageLocations
+            .FirstOrDefaultAsync(l => l.LocationId == request.StorageLocationId);
+
+        if (location == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy vị trí lưu trữ với ID {request.StorageLocationId}.");
+        }
+
+        var locationName = $"{location.RefrigeratorName} - {location.ShelfNumber}";
+
+        if (!location.IsActive)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{locationName}' đang bị vô hiệu hóa hoặc bảo trì.");
+        }
+
+        if (location.IsFull)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{locationName}' hiện đã đầy.");
+        }
+
+        if (!BagRules.IsStorageSuitable(ComponentCode.WB, location.TargetTemperature))
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí '{locationName}' ({location.TargetTemperature:0.#}°C) không phù hợp để bảo quản máu toàn phần (cần {BagRules.StorageHint(ComponentCode.WB)}).");
+        }
+
+        var unitKey = unitName.ToLower();
+        var codeKey = externalCode.ToLower();
+        var duplicated = await _context.BloodBags.AnyAsync(b =>
+            b.ExternalUnitName != null && b.ExternalCode != null &&
+            b.ExternalUnitName.ToLower() == unitKey &&
+            b.ExternalCode.ToLower() == codeKey);
+
+        if (duplicated)
+        {
+            throw new HttpException(StatusCodes.Status409Conflict, $"Túi mã '{externalCode}' của đơn vị '{unitName}' đã được tiếp nhận trước đó.");
+        }
+
+        var bloodType = request.BloodType!.Value;
+        var rhFactor = request.RhFactor!.Value;
+
+        var bag = new BloodBag
+        {
+            // Barcode tạm, thay bằng EXT-... ngay sau khi có BagId (cùng transaction).
+            Barcode = $"EXT-TMP-{Guid.NewGuid():N}",
+            SessionId = null,
+            ParentBagId = null,
+            ComponentTypeId = wb.ComponentTypeId,
+            LocationId = location.LocationId,
+            BloodType = bloodType,
+            RhFactor = rhFactor,
+            VolumeMl = request.VolumeMl,
+            CollectedAt = collectedAt,
+            ExpiredAt = expiredAt,
+            Status = BagStatus.READY_TESTING,
+            ExternalUnitName = unitName,
+            ExternalCode = externalCode,
+            CreatedAt = now
+        };
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            _context.BloodBags.Add(bag);
+            await _context.SaveChangesAsync();
+
+            bag.Barcode = BagRules.ExternalBarcode(collectedAt, bag.BagId);
+
+            var bloodGroup = InventoryProcessing.FormatBloodGroup(bloodType, rhFactor);
+
+            _context.AuditLogs.Add(new AuditLog
+            {
+                TableName = "blood_bags",
+                RecordId = bag.BagId,
+                ActionType = ActionType.INSERT,
+                OldState = JsonSerializer.Serialize(new { }),
+                NewState = JsonSerializer.Serialize(new
+                {
+                    barcode = bag.Barcode,
+                    status = BagStatus.READY_TESTING.ToString(),
+                    bloodGroup,
+                    volumeMl = bag.VolumeMl,
+                    externalUnitName = unitName,
+                    externalCode,
+                    locationId = location.LocationId,
+                    receivedTemperature = request.ReceivedTemperature
+                }),
+                PerformedBy = userId,
+                IpAddress = ipAddress,
+                ChangeReason = $"Tiếp nhận túi máu ngoài từ '{unitName}' (mã gốc: {externalCode}). Nhiệt độ bàn giao: {request.ReceivedTemperature:0.#}°C. Vị trí lưu trữ: {locationName}.",
+                CreatedAt = now
+            });
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return new RegisterExternalBloodBagResponse
+            {
+                BagId = bag.BagId,
+                Barcode = bag.Barcode,
+                ComponentTypeName = wb.TypeName,
+                BloodGroup = bloodGroup,
+                VolumeMl = bag.VolumeMl,
+                Status = bag.Status.ToString(),
+                ExternalUnitName = unitName,
+                ExternalCode = externalCode,
+                StorageLocationId = location.LocationId,
+                StorageLocationName = locationName,
+                ReceivedTemperature = request.ReceivedTemperature,
+                CollectedAt = bag.CollectedAt,
+                ExpiredAt = bag.ExpiredAt,
+                ReceivedAt = now,
+                ReceivedBy = userId,
+                Message = $"Đã khởi tạo mã {bag.Barcode}. Túi máu ở trạng thái READY_TESTING, sẵn sàng xét nghiệm."
+            };
+        }
+        catch (DbUpdateException)
+        {
+            throw new HttpException(StatusCodes.Status409Conflict, $"Không thể lưu túi máu: mã '{externalCode}' của đơn vị '{unitName}' có thể vừa được tiếp nhận bởi người khác.");
+        }
+    }
+
+    private static DateTime ToUtc(DateTime value) => value.Kind switch
+    {
+        DateTimeKind.Utc => value,
+        DateTimeKind.Local => value.ToUniversalTime(),
+        _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+    };
 
     public async Task<PagedResult<BloodBagDto>> GetBloodBagsAsync(BloodBagFilterDto filter)
     {

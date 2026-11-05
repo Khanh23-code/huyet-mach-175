@@ -184,6 +184,16 @@ namespace HuyetMach175.Api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expired_at");
 
+                    b.Property<string>("ExternalCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("external_code");
+
+                    b.Property<string>("ExternalUnitName")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("external_unit_name");
+
                     b.Property<int?>("LocationId")
                         .HasColumnType("integer")
                         .HasColumnName("location_id");
@@ -222,6 +232,10 @@ namespace HuyetMach175.Api.Migrations
                     b.HasIndex("ParentBagId");
 
                     b.HasIndex("SessionId");
+
+                    b.HasIndex("ExternalUnitName", "ExternalCode")
+                        .IsUnique()
+                        .HasDatabaseName("ux_blood_bags_external");
 
                     b.HasIndex("BloodType", "RhFactor", "ComponentTypeId", "Status", "ExpiredAt")
                         .HasDatabaseName("idx_blood_bags_lookup");

@@ -7,4 +7,5 @@ public interface IBloodProcessingService
 {
     Task<PagedResult<ProcessingQueueItemDto>> GetProcessingQueueAsync(ProcessingQueueFilterDto filter);
     Task<SeparateBloodBagResponse> SeparateBloodBagAsync(SeparateBloodBagRequest request, int userId, string? ipAddress);
+    Task<List<ComponentTypeOptionDto>> GetSeparableComponentTypesAsync();
 }

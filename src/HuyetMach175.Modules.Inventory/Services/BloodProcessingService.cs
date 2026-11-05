@@ -7,6 +7,7 @@ using HuyetMach175.Modules.Inventory.DTOs.Processing;
 using HuyetMach175.SharedKernel.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using HuyetMach175.Modules.Inventory.Processing;
 
 namespace HuyetMach175.Modules.Inventory.Services;
 
@@ -99,6 +100,26 @@ public class BloodProcessingService : IBloodProcessingService
         };
     }
 
+    public async Task<List<ComponentTypeOptionDto>> GetSeparableComponentTypesAsync()
+    {
+        var types = await _context.BloodComponentTypes
+            .AsNoTracking()
+            .Where(ct => ct.TypeCode != ComponentCode.WB)
+            .ToListAsync();
+
+        return types
+            .OrderBy(ct => ct.TypeCode)
+            .Select(ct => new ComponentTypeOptionDto
+            {
+                ComponentTypeId = ct.ComponentTypeId,
+                TypeCode = ct.TypeCode.ToString(),
+                TypeName = ct.TypeName,
+                LifeDays = ct.LifeDays,
+                StorageTemperature = ct.StorageTemperature
+            })
+            .ToList();
+    }
+
     public async Task<SeparateBloodBagResponse> SeparateBloodBagAsync(SeparateBloodBagRequest request, int userId, string? ipAddress)
     {
         var identifier = !string.IsNullOrWhiteSpace(request.ParentBarcode)
@@ -113,6 +134,23 @@ public class BloodProcessingService : IBloodProcessingService
         if (request.Components == null || request.Components.Count == 0)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Danh sách chế phẩm con cần phân tách không được để trống.");
+        }
+
+        var requested = new List<(ComponentSeparationItemDto Item, ComponentCode Code)>();
+        foreach (var item in request.Components)
+        {
+            var code = MapComponentCode(item.ComponentType);
+            if (code == null || code == ComponentCode.WB)
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, $"Loại chế phẩm '{item.ComponentType}' không hợp lệ. Các loại cho phép: RED_BLOOD_CELLS (PRBC), PLASMA (FFP), PLATELETS (PLT).");
+            }
+
+            if (requested.Any(r => r.Code == code.Value))
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, $"Loại chế phẩm '{code}' bị khai báo trùng. Mỗi loại chỉ được tạo một túi trong một lần điều chế.");
+            }
+
+            requested.Add((item, code.Value));
         }
 
         int? numericId = int.TryParse(identifier, out var parsedId) ? parsedId : null;
@@ -142,62 +180,87 @@ public class BloodProcessingService : IBloodProcessingService
             throw new HttpException(StatusCodes.Status400BadRequest, "Chỉ túi máu toàn phần (WB) mới có thể thực hiện ép tách thành các chế phẩm con.");
         }
 
+        var now = DateTime.UtcNow;
+
+        if (parentBag.ExpiredAt <= now)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu '{parentBag.Barcode}' đã hết hạn sử dụng, không thể điều chế.");
+        }
+
+        var totalVolume = requested.Sum(r => r.Item.VolumeMl);
+        if (totalVolume > parentBag.VolumeMl)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Tổng thể tích các chế phẩm ({totalVolume} ml) vượt quá thể tích túi mẹ ({parentBag.VolumeMl} ml).");
+        }
+
         var componentTypes = await _context.BloodComponentTypes.ToListAsync();
 
-        var requestedLocationIds = request.Components.Select(c => c.StorageLocationId).Distinct().ToList();
+        var requestedLocationIds = requested.Select(r => r.Item.StorageLocationId).Distinct().ToList();
         var locations = await _context.StorageLocations
             .Where(l => requestedLocationIds.Contains(l.LocationId))
             .ToDictionaryAsync(l => l.LocationId);
 
-        foreach (var comp in request.Components)
+        var typeByCode = new Dictionary<ComponentCode, BloodComponentType>();
+
+        foreach (var (item, code) in requested)
         {
-            var mappedCode = MapComponentCode(comp.ComponentType);
-            if (mappedCode == null)
-            {
-                throw new HttpException(StatusCodes.Status400BadRequest, $"Loại chế phẩm '{comp.ComponentType}' không hợp lệ. Các loại cho phép: RED_BLOOD_CELLS (PRBC), PLASMA (FFP), PLATELETS (PLT).");
-            }
-
-            if (!locations.TryGetValue(comp.StorageLocationId, out var loc))
-            {
-                throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy vị trí lưu trữ với ID {comp.StorageLocationId}.");
-            }
-
-            if (!loc.IsActive)
-            {
-                throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{loc.RefrigeratorName} - {loc.ShelfNumber}' đang bị vô hiệu hóa hoặc bảo trì.");
-            }
-
-            if (loc.IsFull)
-            {
-                throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{loc.RefrigeratorName} - {loc.ShelfNumber}' hiện đã đầy.");
-            }
-        }
-
-        await using var transaction = await _context.Database.BeginTransactionAsync();
-        var now = DateTime.UtcNow;
-
-        var childBags = new List<BloodBag>();
-        var derivedDtos = new List<DerivedComponentDto>();
-
-        foreach (var item in request.Components)
-        {
-            var code = MapComponentCode(item.ComponentType)!.Value;
             var compType = componentTypes.FirstOrDefault(ct => ct.TypeCode == code);
-
             if (compType == null)
             {
                 throw new HttpException(StatusCodes.Status400BadRequest, $"Hệ thống chưa thiết lập loại chế phẩm máu cho mã '{code}'.");
             }
 
-            var loc = locations[item.StorageLocationId];
-            var childBarcode = $"{parentBag.Barcode}-{code}";
+            typeByCode[code] = compType;
 
-            var existingBag = await _context.BloodBags.FirstOrDefaultAsync(b => b.Barcode == childBarcode);
-            if (existingBag != null)
+            if (parentBag.CollectedAt.AddDays(compType.LifeDays) <= now)
             {
-                throw new HttpException(StatusCodes.Status400BadRequest, $"Mã túi chế phẩm '{childBarcode}' đã tồn tại trong hệ thống.");
+                throw new HttpException(StatusCodes.Status400BadRequest, $"Chế phẩm {code} sẽ quá hạn ngay khi tạo (hạn dùng tính từ ngày thu gom {compType.LifeDays} ngày).");
             }
 
+            if (!locations.TryGetValue(item.StorageLocationId, out var loc))
+            {
+                throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy vị trí lưu trữ với ID {item.StorageLocationId}.");
+            }
+
+            var locName = $"{loc.RefrigeratorName} - {loc.ShelfNumber}";
+
+            if (!loc.IsActive)
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{locName}' đang bị vô hiệu hóa hoặc bảo trì.");
+            }
+
+            if (loc.IsFull)
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{locName}' hiện đã đầy.");
+            }
+
+            if (!BagRules.IsStorageSuitable(code, loc.TargetTemperature))
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí '{locName}' ({loc.TargetTemperature:0.#}°C) không phù hợp để bảo quản {code} (cần {BagRules.StorageHint(code)}).");
+            }
+        }
+
+        var childBarcodes = requested.Select(r => BagRules.ChildBarcode(parentBag.Barcode, r.Code)).ToList();
+        var clash = await _context.BloodBags
+            .Where(b => childBarcodes.Contains(b.Barcode))
+            .Select(b => b.Barcode)
+            .FirstOrDefaultAsync();
+
+        if (clash != null)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Mã túi chế phẩm '{clash}' đã tồn tại trong hệ thống.");
+        }
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        var childBags = new List<BloodBag>();
+        var derivedDtos = new List<DerivedComponentDto>();
+
+        foreach (var (item, code) in requested)
+        {
+            var compType = typeByCode[code];
+            var loc = locations[item.StorageLocationId];
+            var childBarcode = BagRules.ChildBarcode(parentBag.Barcode, code);
             var expiredAt = parentBag.CollectedAt.AddDays(compType.LifeDays);
 
             var childBag = new BloodBag
@@ -219,8 +282,6 @@ public class BloodProcessingService : IBloodProcessingService
             _context.BloodBags.Add(childBag);
             childBags.Add(childBag);
 
-            var bloodGroup = $"{(childBag.BloodType == BloodType.AB ? "AB" : childBag.BloodType.ToString())}{(childBag.RhFactor == RhFactor.POSITIVE ? "+" : "-")}";
-
             derivedDtos.Add(new DerivedComponentDto
             {
                 Barcode = childBarcode,
@@ -228,7 +289,7 @@ public class BloodProcessingService : IBloodProcessingService
                 ComponentTypeName = compType.TypeName,
                 BloodType = childBag.BloodType.ToString(),
                 RhFactor = childBag.RhFactor.ToString(),
-                BloodGroup = bloodGroup,
+                BloodGroup = InventoryProcessing.FormatBloodGroup(childBag.BloodType, childBag.RhFactor),
                 VolumeMl = childBag.VolumeMl,
                 Status = childBag.Status.ToString(),
                 StorageLocationId = loc.LocationId,
@@ -242,14 +303,21 @@ public class BloodProcessingService : IBloodProcessingService
         parentBag.Status = BagStatus.PROCESSED;
         parentBag.LocationId = null;
 
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            throw new HttpException(StatusCodes.Status409Conflict, $"Túi máu '{parentBag.Barcode}' vừa được điều chế bởi người khác. Vui lòng tải lại hàng chờ.");
+        }
 
         for (int i = 0; i < childBags.Count; i++)
         {
             derivedDtos[i].BagId = childBags[i].BagId;
         }
 
-        var auditLog = new AuditLog
+        _context.AuditLogs.Add(new AuditLog
         {
             TableName = "blood_bags",
             RecordId = parentBag.BagId,
@@ -269,9 +337,7 @@ public class BloodProcessingService : IBloodProcessingService
             IpAddress = ipAddress,
             ChangeReason = $"Hoàn tất điều chế. Túi máu toàn phần {parentBag.Barcode} đã được ép tách thành {childBags.Count} chế phẩm con: {string.Join(", ", childBags.Select(cb => cb.Barcode))}.",
             CreatedAt = now
-        };
-
-        _context.AuditLogs.Add(auditLog);
+        });
 
         await _context.SaveChangesAsync();
         await transaction.CommitAsync();
