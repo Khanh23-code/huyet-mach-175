@@ -50,6 +50,23 @@ public class BloodDisposalsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("candidates")]
+    [HasPermission("DISPOSAL_VIEW")]
+    [EndpointSummary("Danh sách túi máu tạm khóa (LOCKED) chưa nằm trong biên bản tiêu hủy nào")]
+    [EndpointDescription(
+        "Trả về các túi máu đang LOCKED và chưa thuộc biên bản PENDING_APPROVAL / APPROVED, để BBNK chọn lập biên bản tiêu hủy (ví dụ túi không đạt xét nghiệm).\n\n" +
+        "Hỗ trợ `search` theo barcode, phân trang `pageNumber`, `pageSize` (1-100).\n\n" +
+        "**Yêu cầu quyền truy cập:** **DISPOSAL_VIEW**.")]
+    [ProducesResponseType(typeof(PagedResult<DisposalCandidateDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetDisposalCandidates([FromQuery] DisposalCandidateFilterDto filter)
+    {
+        var result = await _bloodDisposalsService.GetDisposalCandidatesAsync(filter);
+        return Ok(result);
+    }
+
     [HttpGet("{id:int}")]
     [HasPermission("DISPOSAL_VIEW")]
     [EndpointSummary("Lấy thông tin chi tiết một biên bản tiêu hủy kèm danh sách túi máu")]
@@ -162,6 +179,30 @@ public class BloodDisposalsController : ControllerBase
         var userId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var result = await _bloodDisposalsService.ApproveDisposalAsync(id, request, userId, ipAddress);
+        return Ok(result);
+    }
+
+    [HttpPatch("{id:int}/execute")]
+    [HasPermission("DISPOSAL_EDIT")]
+    [EndpointSummary("Xác nhận đã tiêu hủy vật lý lô túi máu")]
+    [EndpointDescription(
+        "BBNK xác nhận đã tiêu hủy vật lý sau khi biên bản được lãnh đạo phê duyệt.\n\n" +
+        "**Quy tắc nghiệp vụ:**\n" +
+        "- Chỉ áp dụng cho biên bản ở trạng thái **APPROVED**.\n" +
+        "- Biên bản chuyển sang **DISPOSED**, toàn bộ túi máu trong lô chuyển sang **DISCARDED**.\n" +
+        "- Ghi vết vào AuditLog.\n\n" +
+        "**Yêu cầu quyền truy cập:** **DISPOSAL_EDIT**.\n\n" +
+        "**HTTP Response:** 200 OK, 400 biên bản không ở trạng thái APPROVED, 404 không tìm thấy biên bản.")]
+    [ProducesResponseType(typeof(DisposalDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ExecuteDisposal([FromRoute] int id)
+    {
+        var userId = User.GetUserId();
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var result = await _bloodDisposalsService.ExecuteDisposalAsync(id, userId, ipAddress);
         return Ok(result);
     }
 }

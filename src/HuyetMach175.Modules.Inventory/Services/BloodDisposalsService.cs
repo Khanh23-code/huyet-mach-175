@@ -5,6 +5,7 @@ using HuyetMach175.Api.Data.Enums;
 using HuyetMach175.Modules.Inventory.DTOs.BloodDisposals;
 using HuyetMach175.Modules.Inventory.DTOs.Common;
 using HuyetMach175.Modules.Inventory.Mappings;
+using HuyetMach175.Modules.Inventory.Processing;
 using HuyetMach175.SharedKernel.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -437,6 +438,130 @@ public class BloodDisposalsService : IBloodDisposalsService
             };
             _context.AuditLogs.Add(auditLog);
         }
+
+        await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
+
+        return await GetDisposalByIdAsync(record.DisposalId);
+    }
+
+    public async Task<PagedResult<DisposalCandidateDto>> GetDisposalCandidatesAsync(DisposalCandidateFilterDto filter)
+    {
+        if (filter.PageNumber < 1)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Số trang (pageNumber) phải lớn hơn hoặc bằng 1.");
+        }
+
+        if (filter.PageSize < 1 || filter.PageSize > 100)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Kích thước trang (pageSize) phải nằm trong khoảng từ 1 đến 100.");
+        }
+
+        var activeBagIds = _context.BloodDisposalItems
+            .Where(i => i.DisposalRecord != null &&
+                        (i.DisposalRecord.Status == DisposalStatus.PENDING_APPROVAL ||
+                         i.DisposalRecord.Status == DisposalStatus.APPROVED))
+            .Select(i => i.BagId);
+
+        var query = _context.BloodBags
+            .AsNoTracking()
+            .Include(b => b.ComponentType)
+            .Include(b => b.Location)
+            .Where(b => b.Status == BagStatus.LOCKED && !activeBagIds.Contains(b.BagId));
+
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var kw = filter.Search.Trim();
+            query = query.Where(b => EF.Functions.ILike(b.Barcode, $"%{kw}%"));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var bags = await query
+            .OrderBy(b => b.CollectedAt)
+            .ThenBy(b => b.BagId)
+            .Skip((filter.PageNumber - 1) * filter.PageSize)
+            .Take(filter.PageSize)
+            .ToListAsync();
+
+        var items = bags.Select(b => new DisposalCandidateDto
+        {
+            BagId = b.BagId,
+            Barcode = b.Barcode,
+            BloodGroup = InventoryProcessing.FormatBloodGroup(b.BloodType, b.RhFactor),
+            ComponentTypeCode = b.ComponentType?.TypeCode.ToString() ?? string.Empty,
+            ComponentTypeName = b.ComponentType?.TypeName ?? string.Empty,
+            VolumeMl = b.VolumeMl,
+            StorageLocationName = b.Location != null ? $"{b.Location.RefrigeratorName} - {b.Location.ShelfNumber}" : null,
+            CollectedAt = b.CollectedAt,
+            ExpiredAt = b.ExpiredAt,
+            DiscardReason = b.DiscardReason
+        }).ToList();
+
+        return new PagedResult<DisposalCandidateDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageNumber = filter.PageNumber,
+            PageSize = filter.PageSize
+        };
+    }
+
+    public async Task<DisposalDetailDto> ExecuteDisposalAsync(int id, int userId, string? ipAddress)
+    {
+        if (id <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Mã biên bản đề xuất tiêu hủy không hợp lệ.");
+        }
+
+        var record = await _context.BloodDisposalRecords
+            .Include(r => r.Items)
+                .ThenInclude(i => i.BloodBag)
+            .FirstOrDefaultAsync(r => r.DisposalId == id);
+
+        if (record == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy biên bản đề xuất tiêu hủy với mã #{id}.");
+        }
+
+        if (record.Status != DisposalStatus.APPROVED)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Biên bản đang ở trạng thái '{record.Status}'. Chỉ có thể xác nhận tiêu hủy khi biên bản đã được phê duyệt (APPROVED).");
+        }
+
+        var now = DateTime.UtcNow;
+        using var transaction = await _context.Database.BeginTransactionAsync();
+
+        record.Status = DisposalStatus.DISPOSED;
+
+        foreach (var item in record.Items)
+        {
+            if (item.BloodBag == null) continue;
+            item.BloodBag.Status = BagStatus.DISCARDED;
+            if (string.IsNullOrWhiteSpace(item.BloodBag.DiscardReason))
+            {
+                item.BloodBag.DiscardReason = BloodDisposalMappings.FormatDisposalReasonText(record.Reason);
+            }
+        }
+
+        _context.AuditLogs.Add(new AuditLog
+        {
+            TableName = "blood_disposal_records",
+            RecordId = record.DisposalId,
+            ActionType = ActionType.STATUS_CHANGE,
+            OldState = JsonSerializer.Serialize(new { status = DisposalStatus.APPROVED.ToString() }),
+            NewState = JsonSerializer.Serialize(new
+            {
+                status = record.Status.ToString(),
+                disposedBy = userId,
+                totalBags = record.Items.Count
+            }),
+            PerformedBy = userId,
+            IpAddress = ipAddress,
+            ChangeReason = $"Xác nhận đã tiêu hủy vật lý biên bản {record.DisposalCode}. {record.Items.Count} túi máu chuyển sang DISCARDED.",
+            CreatedAt = now
+        });
 
         await _context.SaveChangesAsync();
         await transaction.CommitAsync();
