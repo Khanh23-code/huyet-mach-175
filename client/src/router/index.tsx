@@ -17,6 +17,9 @@ import { findRouteItem } from '@/config/routeConfig'
 import SessionPage from '@/features/sessions/pages/SessionPage'
 import ExternalBagPage from '@/features/inventory/pages/ExternalBagPage'
 import ProcessingPage from '@/features/inventory/pages/ProcessingPage'
+import DisposalApprovalPage from "@/features/inventory/pages/DisposalApprovalPage.tsx";
+import DisposalPage from "@/features/inventory/pages/DisposalPage.tsx";
+import LabTestPage from "@/features/inventory/pages/LabTestPage.tsx";
 
 const usersRoute = findRouteItem('users')
 const siteListRoute = findRouteItem('site-list')
@@ -26,6 +29,9 @@ const screeningRoute = findRouteItem('screening')
 const sessionsRoute = findRouteItem('sessions')
 const bagIntakeRoute = findRouteItem('bag-intake')
 const processingRoute = findRouteItem('processing')
+const labRoute = findRouteItem('lab-tests')
+const disposalRoute = findRouteItem('disposals')
+const approvalRoute = findRouteItem('disposal-approvals')
 
 export const router = createBrowserRouter([
     {
@@ -84,6 +90,15 @@ export const router = createBrowserRouter([
                         element: <ProtectedRoute requiredPermission={processingRoute.requiredPermission} />,
                         children: [{ path: processingRoute.path, element: <ProcessingPage /> }],
                     },
+                    {
+                        element: <ProtectedRoute requiredPermission={labRoute.requiredPermission} />,
+                        children: [{ path: labRoute.path, element: <LabTestPage /> }] },
+                    {
+                        element: <ProtectedRoute requiredPermission={disposalRoute.requiredPermission} />,
+                        children: [{ path: disposalRoute.path, element: <DisposalPage /> }] },
+                    {
+                        element: <ProtectedRoute requiredPermission={approvalRoute.requiredPermission} />,
+                        children: [{ path: approvalRoute.path, element: <DisposalApprovalPage /> }] },
                     { path: '*', element: <NotFoundPage /> },
                 ],
             },
