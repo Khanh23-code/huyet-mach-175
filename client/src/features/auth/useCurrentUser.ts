@@ -1,7 +1,5 @@
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useAuthStore } from '@/features/auth/authStore'
-import { authApi } from '@/features/auth/authApi'
-import type { AuthUser } from '@/types/auth'
 
 /** "Lê Quốc Anh" -> "LA", "Mai" -> "MA" */
 export function getInitials(name: string): string {
@@ -21,38 +19,12 @@ export function getInitials(name: string): string {
 }
 
 /**
- * Lấy thông tin user hiện tại từ backend (GET /api/Auth/me) và đồng bộ vào authStore,
- * kể cả `permissions`. Sau khi xong (thành công hoặc lỗi) đánh dấu `permissionsSynced`
- * để ProtectedRoute biết đã có thể quyết định theo quyền.
- *
- * Gọi hook này ở một vị trí cố định bên trong AppLayout (hiện là Header).
+ * Đọc thông tin user hiện tại từ authStore.
+ * Việc gọi GET /api/Auth/me đã chuyển sang <AuthGate /> (chạy 1 lần khi mở app).
  */
 export function useCurrentUser() {
     const user = useAuthStore((s) => s.user)
     const accessToken = useAuthStore((s) => s.accessToken)
-    const setUser = useAuthStore((s) => s.setUser)
-    const markPermissionsSynced = useAuthStore((s) => s.markPermissionsSynced)
-
-    useEffect(() => {
-        if (!accessToken) return
-        let cancelled = false
-
-        authApi
-            .me()
-            .then((currentUser: AuthUser) => {
-                if (!cancelled) {
-                    setUser({ ...currentUser, permissions: currentUser.permissions ?? [] })
-                }
-            })
-            .catch(() => {})
-            .finally(() => {
-                if (!cancelled) markPermissionsSynced()
-            })
-
-        return () => {
-            cancelled = true
-        }
-    }, [accessToken, setUser, markPermissionsSynced])
 
     return useMemo(() => {
         const fullName = user?.fullName?.trim() || user?.username || ''

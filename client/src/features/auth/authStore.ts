@@ -2,6 +2,7 @@
 import { persist } from 'zustand/middleware'
 import type { AuthUser } from '@/types/auth'
 import { useWorkCampaignStore } from '@/features/reception/workCampaignStore'
+import { queryClient } from '@/services/queryClient'
 
 interface AuthState {
     accessToken: string | null
@@ -27,15 +28,17 @@ export const useAuthStore = create<AuthState>()(
             logout: () => {
                 // Đăng nhập lại phải nhập lại mã đợt hiến máu
                 useWorkCampaignStore.getState().clear()
+                // Xoá cache để tài khoản khác không thấy dữ liệu của tài khoản trước
+                queryClient.clear()
                 set({ accessToken: null, refreshToken: null, user: null, permissionsSynced: false })
             },
         }),
         {
             name: 'auth-storage',
+            // Không persist user: luôn lấy mới từ /me khi mở app
             partialize: (s) => ({
                 accessToken: s.accessToken,
                 refreshToken: s.refreshToken,
-                user: s.user,
             }),
         },
     ),
