@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<IRolesService, RolesService>();
         services.AddScoped<IPermissionsService, PermissionsService>();
         services.AddScoped<IDepartmentsService, DepartmentsService>();
+        services.AddMemoryCache();
 
         services.AddControllers()
             .AddApplicationPart(typeof(DependencyInjection).Assembly);

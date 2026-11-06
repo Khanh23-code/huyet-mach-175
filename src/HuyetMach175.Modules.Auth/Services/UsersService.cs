@@ -3,10 +3,12 @@ using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Modules.Auth.DTOs.Common;
 using HuyetMach175.Modules.Auth.DTOs.Users;
 using HuyetMach175.Modules.Auth.Mappings;
+using HuyetMach175.SharedKernel.Authorization;
 using HuyetMach175.SharedKernel.Exceptions;
 using HuyetMach175.SharedKernel.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace HuyetMach175.Modules.Auth.Services;
 
@@ -14,13 +16,16 @@ public class UsersService : IUsersService
 {
     private readonly ApplicationDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IMemoryCache _cache;
 
     public UsersService(
         ApplicationDbContext context,
-        IPasswordHasher passwordHasher)
+        IPasswordHasher passwordHasher,
+        IMemoryCache cache)
     {
         _context = context;
         _passwordHasher = passwordHasher;
+        _cache = cache;
     }
 
     public async Task<PagedResult<UserListItemDto>> GetUsersAsync(UserFilterDto filter)
@@ -113,7 +118,7 @@ public class UsersService : IUsersService
 
         return user;
     }
-    
+
     private static string? NormalizeOptional(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
@@ -265,6 +270,7 @@ public class UsersService : IUsersService
         }
 
         await _context.SaveChangesAsync();
+        _cache.Remove(PermissionAuthorizationHandler.CacheKey(userId)); // khoá/mở khoá có hiệu lực ngay
 
         return await GetUserByIdAsync(userId);
     }
@@ -320,6 +326,7 @@ public class UsersService : IUsersService
         }
 
         await _context.SaveChangesAsync();
+        _cache.Remove(PermissionAuthorizationHandler.CacheKey(userId)); // đổi role có hiệu lực ngay
 
         return await GetUserByIdAsync(userId);
     }
