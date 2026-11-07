@@ -50,6 +50,14 @@ public class BloodBag
     [Column("discard_reason")]
     public string? DiscardReason { get; set; }
 
+    [MaxLength(150)]
+    [Column("external_unit_name")]
+    public string? ExternalUnitName { get; set; }
+
+    [MaxLength(100)]
+    [Column("external_code")]
+    public string? ExternalCode { get; set; }
+
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
@@ -68,5 +76,11 @@ public class BloodBag
     public ICollection<BloodBag> DerivedBags { get; set; } = new List<BloodBag>();
     public ICollection<BloodTestResult> TestResults { get; set; } = new List<BloodTestResult>();
     public ICollection<BloodAllocation> Allocations { get; set; } = new List<BloodAllocation>();
+<<<<<<< HEAD
     public ICollection<BloodDisposalRecord> DisposalRecords { get; set; } = new List<BloodDisposalRecord>();
 }
+=======
+    public ICollection<BloodDisposalItem> DisposalItems { get; set; } = new List<BloodDisposalItem>();
+    public ICollection<BloodBagStatusLog> StatusLogs { get; set; } = new List<BloodBagStatusLog>();
+}
+>>>>>>> 18fd47d92a9274d24c20e3913cd951c12967d593

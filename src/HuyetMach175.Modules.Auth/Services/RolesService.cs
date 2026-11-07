@@ -3,19 +3,39 @@ using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Modules.Auth.DTOs;
 using HuyetMach175.Modules.Auth.DTOs.Roles;
 using HuyetMach175.Modules.Auth.Mappings;
+using HuyetMach175.SharedKernel.Authorization;
 using HuyetMach175.SharedKernel.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace HuyetMach175.Modules.Auth.Services;
 
 public class RolesService : IRolesService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IMemoryCache _cache;
 
-    public RolesService(ApplicationDbContext context)
+    public RolesService(ApplicationDbContext context, IMemoryCache cache)
     {
         _context = context;
+        _cache = cache;
+    }
+
+    /// <summary>Xoá cache quyền của mọi user thuộc role (gọi SAU khi SaveChanges).</summary>
+    private async Task EvictPermissionCacheForRoleAsync(int roleId)
+    {
+        var userIds = await _context.UserRoles
+            .AsNoTracking()
+            .Where(ur => ur.RoleId == roleId)
+            .Select(ur => ur.UserId)
+            .Distinct()
+            .ToListAsync();
+
+        foreach (var id in userIds)
+        {
+            _cache.Remove(PermissionAuthorizationHandler.CacheKey(id));
+        }
     }
 
     public async Task<List<RoleDto>> GetRolesAsync()
@@ -169,6 +189,7 @@ public class RolesService : IRolesService
 
         role.IsActive = targetStatus;
         await _context.SaveChangesAsync();
+        await EvictPermissionCacheForRoleAsync(roleId);
 
         return await GetRoleByIdAsync(roleId);
     }
@@ -266,6 +287,7 @@ public class RolesService : IRolesService
         }
 
         await _context.SaveChangesAsync();
+        await EvictPermissionCacheForRoleAsync(roleId);
 
         return await GetRolePermissionsAsync(roleId);
     }

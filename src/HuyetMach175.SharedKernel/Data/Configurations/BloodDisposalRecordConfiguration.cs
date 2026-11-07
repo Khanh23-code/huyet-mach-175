@@ -12,12 +12,15 @@ public class BloodDisposalRecordConfiguration : IEntityTypeConfiguration<BloodDi
 
         builder.Property(b => b.Reason).HasConversion<string>();
         builder.Property(b => b.Status).HasConversion<string>();
+<<<<<<< HEAD
         builder.Property(b => b.PreviousStatus).HasConversion<string>();
 
         builder.HasOne(b => b.BloodBag)
             .WithMany(bb => bb.DisposalRecords)
             .HasForeignKey(b => b.BagId)
             .OnDelete(DeleteBehavior.Restrict);
+=======
+>>>>>>> 18fd47d92a9274d24c20e3913cd951c12967d593
 
         builder.HasOne(b => b.RequestedByUser)
             .WithMany()
@@ -28,6 +31,16 @@ public class BloodDisposalRecordConfiguration : IEntityTypeConfiguration<BloodDi
             .WithMany()
             .HasForeignKey(b => b.ApprovedBy)
             .OnDelete(DeleteBehavior.Restrict);
+<<<<<<< HEAD
     }
 }
 
+=======
+
+        builder.HasMany(b => b.Items)
+            .WithOne(i => i.DisposalRecord)
+            .HasForeignKey(i => i.DisposalId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+>>>>>>> 18fd47d92a9274d24c20e3913cd951c12967d593

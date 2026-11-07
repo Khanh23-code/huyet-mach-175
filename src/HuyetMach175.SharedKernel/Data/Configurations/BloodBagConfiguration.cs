@@ -10,6 +10,10 @@ public class BloodBagConfiguration : IEntityTypeConfiguration<BloodBag>
     {
         builder.HasIndex(bb => bb.Barcode).IsUnique();
 
+        builder.HasIndex(bb => new { bb.ExternalUnitName, bb.ExternalCode })
+            .IsUnique()
+            .HasDatabaseName("ux_blood_bags_external");
+
         builder.Property(bb => bb.BloodType)
             .HasConversion<string>();
 

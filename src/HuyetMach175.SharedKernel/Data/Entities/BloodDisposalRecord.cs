@@ -16,9 +16,12 @@ public class BloodDisposalRecord
     [Column("disposal_code")]
     public string DisposalCode { get; set; } = string.Empty;
 
+<<<<<<< HEAD
     [Column("bag_id")]
     public int BagId { get; set; }
 
+=======
+>>>>>>> 18fd47d92a9274d24c20e3913cd951c12967d593
     [Column("reason")]
     public DisposalReason Reason { get; set; }
 
@@ -29,8 +32,13 @@ public class BloodDisposalRecord
     [Column("status")]
     public DisposalStatus Status { get; set; } = DisposalStatus.PENDING_APPROVAL;
 
+<<<<<<< HEAD
     [Column("previous_status")]
     public BagStatus PreviousStatus { get; set; }
+=======
+    [Column("total_bags")]
+    public int TotalBags { get; set; }
+>>>>>>> 18fd47d92a9274d24c20e3913cd951c12967d593
 
     [Column("requested_by")]
     public int RequestedBy { get; set; }
@@ -48,12 +56,21 @@ public class BloodDisposalRecord
     [Column("rejection_reason")]
     public string? RejectionReason { get; set; }
 
+<<<<<<< HEAD
     [ForeignKey(nameof(BagId))]
     public BloodBag? BloodBag { get; set; }
 
+=======
+>>>>>>> 18fd47d92a9274d24c20e3913cd951c12967d593
     [ForeignKey(nameof(RequestedBy))]
     public User? RequestedByUser { get; set; }
 
     [ForeignKey(nameof(ApprovedBy))]
     public User? ApprovedByUser { get; set; }
+<<<<<<< HEAD
 }
+=======
+
+    public ICollection<BloodDisposalItem> Items { get; set; } = new List<BloodDisposalItem>();
+}
+>>>>>>> 18fd47d92a9274d24c20e3913cd951c12967d593

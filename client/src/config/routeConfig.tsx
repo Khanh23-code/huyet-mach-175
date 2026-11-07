@@ -4,6 +4,7 @@ import {
     HeartOutlined,
     SettingOutlined,
     TeamOutlined,
+    InboxOutlined,
 } from '@ant-design/icons'
 import { PERMISSIONS, type PermissionRequirement } from './permissions'
 
@@ -47,6 +48,23 @@ export const ROUTE_GROUPS: RouteGroup[] = [
             { key: 'queue', label: 'Hàng chờ tiếp nhận', path: '/btd/queue', requiredPermission: PERMISSIONS.APPOINTMENTS_VIEW },
             { key: 'screening', label: 'Khám sàng lọc', path: '/btd/screening', requiredPermission: PERMISSIONS.SCREENING_VIEW },
             { key: 'sessions', label: 'Phiên lấy máu', path: '/btd/sessions', requiredPermission: PERMISSIONS.SESSION_VIEW },
+<<<<<<< HEAD
+=======
+        ],
+    },
+    {
+        // W2: Túi máu & Kho
+        key: 'inventory',
+        label: 'Túi máu & Kho',
+        icon: <InboxOutlined />,
+        defaultOpen: true,
+        children: [
+            { key: 'bag-intake', label: 'Khởi tạo mã định danh', path: '/inventory/intake', requiredPermission: PERMISSIONS.INVENTORY_EDIT },
+            { key: 'processing', label: 'Điều chế chế phẩm', path: '/inventory/processing', requiredPermission: PERMISSIONS.PROCESSING_VIEW },
+            { key: 'lab-tests', label: 'Xét nghiệm túi máu', path: '/inventory/lab-tests', requiredPermission: PERMISSIONS.LAB_VIEW },
+            { key: 'disposals', label: 'Xử lý hủy túi máu', path: '/inventory/disposals', requiredPermission: PERMISSIONS.DISPOSAL_EDIT },
+            { key: 'disposal-approvals', label: 'Phê duyệt biên bản hủy', path: '/inventory/disposal-approvals', requiredPermission: PERMISSIONS.DISPOSAL_APPROVE },
+>>>>>>> 18fd47d92a9274d24c20e3913cd951c12967d593
         ],
     },
     {
