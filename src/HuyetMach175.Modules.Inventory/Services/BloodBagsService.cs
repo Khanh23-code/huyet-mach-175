@@ -58,6 +58,11 @@ public class BloodBagsService : IBloodBagsService
             throw new HttpException(StatusCodes.Status400BadRequest, "Túi máu thuộc phiên lấy máu chưa hoàn tất, chưa thể tiếp nhận vào Viện.");
         }
 
+        if (bloodBag.Session != null && bloodBag.Session.Status != SessionStatus.COMPLETED)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Túi máu thuộc phiên lấy máu chưa hoàn tất, chưa thể tiếp nhận vào Viện.");
+        }
+
         var location = await _context.StorageLocations
             .FirstOrDefaultAsync(l => l.LocationId == request.StorageLocationId);
 

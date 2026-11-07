@@ -1,4 +1,4 @@
-﻿export const ROLE_PRESETS: Record<string, string[]> = {
+export const ROLE_PRESETS: Record<string, string[]> = {
     SYS: ['*'],
     MGT: ['*_VIEW', 'CAMPAIGN_APPROVE', 'CAMPAIGN_CANCEL', 'DISPOSAL_APPROVE', '!USERS_*', '!ROLES_*'],
     CLIN: ['DONORS_VIEW', 'SCREENING_*'],
