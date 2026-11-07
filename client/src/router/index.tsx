@@ -8,7 +8,6 @@ import ForbiddenPage from '@/pages/ForbiddenPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import RouteErrorBoundary from '@/components/RouteErrorBoundary'
 import { findRouteItem } from '@/config/routeConfig'
-import SessionPage from '@/features/sessions/pages/SessionPage'
 
 type RouteItem = ReturnType<typeof findRouteItem>
 type PageLoader = () => Promise<{ default: ComponentType }>
@@ -30,14 +29,11 @@ const proposalsRoute = findRouteItem('site-proposals')
 const queueRoute = findRouteItem('queue')
 const screeningRoute = findRouteItem('screening')
 const sessionsRoute = findRouteItem('sessions')
-<<<<<<< HEAD
-=======
 const bagIntakeRoute = findRouteItem('bag-intake')
 const processingRoute = findRouteItem('processing')
 const labRoute = findRouteItem('lab-tests')
 const disposalRoute = findRouteItem('disposals')
 const approvalRoute = findRouteItem('disposal-approvals')
->>>>>>> 18fd47d92a9274d24c20e3913cd951c12967d593
 
 export const router = createBrowserRouter([
     {
@@ -69,24 +65,6 @@ export const router = createBrowserRouter([
                             { path: '/campaigns/:id/summary', ...lazyPage(() => import('@/features/campaigns/pages/CampaignSummaryPage')) },
                         ],
                     },
-<<<<<<< HEAD
-                    {
-                        element: <ProtectedRoute requiredPermission={proposalsRoute.requiredPermission} />,
-                        children: [{ path: proposalsRoute.path, element: <ProposalPage /> }],
-                    },
-                    {
-                        element: <ProtectedRoute requiredPermission={queueRoute.requiredPermission} />,
-                        children: [{ path: queueRoute.path, element: <ReceptionQueuePage /> }],
-                    },
-                    {
-                        element: <ProtectedRoute requiredPermission={screeningRoute.requiredPermission} />,
-                        children: [{ path: screeningRoute.path, element: <ScreeningPage /> }],
-                    },
-                    {
-                        element: <ProtectedRoute requiredPermission={sessionsRoute.requiredPermission} />,
-                        children: [{ path: sessionsRoute.path, element: <SessionPage /> }],
-                    },
-=======
                     guarded(proposalsRoute, () => import('@/features/campaigns/pages/ProposalPage')),
                     guarded(queueRoute, () => import('@/features/reception/pages/ReceptionQueuePage')),
                     guarded(screeningRoute, () => import('@/features/screening/pages/ScreeningPage')),
@@ -96,7 +74,6 @@ export const router = createBrowserRouter([
                     guarded(labRoute, () => import('@/features/inventory/pages/LabTestPage')),
                     guarded(disposalRoute, () => import('@/features/inventory/pages/DisposalPage')),
                     guarded(approvalRoute, () => import('@/features/inventory/pages/DisposalApprovalPage')),
->>>>>>> 18fd47d92a9274d24c20e3913cd951c12967d593
                     { path: '*', element: <NotFoundPage /> },
                 ],
             },

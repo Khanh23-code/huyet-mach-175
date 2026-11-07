@@ -176,10 +176,6 @@ public enum PermissionAction
     CANCEL
 }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 18fd47d92a9274d24c20e3913cd951c12967d593
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum DisposalReason
 {
@@ -194,10 +190,7 @@ public enum DisposalReason
 public enum DisposalStatus
 {
     PENDING_APPROVAL,
-<<<<<<< HEAD
-=======
     APPROVED,
->>>>>>> 18fd47d92a9274d24c20e3913cd951c12967d593
     DISPOSED,
     REJECTED,
     CANCELLED

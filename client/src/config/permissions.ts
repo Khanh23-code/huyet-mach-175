@@ -17,8 +17,6 @@ export const PERMISSIONS = {
     // W1: Phiên lấy máu
     SESSION_VIEW: 'SESSION_VIEW',
     SESSION_EDIT: 'SESSION_EDIT',
-<<<<<<< HEAD
-=======
     // W2: Túi máu & Kho
     INVENTORY_VIEW: 'INVENTORY_VIEW',
     INVENTORY_EDIT: 'INVENTORY_EDIT',
@@ -29,7 +27,6 @@ export const PERMISSIONS = {
     DISPOSAL_VIEW: 'DISPOSAL_VIEW',
     DISPOSAL_EDIT: 'DISPOSAL_EDIT',
     DISPOSAL_APPROVE: 'DISPOSAL_APPROVE',
->>>>>>> 18fd47d92a9274d24c20e3913cd951c12967d593
     // Quản trị hệ thống
     USERS_VIEW: 'USERS_VIEW',
     USERS_EDIT: 'USERS_EDIT',
