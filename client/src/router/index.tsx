@@ -34,6 +34,9 @@ const processingRoute = findRouteItem('processing')
 const labRoute = findRouteItem('lab-tests')
 const disposalRoute = findRouteItem('disposals')
 const approvalRoute = findRouteItem('disposal-approvals')
+const bagScanRoute = findRouteItem('bag-scan')
+const stockRoute = findRouteItem('stock')
+const expiryRoute = findRouteItem('expiry-alerts')
 
 export const router = createBrowserRouter([
     {
@@ -74,6 +77,9 @@ export const router = createBrowserRouter([
                     guarded(labRoute, () => import('@/features/inventory/pages/LabTestPage')),
                     guarded(disposalRoute, () => import('@/features/inventory/pages/DisposalPage')),
                     guarded(approvalRoute, () => import('@/features/inventory/pages/DisposalApprovalPage')),
+                    guarded(bagScanRoute, () => import('@/features/inventory/pages/BagScanPage')),
+                    guarded(stockRoute, () => import('@/features/inventory/pages/StockPage')),
+                    guarded(expiryRoute, () => import('@/features/inventory/pages/ExpiryAlertsPage')),
                     { path: '*', element: <NotFoundPage /> },
                 ],
             },

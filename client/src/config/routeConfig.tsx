@@ -58,10 +58,13 @@ export const ROUTE_GROUPS: RouteGroup[] = [
         defaultOpen: true,
         children: [
             { key: 'bag-intake', label: 'Khởi tạo mã định danh', path: '/inventory/intake', requiredPermission: PERMISSIONS.INVENTORY_EDIT },
+            { key: 'bag-scan', label: 'Quét vòng đời túi máu', path: '/inventory/scan', requiredPermission: PERMISSIONS.INVENTORY_VIEW },
+            { key: 'stock', label: 'Tồn kho & kiểm kê', path: '/inventory/stock', requiredPermission: PERMISSIONS.INVENTORY_VIEW },
             { key: 'processing', label: 'Điều chế chế phẩm', path: '/inventory/processing', requiredPermission: PERMISSIONS.PROCESSING_VIEW },
             { key: 'lab-tests', label: 'Xét nghiệm túi máu', path: '/inventory/lab-tests', requiredPermission: PERMISSIONS.LAB_VIEW },
             { key: 'disposals', label: 'Xử lý hủy túi máu', path: '/inventory/disposals', requiredPermission: PERMISSIONS.DISPOSAL_EDIT },
             { key: 'disposal-approvals', label: 'Phê duyệt biên bản hủy', path: '/inventory/disposal-approvals', requiredPermission: PERMISSIONS.DISPOSAL_APPROVE },
+            { key: 'expiry-alerts', label: 'Cảnh báo cận hạn', path: '/inventory/expiring', requiredPermission: PERMISSIONS.INVENTORY_VIEW },
         ],
     },
     {
