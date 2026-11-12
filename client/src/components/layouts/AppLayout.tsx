@@ -12,10 +12,18 @@ export default function AppLayout() {
         <Layout className="app-layout" style={{ minHeight: '100vh' }}>
             <Header />
 
-            <Layout className="app-layout__body">
+            <Layout className="app-layout__body" style={{ position: 'relative' }}>
                 <Sidebar />
 
-                <Content className="app-layout__content">
+                <Content
+                    className="app-layout__content"
+                    style={{
+                        marginLeft: '10px',
+                        padding: '24px',
+                        minHeight: 280,
+                        background: '#f5f5f5'
+                    }}
+                >
                     {/* delay 150ms: chuyển trang nhanh thì không nháy spinner */}
                     <Spin spinning={navigation.state === 'loading'} delay={150}>
                         <Outlet />

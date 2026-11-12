@@ -1,0 +1,65 @@
+.bb { display: flex; flex-direction: column; gap: 20px; }
+.bb-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.bb-head h1 { margin: 8px 0 4px; font-size: 36px; font-weight: 500; color: var(--c-text); }
+.bb-head p { margin: 0; color: var(--c-text-muted); }
+.bb-meta { display: flex; align-items: center; gap: 12px; }
+.bb-role { background: var(--c-primary); color: var(--c-on-primary); font-weight: 600; padding: 12px 14px; border-radius: var(--radius-md); }
+.bb-date { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: 8px 18px; text-align: right; display: grid; }
+.bb-date small { color: var(--c-text-muted); font-size: 12px; }
+.bb-date b { font-size: 18px; font-weight: 500; }
+
+.bb-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.bb-card, .bb-panel { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 16px; }
+.bb-card { padding: 24px 28px; display: grid; gap: 4px; }
+.bb-card small { color: var(--c-text-muted); }
+.bb-card b { font-size: 40px; font-weight: 500; line-height: 1.15; color: var(--c-text); }
+.bb-card-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 14px; }
+.bb-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-size: 20px; }
+.bb-icon--green { background: var(--c-primary-soft); color: var(--c-primary); }
+.bb-icon--blue { background: var(--c-info-soft); color: var(--c-info); }
+.bb-icon--amber { background: var(--c-warning-soft); color: var(--c-warning); }
+.bb-chip { font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: var(--radius-pill); }
+.bb-chip--green { background: var(--c-primary-soft); color: var(--c-primary); }
+.bb-chip--blue { background: var(--c-info-soft); color: var(--c-info); }
+.bb-chip--amber { background: var(--c-warning-soft); color: var(--c-warning); }
+
+.bb-main { display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
+.bb-panel { padding: 24px; display: grid; gap: 18px; }
+.bb-panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.bb-panel-head h2 { margin: 0; font-size: 20px; font-weight: 500; color: var(--c-text); }
+.bb-panel-head small { color: var(--c-text-muted); }
+.bb-link { color: var(--c-primary); font-weight: 600; font-size: 13px; white-space: nowrap; }
+.bb-link--foot { justify-self: start; }
+
+.bb-groups { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.bb-group { border: 1px solid var(--c-border); border-radius: 14px; padding: 16px; display: grid; gap: 12px; background: var(--c-surface); }
+.bb-group small { color: var(--c-text-muted); }
+.bb-group-top { display: flex; justify-content: space-between; align-items: center; }
+.bb-group-top b { font-size: 15px; }
+.bb-group-tag { background: var(--c-blood-soft); color: var(--c-blood); font-weight: 600; padding: 6px 12px; border-radius: 10px; }
+.bb-bar { height: 6px; border-radius: var(--radius-pill); background: var(--c-border); overflow: hidden; }
+.bb-bar i { display: block; height: 100%; border-radius: inherit; background: var(--c-primary); }
+.bb-group--ok .bb-group-top b { color: var(--c-primary); }
+.bb-group--warn .bb-group-top b { color: var(--c-warning); }
+.bb-group--warn .bb-bar i { background: var(--c-warning); }
+.bb-group--low { background: var(--c-blood-soft); border-color: rgba(180, 35, 44, .25); }
+.bb-group--low .bb-group-top b { color: var(--c-danger); }
+.bb-group--low .bb-bar i { background: var(--c-danger); }
+.bb-group--low .bb-group-tag { background: var(--c-surface); }
+
+.bb-urgent { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.bb-urgent li { border: 1px solid var(--c-border); border-radius: 14px; padding: 14px 16px; display: grid; gap: 6px; }
+.bb-urgent small { color: var(--c-text-muted); }
+.bb-urgent-top { display: flex; justify-content: space-between; align-items: center; }
+.bb-level { color: #fff; font-weight: 600; padding: 4px 12px; border-radius: 8px; font-size: 13px; }
+.bb-level--red { background: var(--c-danger); }
+.bb-level--amber { background: var(--c-warning); }
+.bb-eta { font-size: 16px; }
+.bb-eta--red { color: var(--c-danger); }
+.bb-eta--amber { color: var(--c-warning); }
+
+@media (max-width: 1200px) {
+    .bb-main { grid-template-columns: 1fr; }
+    .bb-groups { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 800px) { .bb-cards { grid-template-columns: 1fr; } }
