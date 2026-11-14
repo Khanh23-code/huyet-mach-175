@@ -139,6 +139,7 @@ public enum AllocationStatus
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ReturnFinalAction
 {
+    PENDING_INSPECTION,
     RESTOCK,
     DISCARD
 }

@@ -1,4 +1,5 @@
 using HuyetMach175.Api.Data;
+using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Modules.Clinical.DTOs.BloodRequests;
 using HuyetMach175.SharedKernel.Exceptions;
 using Microsoft.AspNetCore.Http;
@@ -10,18 +11,33 @@ public static class BloodRequestProcessing
 {
     public static async Task EnsureActiveUserAsync(ApplicationDbContext context, int userId, string errorMessage)
     {
+        await LoadActiveUserAsync(context, userId, errorMessage);
+    }
+
+    public static async Task<User> LoadActiveUserAsync(ApplicationDbContext context, int userId, string errorMessage)
+    {
         if (userId <= 0)
         {
             throw new HttpException(StatusCodes.Status401Unauthorized, errorMessage);
         }
 
-        var exists = await context.Users
+        var user = await context.Users
             .AsNoTracking()
-            .AnyAsync(u => u.UserId == userId && u.IsActive);
+            .FirstOrDefaultAsync(u => u.UserId == userId && u.IsActive);
 
-        if (!exists)
+        if (user == null)
         {
             throw new HttpException(StatusCodes.Status401Unauthorized, "Tài khoản thực hiện không tồn tại hoặc đã bị vô hiệu hóa.");
+        }
+
+        return user;
+    }
+
+    public static void EnsureSameDepartmentAccess(User currentUser, BloodRequest? bloodRequest, string errorMessage)
+    {
+        if (bloodRequest?.Doctor == null || bloodRequest.Doctor.DepartmentId != currentUser.DepartmentId)
+        {
+            throw new HttpException(StatusCodes.Status403Forbidden, errorMessage);
         }
     }
 

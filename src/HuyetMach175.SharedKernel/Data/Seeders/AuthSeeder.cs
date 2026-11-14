@@ -139,6 +139,10 @@ public static class AuthSeeder
             new Permission { PermissionCode = "BLOOD_REQUEST_EDIT", PermissionName = "Tạo, lưu nháp và tiếp nhận máu theo phiếu", ModuleCode = "BLOOD_REQUEST", ModuleName = "Điều phối máu", ActionType = PermissionAction.EDIT, Description = "Bác sĩ lâm sàng lập phiếu yêu cầu máu, xác nhận tiếp nhận và hoàn trả máu" },
             new Permission { PermissionCode = "BLOOD_REQUEST_APPROVE", PermissionName = "Duyệt, giữ chỗ và cấp phát túi máu", ModuleCode = "BLOOD_REQUEST", ModuleName = "Điều phối máu", ActionType = PermissionAction.APPROVE, Description = "Ngân hàng máu duyệt phiếu yêu cầu, giữ chỗ và xuất kho cấp phát máu" },
             new Permission { PermissionCode = "BLOOD_REQUEST_CANCEL", PermissionName = "Hủy hoặc từ chối phiếu yêu cầu máu", ModuleCode = "BLOOD_REQUEST", ModuleName = "Điều phối máu", ActionType = PermissionAction.CANCEL, Description = "Hủy phiếu nháp/chờ duyệt hoặc từ chối yêu cầu máu" },
+
+            new Permission { PermissionCode = "BLOOD_RETURN_VIEW", PermissionName = "Xem danh sách và chi tiết Phiếu hoàn trả máu", ModuleCode = "BLOOD_RETURN", ModuleName = "Hoàn trả máu", ActionType = PermissionAction.VIEW, Description = "Xem danh sách và chi tiết phiếu hoàn trả túi máu" },
+            new Permission { PermissionCode = "BLOOD_RETURN_EDIT", PermissionName = "Lập phiếu hoàn trả túi máu", ModuleCode = "BLOOD_RETURN", ModuleName = "Hoàn trả máu", ActionType = PermissionAction.EDIT, Description = "Lâm sàng lập phiếu hoàn trả túi máu chưa sử dụng" },
+            new Permission { PermissionCode = "BLOOD_RETURN_APPROVE", PermissionName = "Kiểm định và xử lý túi máu hoàn trả", ModuleCode = "BLOOD_RETURN", ModuleName = "Hoàn trả máu", ActionType = PermissionAction.APPROVE, Description = "Ngân hàng máu kiểm định túi máu hoàn trả để tái nhập kho hoặc tiêu hủy" },
         };
 
         foreach (var p in defaultPermissions)
@@ -200,7 +204,7 @@ public static class AuthSeeder
                 "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "CAMPAIGN_APPROVE", "CAMPAIGN_CANCEL",
                 "DONORS_VIEW", "APPOINTMENTS_VIEW", "SURVEY_VIEW", "SCREENING_VIEW", "SESSION_VIEW", "INVENTORY_VIEW", "LAB_VIEW", "PROCESSING_VIEW",
                 "DISPOSAL_VIEW", "DISPOSAL_APPROVE",
-                "BLOOD_REQUEST_VIEW"
+                "BLOOD_REQUEST_VIEW", "BLOOD_RETURN_VIEW"
             },
             ["CLIN"] = new[]
             {
@@ -208,7 +212,8 @@ public static class AuthSeeder
                 "SURVEY_VIEW", "SURVEY_EDIT",
                 "DONORS_VIEW", "DONORS_EDIT",
                 "APPOINTMENTS_VIEW", "SESSION_VIEW",
-                "BLOOD_REQUEST_VIEW", "BLOOD_REQUEST_EDIT", "BLOOD_REQUEST_CANCEL"
+                "BLOOD_REQUEST_VIEW", "BLOOD_REQUEST_EDIT", "BLOOD_REQUEST_CANCEL",
+                "BLOOD_RETURN_VIEW", "BLOOD_RETURN_EDIT"
             },
             ["DON"] = new[]
             {
@@ -222,7 +227,8 @@ public static class AuthSeeder
             {
                 "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "DONORS_VIEW", "SCREENING_VIEW", "SESSION_VIEW", "INVENTORY_VIEW", "INVENTORY_EDIT", "LAB_VIEW", "LAB_EDIT", "PROCESSING_VIEW", "PROCESSING_EDIT",
                 "DISPOSAL_VIEW", "DISPOSAL_EDIT",
-                "BLOOD_REQUEST_VIEW", "BLOOD_REQUEST_APPROVE"
+                "BLOOD_REQUEST_VIEW", "BLOOD_REQUEST_APPROVE",
+                "BLOOD_RETURN_VIEW", "BLOOD_RETURN_APPROVE"
             }
         };
 

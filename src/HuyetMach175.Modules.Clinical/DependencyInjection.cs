@@ -9,6 +9,8 @@ public static class DependencyInjection
     {
         services.AddScoped<IBloodRequestsService, BloodRequestsService>();
         services.AddScoped<IBloodCoordinationService, BloodCoordinationService>();
+        services.AddScoped<IBloodHandoversService, BloodHandoversService>();
+        services.AddScoped<IBloodReturnsService, BloodReturnsService>();
 
         services.AddControllers()
             .AddApplicationPart(typeof(DependencyInjection).Assembly);
