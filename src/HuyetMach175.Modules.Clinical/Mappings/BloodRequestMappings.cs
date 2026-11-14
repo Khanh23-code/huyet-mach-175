@@ -1,5 +1,6 @@
 using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
+using HuyetMach175.Modules.Clinical.DTOs.BloodCoordination;
 using HuyetMach175.Modules.Clinical.DTOs.BloodRequests;
 using HuyetMach175.Modules.Clinical.Processing;
 

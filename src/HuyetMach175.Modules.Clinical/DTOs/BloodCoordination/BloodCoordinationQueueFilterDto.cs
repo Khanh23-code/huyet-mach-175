@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace HuyetMach175.Modules.Clinical.DTOs.BloodRequests;
+namespace HuyetMach175.Modules.Clinical.DTOs.BloodCoordination;
 
 public class BloodCoordinationQueueFilterDto
 {
