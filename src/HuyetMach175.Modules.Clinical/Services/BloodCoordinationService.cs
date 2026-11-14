@@ -385,19 +385,51 @@ public class BloodCoordinationService : IBloodCoordinationService
             throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy các túi máu với ID: {string.Join(", ", missingIds)}.");
         }
 
-        var activeAllocatedBagIds = await _context.BloodAllocations
-            .AsNoTracking()
-            .Where(a => distinctBagIds.Contains(a.BagId) &&
-                       (a.Status == AllocationStatus.RESERVED || a.Status == AllocationStatus.ISSUED))
-            .Select(a => a.BagId)
-            .ToListAsync();
+        var componentCode = requestItem.ComponentType?.TypeCode ?? ComponentCode.WB;
 
-        if (activeAllocatedBagIds.Count > 0)
+        foreach (var bag in bags)
         {
-            throw new HttpException(StatusCodes.Status409Conflict, $"Các túi máu sau đã được giữ chỗ hoặc cấp phát cho phiếu khác: {string.Join(", ", activeAllocatedBagIds)}.");
+            if (bag.ComponentTypeId != requestItem.ComponentTypeId)
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu {bag.Barcode} không khớp loại chế phẩm của y lệnh.");
+            }
+
+            if (!BloodCompatibilityRules.IsCompatible(componentCode, bloodRequest.PatientBloodType, bloodRequest.PatientRh, bag.BloodType, bag.RhFactor))
+            {
+                var bagGroup = BloodCompatibilityRules.FormatBloodGroup(bag.BloodType, bag.RhFactor);
+                var patientGroup = BloodCompatibilityRules.FormatBloodGroup(bloodRequest.PatientBloodType, bloodRequest.PatientRh);
+                throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu {bag.Barcode} (nhóm {bagGroup}) không tương thích miễn dịch với người bệnh (nhóm {patientGroup}).");
+            }
         }
 
-        var componentCode = requestItem.ComponentType?.TypeCode ?? ComponentCode.WB;
+        var activeAllocations = await _context.BloodAllocations
+            .AsNoTracking()
+            .Include(a => a.Request)
+            .Include(a => a.Bag)
+            .Where(a => distinctBagIds.Contains(a.BagId) &&
+                       (a.Status == AllocationStatus.RESERVED || a.Status == AllocationStatus.ISSUED))
+            .ToListAsync();
+
+        if (activeAllocations.Count > 0)
+        {
+            var sameRequestBags = activeAllocations
+                .Where(a => a.RequestId == bloodRequest.RequestId)
+                .Select(a => a.Bag?.Barcode ?? a.BagId.ToString())
+                .Distinct()
+                .ToList();
+
+            if (sameRequestBags.Count > 0)
+            {
+                throw new HttpException(StatusCodes.Status409Conflict, $"Các túi máu sau đã được giữ chỗ hoặc cấp phát cho chính phiếu {bloodRequest.RequestCode}: {string.Join(", ", sameRequestBags)}.");
+            }
+
+            var otherDetails = activeAllocations
+                .Select(a => $"{a.Bag?.Barcode ?? a.BagId.ToString()} ({a.Request?.RequestCode ?? $"#{a.RequestId}"})")
+                .Distinct()
+                .ToList();
+
+            throw new HttpException(StatusCodes.Status409Conflict, $"Các túi máu sau đã được giữ chỗ hoặc cấp phát cho phiếu khác: {string.Join(", ", otherDetails)}.");
+        }
 
         foreach (var bag in bags)
         {
@@ -409,18 +441,6 @@ public class BloodCoordinationService : IBloodCoordinationService
             if (bag.ExpiredAt <= now)
             {
                 throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu {bag.Barcode} đã hết hạn sử dụng.");
-            }
-
-            if (bag.ComponentTypeId != requestItem.ComponentTypeId)
-            {
-                throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu {bag.Barcode} không khớp loại chế phẩm của y lệnh.");
-            }
-
-            if (!BloodCompatibilityRules.IsCompatible(componentCode, bloodRequest.PatientBloodType, bloodRequest.PatientRh, bag.BloodType, bag.RhFactor))
-            {
-                var bagGroup = BloodCompatibilityRules.FormatBloodGroup(bag.BloodType, bag.RhFactor);
-                var patientGroup = BloodCompatibilityRules.FormatBloodGroup(bloodRequest.PatientBloodType, bloodRequest.PatientRh);
-                throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu {bag.Barcode} (nhóm {bagGroup}) không tương thích miễn dịch với người bệnh (nhóm {patientGroup}).");
             }
         }
 
