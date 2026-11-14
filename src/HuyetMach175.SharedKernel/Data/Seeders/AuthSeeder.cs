@@ -134,6 +134,11 @@ public static class AuthSeeder
             new Permission { PermissionCode = "DISPOSAL_VIEW", PermissionName = "Xem danh sách và chi tiết Phiếu tiêu hủy", ModuleCode = "DISPOSAL", ModuleName = "Tiêu hủy máu", ActionType = PermissionAction.VIEW, Description = "Quản lý và tra cứu phiếu tiêu hủy túi máu" },
             new Permission { PermissionCode = "DISPOSAL_EDIT", PermissionName = "Lập và rút phiếu đề xuất tiêu hủy", ModuleCode = "DISPOSAL", ModuleName = "Tiêu hủy máu", ActionType = PermissionAction.EDIT, Description = "Lập phiếu đề xuất tiêu hủy và rút phiếu khi còn chờ duyệt" },
             new Permission { PermissionCode = "DISPOSAL_APPROVE", PermissionName = "Phê duyệt / Từ chối tiêu hủy túi máu", ModuleCode = "DISPOSAL", ModuleName = "Tiêu hủy máu", ActionType = PermissionAction.APPROVE, Description = "Phê duyệt hoặc từ chối đề xuất tiêu hủy túi máu" },
+
+            new Permission { PermissionCode = "BLOOD_REQUEST_VIEW", PermissionName = "Xem danh sách và chi tiết Phiếu yêu cầu máu", ModuleCode = "BLOOD_REQUEST", ModuleName = "Điều phối máu", ActionType = PermissionAction.VIEW, Description = "Xem danh sách và chi tiết phiếu yêu cầu, cấp phát máu" },
+            new Permission { PermissionCode = "BLOOD_REQUEST_EDIT", PermissionName = "Tạo, lưu nháp và tiếp nhận máu theo phiếu", ModuleCode = "BLOOD_REQUEST", ModuleName = "Điều phối máu", ActionType = PermissionAction.EDIT, Description = "Bác sĩ lâm sàng lập phiếu yêu cầu máu, xác nhận tiếp nhận và hoàn trả máu" },
+            new Permission { PermissionCode = "BLOOD_REQUEST_APPROVE", PermissionName = "Duyệt, giữ chỗ và cấp phát túi máu", ModuleCode = "BLOOD_REQUEST", ModuleName = "Điều phối máu", ActionType = PermissionAction.APPROVE, Description = "Ngân hàng máu duyệt phiếu yêu cầu, giữ chỗ và xuất kho cấp phát máu" },
+            new Permission { PermissionCode = "BLOOD_REQUEST_CANCEL", PermissionName = "Hủy hoặc từ chối phiếu yêu cầu máu", ModuleCode = "BLOOD_REQUEST", ModuleName = "Điều phối máu", ActionType = PermissionAction.CANCEL, Description = "Hủy phiếu nháp/chờ duyệt hoặc từ chối yêu cầu máu" },
         };
 
         foreach (var p in defaultPermissions)
@@ -194,14 +199,16 @@ public static class AuthSeeder
             {
                 "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "CAMPAIGN_APPROVE", "CAMPAIGN_CANCEL",
                 "DONORS_VIEW", "APPOINTMENTS_VIEW", "SURVEY_VIEW", "SCREENING_VIEW", "SESSION_VIEW", "INVENTORY_VIEW", "LAB_VIEW", "PROCESSING_VIEW",
-                "DISPOSAL_VIEW", "DISPOSAL_APPROVE"
+                "DISPOSAL_VIEW", "DISPOSAL_APPROVE",
+                "BLOOD_REQUEST_VIEW"
             },
             ["CLIN"] = new[]
             {
                 "SCREENING_VIEW", "SCREENING_EDIT",
                 "SURVEY_VIEW", "SURVEY_EDIT",
                 "DONORS_VIEW", "DONORS_EDIT",
-                "APPOINTMENTS_VIEW", "SESSION_VIEW"
+                "APPOINTMENTS_VIEW", "SESSION_VIEW",
+                "BLOOD_REQUEST_VIEW", "BLOOD_REQUEST_EDIT", "BLOOD_REQUEST_CANCEL"
             },
             ["DON"] = new[]
             {
@@ -214,7 +221,8 @@ public static class AuthSeeder
             ["BBNK"] = new[]
             {
                 "CAMPAIGN_VIEW", "CAMPAIGN_EDIT", "DONORS_VIEW", "SCREENING_VIEW", "SESSION_VIEW", "INVENTORY_VIEW", "INVENTORY_EDIT", "LAB_VIEW", "LAB_EDIT", "PROCESSING_VIEW", "PROCESSING_EDIT",
-                "DISPOSAL_VIEW", "DISPOSAL_EDIT"
+                "DISPOSAL_VIEW", "DISPOSAL_EDIT",
+                "BLOOD_REQUEST_VIEW", "BLOOD_REQUEST_APPROVE"
             }
         };
 

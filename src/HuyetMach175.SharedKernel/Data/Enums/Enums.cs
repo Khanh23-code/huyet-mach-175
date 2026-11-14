@@ -113,12 +113,14 @@ public enum OverallConclusion
 public enum UrgencyLevel
 {
     ROUTINE,
-    URGENT
+    URGENT,
+    EMERGENCY
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum RequestStatus
 {
+    DRAFT,
     PENDING,
     REJECTED,
     READY,
