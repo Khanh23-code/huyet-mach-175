@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Breadcrumb, Empty, Input, Skeleton, Tag, message } from 'antd'
+import { Breadcrumb, Empty, Input, Skeleton, message } from 'antd'
 import { BarcodeOutlined } from '@ant-design/icons'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
-import { fmtDateTime } from '@/features/screening/format'
 import { useLabQueue } from '../labTestsHooks'
 import { labTestsApi } from '../labTestsApi'
 import LabTestWorkspace from '../components/LabTestWorkspace'
+import BagSourceFilter from '../components/BagSourceFilter'
+import BagQueueItem from '../components/BagQueueItem'
 import type { LabQueueItem } from '../labTestsTypes'
+import type { SourceFilterValue } from '../bagSource'
 import './InventoryPages.css'
 import './LabTest.css'
 
@@ -18,6 +20,7 @@ export default function LabTestPage() {
     const { can } = usePermission()
     const [keyword, setKeyword] = useState('')
     const [search, setSearch] = useState('')
+    const [sourceType, setSourceType] = useState<SourceFilterValue>('')
     const [selected, setSelected] = useState<LabQueueItem | null>(null)
     const [looking, setLooking] = useState(false)
 
@@ -27,7 +30,7 @@ export default function LabTestPage() {
     }, [keyword])
 
     const { data, isLoading } = useLabQueue(
-        { search: search || undefined, pageNumber: 1, pageSize: 50 },
+        { search: search || undefined, sourceType: sourceType || undefined, pageNumber: 1, pageSize: 50 },
         { refetchInterval: REFRESH_MS },
     )
     const items = useMemo(() => data?.items ?? [], [data])
@@ -75,6 +78,7 @@ export default function LabTestPage() {
                         allowClear
                         autoComplete="off"
                     />
+                    <BagSourceFilter value={sourceType} onChange={setSourceType} />
                     <div className="inv-queue__list">
                         {isLoading ? (
                             <Skeleton active paragraph={{ rows: 6 }} />
@@ -82,21 +86,19 @@ export default function LabTestPage() {
                             <Empty description="Không có túi nào chờ xét nghiệm" />
                         ) : (
                             items.map((i) => (
-                                <button
-                                    type="button"
+                                <BagQueueItem
                                     key={i.bagId}
-                                    className={`inv-queue__item${selected?.bagId === i.bagId ? ' is-active' : ''}`}
+                                    barcode={i.barcode}
+                                    bloodGroup={i.expectedBloodGroup}
+                                    volumeMl={i.volumeMl}
+                                    componentTypeCode={i.componentTypeCode}
+                                    collectedAt={i.collectedAt}
+                                    expiredAt={i.expiredAt}
+                                    isExpired={i.isExpired}
+                                    source={i.source}
+                                    active={selected?.bagId === i.bagId}
                                     onClick={() => setSelected(i)}
-                                >
-                                    <div className="inv-queue__top">
-                                        <span className="inv-mono">{i.barcode}</span>
-                                        <Tag color="red" style={{ marginInlineEnd: 0 }}>{i.expectedBloodGroup}</Tag>
-                                    </div>
-                                    <div className="inv-queue__sub">
-                                        {i.componentTypeCode} · {i.volumeMl} ml · {i.donorName || 'Tiếp nhận ngoài viện'}
-                                    </div>
-                                    <div className="inv-queue__sub">Thu thập {fmtDateTime(i.collectedAt)}</div>
-                                </button>
+                                />
                             ))
                         )}
                     </div>

@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Breadcrumb, Empty, Input, Skeleton, Tag, message } from 'antd'
+import { Breadcrumb, Empty, Input, Skeleton, message } from 'antd'
 import { BarcodeOutlined } from '@ant-design/icons'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
-import { fmtDateTime } from '@/features/screening/format'
 import { useProcessingQueue } from '../hooks'
 import { inventoryApi } from '../inventoryApi'
 import { explainNotSeparable } from '../format'
 import SeparationWorkspace from '../components/SeparationWorkspace'
+import BagSourceFilter from '../components/BagSourceFilter'
+import BagQueueItem from '../components/BagQueueItem'
 import type { ProcessingQueueItem } from '../types'
+import type { SourceFilterValue } from '../bagSource'
 import './InventoryPages.css'
 
 const REFRESH_MS = 30_000
@@ -18,6 +20,7 @@ export default function ProcessingPage() {
     const { can } = usePermission()
     const [keyword, setKeyword] = useState('')
     const [search, setSearch] = useState('')
+    const [sourceType, setSourceType] = useState<SourceFilterValue>('')
     const [selected, setSelected] = useState<ProcessingQueueItem | null>(null)
     const [looking, setLooking] = useState(false)
 
@@ -27,7 +30,7 @@ export default function ProcessingPage() {
     }, [keyword])
 
     const { data, isLoading } = useProcessingQueue(
-        { search: search || undefined, pageNumber: 1, pageSize: 50 },
+        { search: search || undefined, sourceType: sourceType || undefined, pageNumber: 1, pageSize: 50 },
         { refetchInterval: REFRESH_MS },
     )
     const items = useMemo(() => data?.items ?? [], [data])
@@ -75,6 +78,7 @@ export default function ProcessingPage() {
                         allowClear
                         autoComplete="off"
                     />
+                    <BagSourceFilter value={sourceType} onChange={setSourceType} />
                     <div className="inv-queue__list">
                         {isLoading ? (
                             <Skeleton active paragraph={{ rows: 6 }} />
@@ -82,21 +86,18 @@ export default function ProcessingPage() {
                             <Empty description="Không có túi nào chờ điều chế" />
                         ) : (
                             items.map((i) => (
-                                <button
-                                    type="button"
+                                <BagQueueItem
                                     key={i.bagId}
-                                    className={`inv-queue__item${selected?.bagId === i.bagId ? ' is-active' : ''}`}
+                                    barcode={i.barcode}
+                                    bloodGroup={i.bloodGroup}
+                                    volumeMl={i.volumeMl}
+                                    collectedAt={i.collectedAt}
+                                    expiredAt={i.expiredAt}
+                                    isExpired={i.isExpired}
+                                    source={i.source}
+                                    active={selected?.bagId === i.bagId}
                                     onClick={() => setSelected(i)}
-                                >
-                                    <div className="inv-queue__top">
-                                        <span className="inv-mono">{i.barcode}</span>
-                                        <Tag color="red" style={{ marginInlineEnd: 0 }}>{i.bloodGroup}</Tag>
-                                    </div>
-                                    <div className="inv-queue__sub">
-                                        {i.volumeMl} ml · {i.donorName || 'Tiếp nhận ngoài viện'}
-                                    </div>
-                                    <div className="inv-queue__sub">Thu thập {fmtDateTime(i.collectedAt)}</div>
-                                </button>
+                                />
                             ))
                         )}
                     </div>
