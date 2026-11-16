@@ -45,7 +45,8 @@ export default function BagScanResult({ bag, onChanged, onQueued }: Props) {
         .filter((l) => l.isActive && !l.isFull)
         .map((l) => ({ value: l.locationId, label: `${l.refrigeratorName} - ${l.shelfNumber} (${l.targetTemperature}°C)` }))
     const needsLocation = target === 'READY_TESTING' || target === 'AVAILABLE'
-    const terminal = bag.isDiscarded || bag.currentStatus === 'TRANSFUSED'
+    // Túi hết hạn là trạng thái cuối trên màn quét: chỉ xử lý qua biên bản tiêu hủy.
+    const terminal = bag.isDiscarded || bag.currentStatus === 'TRANSFUSED' || bag.isExpired
 
     const submit = async () => {
         if (!target) return
@@ -100,7 +101,13 @@ export default function BagScanResult({ bag, onChanged, onQueued }: Props) {
 
             {bag.isDiscarded && <Alert type="error" showIcon title="Túi máu đã bị tiêu hủy, không thể cập nhật trạng thái." />}
             {bag.isLocked && !bag.isDiscarded && <Alert type="warning" showIcon title="Túi máu đang bị tạm khóa." />}
-            {bag.isExpired && !bag.isDiscarded && <Alert type="error" showIcon title="Túi máu đã hết hạn sử dụng: không thể nhập kho hoặc cấp phát, chỉ được tạm khóa để xử lý hủy." />}
+            {bag.isExpired && !bag.isDiscarded && (
+                <Alert
+                    type="error"
+                    showIcon
+                    title="Túi máu đã hết hạn sử dụng: không thể cập nhật trạng thái. Vui lòng lập biên bản tiêu hủy."
+                />
+            )}
 
             <ol className="scan-steps" aria-label="Vòng đời túi máu">
                 {bag.timeline.map((s) => {
