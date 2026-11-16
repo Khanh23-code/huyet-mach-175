@@ -26,7 +26,9 @@
 }
 .inv-queue__item:hover { border-color: var(--c-primary); }
 .inv-queue__item.is-active { border-color: var(--c-primary); background: var(--c-primary-soft); }
+.inv-queue__item.is-expired { border-color: var(--c-danger); background: var(--c-danger-soft); }
 .inv-queue__top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.inv-queue__tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 .inv-queue__sub { margin-top: 4px; font-size: 12px; color: var(--c-text-muted); }
 .inv-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
 
