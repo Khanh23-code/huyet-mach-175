@@ -53,9 +53,10 @@ public class BloodBagsService : IBloodBagsService
                 $"Túi máu đang ở trạng thái '{bloodBag.Status}'. Chỉ túi máu mới thu gom ('NEWLY_COLLECTED') mới có thể tiếp nhận vào Viện.");
         }
 
-        if (bloodBag.Session != null && bloodBag.Session.Status != SessionStatus.COMPLETED)
+        if (bloodBag.ExpiredAt <= DateTime.UtcNow)
         {
-            throw new HttpException(StatusCodes.Status400BadRequest, "Túi máu thuộc phiên lấy máu chưa hoàn tất, chưa thể tiếp nhận vào Viện.");
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Túi máu '{bloodBag.Barcode}' đã hết hạn sử dụng, không thể tiếp nhận.");
         }
 
         if (bloodBag.Session != null && bloodBag.Session.Status != SessionStatus.COMPLETED)
