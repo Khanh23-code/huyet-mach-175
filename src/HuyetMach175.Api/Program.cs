@@ -26,14 +26,45 @@ builder.Services.AddDonationModule();
 builder.Services.AddInventoryModule();
 builder.Services.AddPermissionAuthorization();
 
+var configuredOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>()?
+    .Select(o => o.Trim().TrimEnd('/'))
+    .Where(o => !string.IsNullOrWhiteSpace(o))
+    .ToHashSet(StringComparer.OrdinalIgnoreCase) ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+var allowLocalhostOrigins = builder.Environment.IsDevelopment() ||
+    builder.Configuration.GetValue<bool>("Cors:AllowLocalhostOrigins");
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.SetIsOriginAllowed(origin => true)
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+        policy.SetIsOriginAllowed(origin =>
+        {
+            if (string.IsNullOrWhiteSpace(origin))
+            {
+                return false;
+            }
+
+            var normalizedOrigin = origin.Trim().TrimEnd('/');
+            if (configuredOrigins.Contains(normalizedOrigin))
+            {
+                return true;
+            }
+
+            if (allowLocalhostOrigins && Uri.TryCreate(normalizedOrigin, UriKind.Absolute, out var uri))
+            {
+                var isHttpOrHttps = uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
+                var isLocalhost = string.Equals(uri.Host, "localhost", StringComparison.OrdinalIgnoreCase) ||
+                                  string.Equals(uri.Host, "127.0.0.1", StringComparison.OrdinalIgnoreCase);
+                return isHttpOrHttps && isLocalhost;
+            }
+
+            return false;
+        })
+        .AllowAnyHeader()
+        .AllowAnyMethod();
     });
 });
 
