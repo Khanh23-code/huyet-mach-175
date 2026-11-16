@@ -43,16 +43,17 @@ export const AUTO_STATUSES: BagStatus[] = ['TESTED_PASSED', 'PROCESSED']
 /** Sprint sau: chỉ hiển thị, disable. */
 export const COMING_SOON_STATUSES: BagStatus[] = ['RESERVED', 'ISSUED', 'TRANSFUSED']
 
-/** Phản chiếu BloodBagTransitionRules.cs (BE vẫn là nơi quyết định cuối cùng). */
+/**
+ * Phản chiếu BloodBagTransitionRules.cs (BE vẫn là nơi quyết định cuối cùng).
+ * Túi đã hết hạn: không còn đích thủ công nào, chỉ xử lý qua biên bản tiêu hủy.
+ */
 export const allowedManualTargets = (current: string, expired: boolean): BagStatus[] => {
     if (current === 'DISCARDED' || current === 'TRANSFUSED') return []
+    if (expired) return []
     const out: BagStatus[] = []
     if (current === 'NEWLY_COLLECTED') out.push('READY_TESTING')
-    if (current === 'LOCKED') {
-        out.push('READY_TESTING')
-        if (!expired) out.push('AVAILABLE')
-    }
-    if (current === 'TESTED_PASSED' && !expired) out.push('AVAILABLE')
+    if (current === 'LOCKED') out.push('READY_TESTING', 'AVAILABLE')
+    if (current === 'TESTED_PASSED') out.push('AVAILABLE')
     if (current !== 'LOCKED') out.push('LOCKED')
     return out
 }

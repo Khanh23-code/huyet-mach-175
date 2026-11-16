@@ -4,6 +4,7 @@ using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
 using HuyetMach175.Modules.Inventory.DTOs.Common;
 using HuyetMach175.Modules.Inventory.DTOs.LabTests;
+using HuyetMach175.Modules.Inventory.Mappings;
 using HuyetMach175.SharedKernel.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -31,30 +32,27 @@ public class LabTestsService : ILabTestsService
             throw new HttpException(StatusCodes.Status400BadRequest, "Kích thước trang (pageSize) phải nằm trong khoảng từ 1 đến 100.");
         }
 
+        if (!BagSourceTypes.IsValidFilter(filter.SourceType))
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "sourceType chỉ nhận CAMPAIGN, WALK_IN hoặc EXTERNAL.");
+        }
+
+        var now = DateTime.UtcNow;
+
         var query = _context.BloodBags
             .AsNoTracking()
             .Include(b => b.ComponentType)
             .Include(b => b.Location)
-            .Include(b => b.Session)
-                .ThenInclude(s => s!.Appointment)
-                    .ThenInclude(a => a!.Donor)
+            .IncludeSource()
             .Where(b => b.Status == BagStatus.READY_TESTING && !b.TestResults.Any())
-            .AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(filter.Search))
-        {
-            var kw = filter.Search.Trim();
-            query = query.Where(b =>
-                EF.Functions.ILike(b.Barcode, $"%{kw}%") ||
-                (b.Session != null && b.Session.Appointment != null && b.Session.Appointment.Donor != null &&
-                    (EF.Functions.ILike(b.Session.Appointment.Donor.FullName, $"%{kw}%") ||
-                     EF.Functions.ILike(b.Session.Appointment.Donor.CitizenId, $"%{kw}%"))));
-        }
+            .ApplySourceFilter(filter.SourceType)
+            .ApplyQueueSearch(filter.Search);
 
         var totalCount = await query.CountAsync();
 
+        // Túi sắp / đã hết hạn lên đầu để ưu tiên xử lý
         var entities = await query
-            .OrderBy(b => b.CollectedAt)
+            .OrderBy(b => b.ExpiredAt)
             .ThenBy(b => b.BagId)
             .Skip((filter.PageNumber - 1) * filter.PageSize)
             .Take(filter.PageSize)
@@ -63,24 +61,27 @@ public class LabTestsService : ILabTestsService
         var items = entities.Select(b =>
         {
             var donor = b.Session?.Appointment?.Donor;
-            var bloodGroup = $"{(b.BloodType == BloodType.AB ? "AB" : b.BloodType.ToString())}{(b.RhFactor == RhFactor.POSITIVE ? "+" : "-")}";
+            var group = BloodBagMappings.FormatBloodGroup(b.BloodType, b.RhFactor);
 
             return new LabTestQueueItemDto
             {
                 BagId = b.BagId,
                 Barcode = b.Barcode,
                 DonorCode = donor?.CitizenId,
-                DonorName = donor != null ? donor.FullName : "Tiếp nhận ngoài viện",
+                DonorName = donor?.FullName,
                 ComponentTypeCode = b.ComponentType?.TypeCode.ToString() ?? string.Empty,
                 ComponentTypeName = b.ComponentType?.TypeName ?? string.Empty,
                 VolumeMl = b.VolumeMl,
                 ExpectedBloodType = b.BloodType.ToString(),
                 ExpectedRhFactor = b.RhFactor.ToString(),
-                ExpectedBloodGroup = bloodGroup,
+                ExpectedBloodGroup = group,
                 StorageLocationId = b.LocationId,
                 StorageLocationName = b.Location != null ? $"{b.Location.RefrigeratorName} - {b.Location.ShelfNumber}" : null,
                 CollectedAt = b.CollectedAt,
-                Status = b.Status.ToString()
+                ExpiredAt = b.ExpiredAt,
+                IsExpired = b.ExpiredAt <= now,
+                Status = b.Status.ToString(),
+                Source = b.ToSourceDto()
             };
         }).ToList();
 
@@ -123,6 +124,12 @@ public class LabTestsService : ILabTestsService
         if (bloodBag.Status != BagStatus.READY_TESTING)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu đang ở trạng thái '{bloodBag.Status}', không hợp lệ để xét nghiệm. Chỉ túi máu ở trạng thái 'READY_TESTING' mới được phép nhập kết quả.");
+        }
+
+        if (bloodBag.ExpiredAt <= DateTime.UtcNow)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Túi máu '{bloodBag.Barcode}' đã hết hạn sử dụng, không thể xét nghiệm. Vui lòng lập biên bản tiêu hủy.");
         }
 
         var alreadyTested = await _context.BloodTestResults.AnyAsync(tr => tr.BagId == bloodBag.BagId);

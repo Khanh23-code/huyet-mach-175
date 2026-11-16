@@ -44,28 +44,27 @@ public static class BloodBagTransitionRules
                 "Túi máu đã được truyền cho bệnh nhân (TRANSFUSED), không thể thay đổi trạng thái.");
         }
 
-        // Chốt chặn 6: Trùng trạng thái
+        // Chốt chặn 6: Túi đã hết hạn sử dụng không được cập nhật trạng thái thủ công ở bất kỳ đích nào.
+        // Chỉ được xử lý qua quy trình lập biên bản tiêu hủy (BloodDisposalsService không đi qua hàm này).
+        if (bag.ExpiredAt <= now)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Túi máu đã hết hạn sử dụng vào lúc {bag.ExpiredAt.AddHours(7):dd/MM/yyyy HH:mm} (giờ Việt Nam). " +
+                "Không thể cập nhật trạng thái thủ công. Vui lòng xử lý qua quy trình lập biên bản tiêu hủy.");
+        }
+
+        // Chốt chặn 7: Trùng trạng thái
         if (bag.Status == targetStatus)
         {
             throw new HttpException(StatusCodes.Status400BadRequest,
                 $"Túi máu hiện tại đã ở trạng thái '{BloodBagMappings.FormatLifecycleStatusLabel(bag.Status)}' ({bag.Status}).");
         }
 
-        // Chốt chặn 7: Kiểm tra biên bản hủy đang chờ xử lý
+        // Chốt chặn 8: Kiểm tra biên bản hủy đang chờ xử lý
         if (bag.Status == BagStatus.LOCKED && hasActiveDisposal)
         {
             throw new HttpException(StatusCodes.Status400BadRequest,
                 "Túi máu đang nằm trong một biên bản tiêu hủy đang chờ xử lý. Vui lòng hoàn tất hoặc rút biên bản tiêu hủy trước khi mở khóa.");
-        }
-
-        // Chốt chặn 8: Hết hạn sử dụng
-        if (bag.ExpiredAt <= now)
-        {
-            if (targetStatus is BagStatus.AVAILABLE or BagStatus.RESERVED or BagStatus.ISSUED or BagStatus.TRANSFUSED)
-            {
-                throw new HttpException(StatusCodes.Status400BadRequest,
-                    $"Túi máu đã hết hạn sử dụng vào lúc {bag.ExpiredAt:dd/MM/yyyy HH:mm}. Không thể chuyển sang trạng thái '{BloodBagMappings.FormatLifecycleStatusLabel(targetStatus)}'. Vui lòng tạm khóa (LOCKED) để xử lý tiêu hủy.");
-            }
         }
 
         // Chốt chặn 9: State Machine logic

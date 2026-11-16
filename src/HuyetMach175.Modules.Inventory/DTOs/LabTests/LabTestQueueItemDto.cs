@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using HuyetMach175.Modules.Inventory.DTOs.Common;
 
 namespace HuyetMach175.Modules.Inventory.DTOs.LabTests;
 
@@ -43,6 +44,15 @@ public class LabTestQueueItemDto
     [JsonPropertyName("collectedAt")]
     public DateTime CollectedAt { get; set; }
 
+    [JsonPropertyName("expiredAt")]
+    public DateTime ExpiredAt { get; set; }
+
+    [JsonPropertyName("isExpired")]
+    public bool IsExpired { get; set; }
+
     [JsonPropertyName("status")]
     public string Status { get; set; } = string.Empty;
+
+    [JsonPropertyName("source")]
+    public BagSourceDto Source { get; set; } = new();
 }

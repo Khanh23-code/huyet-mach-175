@@ -1,3 +1,5 @@
+import type { BagLabSummary, BagSource, SourceFilterValue } from './bagSource'
+
 export type ChildCode = 'PRBC' | 'FFP' | 'PLT'
 export type ComponentCode = 'WB' | ChildCode
 
@@ -66,11 +68,16 @@ export interface ProcessingQueueItem {
     storageLocationName?: string | null
     collectedAt: string
     testedAt?: string | null
+    expiredAt: string
+    isExpired: boolean
     status: string
+    source: BagSource
+    labTest?: BagLabSummary | null
 }
 
 export interface ProcessingQueueQuery {
     search?: string
+    sourceType?: SourceFilterValue
     pageNumber?: number
     pageSize?: number
 }

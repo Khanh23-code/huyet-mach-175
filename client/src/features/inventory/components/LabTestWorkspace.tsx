@@ -6,6 +6,7 @@ import { parseApiError } from '@/services/apiError'
 import { fmtDateTime } from '@/features/screening/format'
 import { useRecordLabTest } from '../labTestsHooks'
 import { ABO_OPTIONS, INDICATORS, RH_OPTIONS, formatGroup } from '../labTestsFormat'
+import BagOriginPanel from './BagOriginPanel'
 import type { AboType, IndicatorKey, LabQueueItem, LabTestResult, RhValue, TestResultValue } from '../labTestsTypes'
 
 interface Props {
@@ -45,7 +46,7 @@ export default function LabTestWorkspace({ item, canEdit, canDispose, onDone }: 
     const groupReady = abo !== null && rh !== null
     const confirmedGroup = groupReady ? formatGroup(abo, rh) : null
     const groupMismatch = confirmedGroup !== null && confirmedGroup !== item.expectedBloodGroup
-    const canSubmit = canEdit && verdict !== null && groupReady
+    const canSubmit = canEdit && !item.isExpired && verdict !== null && groupReady
 
     const submit = async () => {
         if (!canSubmit || abo === null || rh === null) return
@@ -124,6 +125,14 @@ export default function LabTestWorkspace({ item, canEdit, canDispose, onDone }: 
                 <p>Chọn kết quả cho cả 5 chỉ số và xác nhận nhóm máu. Kết luận được tính tự động.</p>
             </header>
             <div className="inv-card__body">
+                <BagOriginPanel
+                    source={item.source}
+                    bagBloodGroup={item.expectedBloodGroup}
+                    collectedAt={item.collectedAt}
+                    expiredAt={item.expiredAt}
+                    isExpired={item.isExpired}
+                />
+
                 <dl className="inv-parent">
                     <div>
                         <dt>Nhóm máu dự kiến</dt>
@@ -133,7 +142,7 @@ export default function LabTestWorkspace({ item, canEdit, canDispose, onDone }: 
                     </div>
                     <div><dt>Chế phẩm</dt><dd>{item.componentTypeName}</dd></div>
                     <div><dt>Thể tích</dt><dd>{item.volumeMl} ml</dd></div>
-                    <div><dt>Nguồn</dt><dd>{item.donorName || '—'}</dd></div>
+                    <div><dt>Vị trí</dt><dd>{item.storageLocationName ?? '—'}</dd></div>
                 </dl>
 
                 <div className="lab-section">
@@ -141,7 +150,7 @@ export default function LabTestWorkspace({ item, canEdit, canDispose, onDone }: 
                         <h3>Sàng lọc bệnh truyền nhiễm</h3>
                         <Button
                             size="small"
-                            disabled={!canEdit}
+                            disabled={!canEdit || item.isExpired}
                             onClick={() =>
                                 setDraft({
                                     hivResult: 'NEGATIVE',
@@ -167,7 +176,7 @@ export default function LabTestWorkspace({ item, canEdit, canDispose, onDone }: 
                             <Segmented
                                 options={RESULT_OPTIONS}
                                 value={draft[ind.key] ?? undefined}
-                                disabled={!canEdit}
+                                disabled={!canEdit || item.isExpired}
                                 onChange={(v) => setDraft((p) => ({ ...p, [ind.key]: v as TestResultValue }))}
                             />
                         </div>
@@ -184,14 +193,14 @@ export default function LabTestWorkspace({ item, canEdit, canDispose, onDone }: 
                             options={ABO_OPTIONS}
                             value={abo ?? undefined}
                             onChange={setAbo}
-                            disabled={!canEdit}
+                            disabled={!canEdit || item.isExpired}
                         />
                         <Select
                             placeholder="Yếu tố Rh"
                             options={RH_OPTIONS}
                             value={rh ?? undefined}
                             onChange={setRh}
-                            disabled={!canEdit}
+                            disabled={!canEdit || item.isExpired}
                         />
                     </div>
                     {groupMismatch && (

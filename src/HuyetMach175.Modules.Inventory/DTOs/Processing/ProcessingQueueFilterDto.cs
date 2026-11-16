@@ -7,6 +7,9 @@ public class ProcessingQueueFilterDto
     [FromQuery(Name = "search")]
     public string? Search { get; set; }
 
+    [FromQuery(Name = "sourceType")]
+    public string? SourceType { get; set; }
+
     [FromQuery(Name = "pageNumber")]
     public int PageNumber { get; set; } = 1;
 

@@ -1,3 +1,5 @@
+import type { BagSource, SourceFilterValue } from './bagSource'
+
 export type TestResultValue = 'NEGATIVE' | 'POSITIVE'
 export type AboType = 'A' | 'B' | 'AB' | 'O'
 export type RhValue = 'POSITIVE' | 'NEGATIVE'
@@ -23,11 +25,15 @@ export interface LabQueueItem {
     storageLocationId?: number | null
     storageLocationName?: string | null
     collectedAt: string
+    expiredAt: string
+    isExpired: boolean
     status: string
+    source: BagSource
 }
 
 export interface LabQueueQuery {
     search?: string
+    sourceType?: SourceFilterValue
     pageNumber?: number
     pageSize?: number
 }

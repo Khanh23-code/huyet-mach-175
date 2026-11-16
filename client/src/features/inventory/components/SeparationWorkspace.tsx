@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { Alert, Button, Checkbox, InputNumber, Popconfirm, Select, Tag, message } from 'antd'
 import { CheckCircleOutlined, PrinterOutlined } from '@ant-design/icons'
 import { parseApiError } from '@/services/apiError'
-import { fmtDateTime } from '@/features/screening/format'
 import { useComponentTypes, useSeparate, useStorageLocations } from '../hooks'
 import {
     CHILD_CODES,
@@ -15,6 +14,7 @@ import {
 import type { LabelData } from './BagLabel'
 import BagLabel from './BagLabel'
 import LabelsPrintModal from './LabelsPrintModal'
+import BagOriginPanel from './BagOriginPanel'
 import type { ChildCode, ProcessingQueueItem, SeparateResponse } from '../types'
 
 interface Row {
@@ -65,7 +65,8 @@ export default function SeparationWorkspace({ parent, canEdit, onDone }: Props) 
         return e !== null && new Date(e).getTime() <= Date.now()
     })
 
-    const canSubmit = canEdit && enabled.length > 0 && !incomplete && !overVolume && expiredCodes.length === 0
+    const canSubmit =
+        canEdit && !parent.isExpired && enabled.length > 0 && !incomplete && !overVolume && expiredCodes.length === 0
 
     const submit = async () => {
         try {
@@ -126,6 +127,15 @@ export default function SeparationWorkspace({ parent, canEdit, onDone }: Props) 
                 <p>Chọn các chế phẩm cần tạo. Mã túi con tự sinh theo quy ước mã túi mẹ + mã chế phẩm.</p>
             </header>
             <div className="inv-card__body">
+                <BagOriginPanel
+                    source={parent.source}
+                    bagBloodGroup={parent.bloodGroup}
+                    collectedAt={parent.collectedAt}
+                    expiredAt={parent.expiredAt}
+                    isExpired={parent.isExpired}
+                    labTest={parent.labTest}
+                />
+
                 <dl className="inv-parent">
                     <div>
                         <dt>Nhóm máu</dt>
@@ -134,8 +144,7 @@ export default function SeparationWorkspace({ parent, canEdit, onDone }: Props) 
                         </dd>
                     </div>
                     <div><dt>Thể tích</dt><dd>{parent.volumeMl} ml</dd></div>
-                    <div><dt>Thu thập</dt><dd>{fmtDateTime(parent.collectedAt)}</dd></div>
-                    <div><dt>Nguồn</dt><dd>{parent.donorName || '—'}</dd></div>
+                    <div><dt>Vị trí</dt><dd>{parent.storageLocationName ?? '—'}</dd></div>
                 </dl>
 
                 <div style={{ marginTop: 16 }}>
@@ -144,12 +153,13 @@ export default function SeparationWorkspace({ parent, canEdit, onDone }: Props) 
                         const expiry = expiryOf(code)
                         const expired = expiry !== null && new Date(expiry).getTime() <= Date.now()
                         const opts = locationOptions(locations, code)
+                        const disabled = !canEdit || parent.isExpired
 
                         return (
                             <div key={code} className={`inv-comp${row.enabled ? '' : ' is-off'}`}>
                                 <Checkbox
                                     checked={row.enabled}
-                                    disabled={!canEdit}
+                                    disabled={disabled}
                                     onChange={(e) => patch(code, { enabled: e.target.checked })}
                                 >
                                     <b>{code}</b> · {COMPONENT_LABEL[code]}
@@ -158,14 +168,14 @@ export default function SeparationWorkspace({ parent, canEdit, onDone }: Props) 
                                     min={1}
                                     max={parent.volumeMl}
                                     placeholder="Thể tích (ml)"
-                                    disabled={!row.enabled || !canEdit}
+                                    disabled={!row.enabled || disabled}
                                     value={row.volume}
                                     onChange={(v) => patch(code, { volume: v === null ? null : Number(v) })}
                                     style={{ width: '100%' }}
                                 />
                                 <Select
                                     placeholder={`Tủ phù hợp (${storageHint(code)})`}
-                                    disabled={!row.enabled || !canEdit}
+                                    disabled={!row.enabled || disabled}
                                     value={row.locationId}
                                     options={opts}
                                     notFoundContent="Không có tủ phù hợp đang trống"
@@ -176,7 +186,7 @@ export default function SeparationWorkspace({ parent, canEdit, onDone }: Props) 
                                         Mã túi: <span className="inv-mono">{childBarcode(parent.barcode, code)}</span>
                                         {expiry && (
                                             <>
-                                                {' · '}Hạn dùng: {fmtDateTime(expiry)}
+                                                {' · '}Hạn dùng: {new Date(expiry).toLocaleString('vi-VN')}
                                                 {expired && ' (đã quá hạn, không thể tạo)'}
                                             </>
                                         )}
