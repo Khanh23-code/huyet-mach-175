@@ -1,5 +1,5 @@
-import { fmtDateTime } from '@/features/screening/format'
-import BarcodeSvg from '@/features/sessions/components/BarcodeSvg'
+import { fmtDateTime } from '@/shared/formatters/date'
+import BarcodeSvg from '@/shared/components/BarcodeSvg'
 
 export interface LabelData {
     barcode: string

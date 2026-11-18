@@ -3,7 +3,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { parseApiError } from '@/services/apiError'
 import { locationsApi, stockApi } from './stockApi'
 import { markOfflineError, removeOffline, toRequest, useOfflineQueue } from './offlineQueue'
-import { isNetworkError } from './stockFormat'
+import { isNetworkError } from '@/shared/utils/network'
 import type {
     BagQuery, ExpiringQuery, LocationQuery, OfflineTransition, RelocateRequest, StorageLocationInput,
     TransitionRequest,
