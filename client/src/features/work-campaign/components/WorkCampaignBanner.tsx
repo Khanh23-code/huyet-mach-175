@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button, Space } from 'antd'
 import { BarChartOutlined } from '@ant-design/icons'
 import type { WorkCampaign } from '../workCampaignStore'
-import '../pages/ReceptionQueuePage.css'
+import './WorkCampaign.css'
 
 interface Props {
     campaign: WorkCampaign

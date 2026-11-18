@@ -32,22 +32,15 @@ export const locationOptions = (locations: StorageLocation[], code: ComponentCod
             label: `${l.refrigeratorName} - ${l.shelfNumber} (${l.targetTemperature}°C)`,
         }))
 
-export const BLOOD_GROUP_OPTIONS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((v) => ({
-    value: v,
-    label: v,
-}))
+export { BLOOD_GROUP_OPTIONS, EXTERNAL_VOLUME_OPTIONS } from '@/shared/constants/medical'
 
 export const splitBloodGroup = (value: string) => ({
     bloodType: value.slice(0, -1) as 'A' | 'B' | 'AB' | 'O',
     rhFactor: (value.endsWith('+') ? 'POSITIVE' : 'NEGATIVE') as 'POSITIVE' | 'NEGATIVE',
 })
 
-export const EXTERNAL_VOLUME_OPTIONS = [250, 350, 450].map((v) => ({ value: v, label: `${v} ml` }))
-
 export const childBarcode = (parentBarcode: string, code: ChildCode) => `${parentBarcode}-${code}`
-
-export const addDaysIso = (iso: string, days: number) =>
-    new Date(new Date(iso).getTime() + days * 86_400_000).toISOString()
+export { addDaysUtcIso, addDaysUtcIso as addDaysIso } from '@/shared/formatters/date'
 
 export const explainNotSeparable = (bag: BloodBagLite | undefined, code: string) => {
     if (!bag) return `Không tìm thấy túi máu với mã '${code}'.`

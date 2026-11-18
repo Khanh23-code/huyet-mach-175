@@ -8,15 +8,14 @@ import { SYSTEM_ROLE_CODES } from '@/config/rbac'
 import { PERMISSIONS } from '@/config/permissions'
 import { usePermission } from '@/features/auth/usePermission'
 import type { RoleCode, UserItem } from '@/types/user'
-import { useDebounce, useRoles, useUsers } from '../hooks'
+import { useRoles, useUsers } from '../hooks'
+import { useDebounce } from '@/shared/hooks/useDebounce'
+import { initials } from '@/shared/utils/string'
 import { usersApi } from '../usersApi'
 import { parseApiError } from '@/services/apiError'
 import EditUserModal from './EditUserModal'
 
 const PAGE_SIZE = 10
-
-const initials = (name: string) =>
-    name.trim().split(/\s+/).slice(-2).map((w) => w[0]?.toUpperCase()).join('')
 
 interface UserTableProps {
     selectedRoleCodes?: RoleCode[]

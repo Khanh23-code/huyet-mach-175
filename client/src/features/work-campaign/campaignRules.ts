@@ -1,6 +1,6 @@
 import type { CampaignDetail } from '@/features/campaigns/types'
-import { fmtDate } from '@/features/donors/format'
-import { todayIso } from './format'
+import { formatDateOnly } from '@/shared/formatters/date'
+import { getTodayIso } from '@/shared/utils/date'
 
 const OPEN_STATUSES = ['APPROVED', 'IN_PROGRESS']
 
@@ -21,11 +21,11 @@ export function getCampaignBlockReason(
         return `Đợt hiến máu đang ở trạng thái "${STATUS_TEXT[status] ?? status}", chỉ đợt đã duyệt hoặc đang diễn ra mới được tiếp nhận.`
     }
 
-    const today = todayIso()
+    const today = getTodayIso()
     const start = c.startDate.slice(0, 10)
     const end = c.endDate.slice(0, 10)
-    if (today < start) return `Đợt hiến máu chưa bắt đầu (bắt đầu ngày ${fmtDate(start)}).`
-    if (today > end) return `Đợt hiến máu đã kết thúc (ngày ${fmtDate(end)}).`
+    if (today < start) return `Đợt hiến máu chưa bắt đầu (bắt đầu ngày ${formatDateOnly(start)}).`
+    if (today > end) return `Đợt hiến máu đã kết thúc (ngày ${formatDateOnly(end)}).`
 
     return null
 }

@@ -7,16 +7,17 @@ import { applyServerErrors, parseApiError } from '@/services/apiError'
 import { useCreateWalkIn } from '@/features/reception/hooks'
 import { useCheckEligibility, useCreateDonor } from '../hooks'
 import { walkInSchema, type WalkInForm } from '../donorSchema'
-import { fmtDate, GENDER_OPTIONS } from '../format'
+import { GENDER_OPTIONS } from '../format'
 import type { DonorDetail, DonorEligibility } from '../types'
-import { useWorkCampaignStore } from '@/features/reception/workCampaignStore'
+import { useWorkCampaignStore } from '@/features/work-campaign'
+import { todayIso } from '@/shared/utils/date'
+import { fmtDate } from '@/shared/formatters/date'
 
 interface Props {
     onClose: () => void
 }
 
 const FORM_FIELDS = ['citizenId', 'fullName', 'dateOfBirth', 'gender', 'phoneNumber']
-const todayIso = () => new Date().toISOString().slice(0, 10)
 
 function FieldItem({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
     return (

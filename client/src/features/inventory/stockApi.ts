@@ -1,5 +1,5 @@
 import { axiosClient } from '@/services/axiosClient'
-import type { PagedResult } from '@/features/reception/types'
+import type { PagedResult } from '@/shared/types/api'
 import type { StorageLocation } from './types'
 import type {
     BagQuery, BagScan, BloodBag, ExpiringQuery, ExpiringSoonBag, InventorySummary, LocationQuery,

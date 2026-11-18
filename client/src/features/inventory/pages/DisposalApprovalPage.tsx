@@ -3,7 +3,7 @@ import { Breadcrumb, Button, Input, Modal, Popconfirm, Select, Space, Table, Tag
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
-import { fmtDateTime } from '@/features/screening/format'
+import { fmtDateTime } from '@/shared/formatters/date'
 import { useApproveDisposal, useDisposals } from '../disposalsHooks'
 import { STATUS_COLOR, STATUS_OPTIONS } from '../disposalsFormat'
 import DisposalDetailDrawer from '../components/DisposalDetailDrawer'

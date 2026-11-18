@@ -1,6 +1,7 @@
 export type ScreeningStatus = 'PENDING' | 'QUALIFIED' | 'DEFERRED' | 'UNQUALIFIED'
 export type Conclusion = Exclude<ScreeningStatus, 'PENDING'>
-export type TargetVolume = 'VOL_250' | 'VOL_350' | 'VOL_450'
+import type { TargetVolume } from '@/shared/types/medical'
+export type { TargetVolume }
 export type AboGroup = 'A' | 'B' | 'AB' | 'O'
 export type RhValue = 'POSITIVE' | 'NEGATIVE'
 

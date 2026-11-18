@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button, Popconfirm, Select, Space, Table, Tag, message } from 'antd'
 import { parseApiError } from '@/services/apiError'
-import { fmtDateTime } from '@/features/screening/format'
+import { fmtDateTime } from '@/shared/formatters/date'
 import { useCancelDisposal, useDisposals, useExecuteDisposal } from '../disposalsHooks'
 import { STATUS_COLOR, STATUS_OPTIONS } from '../disposalsFormat'
 import DisposalDetailDrawer from './DisposalDetailDrawer'

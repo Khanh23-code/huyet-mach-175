@@ -1,5 +1,4 @@
 import dayjs from 'dayjs'
-import type { AxiosError } from 'axios'
 import type { BagStatus } from './stockTypes'
 
 export const BAG_STATUS_META: Record<BagStatus, { label: string; color: string }> = {
@@ -68,9 +67,6 @@ export const fmtRemaining = (hours: number) => {
     if (hours < 24) return `${Math.floor(hours)} giờ ${Math.round((hours % 1) * 60)} phút`
     return `${Math.floor(hours / 24)} ngày ${Math.floor(hours % 24)} giờ`
 }
-
-/** Không có response = mất mạng / server không phản hồi. */
-export const isNetworkError = (e: unknown) => !(e as AxiosError)?.response
 
 /** Nhóm máu -> tham số lọc BE. */
 export const bloodGroupParams = (group: string) =>

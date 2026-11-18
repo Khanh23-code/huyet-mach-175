@@ -32,13 +32,7 @@ export interface AppointmentFilterQuery {
     pageSize?: number // 1..100, mặc định BE là 20
 }
 
-export interface PagedResult<T> {
-    items: T[]
-    totalCount: number
-    pageNumber: number
-    pageSize: number
-    totalPages?: number
-}
+export type { PagedResult } from '@/shared/types/api'
 
 /** CreateWalkInAppointmentRequest: không truyền slotId thì BE tự chọn khung giờ của đợt */
 export interface CreateWalkInRequest {

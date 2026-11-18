@@ -8,8 +8,9 @@ import { useStorageLocations } from '../hooks'
 import { useTransitionBag } from '../stockHooks'
 import { addOffline } from '../offlineQueue'
 import {
-    AUTO_STATUSES, COMING_SOON_STATUSES, MANUAL_STATUSES, allowedManualTargets, fmtDateTimeSec, isNetworkError, statusMeta,
+    AUTO_STATUSES, COMING_SOON_STATUSES, MANUAL_STATUSES, allowedManualTargets, fmtDateTimeSec, statusMeta,
 } from '../stockFormat'
+import { isNetworkError } from '@/shared/utils/network'
 import type { BagScan, BagStatus } from '../stockTypes'
 import { BagStatusTag, BloodGroupTag } from './StockBadges'
 

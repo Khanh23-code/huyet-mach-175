@@ -1,5 +1,5 @@
 import { Tag } from 'antd'
-import { fmtDateTime } from '@/features/screening/format'
+import { fmtDateTime } from '@/shared/formatters/date'
 import type { BagSource } from '../bagSource'
 import { BagSourceTag, ExpiryTag } from './BagSourceBadges'
 

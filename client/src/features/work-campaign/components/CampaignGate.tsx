@@ -5,7 +5,7 @@ import { campaignsApi } from '@/features/campaigns/campaignsApi'
 import { parseApiError } from '@/services/apiError'
 import { getCampaignBlockReason } from '../campaignRules'
 import { useWorkCampaignStore } from '../workCampaignStore'
-import '../pages/ReceptionQueuePage.css'
+import './WorkCampaign.css'
 
 /** Chặn trang hàng chờ cho tới khi nhập mã (ID) đợt hiến máu hợp lệ. */
 export default function CampaignGate() {

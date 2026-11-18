@@ -1,5 +1,5 @@
-import { fmtDateTime } from '@/features/screening/format'
-import BarcodeSvg from './BarcodeSvg'
+import { fmtDateTime } from '@/shared/formatters/date'
+import BarcodeSvg from '@/shared/components/BarcodeSvg'
 import type { SessionBloodBag } from '../types'
 
 export default function BloodBagLabel({ bag }: { bag: SessionBloodBag }) {

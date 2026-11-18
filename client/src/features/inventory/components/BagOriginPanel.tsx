@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Alert, Tag } from 'antd'
 import { WarningOutlined } from '@ant-design/icons'
-import { fmtDateTime } from '@/features/screening/format'
+import { fmtDateTime } from '@/shared/formatters/date'
 import { fmtDay } from '../stockFormat'
 import type { BagLabSummary, BagSource } from '../bagSource'
 import { BagSourceTag, ExpiryTag } from './BagSourceBadges'

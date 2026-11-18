@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Alert, Drawer, Skeleton, Table, Tag } from 'antd'
-import { fmtDateTime } from '@/features/screening/format'
+import { fmtDateTime } from '@/shared/formatters/date'
 import { useDisposalDetail } from '../disposalsHooks'
 import { STATUS_COLOR } from '../disposalsFormat'
 import type { DisposalDetail, DisposalItem } from '../disposalsTypes'
