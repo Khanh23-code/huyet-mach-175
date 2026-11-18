@@ -7,13 +7,14 @@ import {
     PrinterOutlined,
     ReloadOutlined,
 } from '@ant-design/icons'
-import { initials } from '@/features/donors/format'
-import { fmtBlood, fmtDateTime } from '@/features/screening/format'
+import { initials } from '@/shared/utils/string'
+import { fmtBlood } from '@/shared/formatters/medical'
+import { fmtDateTime } from '@/shared/formatters/date'
 import { parseApiError } from '@/services/apiError'
 import { useCompleteCollection, useStartCollection } from '../hooks'
 import { useElapsed } from '../useElapsed'
 import { SESSION_META, VOLUME_CHOICES, fmtElapsed, parseUtc, volumeMl } from '../format'
-import BarcodeSvg from './BarcodeSvg'
+import BarcodeSvg from '@/shared/components/BarcodeSvg'
 import LabelPreviewModal from './LabelPreviewModal'
 import type { SessionDetail } from '../types'
 

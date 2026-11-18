@@ -1,30 +1,6 @@
-import { fmtDate } from '@/features/donors/format'
 import type { Conclusion, ScreeningStatus } from './types'
-
-const pad = (n: number) => String(n).padStart(2, '0')
-
-/** "YYYY-MM-DD" + n ngày -> "YYYY-MM-DD" (theo giờ máy) */
-export const addDaysIso = (iso: string, days: number) => {
-    const [y, m, d] = iso.slice(0, 10).split('-').map(Number)
-    const t = new Date(y, m - 1, d + days)
-    return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`
-}
-
-export const fmtDateTime = (iso?: string | null) => {
-    if (!iso) return '—'
-    const d = new Date(iso)
-    if (Number.isNaN(d.getTime())) return '—'
-    return `${pad(d.getHours())}:${pad(d.getMinutes())} ${fmtDate(
-        `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
-    )}`
-}
-
-/** bloodType "O" + rhFactor "Rh+" -> "O+" */
-export const fmtBlood = (bloodType?: string | null, rh?: string | null) => {
-    if (!bloodType) return 'Chưa xác định'
-    const sign = rh === 'Rh+' ? '+' : rh === 'Rh-' ? '-' : ''
-    return `${bloodType}${sign}`
-}
+export { formatDateTimeMedical, fmtDateTime, addDaysDateOnly, addDaysIso } from '@/shared/formatters/date'
+export { formatBloodGroup, fmtBlood } from '@/shared/formatters/medical'
 
 export const SCREENING_META: Record<ScreeningStatus, { label: string; color: string }> = {
     PENDING: { label: 'Chờ khám', color: 'blue' },

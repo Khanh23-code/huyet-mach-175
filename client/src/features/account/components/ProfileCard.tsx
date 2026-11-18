@@ -1,5 +1,6 @@
 import { Skeleton } from 'antd'
-import { getInitials, useCurrentUser } from '@/features/auth/useCurrentUser'
+import { useCurrentUser } from '@/features/auth/useCurrentUser'
+import { getInitials } from '@/shared/utils/string'
 import { useRoles } from '@/features/users/hooks'
 import type { UserProfile } from '@/types/auth'
 import { formatDate } from '../utils/device'

@@ -1,17 +1,8 @@
 import type { AppointmentStatus } from './types'
 
-const pad = (n: number) => String(n).padStart(2, '0')
 
-export const todayIso = () => {
-    const d = new Date()
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-}
-
-export const fmtTime = (iso?: string | null) => {
-    if (!iso) return '—'
-    const d = new Date(iso)
-    return Number.isNaN(d.getTime()) ? '—' : `${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
+export { getTodayIso, todayIso } from '@/shared/utils/date'
+export { formatTime, fmtTime } from '@/shared/formatters/date'
 
 export const waitingMinutes = (iso?: string | null): number | null => {
     if (!iso) return null

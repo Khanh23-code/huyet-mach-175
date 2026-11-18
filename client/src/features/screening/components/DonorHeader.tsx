@@ -1,5 +1,6 @@
 import { addDaysIso, fmtBlood } from '../format'
-import { fmtDate, initials } from '@/features/donors/format'
+import { initials } from '@/shared/utils/string'
+import { fmtDate } from '@/shared/formatters/date'
 import { Tag } from 'antd'
 import type { SurveyDetail } from '../types'
 

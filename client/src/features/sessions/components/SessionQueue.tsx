@@ -1,8 +1,8 @@
 import { Input, Segmented, Skeleton, Tag } from 'antd'
 import { RightOutlined, SearchOutlined } from '@ant-design/icons'
-import { initials } from '@/features/donors/format'
-import { fmtTime } from '@/features/reception/format'
-import { fmtBlood } from '@/features/screening/format'
+import { initials } from '@/shared/utils/string'
+import { fmtTime } from '@/shared/formatters/date'
+import { fmtBlood } from '@/shared/formatters/medical'
 import { SESSION_META } from '../format'
 import type { SessionQueueItem, SessionStatus } from '../types'
 

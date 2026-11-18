@@ -1,7 +1,9 @@
 import { Descriptions, Empty, Modal, Skeleton, Table, Tag } from 'antd'
 import { STATUS_COLOR, STATUS_LABEL, normalizeStatus } from '@/features/reception/format'
 import { useDonorDetail } from '../hooks'
-import { SCREENING_LABEL, SESSION_LABEL, fmtBloodType, fmtDate } from '../format'
+import { SCREENING_LABEL, SESSION_LABEL } from '../format'
+import { fmtDate } from '@/shared/formatters/date'
+import { fmtBloodType } from '@/shared/formatters/medical'
 import type { DonorHistoryItem } from '../types'
 
 interface Props {

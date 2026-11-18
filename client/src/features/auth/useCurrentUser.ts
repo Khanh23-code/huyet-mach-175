@@ -1,22 +1,8 @@
 import { useMemo } from 'react'
 import { useAuthStore } from '@/features/auth/authStore'
+import { getInitials } from '@/shared/utils/string'
 
-/** "Lê Quốc Anh" -> "LA", "Mai" -> "MA" */
-export function getInitials(name: string): string {
-    const words = name.trim().split(/\s+/).filter(Boolean)
-
-    if (words.length === 0) return '?'
-
-    const first = Array.from(words[0])
-
-    if (words.length === 1) {
-        return first.slice(0, 2).join('').toLocaleUpperCase('vi')
-    }
-
-    const last = Array.from(words[words.length - 1])
-
-    return (first[0] + last[0]).toLocaleUpperCase('vi')
-}
+export { getInitials } from '@/shared/utils/string'
 
 /**
  * Đọc thông tin user hiện tại từ authStore.

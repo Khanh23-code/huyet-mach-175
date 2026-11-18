@@ -1,7 +1,7 @@
 import { Input, Segmented, Skeleton, Tag } from 'antd'
 import { RightOutlined, SearchOutlined } from '@ant-design/icons'
-import { initials } from '@/features/donors/format'
-import { fmtTime } from '@/features/reception/format'
+import { initials } from '@/shared/utils/string'
+import { fmtTime } from '@/shared/formatters/date'
 import { SCREENING_META } from '../format'
 import type { ScreeningQueueItem } from '../types'
 
