@@ -1,4 +1,4 @@
-import type { TargetVolume } from '@/features/screening/types'
+import type { TargetVolume } from '@/shared/types/medical'
 
 export type { TargetVolume }
 export type SessionStatus = 'WAITING_COLLECTION' | 'COMPLETED' | 'ABORTED'

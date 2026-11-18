@@ -1,5 +1,5 @@
 import { axiosClient } from '@/services/axiosClient'
-import type { PagedResult } from '@/features/reception/types'
+import type { PagedResult } from '@/shared/types/api'
 import type {
     CollectionResponse,
     SessionDetail,
