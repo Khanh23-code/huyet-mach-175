@@ -1,7 +1,7 @@
 ﻿import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { AuthUser } from '@/types/auth'
-import { useWorkCampaignStore } from '@/features/reception/workCampaignStore'
+import { useWorkCampaignStore } from '@/features/work-campaign/workCampaignStore'
 import { queryClient } from '@/services/queryClient'
 
 interface AuthState {
