@@ -1,8 +1,21 @@
 export const ROLE_PRESETS: Record<string, string[]> = {
     SYS: ['*'],
     MGT: ['*_VIEW', 'CAMPAIGN_APPROVE', 'CAMPAIGN_CANCEL', 'DISPOSAL_APPROVE', '!USERS_*', '!ROLES_*'],
-    CLIN: ['DONORS_VIEW', 'SCREENING_*'],
-    BBNK: ['CAMPAIGN_VIEW', 'CAMPAIGN_EDIT', 'DONORS_VIEW', 'INVENTORY_*', 'LAB_*', 'PROCESSING_*', 'DISPOSAL_VIEW', 'DISPOSAL_EDIT'],
+    CLIN: ['DONORS_VIEW', 'SCREENING_*', 'BLOOD_REQUEST_*', 'BLOOD_RETURN_*', '!*_APPROVE'],
+    BBNK: [
+        'CAMPAIGN_VIEW',
+        'CAMPAIGN_EDIT',
+        'DONORS_VIEW',
+        'INVENTORY_*',
+        'LAB_*',
+        'PROCESSING_*',
+        'DISPOSAL_VIEW',
+        'DISPOSAL_EDIT',
+        'BLOOD_REQUEST_VIEW',
+        'BLOOD_REQUEST_APPROVE',
+        'BLOOD_RETURN_VIEW',
+        'BLOOD_RETURN_APPROVE',
+    ],
     DON: ['CAMPAIGN_VIEW', 'DONORS_*', 'APPOINTMENTS_*', 'SURVEY_*', 'SCREENING_*', 'SESSION_*'],
 }
 

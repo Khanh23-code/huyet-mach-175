@@ -116,6 +116,207 @@ public class BloodRequestsService : IBloodRequestsService
         };
     }
 
+    public async Task<BloodRequestDetailDto> UpdateDraftBloodRequestAsync(int id, UpdateBloodRequestDto request, int doctorId, string? ipAddress)
+    {
+        if (id <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiếu yêu cầu máu không hợp lệ.");
+        }
+
+        await BloodRequestProcessing.EnsureActiveUserAsync(_context, doctorId, "Thông tin bác sĩ đăng nhập không hợp lệ.");
+
+        var (patientCode, patientName) = BloodRequestProcessing.ValidateUpdateBloodRequest(request);
+
+        var componentTypeIds = request.Items.Select(i => i.ComponentTypeId).Distinct().ToList();
+        var existingComponentIds = await _context.BloodComponentTypes
+            .AsNoTracking()
+            .Where(c => componentTypeIds.Contains(c.ComponentTypeId))
+            .Select(c => c.ComponentTypeId)
+            .ToHashSetAsync();
+
+        var missingComponentIds = componentTypeIds.Where(cid => !existingComponentIds.Contains(cid)).ToList();
+        if (missingComponentIds.Count > 0)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy loại chế phẩm máu với ID: {string.Join(", ", missingComponentIds)}.");
+        }
+
+        var now = DateTime.UtcNow;
+        var diagnosisTrimmed = request.Diagnosis?.Trim();
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        var existingRequest = await _context.BloodRequests
+            .AsNoTracking()
+            .Include(r => r.Items)
+            .FirstOrDefaultAsync(r => r.RequestId == id);
+
+        if (existingRequest == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy phiếu yêu cầu máu với mã #{id}.");
+        }
+
+        if (existingRequest.DoctorId != doctorId)
+        {
+            throw new HttpException(StatusCodes.Status403Forbidden, "Bạn chỉ có quyền chỉnh sửa phiếu yêu cầu máu nháp do chính mình tạo.");
+        }
+
+        if (existingRequest.Status != RequestStatus.DRAFT)
+        {
+            throw new HttpException(StatusCodes.Status409Conflict, $"Phiếu yêu cầu {existingRequest.RequestCode} đang ở trạng thái '{existingRequest.Status}', chỉ có thể chỉnh sửa khi ở trạng thái Bản nháp (DRAFT).");
+        }
+
+        var updatedRows = await _context.BloodRequests
+            .Where(r => r.RequestId == id && r.DoctorId == doctorId && r.Status == RequestStatus.DRAFT)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(r => r.PatientCode, patientCode)
+                .SetProperty(r => r.PatientName, patientName)
+                .SetProperty(r => r.PatientBloodType, request.PatientBloodType)
+                .SetProperty(r => r.PatientRh, request.PatientRh)
+                .SetProperty(r => r.UrgencyLevel, request.UrgencyLevel)
+                .SetProperty(r => r.Diagnosis, diagnosisTrimmed));
+
+        if (updatedRows == 0)
+        {
+            throw new HttpException(StatusCodes.Status409Conflict, $"Phiếu yêu cầu {existingRequest.RequestCode} vừa được gửi hoặc không còn ở trạng thái Bản nháp (DRAFT).");
+        }
+
+        await _context.BloodRequestItems
+            .Where(i => i.RequestId == id)
+            .ExecuteDeleteAsync();
+
+        foreach (var item in request.Items)
+        {
+            _context.BloodRequestItems.Add(new BloodRequestItem
+            {
+                RequestId = id,
+                ComponentTypeId = item.ComponentTypeId,
+                RequestedUnits = item.RequestedUnits,
+                AllocatedUnits = 0
+            });
+        }
+
+        _context.AuditLogs.Add(new AuditLog
+        {
+            TableName = "blood_requests",
+            RecordId = id,
+            ActionType = ActionType.UPDATE,
+            OldState = JsonSerializer.Serialize(new
+            {
+                patientCode = existingRequest.PatientCode,
+                patientName = existingRequest.PatientName,
+                patientBloodType = existingRequest.PatientBloodType.ToString(),
+                patientRh = existingRequest.PatientRh.ToString(),
+                urgencyLevel = existingRequest.UrgencyLevel.ToString(),
+                diagnosis = existingRequest.Diagnosis,
+                status = existingRequest.Status.ToString(),
+                items = existingRequest.Items.Select(i => new { i.ComponentTypeId, i.RequestedUnits }).ToList()
+            }),
+            NewState = JsonSerializer.Serialize(new
+            {
+                patientCode,
+                patientName,
+                patientBloodType = request.PatientBloodType.ToString(),
+                patientRh = request.PatientRh.ToString(),
+                urgencyLevel = request.UrgencyLevel.ToString(),
+                diagnosis = diagnosisTrimmed,
+                status = RequestStatus.DRAFT.ToString(),
+                items = request.Items.Select(i => new { i.ComponentTypeId, i.RequestedUnits }).ToList()
+            }),
+            PerformedBy = doctorId,
+            IpAddress = ipAddress,
+            ChangeReason = $"Cập nhật nội dung phiếu nháp {existingRequest.RequestCode}.",
+            CreatedAt = now
+        });
+
+        await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
+
+        return await GetBloodRequestByIdAsync(id, doctorId);
+    }
+
+    public async Task<SubmitBloodRequestResponse> SubmitDraftBloodRequestAsync(int id, int doctorId, string? ipAddress)
+    {
+        if (id <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiếu yêu cầu máu không hợp lệ.");
+        }
+
+        await BloodRequestProcessing.EnsureActiveUserAsync(_context, doctorId, "Thông tin bác sĩ đăng nhập không hợp lệ.");
+
+        var now = DateTime.UtcNow;
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        var existingRequest = await _context.BloodRequests
+            .AsNoTracking()
+            .Include(r => r.Items)
+            .FirstOrDefaultAsync(r => r.RequestId == id);
+
+        if (existingRequest == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy phiếu yêu cầu máu với mã #{id}.");
+        }
+
+        if (existingRequest.DoctorId != doctorId)
+        {
+            throw new HttpException(StatusCodes.Status403Forbidden, "Bạn chỉ có quyền gửi phiếu yêu cầu máu do chính mình tạo.");
+        }
+
+        if (existingRequest.Status != RequestStatus.DRAFT)
+        {
+            throw new HttpException(StatusCodes.Status409Conflict, $"Phiếu yêu cầu {existingRequest.RequestCode} đang ở trạng thái '{existingRequest.Status}', chỉ có thể gửi phiếu đang ở trạng thái Bản nháp (DRAFT).");
+        }
+
+        if (existingRequest.Items.Count == 0 || existingRequest.Items.Any(i => i.RequestedUnits <= 0))
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Phiếu yêu cầu nháp {existingRequest.RequestCode} chưa có chế phẩm máu hợp lệ để gửi.");
+        }
+
+        var updatedRows = await _context.BloodRequests
+            .Where(r => r.RequestId == id && r.DoctorId == doctorId && r.Status == RequestStatus.DRAFT)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.Status, RequestStatus.PENDING));
+
+        if (updatedRows == 0)
+        {
+            throw new HttpException(StatusCodes.Status409Conflict, $"Phiếu yêu cầu {existingRequest.RequestCode} đã được gửi trước đó hoặc không còn ở trạng thái Bản nháp (DRAFT).");
+        }
+
+        _context.AuditLogs.Add(new AuditLog
+        {
+            TableName = "blood_requests",
+            RecordId = id,
+            ActionType = ActionType.STATUS_CHANGE,
+            OldState = JsonSerializer.Serialize(new
+            {
+                requestId = existingRequest.RequestId,
+                requestCode = existingRequest.RequestCode,
+                status = RequestStatus.DRAFT.ToString()
+            }),
+            NewState = JsonSerializer.Serialize(new
+            {
+                requestId = existingRequest.RequestId,
+                requestCode = existingRequest.RequestCode,
+                status = RequestStatus.PENDING.ToString()
+            }),
+            PerformedBy = doctorId,
+            IpAddress = ipAddress,
+            ChangeReason = $"Gửi chính thức phiếu yêu cầu máu {existingRequest.RequestCode} từ bản nháp.",
+            CreatedAt = now
+        });
+
+        await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
+
+        return new SubmitBloodRequestResponse
+        {
+            RequestId = existingRequest.RequestId,
+            RequestCode = existingRequest.RequestCode,
+            Status = RequestStatus.PENDING,
+            CurrentStep = BloodRequestMappings.ResolveCurrentStep(RequestStatus.PENDING),
+            SubmittedAt = now
+        };
+    }
+
     public async Task<PagedResult<ClinicalBloodRequestDto>> GetClinicalBloodRequestsAsync(ClinicalBloodRequestFilterDto filter, int doctorId)
     {
         if (doctorId <= 0)

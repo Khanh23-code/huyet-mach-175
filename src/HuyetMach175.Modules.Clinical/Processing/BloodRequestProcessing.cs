@@ -55,9 +55,18 @@ public static class BloodRequestProcessing
     }
 
     public static (string PatientCode, string PatientName) ValidateCreateBloodRequest(CreateBloodRequestDto request)
+        => ValidateBloodRequestPayload(request.PatientCode, request.PatientName, request.Items);
+
+    public static (string PatientCode, string PatientName) ValidateUpdateBloodRequest(UpdateBloodRequestDto request)
+        => ValidateBloodRequestPayload(request.PatientCode, request.PatientName, request.Items);
+
+    private static (string PatientCode, string PatientName) ValidateBloodRequestPayload(
+        string? rawPatientCode,
+        string? rawPatientName,
+        List<CreateBloodRequestItemDto>? items)
     {
-        var patientCode = request.PatientCode?.Trim() ?? string.Empty;
-        var patientName = request.PatientName?.Trim() ?? string.Empty;
+        var patientCode = rawPatientCode?.Trim() ?? string.Empty;
+        var patientName = rawPatientName?.Trim() ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(patientCode))
         {
@@ -69,12 +78,12 @@ public static class BloodRequestProcessing
             throw new HttpException(StatusCodes.Status400BadRequest, "Tên người bệnh (patientName) không được để trống.");
         }
 
-        if (request.Items == null || request.Items.Count == 0)
+        if (items == null || items.Count == 0)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Phiếu yêu cầu máu phải có ít nhất 1 loại chế phẩm.");
         }
 
-        var duplicateComponentIds = request.Items
+        var duplicateComponentIds = items
             .GroupBy(i => i.ComponentTypeId)
             .Where(g => g.Count() > 1)
             .Select(g => g.Key)
@@ -85,7 +94,7 @@ public static class BloodRequestProcessing
             throw new HttpException(StatusCodes.Status400BadRequest, "Không được chọn trùng loại chế phẩm máu trong cùng một phiếu yêu cầu.");
         }
 
-        if (request.Items.Any(i => i.RequestedUnits <= 0))
+        if (items.Any(i => i.RequestedUnits <= 0))
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Số lượng đơn vị yêu cầu cho mỗi chế phẩm phải lớn hơn 0.");
         }

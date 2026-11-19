@@ -1,0 +1,56 @@
+.clinical-detail-drawer .ant-drawer-header {
+    border-bottom: 1px solid #f1f5f9;
+    padding: 16px 24px;
+}
+
+.request-drawer__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.request-drawer__code {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.request-drawer__content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.request-drawer__stepper-box {
+    padding: 16px;
+    background-color: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+.request-drawer__section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 12px;
+}
+
+.request-drawer__section {
+    background-color: #ffffff;
+}
+
+.request-drawer__no-alloc {
+    padding: 20px;
+    text-align: center;
+    color: #94a3b8;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.request-drawer__loading,
+.request-drawer__empty {
+    text-align: center;
+    padding: 60px 0;
+    color: #64748b;
+}

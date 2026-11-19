@@ -5,6 +5,8 @@ import {
     SettingOutlined,
     TeamOutlined,
     InboxOutlined,
+    FileTextOutlined,
+    BarChartOutlined,
 } from '@ant-design/icons'
 import { PERMISSIONS, type PermissionRequirement } from './permissions'
 
@@ -65,6 +67,40 @@ export const ROUTE_GROUPS: RouteGroup[] = [
             { key: 'disposals', label: 'Xử lý hủy túi máu', path: '/inventory/disposals', requiredPermission: PERMISSIONS.DISPOSAL_EDIT },
             { key: 'disposal-approvals', label: 'Phê duyệt biên bản hủy', path: '/inventory/disposal-approvals', requiredPermission: PERMISSIONS.DISPOSAL_APPROVE },
             { key: 'expiry-alerts', label: 'Cảnh báo cận hạn', path: '/inventory/expiring', requiredPermission: PERMISSIONS.INVENTORY_VIEW },
+        ],
+    },
+    {
+        // W3: Lâm sàng (Yêu cầu máu & Hoàn trả)
+        key: 'clinical',
+        label: 'Yêu cầu máu (Lâm sàng)',
+        icon: <FileTextOutlined />,
+        defaultOpen: true,
+        requiredPermission: PERMISSIONS.BLOOD_REQUEST_EDIT,
+        children: [
+            { key: 'clinical-requests', label: 'Lập phiếu & Theo dõi', path: '/clinical/requests', requiredPermission: PERMISSIONS.BLOOD_REQUEST_EDIT },
+            { key: 'clinical-handovers', label: 'Nhận bàn giao túi máu', path: '/clinical/handovers', requiredPermission: PERMISSIONS.BLOOD_REQUEST_EDIT },
+        ],
+    },
+    {
+        // W4: Điều phối Kho máu (Ngân hàng máu)
+        key: 'coordination',
+        label: 'Điều phối Kho máu',
+        icon: <BarChartOutlined />,
+        defaultOpen: true,
+        requiredPermission: PERMISSIONS.BLOOD_REQUEST_APPROVE,
+        children: [
+            {
+                key: 'supply-demand',
+                label: 'Bảng Cung – Cầu',
+                path: '/coordination/supply-demand',
+                requiredPermission: PERMISSIONS.BLOOD_REQUEST_APPROVE,
+            },
+            {
+                key: 'coordination-queue',
+                label: 'Hàng đợi yêu cầu',
+                path: '/coordination/queue',
+                requiredPermission: PERMISSIONS.BLOOD_REQUEST_APPROVE,
+            },
         ],
     },
     {
