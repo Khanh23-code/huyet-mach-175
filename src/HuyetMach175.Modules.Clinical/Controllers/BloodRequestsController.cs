@@ -52,6 +52,67 @@ public class BloodRequestsController : ControllerBase
         return CreatedAtAction(nameof(GetBloodRequestById), new { id = result.RequestId }, result);
     }
 
+    [HttpPut("{id:int}")]
+    [HasPermission("BLOOD_REQUEST_EDIT")]
+    [EndpointSummary("Cập nhật nội dung phiếu yêu cầu máu đang ở trạng thái DRAFT")]
+    [EndpointDescription(
+        "Bác sĩ điều trị chỉnh sửa nội dung phiếu yêu cầu máu đang ở trạng thái Bản nháp (`DRAFT`) theo đúng ID phiếu gốc, không tạo bản ghi mới.\n\n" +
+        "**Quy tắc nghiệp vụ:**\n" +
+        "- Chỉ chủ sở hữu phiếu (`DoctorId == CurrentUserId`) mới được chỉnh sửa.\n" +
+        "- Chỉ cho phép cập nhật khi phiếu đang ở trạng thái `DRAFT`; nếu phiếu đã gửi (`PENDING`, `READY`, `COMPLETED`, `REJECTED`) sẽ trả `409 Conflict`.\n" +
+        "- Giữ nguyên `requestId`, `requestCode`, `status = DRAFT`.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **BLOOD_REQUEST_EDIT** (vai trò CLIN).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Cập nhật thành công, trả về chi tiết phiếu sau khi cập nhật.\n" +
+        "- 400 BadRequest: Dữ liệu đầu vào không hợp lệ.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền BLOOD_REQUEST_EDIT hoặc không phải bác sĩ tạo phiếu.\n" +
+        "- 404 NotFound: Không tìm thấy phiếu yêu cầu hoặc loại chế phẩm máu.\n" +
+        "- 409 Conflict: Phiếu không còn ở trạng thái DRAFT.")]
+    [ProducesResponseType(typeof(BloodRequestDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpdateDraftBloodRequest(int id, [FromBody] UpdateBloodRequestDto request)
+    {
+        var doctorId = User.GetUserId();
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var result = await _bloodRequestsService.UpdateDraftBloodRequestAsync(id, request, doctorId, ipAddress);
+        return Ok(result);
+    }
+
+    [HttpPatch("{id:int}/submit")]
+    [HasPermission("BLOOD_REQUEST_EDIT")]
+    [EndpointSummary("Gửi chính thức phiếu yêu cầu máu đang ở trạng thái DRAFT")]
+    [EndpointDescription(
+        "Chuyển trạng thái phiếu yêu cầu máu gốc từ `DRAFT` sang `PENDING` theo `id` mà không tạo bản ghi mới.\n\n" +
+        "**Quy tắc nghiệp vụ:**\n" +
+        "- Chỉ chủ sở hữu phiếu (`DoctorId == CurrentUserId`) mới được gửi.\n" +
+        "- Chỉ xử lý khi phiếu đang ở trạng thái `DRAFT`; cập nhật nguyên tử để chống gửi lặp hoặc gửi đồng thời (`409 Conflict`).\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **BLOOD_REQUEST_EDIT** (vai trò CLIN).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Gửi phiếu thành công, phiếu chuyển sang trạng thái `PENDING`.\n" +
+        "- 400 BadRequest: ID không hợp lệ hoặc phiếu nháp thiếu chế phẩm hợp lệ.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền BLOOD_REQUEST_EDIT hoặc không phải bác sĩ tạo phiếu.\n" +
+        "- 404 NotFound: Không tìm thấy phiếu yêu cầu máu.\n" +
+        "- 409 Conflict: Phiếu đã được gửi trước đó hoặc không còn ở trạng thái DRAFT.")]
+    [ProducesResponseType(typeof(SubmitBloodRequestResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> SubmitDraftBloodRequest(int id)
+    {
+        var doctorId = User.GetUserId();
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var result = await _bloodRequestsService.SubmitDraftBloodRequestAsync(id, doctorId, ipAddress);
+        return Ok(result);
+    }
+
     [HttpGet("clinical")]
     [HasPermission("BLOOD_REQUEST_VIEW")]
     [EndpointSummary("Lấy danh sách phiếu yêu cầu máu phía Lâm sàng")]
