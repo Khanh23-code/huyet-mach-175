@@ -37,6 +37,10 @@ const approvalRoute = findRouteItem('disposal-approvals')
 const bagScanRoute = findRouteItem('bag-scan')
 const stockRoute = findRouteItem('stock')
 const expiryRoute = findRouteItem('expiry-alerts')
+const clinicalRequestsRoute = findRouteItem('clinical-requests')
+const clinicalHandoversRoute = findRouteItem('clinical-handovers')
+const supplyDemandRoute = findRouteItem('supply-demand')
+const coordinationQueueRoute = findRouteItem('coordination-queue')
 
 export const router = createBrowserRouter([
     {
@@ -80,6 +84,10 @@ export const router = createBrowserRouter([
                     guarded(bagScanRoute, () => import('@/features/inventory/pages/BagScanPage')),
                     guarded(stockRoute, () => import('@/features/inventory/pages/StockPage')),
                     guarded(expiryRoute, () => import('@/features/inventory/pages/ExpiryAlertsPage')),
+                    guarded(clinicalRequestsRoute, () => import('@/features/clinical/pages/ClinicalBloodRequestsPage')),
+                    guarded(clinicalHandoversRoute, () => import('@/features/clinical/pages/ClinicalBloodRequestsPage')),
+                    guarded(supplyDemandRoute, () => import('@/features/coordination/pages/SupplyDemandPage')),
+                    guarded(coordinationQueueRoute, () => import('@/features/coordination/pages/CoordinationQueuePage')),
                     { path: '*', element: <NotFoundPage /> },
                 ],
             },
