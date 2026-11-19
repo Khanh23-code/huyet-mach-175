@@ -1,0 +1,104 @@
+.clinical-stepper {
+    display: inline-flex;
+    align-items: center;
+    min-width: 310px;
+    padding: 4px 0;
+}
+
+.clinical-stepper__node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.clinical-stepper__circle {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.clinical-stepper__circle.is-completed {
+    background-color: var(--c-primary, #1A7534);
+    color: #ffffff;
+    border: 2px solid var(--c-primary, #1A7534);
+}
+
+.clinical-stepper__circle.is-pending {
+    background-color: #ffffff;
+    color: #94a3b8;
+    border: 1.5px solid #cbd5e1;
+}
+
+.clinical-stepper__check {
+    font-size: 11px;
+}
+
+.clinical-stepper__label {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 4px;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.clinical-stepper__label.is-active {
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.clinical-stepper__line {
+    flex: 1;
+    height: 2px;
+    background-color: #cbd5e1;
+    margin: 0 4px;
+    margin-bottom: 16px;
+    min-width: 24px;
+}
+
+.clinical-stepper__line.is-active {
+    background-color: var(--c-primary, #1A7534);
+}
+
+.stepper-rejected {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background-color: #fef2f2;
+    color: #dc2626;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.stepper-rejected__icon {
+    font-size: 14px;
+}
+
+.stepper-draft {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background-color: #f8fafc;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px dashed #cbd5e1;
+}
+
+.stepper-draft__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #94a3b8;
+}
