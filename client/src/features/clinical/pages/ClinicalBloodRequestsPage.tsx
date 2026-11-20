@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
     Alert,
     Card,
@@ -11,8 +12,6 @@ import {
     Tag,
     message,
     Dropdown,
-    Space,
-    Empty,
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import {
@@ -21,10 +20,7 @@ import {
     ScanOutlined,
     RightOutlined,
     SyncOutlined,
-    CheckCircleOutlined,
-    RollbackOutlined,
     CloseCircleOutlined,
-    ReloadOutlined,
 } from '@ant-design/icons'
 import {
     useClinicalRequests,
@@ -32,18 +28,15 @@ import {
     useUpdateDraftRequest,
     useSubmitDraftRequest,
     usePendingReceipts,
-    usePendingBloodReturns,
     useComponentTypes,
 } from '../hooks'
 import { RequestStatusStepper } from '../components/RequestStatusStepper'
 import { SelectPatientHisModal } from '../components/SelectPatientHisModal'
 import { ConfirmSendRequestModal, type ConfirmSendRequestData } from '../components/ConfirmSendRequestModal'
 import { BloodRequestDetailDrawer } from '../components/BloodRequestDetailDrawer'
-import { ScanHandoverModal } from '../components/ScanHandoverModal'
-import { CreateReturnModal } from '../components/CreateReturnModal'
+import { ClinicalReturnCreatePanel } from '../components/ClinicalReturnCreatePanel'
 import { getUrgencyMeta, getStatusMeta, formatUnits } from '../format'
 import { formatBloodGroup, parseBloodGroup } from '@/shared/formatters/medical'
-import { formatDateTime } from '@/shared/formatters/date'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCurrentUser } from '@/features/auth/useCurrentUser'
 import { usePermission } from '@/features/auth/usePermission'
@@ -54,8 +47,6 @@ import type {
     BloodRequestDetailDto,
     ClinicalBloodRequestDto,
     HisPatientDto,
-    PendingBloodReturnDto,
-    PendingReceiptBagDto,
     UpdateBloodRequestDto,
     UrgencyLevel,
 } from '../types'
@@ -67,17 +58,23 @@ type ConfirmSubmitContext =
     | { mode: 'submit-draft'; draftId: number; requestCode: string }
 
 export default function ClinicalBloodRequestsPage() {
+    const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
     const queryClient = useQueryClient()
     const { displayName, user } = useCurrentUser()
     const { can } = usePermission()
 
     const canViewRequests = can(PERMISSIONS.BLOOD_REQUEST_VIEW)
     const canEditRequests = can(PERMISSIONS.BLOOD_REQUEST_EDIT)
-    const canViewReturns = can(PERMISSIONS.BLOOD_RETURN_VIEW)
-    const canEditReturns = can(PERMISSIONS.BLOOD_RETURN_EDIT)
 
-    // Tab active: 'list' | 'create' | 'handovers' | 'returns'
-    const [activeTab, setActiveTab] = useState<'list' | 'create' | 'handovers' | 'returns'>('list')
+    const initialTab = searchParams.get('tab') === 'returns'
+        ? 'returns'
+        : searchParams.get('tab') === 'create'
+          ? 'create'
+          : 'list'
+
+    // Tab active: 'list' | 'create' | 'returns' (Nhận bàn giao điều hướng sang màn hình riêng /clinical/handovers)
+    const [activeTab, setActiveTab] = useState<'list' | 'create' | 'returns'>(initialTab)
 
     // Filter state cho tab Danh sách
     const [searchKeyword, setSearchKeyword] = useState('')
@@ -104,28 +101,12 @@ export default function ClinicalBloodRequestsPage() {
         { enabled: canViewRequests && activeTab === 'list' },
     )
 
-    // Query túi máu chờ nhận (W3.2)
+    // Query túi máu chờ nhận để hiển thị badge số lượng trên tab Nhận bàn giao
     const {
         data: pendingBags,
-        isLoading: isPendingLoading,
-        isFetching: isPendingFetching,
         refetch: refetchPendingReceipts,
     } = usePendingReceipts(undefined, { enabled: canViewRequests })
     const pendingCount = pendingBags?.length || 0
-
-    // Query phiếu hoàn trả đang chờ kiểm định (W3.3 - chỉ gọi lần đầu khi mở tab Hoàn trả)
-    const {
-        data: pendingReturnsPage,
-        isLoading: isPendingReturnsLoading,
-        isFetching: isPendingReturnsFetching,
-        refetch: refetchReturns,
-    } = usePendingBloodReturns(
-        {
-            pageNumber: 1,
-            pageSize: 20,
-        },
-        { enabled: canViewReturns && activeTab === 'returns' },
-    )
 
     // Component types
     const { data: componentTypes = [] } = useComponentTypes()
@@ -213,14 +194,6 @@ export default function ClinicalBloodRequestsPage() {
     // Drawer state
     const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null)
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-
-    // Handover modal state
-    const [isScanModalOpen, setIsScanModalOpen] = useState(false)
-    const [targetHandoverBag, setTargetHandoverBag] = useState<PendingReceiptBagDto | null>(null)
-
-    // Return modal state
-    const [isReturnModalOpen, setIsReturnModalOpen] = useState(false)
-    const [targetReturnBag, setTargetReturnBag] = useState<PendingReceiptBagDto | null>(null)
 
     // Xử lý khi chọn bệnh nhân từ popup HIS
     const handleSelectHisPatient = (patient: HisPatientDto) => {
@@ -555,150 +528,6 @@ export default function ClinicalBloodRequestsPage() {
         [],
     )
 
-    // Bảng nhận bàn giao (Tab Nhận bàn giao)
-    const handoverColumns: ColumnsType<PendingReceiptBagDto> = useMemo(
-        () => [
-            {
-                title: 'MÃ TÚI MÁU',
-                dataIndex: 'barcode',
-                key: 'barcode',
-                render: (barcode) => <code className="handover-barcode">{barcode}</code>,
-            },
-            {
-                title: 'NGƯỜI BỆNH',
-                key: 'patient',
-                render: (_, row) => (
-                    <div>
-                        <strong>{row.patientName}</strong>
-                        <div style={{ color: '#64748b', fontSize: 12 }}>{row.patientCode}</div>
-                    </div>
-                ),
-            },
-            {
-                title: 'CHẾ PHẨM / NHÓM MÁU',
-                key: 'product',
-                render: (_, row) => (
-                    <div>
-                        <div>{row.componentName} ({row.volumeMl} ml)</div>
-                        <Tag color="red">{row.bloodType}</Tag>
-                    </div>
-                ),
-            },
-            {
-                title: 'BÁC SĨ LẬP PHIẾU',
-                key: 'doctor',
-                render: (_, row) => (
-                    <div>
-                        <div>{row.doctorName || 'Bác sĩ điều trị'}</div>
-                        {row.isOwnRequest ? (
-                            <Tag color="green">Phiếu của bạn</Tag>
-                        ) : (
-                            <Tag color="gold">Nhận hộ trong khoa</Tag>
-                        )}
-                    </div>
-                ),
-            },
-            {
-                title: 'THỜI GIAN XUẤT KHO',
-                dataIndex: 'issuedAt',
-                key: 'issuedAt',
-                render: (val) => (val ? formatDateTime(val) : '—'),
-            },
-            {
-                title: 'HÀNH ĐỘNG',
-                key: 'actions',
-                align: 'center',
-                render: (_, row) => (
-                    <Space>
-                        {canEditRequests && (
-                            <Button
-                                type="primary"
-                                size="small"
-                                icon={<CheckCircleOutlined />}
-                                style={{ backgroundColor: '#1A7534', borderColor: '#1A7534' }}
-                                onClick={() => {
-                                    setTargetHandoverBag(row)
-                                    setIsScanModalOpen(true)
-                                }}
-                            >
-                                Quét nhận
-                            </Button>
-                        )}
-                        {canEditReturns && (
-                            <Button
-                                size="small"
-                                danger
-                                icon={<RollbackOutlined />}
-                                onClick={() => {
-                                    setTargetReturnBag(row)
-                                    setIsReturnModalOpen(true)
-                                }}
-                            >
-                                Hoàn trả
-                            </Button>
-                        )}
-                    </Space>
-                ),
-            },
-        ],
-        [canEditRequests, canEditReturns],
-    )
-
-    // Bảng danh sách phiếu hoàn trả đang kiểm định (Tab Lập phiếu hoàn trả)
-    const returnColumns: ColumnsType<PendingBloodReturnDto> = useMemo(
-        () => [
-            {
-                title: 'MÃ PHIẾU / TÚI MÁU',
-                key: 'info',
-                render: (_, r) => (
-                    <div>
-                        <strong>Mã phiếu #{r.returnId}</strong>
-                        <div><code className="handover-barcode">{r.barcode}</code></div>
-                    </div>
-                ),
-            },
-            {
-                title: 'NGƯỜI BỆNH',
-                key: 'patient',
-                render: (_, r) => (
-                    <div>
-                        <div><strong>{r.patientName}</strong> ({r.patientCode})</div>
-                        <div style={{ color: '#64748b', fontSize: 12 }}>Phiếu yêu cầu: {r.requestCode}</div>
-                    </div>
-                ),
-            },
-            {
-                title: 'CHẾ PHẨM',
-                key: 'product',
-                render: (_, r) => (
-                    <div>
-                        <div>{r.componentName} ({r.volumeMl} ml)</div>
-                        <Tag color="red">{r.bloodType}</Tag>
-                    </div>
-                ),
-            },
-            {
-                title: 'LÝ DO HOÀN TRẢ',
-                dataIndex: 'returnReason',
-                key: 'returnReason',
-                render: (text) => <span style={{ color: '#475569' }}>{text}</span>,
-            },
-            {
-                title: 'TRẠNG THÁI KIỂM ĐỊNH',
-                key: 'status',
-                align: 'center',
-                render: () => <Tag color="processing">Chờ Ngân hàng máu kiểm định</Tag>,
-            },
-            {
-                title: 'THỜI GIAN LẬP',
-                dataIndex: 'processedAt',
-                key: 'processedAt',
-                render: (val) => formatDateTime(val),
-            },
-        ],
-        [],
-    )
-
     return (
         <div className="clinical-page-container">
             {/* Breadcrumb & Header */}
@@ -719,9 +548,6 @@ export default function ClinicalBloodRequestsPage() {
                             if (canViewRequests) {
                                 if (activeTab === 'list') refetchRequests()
                                 refetchPendingReceipts()
-                            }
-                            if (canViewReturns && activeTab === 'returns') {
-                                refetchReturns()
                             }
                             message.success('Đã làm mới dữ liệu đồng bộ với hệ thống!')
                         }}
@@ -751,8 +577,8 @@ export default function ClinicalBloodRequestsPage() {
                 </button>
                 <button
                     type="button"
-                    className={`clinical-tab-btn ${activeTab === 'handovers' ? 'is-active' : ''}`}
-                    onClick={() => setActiveTab('handovers')}
+                    className="clinical-tab-btn"
+                    onClick={() => navigate('/clinical/handovers')}
                 >
                     <span className="tab-label">Nhận bàn giao</span>
                     {pendingCount > 0 && <span className="tab-badge">{pendingCount}</span>}
@@ -950,7 +776,7 @@ export default function ClinicalBloodRequestsPage() {
                         className="clinical-request-table"
                     />
 
-                    {/* Nút nổi quét nhận bàn giao góc dưới */}
+                    {/* Nút nổi quét nhận bàn giao góc dưới -> mở Màn hình 3 */}
                     {canEditRequests && (
                         <div className="floating-action-bar">
                             <Button
@@ -958,10 +784,7 @@ export default function ClinicalBloodRequestsPage() {
                                 icon={<ScanOutlined />}
                                 size="large"
                                 className="btn-scan-floating"
-                                onClick={() => {
-                                    setTargetHandoverBag(null)
-                                    setIsScanModalOpen(true)
-                                }}
+                                onClick={() => navigate('/clinical/handovers')}
                             >
                                 Quét nhận bàn giao
                             </Button>
@@ -1140,134 +963,8 @@ export default function ClinicalBloodRequestsPage() {
                 </Card>
             )}
 
-            {/* Tab: Nhận bàn giao */}
-            {activeTab === 'handovers' && (
-                <Card className="clinical-main-card" bordered={false}>
-                    <div className="clinical-card-header">
-                        <div>
-                            <h2 className="card-inner-title">Nhận bàn giao túi máu tại Lâm sàng</h2>
-                            <p className="card-inner-sub">
-                                Danh sách các túi máu đã được Ngân hàng máu xuất kho (trạng thái ISSUED) và đang chờ khoa điều trị xác nhận thực nhận.
-                            </p>
-                        </div>
-                        <Button
-                            icon={<ReloadOutlined />}
-                            onClick={() => refetchPendingReceipts()}
-                            loading={isPendingLoading || isPendingFetching}
-                        >
-                            Làm mới
-                        </Button>
-                    </div>
-
-                    <Table
-                        columns={handoverColumns}
-                        dataSource={pendingBags || []}
-                        rowKey="allocationId"
-                        loading={isPendingLoading || isPendingFetching}
-                        pagination={{ pageSize: 10 }}
-                        locale={{
-                            emptyText: (
-                                <Empty
-                                    description={
-                                        <div>
-                                            <p>Hiện không có túi máu nào đang chờ nhận tại khoa của bạn.</p>
-                                            <small style={{ color: '#94a3b8' }}>
-                                                Túi máu sẽ xuất hiện tại đây sau khi được Ngân hàng máu thẩm định (Allocate) và xuất kho (Dispatch).
-                                            </small>
-                                        </div>
-                                    }
-                                />
-                            ),
-                        }}
-                    />
-                </Card>
-            )}
-
-            {/* Tab: Lập phiếu hoàn trả */}
-            {activeTab === 'returns' && (
-                <Card className="clinical-main-card" bordered={false}>
-                    <div className="clinical-card-header">
-                        <div>
-                            <h2 className="card-inner-title">Hoàn trả túi máu chưa sử dụng</h2>
-                            <p className="card-inner-sub">
-                                Lập biên bản hoàn trả túi máu về Ngân hàng máu khi bệnh nhân hoãn chỉ định hoặc thay đổi phác đồ điều trị.
-                            </p>
-                        </div>
-                        <Button
-                            icon={<ReloadOutlined />}
-                            onClick={() => {
-                                refetchReturns()
-                                refetchPendingReceipts()
-                            }}
-                            loading={isPendingReturnsLoading || isPendingReturnsFetching || isPendingFetching}
-                        >
-                            Làm mới
-                        </Button>
-                    </div>
-
-                    {/* Phần 1: Túi máu có thể hoàn trả tại khoa */}
-                    <div style={{ marginBottom: 28 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                            <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0, color: '#1e293b' }}>
-                                1. Túi máu tại khoa có thể lập phiếu hoàn trả
-                            </h3>
-                            <Tag color="blue">{pendingBags?.length || 0} túi khả dụng</Tag>
-                        </div>
-                        <p style={{ fontSize: 13, color: '#64748b', marginTop: 0, marginBottom: 12 }}>
-                            Các túi máu đã xuất kho cho khoa của bạn và chưa hết hạn. Bấm "Hoàn trả" để kiểm tra 4 điều kiện an toàn sinh học.
-                        </p>
-
-                        <Table
-                            columns={handoverColumns}
-                            dataSource={pendingBags || []}
-                            rowKey="allocationId"
-                            loading={isPendingLoading || isPendingFetching}
-                            pagination={false}
-                            size="small"
-                            locale={{
-                                emptyText: (
-                                    <Empty
-                                        description="Hiện tại khoa không có túi máu nào đủ điều kiện hoàn trả."
-                                        style={{ padding: 20 }}
-                                    />
-                                ),
-                            }}
-                        />
-                    </div>
-
-                    {/* Phần 2: Phiếu hoàn trả đang chờ Ngân hàng máu kiểm định */}
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                            <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0, color: '#1e293b' }}>
-                                2. Phiếu hoàn trả đang chờ Ngân hàng máu kiểm định
-                            </h3>
-                            <Tag color="orange">{pendingReturnsPage?.totalCount || 0} phiếu đang chờ</Tag>
-                        </div>
-                        <p style={{ fontSize: 13, color: '#64748b', marginTop: 0, marginBottom: 12 }}>
-                            Danh sách các túi máu đã lập phiếu hoàn trả và phong tỏa (LOCKED), đang chờ KTV Ngân hàng máu quét kiểm định tiếp nhận.
-                        </p>
-
-                        <Table
-                            columns={returnColumns}
-                            dataSource={pendingReturnsPage?.items || []}
-                            rowKey="returnId"
-                            loading={isPendingReturnsLoading || isPendingReturnsFetching}
-                            pagination={{
-                                pageSize: 10,
-                                total: pendingReturnsPage?.totalCount || 0,
-                            }}
-                            locale={{
-                                emptyText: (
-                                    <Empty
-                                        description="Chưa có phiếu hoàn trả nào của khoa đang chờ kiểm định."
-                                        style={{ padding: 20 }}
-                                    />
-                                ),
-                            }}
-                        />
-                    </div>
-                </Card>
-            )}
+            {/* Tab: Lập phiếu hoàn trả (Màn hình 5) */}
+            {activeTab === 'returns' && <ClinicalReturnCreatePanel />}
 
             {/* Modal Chọn bệnh nhân từ HIS */}
             <SelectPatientHisModal
@@ -1301,26 +998,6 @@ export default function ClinicalBloodRequestsPage() {
                 }}
                 onEditDraft={handleEditDraft}
                 onSubmitDraft={handleSubmitDraft}
-            />
-
-            {/* Modal Quét đối soát nhận bàn giao */}
-            <ScanHandoverModal
-                open={isScanModalOpen}
-                onClose={() => {
-                    setIsScanModalOpen(false)
-                    setTargetHandoverBag(null)
-                }}
-                targetBag={targetHandoverBag}
-            />
-
-            {/* Modal Lập phiếu hoàn trả */}
-            <CreateReturnModal
-                open={isReturnModalOpen}
-                onClose={() => {
-                    setIsReturnModalOpen(false)
-                    setTargetReturnBag(null)
-                }}
-                bag={targetReturnBag}
             />
         </div>
     )
