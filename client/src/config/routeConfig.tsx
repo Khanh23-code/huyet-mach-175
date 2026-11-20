@@ -101,6 +101,17 @@ export const ROUTE_GROUPS: RouteGroup[] = [
                 path: '/coordination/queue',
                 requiredPermission: PERMISSIONS.BLOOD_REQUEST_APPROVE,
             },
+            {
+                key: 'coordination-handover',
+                label: 'Bàn giao cấp phát',
+                path: '/coordination/handover',
+                requiredPermission: PERMISSIONS.BLOOD_REQUEST_APPROVE,
+            },
+            {
+                key: 'returns-scan', label: 'Tiếp nhận hoàn trả',
+                path: '/inventory/returns',
+                requiredPermission: PERMISSIONS.BLOOD_RETURN_APPROVE
+            },
         ],
     },
     {
