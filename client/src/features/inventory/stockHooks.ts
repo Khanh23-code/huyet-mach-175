@@ -39,11 +39,12 @@ export const useManagedLocations = (params: LocationQuery) =>
         placeholderData: keepPreviousData,
     })
 
-export const useRecentLogs = (limit: number) =>
+export const useRecentLogs = (limit: number, enabled = true) =>
     useQuery({
         queryKey: ['inventory', 'status-logs', limit],
         queryFn: () => stockApi.recentLogs(limit),
-        refetchInterval: 30_000,
+        refetchInterval: enabled ? 30_000 : false,
+        enabled,
     })
 
 const useInvalidate = () => {

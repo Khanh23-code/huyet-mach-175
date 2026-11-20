@@ -30,7 +30,7 @@ export default function CameraScanner({ active, onDetected, onError }: Props) {
                 })
                 await scanner.start(
                     { facingMode: 'environment' },
-                    { fps: 10, qrbox: { width: 320, height: 140 } },
+                    { fps: 10, qrbox: { width: 260, height: 220 } },
                     (text) => {
                         const now = Date.now()
                         if (text === lastCode && now - lastAt < 2500) return // chống đọc trùng liên tiếp
