@@ -6,6 +6,8 @@ import { coordinationApi, FALLBACK_COMPONENT_TYPES } from './coordinationApi'
 import type {
     AllocateBloodBagsRequest,
     BloodCoordinationQueueFilter,
+    DispatchBloodBagRequest,
+    DispatchBloodBagResponse,
     RejectBloodRequestDto,
 } from './types'
 
@@ -209,6 +211,7 @@ export function useAllocateBags() {
             queryClient.invalidateQueries({ queryKey: COORDINATION_QUERY_KEYS.detail(variables.requestId) })
             queryClient.invalidateQueries({ queryKey: ['coordination', 'availableBags'] })
             queryClient.invalidateQueries({ queryKey: ['coordination', 'supplyDemand'] })
+            queryClient.invalidateQueries({ queryKey: ['inventory'] })
             queryClient.invalidateQueries({ queryKey: ['clinical'] })
         },
     })
@@ -230,6 +233,41 @@ export function useRejectBloodRequest() {
             queryClient.invalidateQueries({ queryKey: COORDINATION_QUERY_KEYS.detail(variables.requestId) })
             queryClient.invalidateQueries({ queryKey: ['coordination', 'availableBags'] })
             queryClient.invalidateQueries({ queryKey: ['coordination', 'supplyDemand'] })
+            queryClient.invalidateQueries({ queryKey: ['inventory'] })
+            queryClient.invalidateQueries({ queryKey: ['clinical'] })
+        },
+    })
+}
+
+const DISPATCHED_HANDOVER_CACHE_KEY = ['handover-dispatched-cache'] as const
+
+export function useDispatchedHandoverMap() {
+    return useQuery<Record<string, DispatchBloodBagResponse>>({
+        queryKey: DISPATCHED_HANDOVER_CACHE_KEY,
+        queryFn: () => ({}),
+        staleTime: Infinity,
+        gcTime: Infinity,
+        enabled: false,
+        initialData: {},
+    })
+}
+
+export function useDispatchBag() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: (data: DispatchBloodBagRequest) => coordinationApi.dispatchBag(data),
+        onSuccess: (res) => {
+            queryClient.setQueryData<Record<string, DispatchBloodBagResponse>>(
+                DISPATCHED_HANDOVER_CACHE_KEY,
+                (prev) => ({
+                    ...(prev ?? {}),
+                    [res.barcode.trim().toLowerCase()]: res,
+                }),
+            )
+            queryClient.invalidateQueries({ queryKey: ['inventory'] })
+            queryClient.invalidateQueries({ queryKey: ['coordination'] })
+            queryClient.invalidateQueries({ queryKey: COORDINATION_QUERY_KEYS.detail(res.requestId) })
             queryClient.invalidateQueries({ queryKey: ['clinical'] })
         },
     })

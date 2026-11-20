@@ -8,6 +8,8 @@ import type {
     BloodRequestDetailDto,
     ComponentTypeOption,
     CoordinationQueueItemDto,
+    DispatchBloodBagRequest,
+    DispatchBloodBagResponse,
     RejectBloodRequestDto,
     RejectBloodRequestResponse,
     SupplyDemandResponse,
@@ -101,5 +103,14 @@ export const coordinationApi = {
                 `/api/blood-coordination/requests/${requestId}/items/${requestItemId}/allocate`,
                 data,
             )
+            .then((res) => res.data),
+
+    /**
+     * Xuất kho bàn giao túi máu đã giữ chỗ (RESERVED -> ISSUED)
+     * POST /api/blood-handovers/dispatch
+     */
+    dispatchBag: (data: DispatchBloodBagRequest) =>
+        axiosClient
+            .post<DispatchBloodBagResponse>('/api/blood-handovers/dispatch', data)
             .then((res) => res.data),
 }

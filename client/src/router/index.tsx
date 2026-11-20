@@ -8,6 +8,7 @@ import ForbiddenPage from '@/pages/ForbiddenPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import RouteErrorBoundary from '@/components/RouteErrorBoundary'
 import { findRouteItem } from '@/config/routeConfig'
+import { PERMISSIONS } from '@/config/permissions'
 
 type RouteItem = ReturnType<typeof findRouteItem>
 type PageLoader = () => Promise<{ default: ComponentType }>
@@ -36,11 +37,13 @@ const disposalRoute = findRouteItem('disposals')
 const approvalRoute = findRouteItem('disposal-approvals')
 const bagScanRoute = findRouteItem('bag-scan')
 const stockRoute = findRouteItem('stock')
+const returnsScanRoute = findRouteItem('returns-scan')
 const expiryRoute = findRouteItem('expiry-alerts')
 const clinicalRequestsRoute = findRouteItem('clinical-requests')
 const clinicalHandoversRoute = findRouteItem('clinical-handovers')
 const supplyDemandRoute = findRouteItem('supply-demand')
 const coordinationQueueRoute = findRouteItem('coordination-queue')
+const coordinationHandoverRoute = findRouteItem('coordination-handover')
 
 export const router = createBrowserRouter([
     {
@@ -83,11 +86,37 @@ export const router = createBrowserRouter([
                     guarded(approvalRoute, () => import('@/features/inventory/pages/DisposalApprovalPage')),
                     guarded(bagScanRoute, () => import('@/features/inventory/pages/BagScanPage')),
                     guarded(stockRoute, () => import('@/features/inventory/pages/StockPage')),
+                    {
+                        element: <ProtectedRoute requiredPermission={returnsScanRoute.requiredPermission} />,
+                        children: [
+                            { path: returnsScanRoute.path, ...lazyPage(() => import('@/features/inventory/pages/ReturnScanPage')) },
+                            { path: '/inventory/returns/:barcode', ...lazyPage(() => import('@/features/inventory/pages/ReturnDetailPage')) },
+                        ],
+                    },
                     guarded(expiryRoute, () => import('@/features/inventory/pages/ExpiryAlertsPage')),
                     guarded(clinicalRequestsRoute, () => import('@/features/clinical/pages/ClinicalBloodRequestsPage')),
-                    guarded(clinicalHandoversRoute, () => import('@/features/clinical/pages/ClinicalBloodRequestsPage')),
+                    {
+                        element: <ProtectedRoute requiredPermission={clinicalHandoversRoute.requiredPermission} />,
+                        children: [
+                            { path: clinicalHandoversRoute.path, ...lazyPage(() => import('@/features/clinical/pages/ClinicalHandoverScanPage')) },
+                            { path: '/clinical/handovers/:allocationId', ...lazyPage(() => import('@/features/clinical/pages/ClinicalHandoverDetailPage')) },
+                        ],
+                    },
+                    {
+                        element: <ProtectedRoute requiredPermission={PERMISSIONS.BLOOD_RETURN_EDIT} />,
+                        children: [
+                            { path: '/clinical/returns', ...lazyPage(() => import('@/features/clinical/pages/ClinicalReturnCreatePage')) },
+                        ],
+                    },
                     guarded(supplyDemandRoute, () => import('@/features/coordination/pages/SupplyDemandPage')),
                     guarded(coordinationQueueRoute, () => import('@/features/coordination/pages/CoordinationQueuePage')),
+                    {
+                        element: <ProtectedRoute requiredPermission={coordinationHandoverRoute.requiredPermission} />,
+                        children: [
+                            { path: coordinationHandoverRoute.path, ...lazyPage(() => import('@/features/coordination/pages/HandoverScanPage')) },
+                            { path: '/coordination/handover/:barcode', ...lazyPage(() => import('@/features/coordination/pages/HandoverDetailPage')) },
+                        ],
+                    },
                     { path: '*', element: <NotFoundPage /> },
                 ],
             },

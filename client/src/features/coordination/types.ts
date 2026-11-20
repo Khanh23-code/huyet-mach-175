@@ -155,3 +155,33 @@ export interface AllocateBloodBagsResponse {
     currentStep: number
     allocatedBags: AllocatedBagSummaryDto[]
 }
+
+export interface DispatchBloodBagRequest {
+    barcode: string
+}
+
+export interface DispatchBloodBagResponse {
+    allocationId: number
+    bagId: number
+    barcode: string
+    componentTypeId: number
+    componentCode: ComponentCode | string
+    componentName: string
+    bloodType: string
+    volumeMl: number
+    expiredAt: string
+    bagStatus: string
+    requestId: number
+    requestCode: string
+    patientCode: string
+    patientName: string
+    patientBloodType: string
+    departmentName?: string | null
+    doctorName?: string | null
+    urgencyLevel: UrgencyLevel
+    requestStatus: RequestStatus
+    issuedById: number
+    issuedByName?: string | null
+    issuedAt: string
+}
+
