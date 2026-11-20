@@ -262,3 +262,40 @@ export interface HisPatientDto {
     bloodGroupDisplay: string // "O+", "A+",...
     initials: string
 }
+
+export interface EligibleReturnBag {
+    allocationId: number
+    bagId: number
+    barcode: string
+    componentCode?: ComponentCode | string
+    componentName: string
+    bloodType: string
+    volumeMl: number
+    expiredAt?: string
+    isExpired: boolean
+    requestId: number
+    requestCode: string
+    patientCode: string
+    patientName: string
+    allocationStatus: AllocationStatus
+    bagStatus: 'ISSUED'
+    issuedAt?: string
+    receivedByName?: string
+    isReceivedAtClinical: boolean
+}
+
+export interface IneligibleReturnBag {
+    allocationId: number
+    bagId: number
+    barcode: string
+    componentName: string
+    bloodType: string
+    volumeMl: number
+    requestCode: string
+    patientCode: string
+    patientName: string
+    allocationStatus: AllocationStatus
+    bagStatus?: string
+    ineligibleReason: string
+}
+

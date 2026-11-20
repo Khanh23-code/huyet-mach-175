@@ -3,11 +3,14 @@ import { message } from 'antd'
 import { PERMISSIONS } from '@/config/permissions'
 import { usePermission } from '@/features/auth/usePermission'
 import { clinicalApi, FALLBACK_COMPONENT_TYPES } from './clinicalApi'
+import { formatBloodGroup } from '@/shared/formatters/medical'
 import type {
     ClinicalBloodRequestFilter,
     ConfirmReceiptRequest,
     CreateBloodRequestDto,
     CreateBloodReturnRequest,
+    EligibleReturnBag,
+    IneligibleReturnBag,
     PendingBloodReturnFilter,
     PendingClinicalReceiptFilter,
     UpdateBloodRequestDto,
@@ -26,6 +29,7 @@ export const CLINICAL_QUERY_KEYS = {
     detail: (id: number) => ['clinical', 'request', id] as const,
     pendingReceipts: (filter?: PendingClinicalReceiptFilter) => ['clinical', 'pendingReceipts', filter] as const,
     pendingReturns: (filter?: PendingBloodReturnFilter) => ['clinical', 'pendingReturns', filter] as const,
+    eligibleReturnBags: () => ['clinical', 'eligibleReturnBags'] as const,
     componentTypes: (canFetchFromProcessing: boolean) =>
         ['clinical', 'componentTypes', canFetchFromProcessing] as const,
 }
@@ -145,6 +149,7 @@ export function useConfirmReceipt() {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['clinical'] })
             queryClient.invalidateQueries({ queryKey: ['coordination'] })
+            queryClient.invalidateQueries({ queryKey: ['inventory'] })
             message.success(`Đã đối soát & xác nhận nhận thành công túi máu ${data.barcode}!`)
         },
         onError: (err: any) => {
@@ -163,6 +168,7 @@ export function useCreateReturn() {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['clinical'] })
             queryClient.invalidateQueries({ queryKey: ['coordination'] })
+            queryClient.invalidateQueries({ queryKey: ['inventory'] })
             message.success(`Đã lập phiếu hoàn trả thành công túi máu ${data.barcode} (Mã phiếu #${data.returnId})`)
         },
         onError: (err: any) => {
@@ -199,6 +205,161 @@ export function usePendingBloodReturns(
         queryKey: CLINICAL_QUERY_KEYS.pendingReturns(filter),
         queryFn: () => clinicalApi.getPendingReturns(filter),
         enabled: canView && (options?.enabled ?? true),
+        ...SESSION_CACHE_OPTIONS,
+    })
+}
+
+function resolveIneligibleReason(bagStatus?: string, allocationStatus?: string, hasPendingReturn?: boolean): string {
+    if (hasPendingReturn || bagStatus === 'LOCKED') {
+        return 'Túi máu đang bị phong tỏa / đã có phiếu hoàn trả chờ kiểm định'
+    }
+    if (allocationStatus === 'RETURNED') {
+        return 'Túi máu đã hoàn trả trước đó'
+    }
+    if (bagStatus === 'RESERVED' || allocationStatus === 'RESERVED') {
+        return 'Túi máu mới giữ chỗ (RESERVED), chưa xuất kho từ BBNK'
+    }
+    if (bagStatus === 'TRANSFUSED') {
+        return 'Túi máu đã truyền cho người bệnh'
+    }
+    if (bagStatus === 'DISCARDED') {
+        return 'Túi máu đã tiêu hủy'
+    }
+    return `Trạng thái hiện tại không đủ điều kiện (${bagStatus || allocationStatus || 'Không rõ'})`
+}
+
+/**
+ * Tổng hợp danh sách túi máu đủ điều kiện hoàn trả (và túi không đủ điều kiện để khóa chọn)
+ * dựa trên đúng các API Backend hiện có:
+ * - GET /api/blood-handovers/clinical/pending-receipt (túi ISSUED chưa xác nhận nhận thuộc khoa)
+ * - GET /api/blood-requests/clinical + GET /api/blood-requests/{id} (túi đã xác nhận nhận COMPLETED & ISSUED)
+ * - GET /api/blood-returns/pending (loại trừ lượt phân bổ đã lập phiếu hoàn trả)
+ */
+export function useEligibleReturnBags(options?: { enabled?: boolean }) {
+    const { can } = usePermission()
+    const canViewRequests = can(PERMISSIONS.BLOOD_REQUEST_VIEW)
+    const canViewReturns = can(PERMISSIONS.BLOOD_RETURN_VIEW)
+
+    return useQuery({
+        queryKey: CLINICAL_QUERY_KEYS.eligibleReturnBags(),
+        enabled: canViewRequests && (options?.enabled ?? true),
+        queryFn: async () => {
+            const [pendingReceipts, requestsPage, pendingReturnsPage] = await Promise.all([
+                clinicalApi.getPendingReceipts(),
+                clinicalApi.getRequests({ pageNumber: 1, pageSize: 100 }),
+                canViewReturns
+                    ? clinicalApi.getPendingReturns({ pageNumber: 1, pageSize: 100 })
+                    : Promise.resolve({ items: [], totalCount: 0, pageNumber: 1, pageSize: 100, totalPages: 0 }),
+            ])
+
+            const pendingReturnAllocIds = new Set<number>(
+                (pendingReturnsPage?.items || []).map((r) => r.allocationId),
+            )
+
+            const requestsWithAllocations = (requestsPage?.items || []).filter(
+                (r) => r.totalAllocatedUnits > 0 && r.status !== 'DRAFT' && r.status !== 'REJECTED',
+            )
+
+            const details = await Promise.all(
+                requestsWithAllocations.map((r) => clinicalApi.getRequestById(r.requestId).catch(() => null)),
+            )
+
+            const eligibleMap = new Map<number, EligibleReturnBag>()
+            const ineligibleMap = new Map<number, IneligibleReturnBag>()
+            const nowMs = Date.now()
+
+            // 1. Nguồn từ chi tiết phiếu yêu cầu của bác sĩ (bao gồm cả ISSUED và COMPLETED)
+            for (const req of details) {
+                if (!req) continue
+                for (const alloc of req.allocations || []) {
+                    const hasPendingReturn = pendingReturnAllocIds.has(alloc.allocationId)
+                    const isEligible =
+                        !hasPendingReturn &&
+                        alloc.bagStatus === 'ISSUED' &&
+                        (alloc.status === 'ISSUED' || alloc.status === 'COMPLETED')
+
+                    const bloodGroup =
+                        alloc.bloodType && alloc.rhFactor
+                            ? formatBloodGroup(alloc.bloodType, alloc.rhFactor)
+                            : alloc.bloodType || '—'
+
+                    if (isEligible) {
+                        const isExpired = Boolean(alloc.expiredAt && new Date(alloc.expiredAt).getTime() <= nowMs)
+                        eligibleMap.set(alloc.allocationId, {
+                            allocationId: alloc.allocationId,
+                            bagId: alloc.bagId,
+                            barcode: alloc.barcode,
+                            componentCode: alloc.componentCode,
+                            componentName: alloc.componentName,
+                            bloodType: bloodGroup,
+                            volumeMl: alloc.volumeMl,
+                            expiredAt: alloc.expiredAt,
+                            isExpired,
+                            requestId: req.requestId,
+                            requestCode: req.requestCode,
+                            patientCode: req.patientCode,
+                            patientName: req.patientName,
+                            allocationStatus: alloc.status,
+                            bagStatus: 'ISSUED',
+                            issuedAt: alloc.issuedAt,
+                            receivedByName: alloc.receivedByName,
+                            isReceivedAtClinical: alloc.status === 'COMPLETED',
+                        })
+                    } else {
+                        ineligibleMap.set(alloc.allocationId, {
+                            allocationId: alloc.allocationId,
+                            bagId: alloc.bagId,
+                            barcode: alloc.barcode,
+                            componentName: alloc.componentName,
+                            bloodType: bloodGroup,
+                            volumeMl: alloc.volumeMl,
+                            requestCode: req.requestCode,
+                            patientCode: req.patientCode,
+                            patientName: req.patientName,
+                            allocationStatus: alloc.status,
+                            bagStatus: alloc.bagStatus,
+                            ineligibleReason: resolveIneligibleReason(
+                                alloc.bagStatus,
+                                alloc.status,
+                                hasPendingReturn,
+                            ),
+                        })
+                    }
+                }
+            }
+
+            // 2. Nguồn từ pending-receipt trong khoa (kể cả phiếu của bác sĩ khác cùng khoa)
+            for (const bag of pendingReceipts || []) {
+                if (pendingReturnAllocIds.has(bag.allocationId)) continue
+                if (!eligibleMap.has(bag.allocationId)) {
+                    const isExpired = Boolean(bag.expiresAt && new Date(bag.expiresAt).getTime() <= nowMs)
+                    eligibleMap.set(bag.allocationId, {
+                        allocationId: bag.allocationId,
+                        bagId: bag.bagId,
+                        barcode: bag.barcode,
+                        componentCode: bag.componentCode,
+                        componentName: bag.componentName,
+                        bloodType: bag.bloodType,
+                        volumeMl: bag.volumeMl,
+                        expiredAt: bag.expiresAt,
+                        isExpired,
+                        requestId: bag.requestId,
+                        requestCode: bag.requestCode,
+                        patientCode: bag.patientCode,
+                        patientName: bag.patientName,
+                        allocationStatus: 'ISSUED',
+                        bagStatus: 'ISSUED',
+                        issuedAt: bag.issuedAt,
+                        isReceivedAtClinical: false,
+                    })
+                }
+            }
+
+            return {
+                eligibleBags: Array.from(eligibleMap.values()),
+                ineligibleBags: Array.from(ineligibleMap.values()),
+            }
+        },
         ...SESSION_CACHE_OPTIONS,
     })
 }
