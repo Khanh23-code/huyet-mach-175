@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Button, Popconfirm, Select, Space, Table, Tag, message } from 'antd'
+import { Button, Popconfirm, Select, Space, Table, message } from 'antd'
 import { parseApiError } from '@/services/apiError'
 import { fmtDateTime } from '@/shared/formatters/date'
+import { SectionCard, StatusPill } from '@/shared/components'
 import { useCancelDisposal, useDisposals, useExecuteDisposal } from '../disposalsHooks'
-import { STATUS_COLOR, STATUS_OPTIONS } from '../disposalsFormat'
+import { DISPOSAL_STATUS_TONE, STATUS_OPTIONS } from '../disposalsFormat'
 import DisposalDetailDrawer from './DisposalDetailDrawer'
 import type { DisposalRecord } from '../disposalsTypes'
 
@@ -70,7 +71,7 @@ export default function DisposalRecordsPanel({ canEdit }: Props) {
     )
 
     return (
-        <section className="inv-card inv-card__body">
+        <SectionCard>
             <div className="disp-tools">
                 <Select
                     style={{ minWidth: 240 }}
@@ -106,7 +107,9 @@ export default function DisposalRecordsPanel({ canEdit }: Props) {
                     {
                         title: 'Trạng thái',
                         dataIndex: 'status',
-                        render: (_: unknown, r) => <Tag color={STATUS_COLOR[r.status]}>{r.statusText}</Tag>,
+                        render: (_: unknown, r) => (
+                            <StatusPill tone={DISPOSAL_STATUS_TONE[r.status]}>{r.statusText}</StatusPill>
+                        ),
                     },
                     { title: 'Lập lúc', dataIndex: 'requestedAt', width: 150, render: (v: string) => fmtDateTime(v) },
                     {
@@ -122,6 +125,6 @@ export default function DisposalRecordsPanel({ canEdit }: Props) {
                 onClose={() => setOpenId(null)}
                 actions={(d) => <Space>{actionsFor(d)}</Space>}
             />
-        </section>
+        </SectionCard>
     )
 }

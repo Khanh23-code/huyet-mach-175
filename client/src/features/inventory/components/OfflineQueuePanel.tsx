@@ -1,5 +1,6 @@
-import { Alert, Button, Popconfirm, Table, Tag } from 'antd'
+import { Alert, Button, Popconfirm, Table } from 'antd'
 import { ReloadOutlined, SendOutlined } from '@ant-design/icons'
+import { StatusPill } from '@/shared/components'
 import { removeOffline } from '../offlineQueue'
 import { fmtDateTimeSec, statusMeta } from '../stockFormat'
 import type { useOfflineSync } from '../stockHooks'
@@ -33,7 +34,11 @@ export default function OfflineQueuePanel({ sync, canEdit }: { sync: Sync; canEd
                     { title: 'Ghi nhận lúc', dataIndex: 'createdAt', width: 190, render: fmtDateTimeSec },
                     {
                         title: 'Tình trạng',
-                        render: (_: unknown, r) => (r.error ? <Tag color="red" title={r.error}>Bị từ chối: {r.error}</Tag> : <Tag color="gold">Chờ gửi</Tag>),
+                        render: (_: unknown, r) => (
+                            r.error
+                                ? <StatusPill tone="danger" title={r.error}>Bị từ chối: {r.error}</StatusPill>
+                                : <StatusPill tone="warning">Chờ gửi</StatusPill>
+                        ),
                     },
                     {
                         title: '', width: 170, align: 'right',

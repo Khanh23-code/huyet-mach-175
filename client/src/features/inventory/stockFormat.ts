@@ -1,21 +1,25 @@
 import dayjs from 'dayjs'
+import type { StatusPillTone } from '@/shared/components'
 import type { BagStatus } from './stockTypes'
 
-export const BAG_STATUS_META: Record<BagStatus, { label: string; color: string }> = {
-    NEWLY_COLLECTED: { label: 'Mới thu gom', color: 'default' },
-    READY_TESTING: { label: 'Chờ xét nghiệm', color: 'gold' },
-    TESTED_PASSED: { label: 'Đạt xét nghiệm', color: 'cyan' },
-    AVAILABLE: { label: 'Có sẵn', color: 'green' },
-    LOCKED: { label: 'Tạm khóa', color: 'red' },
-    RESERVED: { label: 'Đặt chỗ', color: 'blue' },
-    ISSUED: { label: 'Đã cấp phát', color: 'purple' },
-    TRANSFUSED: { label: 'Đã truyền', color: 'default' },
-    DISCARDED: { label: 'Đã hủy', color: 'default' },
-    PROCESSED: { label: 'Đã điều chế', color: 'geekblue' },
+export const BAG_STATUS_META: Record<
+    BagStatus,
+    { label: string; color: string; tone: StatusPillTone }
+> = {
+    NEWLY_COLLECTED: { label: 'Mới thu gom', color: 'default', tone: 'neutral' },
+    READY_TESTING: { label: 'Chờ xét nghiệm', color: 'gold', tone: 'warning' },
+    TESTED_PASSED: { label: 'Đạt xét nghiệm', color: 'cyan', tone: 'info' },
+    AVAILABLE: { label: 'Có sẵn', color: 'green', tone: 'success' },
+    LOCKED: { label: 'Tạm khóa', color: 'red', tone: 'danger' },
+    RESERVED: { label: 'Đặt chỗ', color: 'blue', tone: 'info' },
+    ISSUED: { label: 'Đã cấp phát', color: 'purple', tone: 'purple' },
+    TRANSFUSED: { label: 'Đã truyền', color: 'default', tone: 'neutral' },
+    DISCARDED: { label: 'Đã hủy', color: 'default', tone: 'neutral' },
+    PROCESSED: { label: 'Đã điều chế', color: 'geekblue', tone: 'primary' },
 }
 
 export const statusMeta = (s: string) =>
-    BAG_STATUS_META[s as BagStatus] ?? { label: s, color: 'default' }
+    BAG_STATUS_META[s as BagStatus] ?? { label: s, color: 'default', tone: 'neutral' as StatusPillTone }
 
 export const STATUS_FILTER_OPTIONS = (Object.keys(BAG_STATUS_META) as BagStatus[]).map((k) => ({
     value: k,

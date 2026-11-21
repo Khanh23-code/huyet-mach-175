@@ -1,3 +1,4 @@
+import type { StatusPillTone } from '@/shared/components'
 import { fmtDay } from './stockFormat'
 
 export type BagSourceType = 'CAMPAIGN' | 'WALK_IN' | 'EXTERNAL' | 'UNKNOWN'
@@ -48,11 +49,14 @@ export interface BagLabSummary {
     overallConclusion: 'PASSED' | 'FAILED'
 }
 
-export const SOURCE_META: Record<BagSourceType, { label: string; color: string }> = {
-    CAMPAIGN: { label: 'Chiến dịch', color: 'blue' },
-    WALK_IN: { label: 'Tại viện', color: 'green' },
-    EXTERNAL: { label: 'Ngoài viện', color: 'orange' },
-    UNKNOWN: { label: 'Không rõ', color: 'default' },
+export const SOURCE_META: Record<
+    BagSourceType,
+    { label: string; color: string; tone: StatusPillTone }
+> = {
+    CAMPAIGN: { label: 'Chiến dịch', color: 'blue', tone: 'info' },
+    WALK_IN: { label: 'Tại viện', color: 'green', tone: 'success' },
+    EXTERNAL: { label: 'Ngoài viện', color: 'orange', tone: 'urgent' },
+    UNKNOWN: { label: 'Không rõ', color: 'default', tone: 'neutral' },
 }
 
 export const SOURCE_FILTER_OPTIONS: { label: string; value: SourceFilterValue }[] = [
@@ -66,14 +70,21 @@ export interface ExpiryInfo {
     level: 'expired' | 'soon' | 'ok'
     label: string
     color: string
+    tone: StatusPillTone
 }
 
 export const expiryInfo = (expiredAt: string, isExpired?: boolean): ExpiryInfo => {
     const ms = new Date(expiredAt).getTime() - Date.now()
-    if (isExpired || ms <= 0) return { level: 'expired', label: 'Đã hết hạn', color: 'red' }
+    if (isExpired || ms <= 0) {
+        return { level: 'expired', label: 'Đã hết hạn', color: 'red', tone: 'danger' }
+    }
     const hours = ms / 3_600_000
-    if (hours < 24) return { level: 'soon', label: `Còn ${Math.floor(hours)} giờ`, color: 'volcano' }
+    if (hours < 24) {
+        return { level: 'soon', label: `Còn ${Math.floor(hours)} giờ`, color: 'volcano', tone: 'blood' }
+    }
     const days = Math.floor(hours / 24)
-    if (days <= 3) return { level: 'soon', label: `Còn ${days} ngày`, color: 'orange' }
-    return { level: 'ok', label: `HSD ${fmtDay(expiredAt)}`, color: 'default' }
+    if (days <= 3) {
+        return { level: 'soon', label: `Còn ${days} ngày`, color: 'orange', tone: 'warning' }
+    }
+    return { level: 'ok', label: `HSD ${fmtDay(expiredAt)}`, color: 'default', tone: 'neutral' }
 }

@@ -1,4 +1,4 @@
-import { Tag } from 'antd'
+import { BloodGroupTag } from '@/shared/components'
 import { fmtDateTime } from '@/shared/formatters/date'
 import type { BagSource } from '../bagSource'
 import { BagSourceTag, ExpiryTag } from './BagSourceBadges'
@@ -32,7 +32,7 @@ export default function BagQueueItem(p: Props) {
         >
             <div className="inv-queue__top">
                 <span className="inv-mono">{p.barcode}</span>
-                <Tag color="red" style={{ marginInlineEnd: 0 }}>{p.bloodGroup}</Tag>
+                <BloodGroupTag value={p.bloodGroup} size="sm" />
             </div>
             <div className="inv-queue__tags">
                 <BagSourceTag type={source.sourceType} />

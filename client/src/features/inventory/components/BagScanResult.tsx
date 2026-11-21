@@ -11,6 +11,7 @@ import {
     AUTO_STATUSES, COMING_SOON_STATUSES, MANUAL_STATUSES, allowedManualTargets, fmtDateTimeSec, statusMeta,
 } from '../stockFormat'
 import { isNetworkError } from '@/shared/utils/network'
+import { SectionCard } from '@/shared/components'
 import type { BagScan, BagStatus } from '../stockTypes'
 import { BagStatusTag, BloodGroupTag } from './StockBadges'
 
@@ -82,7 +83,7 @@ export default function BagScanResult({ bag, onChanged, onQueued }: Props) {
     })()
 
     return (
-        <section className="inv-card inv-card__body scan-result">
+        <SectionCard bodyClassName="scan-result">
             <div className="scan-result__head">
                 <div>
                     <div className="inv-mono scan-result__code">{bag.barcode}</div>
@@ -159,6 +160,6 @@ export default function BagScanResult({ bag, onChanged, onQueued }: Props) {
                     )
                 )}
             </Can>
-        </section>
+        </SectionCard>
     )
 }

@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Breadcrumb, Button, Input, Modal, Popconfirm, Select, Space, Table, Tag, message } from 'antd'
+import { Button, Input, Modal, Popconfirm, Select, Space, Table, message } from 'antd'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
 import { fmtDateTime } from '@/shared/formatters/date'
+import { PageContainer, PageHeader, SectionCard, StatusPill } from '@/shared/components'
 import { useApproveDisposal, useDisposals } from '../disposalsHooks'
-import { STATUS_COLOR, STATUS_OPTIONS } from '../disposalsFormat'
+import { DISPOSAL_STATUS_TONE, STATUS_OPTIONS } from '../disposalsFormat'
 import DisposalDetailDrawer from '../components/DisposalDetailDrawer'
 import type { DisposalRecord } from '../disposalsTypes'
 import './InventoryPages.css'
@@ -54,14 +55,14 @@ export default function DisposalApprovalPage() {
     }
 
     return (
-        <div className="inv">
-            <Breadcrumb items={[{ title: 'Túi máu & Kho' }, { title: 'Phê duyệt biên bản hủy' }]} />
-            <div className="inv-title">
-                <h1>Phê duyệt biên bản hủy</h1>
-                <p>Xem danh sách túi trong từng biên bản, sau đó duyệt hoặc từ chối kèm lý do.</p>
-            </div>
+        <PageContainer>
+            <PageHeader
+                breadcrumb={[{ title: 'Túi máu & Kho' }, { title: 'Phê duyệt biên bản hủy' }]}
+                title="Phê duyệt biên bản hủy"
+                subtitle="Xem danh sách túi trong từng biên bản, sau đó duyệt hoặc từ chối kèm lý do."
+            />
 
-            <section className="inv-card inv-card__body">
+            <SectionCard>
                 <div className="disp-tools">
                     <Select
                         style={{ minWidth: 260 }}
@@ -96,7 +97,9 @@ export default function DisposalApprovalPage() {
                         {
                             title: 'Trạng thái',
                             dataIndex: 'status',
-                            render: (_: unknown, r) => <Tag color={STATUS_COLOR[r.status]}>{r.statusText}</Tag>,
+                            render: (_: unknown, r) => (
+                                <StatusPill tone={DISPOSAL_STATUS_TONE[r.status]}>{r.statusText}</StatusPill>
+                            ),
                         },
                         { title: 'Lập lúc', dataIndex: 'requestedAt', width: 150, render: (v: string) => fmtDateTime(v) },
                         {
@@ -111,7 +114,7 @@ export default function DisposalApprovalPage() {
                         },
                     ]}
                 />
-            </section>
+            </SectionCard>
 
             <DisposalDetailDrawer
                 id={openId}
@@ -156,6 +159,6 @@ export default function DisposalApprovalPage() {
                     onChange={(e) => setReason(e.target.value)}
                 />
             </Modal>
-        </div>
+        </PageContainer>
     )
 }

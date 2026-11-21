@@ -3,6 +3,7 @@ import { Alert, Button, Input, Popconfirm, Select, Table, Tag, message } from 'a
 import { BarcodeOutlined } from '@ant-design/icons'
 import { parseApiError } from '@/services/apiError'
 import { fmtDateTime } from '@/shared/formatters/date'
+import { BloodGroupTag, SectionCard } from '@/shared/components'
 import { useCreateDisposal, useDisposalCandidates } from '../disposalsHooks'
 import { REASON_OPTIONS } from '../disposalsFormat'
 import type { DisposalCandidate, DisposalReason } from '../disposalsTypes'
@@ -87,7 +88,7 @@ export default function DisposalCandidatesPanel({ presetBarcode, canEdit, onCrea
 
     return (
         <div className="disp-layout">
-            <section className="inv-card inv-card__body">
+            <SectionCard>
                 <div className="disp-tools">
                     <Input
                         style={{ maxWidth: 320 }}
@@ -121,17 +122,20 @@ export default function DisposalCandidatesPanel({ presetBarcode, canEdit, onCrea
                     }}
                     columns={[
                         { title: 'Barcode', dataIndex: 'barcode', render: (v: string) => <span className="inv-mono">{v}</span> },
-                        { title: 'Nhóm máu', dataIndex: 'bloodGroup', width: 90, render: (v: string) => <Tag color="red">{v}</Tag> },
+                        { title: 'Nhóm máu', dataIndex: 'bloodGroup', width: 90, render: (v: string) => <BloodGroupTag value={v} size="sm" /> },
                         { title: 'Chế phẩm', dataIndex: 'componentTypeCode', width: 90 },
                         { title: 'Thể tích', dataIndex: 'volumeMl', width: 90, render: (v: number) => `${v} ml` },
                         { title: 'Lý do khóa', dataIndex: 'discardReason', render: (v?: string | null) => v || '—' },
                         { title: 'Hạn dùng', dataIndex: 'expiredAt', width: 150, render: (v: string) => fmtDateTime(v) },
                     ]}
                 />
-            </section>
+            </SectionCard>
 
-            <aside className="inv-card disp-side">
-                <h3>Lập biên bản đề xuất hủy</h3>
+            <SectionCard
+                title="Lập biên bản đề xuất hủy"
+                className="disp-side-card"
+                bodyClassName="disp-side-body"
+            >
                 {chosen.length === 0 ? (
                     <div className="disp-note">Chọn ít nhất 1 túi trong danh sách bên trái.</div>
                 ) : (
@@ -179,7 +183,7 @@ export default function DisposalCandidatesPanel({ presetBarcode, canEdit, onCrea
                         Lập biên bản ({chosen.length} túi)
                     </Button>
                 </Popconfirm>
-            </aside>
+            </SectionCard>
         </div>
     )
 }

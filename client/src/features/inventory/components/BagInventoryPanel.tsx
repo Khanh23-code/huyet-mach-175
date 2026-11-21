@@ -3,6 +3,7 @@ import { Button, Input, Radio, Select, Table } from 'antd'
 import { BarcodeOutlined, SearchOutlined, SwapOutlined } from '@ant-design/icons'
 import Can from '@/features/auth/components/Can'
 import { PERMISSIONS } from '@/config/permissions'
+import { SectionCard } from '@/shared/components'
 import { useBags } from '../stockHooks'
 import { BLOOD_GROUPS, STATUS_FILTER_OPTIONS, bloodGroupParams, fmtDay } from '../stockFormat'
 import type { BloodBag, RelocatableBag } from '../stockTypes'
@@ -33,7 +34,7 @@ export default function BagInventoryPanel() {
     const nearExpiry = (iso: string) => new Date(iso).getTime() - Date.now() < NEAR_EXPIRY_HOURS * 3_600_000
 
     return (
-        <section className="inv-card inv-card__body">
+        <SectionCard>
             <div className="stk-toolbar">
                 <Radio.Group
                     optionType="button"
@@ -94,6 +95,6 @@ export default function BagInventoryPanel() {
                 ]}
             />
             <RelocateBagModal bag={moving} onClose={() => setMoving(null)} />
-        </section>
+        </SectionCard>
     )
 }

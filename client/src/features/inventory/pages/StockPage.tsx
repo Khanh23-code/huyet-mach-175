@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Breadcrumb, Tabs } from 'antd'
+import { Tabs } from 'antd'
+import { PageContainer, PageHeader } from '@/shared/components'
 import { useInventorySummary } from '../stockHooks'
 import { fmtNum } from '../stockFormat'
 import BagInventoryPanel from '../components/BagInventoryPanel'
@@ -24,16 +25,16 @@ export default function StockPage() {
     ]
 
     return (
-        <div className="inv">
-            <Breadcrumb items={[{ title: 'Túi máu & Kho' }, { title: 'Tồn kho & Kiểm kê' }]} />
-            <div className="inv-title">
-                <h1>Tồn kho &amp; Kiểm kê</h1>
-                <p>Tra cứu trạng thái túi máu, lọc theo nhóm máu, quản lý tủ lưu trữ và thực hiện đối soát kho.</p>
-            </div>
+        <PageContainer>
+            <PageHeader
+                breadcrumb={[{ title: 'Túi máu & Kho' }, { title: 'Tồn kho & Kiểm kê' }]}
+                title="Tồn kho & Kiểm kê"
+                subtitle="Tra cứu trạng thái túi máu, lọc theo nhóm máu, quản lý tủ lưu trữ và thực hiện đối soát kho."
+            />
 
             <div className="stk-cards">
                 {cards.map((c) => (
-                    <div className="inv-card stk-card" key={c.label}>
+                    <div className="stk-card" key={c.label}>
                         <small>{c.label}</small>
                         <b>{c.value === undefined ? '—' : fmtNum(c.value)}</b>
                         <span>{c.sub}</span>
@@ -51,6 +52,6 @@ export default function StockPage() {
                     { key: 'count', label: 'Kiểm kê tồn kho', children: <StockCountPanel /> },
                 ]}
             />
-        </div>
+        </PageContainer>
     )
 }

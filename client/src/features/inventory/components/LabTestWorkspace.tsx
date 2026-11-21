@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Alert, Button, Popconfirm, Segmented, Select, Tag, message } from 'antd'
+import { Alert, Button, Popconfirm, Segmented, Select, message } from 'antd'
 import { CheckCircleOutlined, CloseCircleOutlined, WarningOutlined } from '@ant-design/icons'
 import { parseApiError } from '@/services/apiError'
 import { fmtDateTime } from '@/shared/formatters/date'
+import { BloodGroupTag, SectionCard } from '@/shared/components'
 import { useRecordLabTest } from '../labTestsHooks'
 import { ABO_OPTIONS, INDICATORS, RH_OPTIONS, formatGroup } from '../labTestsFormat'
 import BagOriginPanel from './BagOriginPanel'
@@ -70,80 +71,75 @@ export default function LabTestWorkspace({ item, canEdit, canDispose, onDone }: 
     if (result) {
         const failed = result.overallConclusion === 'FAILED'
         return (
-            <section className="inv-card">
-                <header className="inv-card__head">
-                    <h2>
+            <SectionCard
+                title={
+                    <>
                         {failed ? (
                             <CloseCircleOutlined style={{ color: 'var(--c-danger)' }} />
                         ) : (
                             <CheckCircleOutlined style={{ color: 'var(--c-primary)' }} />
                         )}{' '}
                         {failed ? 'Túi máu không đạt chuẩn' : 'Túi máu đạt chuẩn'}
-                    </h2>
-                    <p>
-                        Túi {result.barcode} · Nhóm máu khẳng định {result.confirmedBloodGroup} · KTV {result.technicianName} ·{' '}
-                        {fmtDateTime(result.testedAt)}
-                    </p>
-                </header>
-                <div className="inv-card__body inv-result">
-                    <Alert
-                        type={failed ? 'error' : 'success'}
-                        showIcon
-                        title={result.message}
-                        description={failed ? result.discardReason : undefined}
-                    />
-                    <div className="inv-actions">
-                        {failed && canDispose && (
-                            <Button
-                                type="primary"
-                                danger
-                                onClick={() =>
-                                    navigate(`/inventory/disposals?barcode=${encodeURIComponent(result.barcode)}`)
-                                }
-                            >
-                                Lập biên bản hủy túi này
-                            </Button>
-                        )}
-                        <Button onClick={onDone}>Xét nghiệm túi khác</Button>
-                    </div>
-                    {failed && !canDispose && (
-                        <Alert
-                            type="warning"
-                            showIcon
-                            title="Túi đã bị khóa cách ly. Chuyển cho nhân viên có quyền lập biên bản tiêu hủy."
-                        />
+                    </>
+                }
+                subtitle={`Túi ${result.barcode} · Nhóm máu khẳng định ${result.confirmedBloodGroup} · KTV ${result.technicianName} · ${fmtDateTime(result.testedAt)}`}
+                bodyClassName="inv-result"
+            >
+                <Alert
+                    type={failed ? 'error' : 'success'}
+                    showIcon
+                    title={result.message}
+                    description={failed ? result.discardReason : undefined}
+                />
+                <div className="inv-actions">
+                    {failed && canDispose && (
+                        <Button
+                            type="primary"
+                            danger
+                            onClick={() =>
+                                navigate(`/inventory/disposals?barcode=${encodeURIComponent(result.barcode)}`)
+                            }
+                        >
+                            Lập biên bản hủy túi này
+                        </Button>
                     )}
+                    <Button onClick={onDone}>Xét nghiệm túi khác</Button>
                 </div>
-            </section>
+                {failed && !canDispose && (
+                    <Alert
+                        type="warning"
+                        showIcon
+                        title="Túi đã bị khóa cách ly. Chuyển cho nhân viên có quyền lập biên bản tiêu hủy."
+                    />
+                )}
+            </SectionCard>
         )
     }
 
     return (
-        <section className="inv-card">
-            <header className="inv-card__head">
-                <h2>Nhập kết quả túi {item.barcode}</h2>
-                <p>Chọn kết quả cho cả 5 chỉ số và xác nhận nhóm máu. Kết luận được tính tự động.</p>
-            </header>
-            <div className="inv-card__body">
-                <BagOriginPanel
-                    source={item.source}
-                    bagBloodGroup={item.expectedBloodGroup}
-                    collectedAt={item.collectedAt}
-                    expiredAt={item.expiredAt}
-                    isExpired={item.isExpired}
-                />
+        <SectionCard
+            title={`Nhập kết quả túi ${item.barcode}`}
+            subtitle="Chọn kết quả cho cả 5 chỉ số và xác nhận nhóm máu. Kết luận được tính tự động."
+        >
+            <BagOriginPanel
+                source={item.source}
+                bagBloodGroup={item.expectedBloodGroup}
+                collectedAt={item.collectedAt}
+                expiredAt={item.expiredAt}
+                isExpired={item.isExpired}
+            />
 
-                <dl className="inv-parent">
-                    <div>
-                        <dt>Nhóm máu dự kiến</dt>
-                        <dd>
-                            <Tag color="red">{item.expectedBloodGroup}</Tag>
-                        </dd>
-                    </div>
-                    <div><dt>Chế phẩm</dt><dd>{item.componentTypeName}</dd></div>
-                    <div><dt>Thể tích</dt><dd>{item.volumeMl} ml</dd></div>
-                    <div><dt>Vị trí</dt><dd>{item.storageLocationName ?? '—'}</dd></div>
-                </dl>
+            <dl className="inv-parent">
+                <div>
+                    <dt>Nhóm máu dự kiến</dt>
+                    <dd>
+                        <BloodGroupTag value={item.expectedBloodGroup} size="sm" />
+                    </dd>
+                </div>
+                <div><dt>Chế phẩm</dt><dd>{item.componentTypeName}</dd></div>
+                <div><dt>Thể tích</dt><dd>{item.volumeMl} ml</dd></div>
+                <div><dt>Vị trí</dt><dd>{item.storageLocationName ?? '—'}</dd></div>
+            </dl>
 
                 <div className="lab-section">
                     <div className="lab-section__head">
@@ -250,7 +246,6 @@ export default function LabTestWorkspace({ item, canEdit, canDispose, onDone }: 
                         </Button>
                     </Popconfirm>
                 </div>
-            </div>
-        </section>
+        </SectionCard>
     )
 }

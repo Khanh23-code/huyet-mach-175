@@ -1,11 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Alert, App, Button, Checkbox, Input, Popconfirm, Result, Select, Spin, Tag } from 'antd'
+import { Alert, App, Button, Checkbox, Input, Popconfirm, Result, Select, Spin } from 'antd'
 import { ArrowLeftOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
 import { formatDateTime } from '@/shared/formatters/date'
+import {
+    BloodGroupTag,
+    PageContainer,
+    PageHeader,
+    SectionCard,
+    StatusPill,
+} from '@/shared/components'
+import { BagStatusTag } from '../components/StockBadges'
 import { useStorageLocations } from '../hooks'
 import { returnsApi } from '../returnsApi'
 import { useProcessBloodReturn } from '../returnsHooks'
@@ -14,7 +22,7 @@ import type {
     ProcessBloodReturnResponse,
     ReturnInspectionDto,
 } from '../returnsTypes'
-import '@/features/coordination/pages/HandoverPages.css'
+import '@/shared/styles/HandoverLayout.css'
 import './ReturnPages.css'
 
 interface LocationState {
@@ -171,31 +179,42 @@ export default function ReturnDetailPage() {
     }
 
     return (
-        <div className="return-page">
-            <div className="handover-head">
-                <div>
-                    <div className="handover-breadcrumb">Túi máu & Kho / Tiếp nhận hoàn trả / Thông tin túi máu trả</div>
-                    <h1 className="handover-title">Tiếp nhận hoàn trả túi máu</h1>
-                    <p className="handover-subtitle">
-                        Kiểm tra điều kiện bảo quản và quyết định nhập lại kho hoặc chuyển sang hủy.
-                    </p>
-                </div>
-                <span className={`handover-status-pill ${result ? 'is-success' : ''}`}>
-                    <i />{' '}
-                    {result
-                        ? result.finalAction === 'RESTOCK'
-                            ? 'Đã tái nhập kho (AVAILABLE)'
-                            : 'Đã chuyển hủy (DISCARDED)'
-                        : 'Chờ thẩm định BBNK'}
-                </span>
-            </div>
+        <PageContainer>
+            <PageHeader
+                breadcrumb={[
+                    { title: 'Túi máu & Kho' },
+                    { title: 'Tiếp nhận hoàn trả', path: '/inventory/returns' },
+                    { title: 'Thông tin túi máu trả' },
+                ]}
+                backTo="/inventory/returns"
+                title="Tiếp nhận hoàn trả túi máu"
+                subtitle="Kiểm tra điều kiện bảo quản và quyết định nhập lại kho hoặc chuyển sang hủy."
+                extra={
+                    <StatusPill
+                        tone={
+                            result
+                                ? result.finalAction === 'RESTOCK'
+                                    ? 'success'
+                                    : 'danger'
+                                : 'warning'
+                        }
+                        pulse={!result}
+                    >
+                        {result
+                            ? result.finalAction === 'RESTOCK'
+                                ? 'Đã tái nhập kho (AVAILABLE)'
+                                : 'Đã chuyển hủy (DISCARDED)'
+                            : 'Chờ thẩm định BBNK'}
+                    </StatusPill>
+                }
+            />
 
             {loading ? (
-                <section className="return-card" style={{ padding: 48, textAlign: 'center' }}>
+                <SectionCard bodyClassName="return-loading-body">
                     <Spin tip="Đang tải thông tin túi máu và phiếu hoàn trả..." />
-                </section>
+                </SectionCard>
             ) : loadError || !inspection ? (
-                <section className="return-card">
+                <SectionCard>
                     <Result
                         status="warning"
                         title="Không thể tra cứu túi máu hoàn trả"
@@ -206,21 +225,18 @@ export default function ReturnDetailPage() {
                             </Button>
                         }
                     />
-                </section>
+                </SectionCard>
             ) : (
                 <div className="return-detail-grid">
                     {/* Cột trái: Thông tin túi máu, lý do hoàn trả từ lâm sàng & bảng kiểm 5 điều kiện */}
-                    <section className="return-card">
-                        <div>
-                            <h2 className="return-card__title">Thông tin túi máu hoàn trả</h2>
-                            <p className="return-card__sub">
-                                Dữ liệu túi máu và phiếu hoàn trả được tra cứu trực tiếp từ hệ thống.
-                            </p>
-                        </div>
-
+                    <SectionCard
+                        title="Thông tin túi máu hoàn trả"
+                        subtitle="Dữ liệu túi máu và phiếu hoàn trả được tra cứu trực tiếp từ hệ thống."
+                        bodyClassName="return-stack"
+                    >
                         <div className={`return-bag-pill ${isExpired ? 'is-expired' : ''}`}>
                             <div className="return-bag-pill__left">
-                                <div className="handover-blood-badge">{inspection.bloodType}</div>
+                                <BloodGroupTag value={inspection.bloodType} size="lg" />
                                 <div>
                                     <div className="handover-bag-banner__code">{inspection.barcode}</div>
                                     <div className="handover-bag-banner__meta">
@@ -246,7 +262,7 @@ export default function ReturnDetailPage() {
                             </div>
                             <div className="handover-kv">
                                 <span>Trạng thái túi hiện tại</span>
-                                <strong><Tag color="warning">{inspection.bagStatus}</Tag></strong>
+                                <strong><BagStatusTag status={inspection.bagStatus} /></strong>
                             </div>
                             <div className="handover-kv">
                                 <span>Phiếu yêu cầu liên quan</span>
@@ -275,15 +291,15 @@ export default function ReturnDetailPage() {
                         </div>
 
                         <div>
-                            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6, color: '#0f172a' }}>
-                                Lý do hoàn trả (từ đơn vị lâm sàng) <span style={{ color: '#dc2626' }}>*</span>
+                            <div className="return-field-label">
+                                Lý do hoàn trả (từ đơn vị lâm sàng) <span className="return-field-req">*</span>
                             </div>
                             <div className="return-reason-box">{inspection.returnReason}</div>
                         </div>
 
                         <div>
-                            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#0f172a' }}>
-                                Kiểm tra điều kiện bảo quản <span style={{ color: '#dc2626' }}>*</span>
+                            <div className="return-field-label">
+                                Kiểm tra điều kiện bảo quản <span className="return-field-req">*</span>
                             </div>
                             <div className="return-checklist">
                                 {CHECKLIST_ITEMS.map((item) => {
@@ -294,11 +310,12 @@ export default function ReturnDetailPage() {
                                             className={`return-check-item ${checked ? 'is-checked' : ''}`}
                                         >
                                             <Checkbox
+                                                style={{ width: '100%' }}
                                                 checked={checked}
                                                 disabled={Boolean(result) || processMutation.isPending}
                                                 onChange={(e) => handleToggleCheck(item.key, e.target.checked)}
                                             >
-                                                {item.label}
+                                                <span className="return-check-item__label">{item.label}</span>
                                             </Checkbox>
                                         </div>
                                     )
@@ -307,12 +324,9 @@ export default function ReturnDetailPage() {
                         </div>
 
                         {!result && (
-                            <div style={{ display: 'grid', gap: 14 }}>
+                            <div className="return-stack">
                                 <div>
-                                    <label
-                                        htmlFor="restock-location-select"
-                                        style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 6 }}
-                                    >
+                                    <label htmlFor="restock-location-select" className="return-field-label">
                                         Ngăn tủ lưu trữ khi nhập lại kho{' '}
                                         {inspection.previousLocationName ? `(Vị trí cũ: ${inspection.previousLocationName})` : ''}
                                     </label>
@@ -336,10 +350,7 @@ export default function ReturnDetailPage() {
                                 </div>
 
                                 <div>
-                                    <label
-                                        htmlFor="discard-reason-input"
-                                        style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 6 }}
-                                    >
+                                    <label htmlFor="discard-reason-input" className="return-field-label">
                                         Lý do từ chối / tiêu hủy (nếu chọn chuyển sang hủy)
                                     </label>
                                     <Input
@@ -353,43 +364,40 @@ export default function ReturnDetailPage() {
                                 </div>
                             </div>
                         )}
-                    </section>
+                    </SectionCard>
 
                     {/* Cột phải: Quyết định tiếp nhận & kết quả */}
-                    <aside className="return-card">
-                        <div>
-                            <h2 className="return-card__title">Quyết định tiếp nhận</h2>
-                            <p className="return-card__sub">
-                                Dựa trên kết quả kiểm tra bảo quản, chọn hành động phù hợp với túi máu hoàn trả.
-                            </p>
-                        </div>
-
+                    <SectionCard
+                        title="Quyết định tiếp nhận"
+                        subtitle="Dựa trên kết quả kiểm tra bảo quản, chọn hành động phù hợp với túi máu hoàn trả."
+                        bodyClassName="return-stack"
+                    >
                         {!result && (
                             <>
                                 {isExpired ? (
                                     <Alert
                                         type="error"
                                         showIcon
-                                        message="Túi máu đã hết hạn sử dụng"
+                                        title="Túi máu đã hết hạn sử dụng"
                                         description="Không thể tái nhập kho túi máu đã hết hạn. Bắt buộc chọn 'Từ chối — Chuyển sang hủy'."
                                     />
                                 ) : !allChecked ? (
                                     <Alert
                                         type="warning"
                                         showIcon
-                                        message="Vui lòng xác nhận tất cả 5 điều kiện trước khi nhập lại kho."
+                                        title="Vui lòng xác nhận tất cả 5 điều kiện trước khi nhập lại kho."
                                     />
                                 ) : !selectedLocationId ? (
                                     <Alert
                                         type="warning"
                                         showIcon
-                                        message="Vui lòng chọn ngăn tủ lưu trữ để tái nhập kho."
+                                        title="Vui lòng chọn ngăn tủ lưu trữ để tái nhập kho."
                                     />
                                 ) : (
                                     <Alert
                                         type="success"
                                         showIcon
-                                        message="Đạt đủ 5 điều kiện bảo quản"
+                                        title="Đạt đủ 5 điều kiện bảo quản"
                                         description="Có thể chấp nhận tái nhập kho về trạng thái AVAILABLE."
                                     />
                                 )}
@@ -402,17 +410,17 @@ export default function ReturnDetailPage() {
                                 showIcon
                                 closable
                                 onClose={() => setSubmitError(null)}
-                                message="Xử lý hoàn trả thất bại"
+                                title="Xử lý hoàn trả thất bại"
                                 description={submitError}
                             />
                         )}
 
                         {result ? (
-                            <div style={{ display: 'grid', gap: 12 }}>
+                            <div className="return-stack">
                                 <Alert
                                     type={result.finalAction === 'RESTOCK' ? 'success' : 'warning'}
                                     showIcon
-                                    message={
+                                    title={
                                         result.finalAction === 'RESTOCK'
                                             ? 'Đã tái nhập kho thành công'
                                             : 'Đã chuyển túi máu sang tiêu hủy'
@@ -420,13 +428,13 @@ export default function ReturnDetailPage() {
                                     description={result.message}
                                 />
 
-                                <div className="handover-detail-box" style={{ padding: 14 }}>
+                                <div className="handover-detail-box">
                                     <div className="handover-kv">
                                         <span>Quyết định xử lý</span>
                                         <strong>
-                                            <Tag color={result.finalAction === 'RESTOCK' ? 'green' : 'red'}>
+                                            <StatusPill tone={result.finalAction === 'RESTOCK' ? 'success' : 'danger'}>
                                                 {result.finalAction}
-                                            </Tag>
+                                            </StatusPill>
                                         </strong>
                                     </div>
                                     <div className="handover-kv">
@@ -463,7 +471,6 @@ export default function ReturnDetailPage() {
                                     type="primary"
                                     size="large"
                                     icon={<ArrowLeftOutlined />}
-                                    className="handover-btn-primary"
                                     onClick={handleBackToScan}
                                 >
                                     Quét túi máu trả tiếp theo
@@ -474,8 +481,8 @@ export default function ReturnDetailPage() {
                                 <div className="return-decision-actions">
                                     <Button
                                         type="primary"
+                                        size="large"
                                         icon={<CheckOutlined />}
-                                        className="return-btn-restock"
                                         loading={processMutation.isPending}
                                         disabled={!canRestock}
                                         onClick={() => void handleProcess('RESTOCK')}
@@ -495,8 +502,8 @@ export default function ReturnDetailPage() {
                                         <Button
                                             type="primary"
                                             danger
+                                            size="large"
                                             icon={<CloseOutlined />}
-                                            className="return-btn-discard"
                                             loading={processMutation.isPending}
                                             disabled={!canDiscard}
                                         >
@@ -505,7 +512,7 @@ export default function ReturnDetailPage() {
                                     </Popconfirm>
                                 </div>
 
-                                <p style={{ margin: 0, fontSize: 12, color: '#64748b' }}>
+                                <p className="return-hint">
                                     * Nút &quot;Chấp nhận nhập lại kho&quot; yêu cầu tất cả 5 điều kiện được xác nhận, túi chưa hết hạn và đã chọn ngăn tủ lưu trữ.
                                 </p>
 
@@ -525,9 +532,9 @@ export default function ReturnDetailPage() {
                                 </Button>
                             </>
                         )}
-                    </aside>
+                    </SectionCard>
                 </div>
             )}
-        </div>
+        </PageContainer>
     )
 }

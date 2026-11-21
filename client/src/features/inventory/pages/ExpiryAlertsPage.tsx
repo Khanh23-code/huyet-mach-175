@@ -1,18 +1,18 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
-import { App, Breadcrumb, Button, Input, Select, Skeleton, Table } from 'antd'
+import { App, Button, Input, Select, Skeleton, Table } from 'antd'
 import {
     BellOutlined, DownloadOutlined, ExclamationOutlined, HourglassOutlined, ReloadOutlined, SearchOutlined,
 } from '@ant-design/icons'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
+import { BloodGroupTag, PageContainer, PageHeader, SectionCard, StatusPill, type StatusPillTone } from '@/shared/components'
 import { COMPONENT_LABEL } from '../format'
 import { useExpiringSoon, useTransitionBag } from '../stockHooks'
 import { fmtRemaining } from '../stockFormat'
 import type { ExpiringSoonBag } from '../stockTypes'
-import { BloodGroupTag } from '../components/StockBadges'
 import './InventoryPages.css'
 import './Disposal.css'
 import './Stock.css'
@@ -25,7 +25,7 @@ const DAY_OPTIONS = [1, 3, 7, 14, 30].map((d) => ({ value: d, label: `${d} ngày
 const COMPONENT_OPTIONS = Object.entries(COMPONENT_LABEL).map(([value, label]) => ({ value, label }))
 const two = (n: number) => String(n).padStart(2, '0')
 
-const tone = (h: number) => (h < 24 ? 'red' : h <= 72 ? 'amber' : 'blue')
+const expiryTone = (h: number): StatusPillTone => (h < 24 ? 'danger' : h <= 72 ? 'warning' : 'info')
 
 export default function ExpiryAlertsPage() {
     const { message, modal } = App.useApp()
@@ -97,24 +97,24 @@ export default function ExpiryAlertsPage() {
     }
 
     return (
-        <div className="inv">
-            <Breadcrumb items={[{ title: 'Túi máu & Kho' }, { title: 'Cảnh báo cận hạn' }]} />
-            <div className="stk-head">
-                <div className="inv-title">
-                    <h1>Cảnh báo túi máu cận hạn</h1>
-                    <p>Danh sách được tự động sắp xếp theo mức độ khẩn cấp và thời gian còn lại.</p>
-                </div>
-                <Button size="large" icon={<DownloadOutlined />} disabled={rows.length === 0} onClick={exportCsv}>
-                    Xuất danh sách
-                </Button>
-            </div>
+        <PageContainer>
+            <PageHeader
+                breadcrumb={[{ title: 'Túi máu & Kho' }, { title: 'Cảnh báo cận hạn' }]}
+                title="Cảnh báo túi máu cận hạn"
+                subtitle="Danh sách được tự động sắp xếp theo mức độ khẩn cấp và thời gian còn lại."
+                extra={
+                    <Button size="large" icon={<DownloadOutlined />} disabled={rows.length === 0} onClick={exportCsv}>
+                        Xuất danh sách
+                    </Button>
+                }
+            />
 
             <div className="exp-top">
-                <div className="inv-card exp-stat">
+                <div className="exp-stat">
                     <span className="exp-stat__icon exp-stat__icon--red"><ExclamationOutlined /></span>
                     <div><b>{isLoading ? '—' : two(under24)}</b><small>Dưới 24 giờ</small></div>
                 </div>
-                <div className="inv-card exp-stat">
+                <div className="exp-stat">
                     <span className="exp-stat__icon exp-stat__icon--amber"><HourglassOutlined /></span>
                     <div><b>{isLoading ? '—' : two(d1to3)}</b><small>Từ 1–3 ngày</small></div>
                 </div>
@@ -134,12 +134,11 @@ export default function ExpiryAlertsPage() {
                 </div>
             </div>
 
-            <section className="inv-card">
-                <div className="inv-card__head stk-head">
-                    <div>
-                        <h2>Danh sách cần xử lý</h2>
-                        <p>{two(rows.length)} túi máu đang cận hạn sử dụng</p>
-                    </div>
+            <SectionCard
+                title="Danh sách cần xử lý"
+                subtitle={`${two(rows.length)} túi máu đang cận hạn sử dụng`}
+                noPadding
+                extra={
                     <div className="disp-tools" style={{ marginBottom: 0 }}>
                         <Input
                             style={{ width: 240 }} size="large" prefix={<SearchOutlined />} placeholder="Tìm mã túi máu..."
@@ -150,10 +149,10 @@ export default function ExpiryAlertsPage() {
                             options={COMPONENT_OPTIONS} value={component} onChange={(v) => { setComponent(v); setPage(1) }}
                         />
                     </div>
-                </div>
-
+                }
+            >
                 {isLoading ? (
-                    <div className="inv-card__body"><Skeleton active paragraph={{ rows: 5 }} /></div>
+                    <div style={{ padding: 'var(--space-6)' }}><Skeleton active paragraph={{ rows: 5 }} /></div>
                 ) : (
                     <Table<ExpiringSoonBag>
                         rowKey="bagId"
@@ -176,14 +175,15 @@ export default function ExpiryAlertsPage() {
                             },
                             {
                                 title: 'THỜI GIAN CÒN LẠI', dataIndex: 'hoursRemaining', width: 190,
-                                render: (h: number) => <span className={`exp-pill exp-pill--${tone(h)}`}>{fmtRemaining(h)}</span>,
+                                render: (h: number) => <StatusPill tone={expiryTone(h)}>{fmtRemaining(h)}</StatusPill>,
                             },
                             {
                                 title: 'THAO TÁC', width: 300,
                                 render: (_: unknown, r) => (
                                     <div className="inv-actions" style={{ flexWrap: 'nowrap' }}>
                                         <Button
-                                            className="exp-btn-prio"
+                                            color="primary"
+                                            variant="filled"
                                             // TODO(sprint sau): nối API phân bổ / giữ chỗ
                                             onClick={() => message.info('Phân bổ theo FEFO sẽ có ở sprint sau')}
                                         >
@@ -208,7 +208,7 @@ export default function ExpiryAlertsPage() {
                         <Button type="link" size="small" icon={<ReloadOutlined />} loading={isFetching} onClick={() => refetch()}>Làm mới</Button>
                     </span>
                 </div>
-            </section>
-        </div>
+            </SectionCard>
+        </PageContainer>
     )
 }

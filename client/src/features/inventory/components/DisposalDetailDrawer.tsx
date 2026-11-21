@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react'
-import { Alert, Drawer, Skeleton, Table, Tag } from 'antd'
+import { Alert, Drawer, Skeleton, Table } from 'antd'
 import { fmtDateTime } from '@/shared/formatters/date'
+import { BloodGroupTag, StatusPill } from '@/shared/components'
 import { useDisposalDetail } from '../disposalsHooks'
-import { STATUS_COLOR } from '../disposalsFormat'
+import { DISPOSAL_STATUS_TONE } from '../disposalsFormat'
 import type { DisposalDetail, DisposalItem } from '../disposalsTypes'
 
 interface Props {
@@ -30,7 +31,7 @@ export default function DisposalDetailDrawer({ id, onClose, actions }: Props) {
                     <dl className="inv-parent" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                         <div>
                             <dt>Trạng thái</dt>
-                            <dd><Tag color={STATUS_COLOR[data.status]}>{data.statusText}</Tag></dd>
+                            <dd><StatusPill tone={DISPOSAL_STATUS_TONE[data.status]}>{data.statusText}</StatusPill></dd>
                         </div>
                         <div><dt>Lý do</dt><dd>{data.reasonText}</dd></div>
                         <div><dt>Số túi</dt><dd>{data.totalBags}</dd></div>
@@ -59,7 +60,7 @@ export default function DisposalDetailDrawer({ id, onClose, actions }: Props) {
                         scroll={{ x: 560 }}
                         columns={[
                             { title: 'Barcode', dataIndex: 'barcode', render: (v: string) => <span className="inv-mono">{v}</span> },
-                            { title: 'Nhóm máu', dataIndex: 'bloodGroup', width: 90, render: (v: string) => <Tag color="red">{v}</Tag> },
+                            { title: 'Nhóm máu', dataIndex: 'bloodGroup', width: 90, render: (v: string) => <BloodGroupTag value={v} size="sm" /> },
                             { title: 'Chế phẩm', dataIndex: 'componentTypeCode', width: 90 },
                             { title: 'Thể tích', dataIndex: 'volumeMl', width: 90, render: (v: number) => `${v} ml` },
                             { title: 'Trước khi khóa', dataIndex: 'previousStatusText' },

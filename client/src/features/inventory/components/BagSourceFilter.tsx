@@ -1,4 +1,3 @@
-import { Segmented } from 'antd'
 import { SOURCE_FILTER_OPTIONS } from '../bagSource'
 import type { SourceFilterValue } from '../bagSource'
 
@@ -9,12 +8,22 @@ interface Props {
 
 export default function BagSourceFilter({ value, onChange }: Props) {
     return (
-        <Segmented
-            block
-            size="small"
-            options={SOURCE_FILTER_OPTIONS}
-            value={value}
-            onChange={(v) => onChange(v as SourceFilterValue)}
-        />
+        <div className="inv-source-filter" role="radiogroup" aria-label="Lọc theo nguồn túi máu">
+            {SOURCE_FILTER_OPTIONS.map((opt) => {
+                const active = value === opt.value
+                return (
+                    <button
+                        key={opt.value || 'ALL'}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        className={`inv-source-filter__btn${active ? ' is-active' : ''}`}
+                        onClick={() => onChange(opt.value)}
+                    >
+                        {opt.label}
+                    </button>
+                )
+            })}
+        </div>
     )
 }
