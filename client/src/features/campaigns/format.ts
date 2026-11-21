@@ -1,8 +1,14 @@
+import type { StatusPillTone } from '@/shared/components'
 import type { CampaignSlot, CampaignStatus, CampaignType } from './types'
 
 export const CAMPAIGN_TYPE_LABEL: Record<CampaignType, string> = {
     EVENT: 'Chiến dịch sự kiện',
     RECURRING: 'Điểm hiến định kỳ',
+}
+
+export const CAMPAIGN_TYPE_TONE: Record<CampaignType, StatusPillTone> = {
+    EVENT: 'info',
+    RECURRING: 'warning',
 }
 
 export const CAMPAIGN_STATUS_LABEL: Record<CampaignStatus, string> = {
@@ -23,6 +29,16 @@ export const CAMPAIGN_STATUS_COLOR: Record<CampaignStatus, string> = {
     COMPLETED: 'purple',
     CANCELLED: 'error',
     REJECTED: 'error',
+}
+
+export const CAMPAIGN_STATUS_TONE: Record<CampaignStatus, StatusPillTone> = {
+    DRAFT: 'neutral',
+    PENDING_APPROVAL: 'warning',
+    APPROVED: 'info',
+    IN_PROGRESS: 'success',
+    COMPLETED: 'purple',
+    CANCELLED: 'danger',
+    REJECTED: 'danger',
 }
 
 const STATUS_NUMBER_MAP: Record<number, CampaignStatus> = {

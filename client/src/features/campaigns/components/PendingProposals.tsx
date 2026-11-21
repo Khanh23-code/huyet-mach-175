@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { Button, Empty, Skeleton, Tag } from 'antd'
+import { Button, Empty, Skeleton } from 'antd'
+import { SectionCard, StatusPill } from '@/shared/components'
 import ReviewProposalModal from './ReviewProposalModal'
 import { usePendingCampaigns } from '../hooks'
 import {
     CAMPAIGN_TYPE_LABEL,
+    CAMPAIGN_TYPE_TONE,
     fmtDate,
     fmtDateTime,
     fmtOperatingDays,
@@ -16,21 +18,21 @@ export default function PendingProposals() {
     const [reviewId, setReviewId] = useState<number | null>(null)
 
     return (
-        <section className="ds-card">
-            <div className="ds-card__head">
-                <h3>Đợt hiến máu chờ phê duyệt</h3>
-                <p>Xem xét nội dung đề xuất, khung giờ và địa điểm trước khi phê duyệt cho phép đặt hẹn.</p>
-            </div>
-
+        <SectionCard
+            eyebrow="Chờ phê duyệt"
+            title="Đợt hiến máu chờ phê duyệt"
+            subtitle="Xem xét nội dung đề xuất, khung giờ và địa điểm trước khi phê duyệt cho phép đặt hẹn."
+            noPadding
+        >
             {isLoading ? (
-                <div style={{ padding: 24 }}>
+                <div style={{ padding: 'var(--space-6)' }}>
                     <Skeleton active paragraph={{ rows: 3 }} />
                 </div>
             ) : !data || data.items.length === 0 ? (
                 <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
                     description="Không có đợt hiến máu nào đang chờ duyệt"
-                    style={{ padding: 24 }}
+                    style={{ padding: 'var(--space-6)' }}
                 />
             ) : (
                 <div className="ds-rows">
@@ -39,9 +41,9 @@ export default function PendingProposals() {
                         return (
                             <div className="ds-row" key={c.campaignId}>
                                 <div>
-                                    <Tag color={cType === 'EVENT' ? 'blue' : 'orange'}>
+                                    <StatusPill tone={CAMPAIGN_TYPE_TONE[cType]} dot={false}>
                                         {CAMPAIGN_TYPE_LABEL[cType]}
-                                    </Tag>
+                                    </StatusPill>
                                 </div>
                                 <div>
                                     <span className="ds-code">ID: {c.campaignId}</span>
@@ -63,7 +65,8 @@ export default function PendingProposals() {
                                     <div className="ds-muted ds-small">{fmtDateTime(c.createdAt)}</div>
                                 </div>
                                 <Button
-                                    className="ds-review-btn"
+                                    color="primary"
+                                    variant="filled"
                                     onClick={() => setReviewId(c.campaignId)}
                                 >
                                     Xem &amp; duyệt
@@ -75,6 +78,6 @@ export default function PendingProposals() {
             )}
 
             <ReviewProposalModal campaignId={reviewId} onClose={() => setReviewId(null)} />
-        </section>
+        </SectionCard>
     )
 }

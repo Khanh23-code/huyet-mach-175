@@ -102,7 +102,7 @@ export default function SlotEditor({ control, errors, count, onAdd, onRemove }: 
             {arrayError && <div className="ds-field__error">{arrayError}</div>}
 
             <div className="ds-slots__foot">
-                <Button className="ds-dashed" type="dashed" icon={<PlusOutlined />} onClick={onAdd} disabled={count >= 12}>
+                <Button type="dashed" icon={<PlusOutlined />} onClick={onAdd} disabled={count >= 12}>
                     Thêm khung giờ
                 </Button>
                 <span className="ds-muted ds-small">Tối đa 12 khung giờ, không được chồng lấn nhau.</span>

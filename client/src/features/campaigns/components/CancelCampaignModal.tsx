@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Alert, App, Button, Card, Input, Modal, Space } from 'antd'
+import { Alert, App, Button, Input, Modal, Space } from 'antd'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { useCancelCampaign } from '../hooks'
 import { fmtDate, normalizeCampaignType } from '../format'
@@ -58,7 +58,7 @@ export default function CancelCampaignModal({ campaign, open, onClose, onSuccess
     return (
         <Modal
             title={
-                <Space style={{ color: '#b91c1c' }}>
+                <Space style={{ color: 'var(--c-danger)' }}>
                     <ExclamationCircleOutlined />
                     <span>Xác nhận Hủy đợt hiến máu</span>
                 </Space>
@@ -69,7 +69,7 @@ export default function CancelCampaignModal({ campaign, open, onClose, onSuccess
             centered
             maskClosable={!cancelMutation.isPending}
             footer={
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 12 }}>
+                <div className="ds-modal-foot" style={{ paddingTop: 12 }}>
                     <Button onClick={handleCancel} disabled={cancelMutation.isPending}>
                         Quay lại
                     </Button>
@@ -93,8 +93,8 @@ export default function CancelCampaignModal({ campaign, open, onClose, onSuccess
                 style={{ marginBottom: 16 }}
             />
 
-            <Card size="small" style={{ marginBottom: 16, background: '#f8fafc' }}>
-                <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>
+            <div className="ds-stat-box">
+                <div style={{ fontWeight: 600, fontSize: 'var(--text-base)', marginBottom: 4 }}>
                     {campaign.campaignName}
                 </div>
                 <div className="ds-muted ds-small">
@@ -106,11 +106,11 @@ export default function CancelCampaignModal({ campaign, open, onClose, onSuccess
                 <div className="ds-muted ds-small">
                     <b>Số người đã đăng ký:</b> {campaign.totalRegistered} người
                 </div>
-            </Card>
+            </div>
 
-            <div style={{ marginBottom: 28 }}>
-                <label style={{ fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                    Lý do hủy đợt hiến máu <span style={{ color: '#c4261b' }}>*</span>
+            <div className="ds-field" style={{ marginBottom: 28 }}>
+                <label>
+                    Lý do hủy đợt hiến máu <span className="ds-req">*</span>
                 </label>
                 <Input.TextArea
                     rows={4}
@@ -124,11 +124,7 @@ export default function CancelCampaignModal({ campaign, open, onClose, onSuccess
                     }}
                     status={error ? 'error' : ''}
                 />
-                {error && (
-                    <div style={{ color: '#c4261b', fontSize: 13, marginTop: 8 }}>
-                        {error}
-                    </div>
-                )}
+                {error && <div className="ds-field__error">{error}</div>}
             </div>
         </Modal>
     )

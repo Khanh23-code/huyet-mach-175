@@ -1,14 +1,16 @@
 import { useState } from 'react'
-import { App, Button, Descriptions, Input, Modal, Skeleton, Tag } from 'antd'
+import { App, Button, Descriptions, Input, Modal, Skeleton } from 'antd'
+import { StatusPill } from '@/shared/components'
 import ConfigCard from './ConfigCard'
 import Can from '@/features/auth/components/Can'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
 import { useApproveCampaign, useCampaignDetail } from '../hooks'
 import {
-    CAMPAIGN_STATUS_COLOR,
     CAMPAIGN_STATUS_LABEL,
+    CAMPAIGN_STATUS_TONE,
     CAMPAIGN_TYPE_LABEL,
+    CAMPAIGN_TYPE_TONE,
     fmtDate,
     fmtDateTime,
     fmtOperatingDays,
@@ -153,20 +155,23 @@ export default function ReviewProposalModal({ campaignId, proposalId, onClose }:
                         return (
                             <Descriptions column={2} size="small" bordered style={{ marginBottom: 16 }}>
                                 <Descriptions.Item label="Campaign ID" span={2}>
-                                    <b>{campaign.campaignId}</b>
+                                    <b className="tabular-nums">{campaign.campaignId}</b>
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Tên chiến dịch" span={2}>
                                     <b>{campaign.campaignName}</b>
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Hình thức">
-                                    <Tag color={cType === 'EVENT' ? 'blue' : 'orange'}>
+                                    <StatusPill tone={CAMPAIGN_TYPE_TONE[cType]} dot={false}>
                                         {CAMPAIGN_TYPE_LABEL[cType]}
-                                    </Tag>
+                                    </StatusPill>
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Trạng thái">
-                                    <Tag color={CAMPAIGN_STATUS_COLOR[cStatus]} style={{ fontWeight: 600 }}>
+                                    <StatusPill
+                                        tone={CAMPAIGN_STATUS_TONE[cStatus]}
+                                        pulse={cStatus === 'IN_PROGRESS'}
+                                    >
                                         {CAMPAIGN_STATUS_LABEL[cStatus]}
-                                    </Tag>
+                                    </StatusPill>
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Địa điểm" span={2}>
                                     {campaign.locationName}

@@ -3,14 +3,12 @@ import {
     Alert,
     App,
     Button,
-    Card,
     Col,
     Modal,
     Row,
     Space,
     Statistic,
     Table,
-    Tag,
     Upload,
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
@@ -25,6 +23,7 @@ import {
     UploadOutlined,
     WarningOutlined,
 } from '@ant-design/icons'
+import { StatusPill } from '@/shared/components'
 import { campaignsApi } from '../campaignsApi'
 import { useImportDonors } from '../hooks'
 import type { DonorImportResult, DonorImportRowError } from '../types'
@@ -113,7 +112,7 @@ export default function ImportDonorsModal({
             dataIndex: 'fullName',
             key: 'fullName',
             width: 170,
-            render: (val) => val || <span style={{ color: 'var(--c-text-muted, #5f7367)' }}>N/A</span>,
+            render: (val) => val || <span className="ds-muted">N/A</span>,
         },
         {
             title: 'Số CCCD',
@@ -121,7 +120,7 @@ export default function ImportDonorsModal({
             key: 'citizenId',
             width: 140,
             render: (val) => (
-                <span style={{ fontFamily: 'monospace' }}>
+                <span className="text-mono">
                     {val || 'N/A'}
                 </span>
             ),
@@ -131,7 +130,7 @@ export default function ImportDonorsModal({
             dataIndex: 'errorMessage',
             key: 'errorMessage',
             render: (text) => (
-                <span style={{ color: '#b91c1c', fontWeight: 500 }}>
+                <span style={{ color: 'var(--c-danger)', fontWeight: 500 }}>
                     {text}
                 </span>
             ),
@@ -142,9 +141,13 @@ export default function ImportDonorsModal({
         <Modal
             title={
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <FileExcelOutlined style={{ color: '#1a7534', fontSize: 20 }} />
+                    <FileExcelOutlined style={{ color: 'var(--c-primary)', fontSize: 20 }} />
                     <span>Nhập danh sách người hiến máu từ Excel</span>
-                    {campaignId && <Tag color="green">Đợt #{campaignId}</Tag>}
+                    {campaignId && (
+                        <StatusPill tone="primary" dot={false}>
+                            Đợt #{campaignId}
+                        </StatusPill>
+                    )}
                 </div>
             }
             open={open}
@@ -165,20 +168,27 @@ export default function ImportDonorsModal({
             destroyOnHidden
         >
             {campaignName && (
-                <div style={{ marginBottom: 16, color: 'var(--c-text-muted, #5f7367)', fontSize: 13 }}>
+                <div className="ds-muted" style={{ marginBottom: 16, fontSize: 'var(--text-sm)' }}>
                     Chiến dịch: <b>{campaignName}</b>
                 </div>
             )}
 
             {!result ? (
                 <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                    <Card size="small" style={{ background: '#f6ffed', borderColor: '#b7eb8f' }}>
+                    <div
+                        style={{
+                            padding: 'var(--space-4)',
+                            borderRadius: 'var(--radius-md)',
+                            background: 'var(--c-primary-soft)',
+                            border: '1px solid var(--c-primary-border)',
+                        }}
+                    >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                             <div>
-                                <div style={{ fontWeight: 600, color: '#135200', marginBottom: 2 }}>
+                                <div style={{ fontWeight: 600, color: 'var(--c-primary)', marginBottom: 2 }}>
                                     Bước 1: Tải file Excel mẫu chuẩn
                                 </div>
-                                <div style={{ fontSize: 12, color: 'var(--c-text-muted, #5f7367)' }}>
+                                <div className="ds-muted ds-small">
                                     File mẫu được cấu hình riêng cho đợt hiến #{campaignId}, bao gồm các khung giờ và 9 câu hỏi khảo sát.
                                 </div>
                             </div>
@@ -190,7 +200,7 @@ export default function ImportDonorsModal({
                                 Tải file mẫu (.xlsx)
                             </Button>
                         </div>
-                    </Card>
+                    </div>
 
                     <div>
                         <div style={{ fontWeight: 600, marginBottom: 8 }}>
@@ -209,15 +219,15 @@ export default function ImportDonorsModal({
                                 setSelectedFile(null)
                                 setFileList([])
                             }}
-                            style={{ padding: '24px 0', background: '#fafafa' }}
+                            style={{ padding: '24px 0', background: 'var(--c-surface-muted)' }}
                         >
                             <p className="ant-upload-drag-icon">
-                                <InboxOutlined style={{ color: '#1a7534', fontSize: 44 }} />
+                                <InboxOutlined style={{ color: 'var(--c-primary)', fontSize: 44 }} />
                             </p>
                             <p className="ant-upload-text" style={{ fontWeight: 600 }}>
                                 Nhấp hoặc kéo thả file Excel (.xlsx) vào khu vực này
                             </p>
-                            <p className="ant-upload-hint" style={{ fontSize: 12, color: 'var(--c-text-muted, #5f7367)' }}>
+                            <p className="ant-upload-hint ds-muted ds-small">
                                 Hệ thống sẽ tự động đọc dữ liệu, đối soát trùng lặp CCCD, tạo lịch hẹn và nạp kết quả bảng hỏi online.
                             </p>
                         </Upload.Dragger>
@@ -263,7 +273,7 @@ export default function ImportDonorsModal({
                         />
                     )}
 
-                    <Card size="small" style={{ background: '#f8fafc' }}>
+                    <div className="ds-stat-box">
                         <Row gutter={[16, 16]}>
                             <Col span={6}>
                                 <Statistic
@@ -275,7 +285,7 @@ export default function ImportDonorsModal({
                                 <Statistic
                                     title="Thành công"
                                     value={result.successCount}
-                                    valueStyle={{ color: '#1a7534' }}
+                                    valueStyle={{ color: 'var(--c-primary)' }}
                                 />
                             </Col>
                             <Col span={6}>
@@ -289,15 +299,15 @@ export default function ImportDonorsModal({
                                 <Statistic
                                     title="Bảng hỏi online"
                                     value={result.surveysIncludedCount}
-                                    valueStyle={{ color: '#0369a1' }}
+                                    valueStyle={{ color: 'var(--c-info)' }}
                                 />
                             </Col>
                         </Row>
-                    </Card>
+                    </div>
 
                     {result.errors && result.errors.length > 0 && (
                         <div>
-                            <div style={{ fontWeight: 600, color: '#b91c1c', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div className="ds-error-box">
                                 <CloseCircleOutlined />
                                 Danh sách các dòng bị lỗi ({result.errors.length} dòng):
                             </div>

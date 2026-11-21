@@ -8,7 +8,6 @@ import {
     Select,
     Space,
     Table,
-    Tag,
     Tooltip,
 } from 'antd'
 import type { TableColumnsType } from 'antd'
@@ -20,6 +19,7 @@ import {
     PlayCircleOutlined,
     SendOutlined,
 } from '@ant-design/icons'
+import { SectionCard, StatusPill } from '@/shared/components'
 import CampaignForm from './CampaignForm'
 import CancelCampaignModal from './CancelCampaignModal'
 import Can from '@/features/auth/components/Can'
@@ -31,9 +31,10 @@ import {
     useUpdateCampaignStatus,
 } from '../hooks'
 import {
-    CAMPAIGN_STATUS_COLOR,
     CAMPAIGN_STATUS_LABEL,
+    CAMPAIGN_STATUS_TONE,
     CAMPAIGN_TYPE_LABEL,
+    CAMPAIGN_TYPE_TONE,
     fmtDate,
     fmtOperatingDays,
     normalizeCampaignStatus,
@@ -125,9 +126,9 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
                         </a>
                         <div className="ds-muted ds-small">{c.locationName}</div>
                         <Space size={4} orientation="horizontal" style={{ marginTop: 4 }}>
-                            <Tag className="campaign-tag">
+                            <StatusPill tone={CAMPAIGN_TYPE_TONE[cType]} dot={false}>
                                 {CAMPAIGN_TYPE_LABEL[cType]}
-                            </Tag>
+                            </StatusPill>
                             {cType === 'RECURRING' && c.operatingDays && (
                                 <span className="ds-muted ds-small">({fmtOperatingDays(c.operatingDays)})</span>
                             )}
@@ -179,16 +180,19 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
                 const cStatus = normalizeCampaignStatus(s)
                 return (
                     <div>
-                        <Tag color={CAMPAIGN_STATUS_COLOR[cStatus]} style={{ fontWeight: 600 }}>
+                        <StatusPill
+                            tone={CAMPAIGN_STATUS_TONE[cStatus]}
+                            pulse={cStatus === 'IN_PROGRESS'}
+                        >
                             {CAMPAIGN_STATUS_LABEL[cStatus]}
-                        </Tag>
+                        </StatusPill>
                         {cStatus === 'REJECTED' && c.rejectionReason && (
-                            <div className="ds-muted ds-small" style={{ color: '#c4261b', marginTop: 4 }} title={c.rejectionReason}>
+                            <div className="ds-reason" title={c.rejectionReason}>
                                 Lý do: {c.rejectionReason.length > 25 ? `${c.rejectionReason.slice(0, 25)}...` : c.rejectionReason}
                             </div>
                         )}
                         {cStatus === 'CANCELLED' && c.cancellationReason && (
-                            <div className="ds-muted ds-small" style={{ color: '#c4261b', marginTop: 4 }} title={c.cancellationReason}>
+                            <div className="ds-reason" title={c.cancellationReason}>
                                 Lý do: {c.cancellationReason.length > 25 ? `${c.cancellationReason.slice(0, 25)}...` : c.cancellationReason}
                             </div>
                         )}
@@ -209,7 +213,7 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
                                 <Tooltip title="Gửi duyệt">
                                     <Button
                                         type="text"
-                                        icon={<SendOutlined style={{ color: '#1a7534', fontSize: 16 }} />}
+                                        icon={<SendOutlined style={{ color: 'var(--c-primary)', fontSize: 16 }} />}
                                         loading={submitApprovalMutation.isPending}
                                         onClick={() => handleSubmitApproval(c)}
                                     />
@@ -217,7 +221,7 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
                                 <Tooltip title="Chỉnh sửa (Điền lên form)">
                                     <Button
                                         type="text"
-                                        icon={<EditOutlined style={{ color: '#0284c7', fontSize: 16 }} />}
+                                        icon={<EditOutlined style={{ color: 'var(--c-info)', fontSize: 16 }} />}
                                         onClick={() => handleEditClick(c)}
                                     />
                                 </Tooltip>
@@ -244,14 +248,14 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
                                 <Tooltip title="Sửa & chuẩn bị gửi lại">
                                     <Button
                                         type="text"
-                                        icon={<EditOutlined style={{ color: '#0284c7', fontSize: 16 }} />}
+                                        icon={<EditOutlined style={{ color: 'var(--c-info)', fontSize: 16 }} />}
                                         onClick={() => handleEditClick(c)}
                                     />
                                 </Tooltip>
                                 <Tooltip title="Gửi duyệt lại">
                                     <Button
                                         type="text"
-                                        icon={<SendOutlined style={{ color: '#1a7534', fontSize: 16 }} />}
+                                        icon={<SendOutlined style={{ color: 'var(--c-primary)', fontSize: 16 }} />}
                                         loading={submitApprovalMutation.isPending}
                                         onClick={() => handleSubmitApproval(c)}
                                     />
@@ -265,7 +269,7 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
                                     <Tooltip title="Bắt đầu diễn ra">
                                         <Button
                                             type="text"
-                                            icon={<PlayCircleOutlined style={{ color: '#1a7534', fontSize: 16 }} />}
+                                            icon={<PlayCircleOutlined style={{ color: 'var(--c-primary)', fontSize: 16 }} />}
                                             onClick={() => handleUpdateStatus(c, 'IN_PROGRESS', 'Đang diễn ra')}
                                         />
                                     </Tooltip>
@@ -289,7 +293,7 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
                                     <Tooltip title="Hoàn thành đợt hiến máu">
                                         <Button
                                             type="text"
-                                            icon={<CheckCircleOutlined style={{ color: '#6d28d9', fontSize: 16 }} />}
+                                            icon={<CheckCircleOutlined style={{ color: 'var(--c-purple)', fontSize: 16 }} />}
                                             onClick={() => handleUpdateStatus(c, 'COMPLETED', 'Đã hoàn thành')}
                                         />
                                     </Tooltip>
@@ -313,12 +317,11 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
     ]
 
     return (
-        <section className="ds-card">
-            <div className="ds-card__head ds-card__head--row">
-                <div>
-                    <h3>Đợt hiến máu của tôi</h3>
-                    <p>Theo dõi tiến độ, gửi phê duyệt hoặc cập nhật trạng thái các đợt hiến do bạn khởi tạo.</p>
-                </div>
+        <SectionCard
+            title="Đợt hiến máu của tôi"
+            subtitle="Theo dõi tiến độ, gửi phê duyệt hoặc cập nhật trạng thái các đợt hiến do bạn khởi tạo."
+            noPadding
+            extra={
                 <Space wrap>
                     <Input.Search
                         placeholder="Tìm theo tên hoặc địa điểm..."
@@ -349,8 +352,8 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
                         ]}
                     />
                 </Space>
-            </div>
-
+            }
+        >
             <Table<CampaignListItem>
                 rowKey="campaignId"
                 columns={columns}
@@ -392,6 +395,6 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
                 open={cancellingCampaign !== null}
                 onClose={() => setCancellingCampaign(null)}
             />
-        </section>
+        </SectionCard>
     )
 }

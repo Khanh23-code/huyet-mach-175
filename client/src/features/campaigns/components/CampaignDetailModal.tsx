@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import {
     App,
     Button,
-    Card,
     Col,
     Descriptions,
     Divider,
@@ -13,7 +12,6 @@ import {
     Skeleton,
     Space,
     Statistic,
-    Tag,
 } from 'antd'
 import {
     BarChartOutlined,
@@ -22,6 +20,7 @@ import {
     FileExcelOutlined,
     PlayCircleOutlined,
 } from '@ant-design/icons'
+import { StatusPill } from '@/shared/components'
 import ConfigCard from './ConfigCard'
 import CancelCampaignModal from './CancelCampaignModal'
 import ImportDonorsModal from './ImportDonorsModal'
@@ -29,9 +28,10 @@ import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { useCampaignDetail, useUpdateCampaignStatus } from '../hooks'
 import {
-    CAMPAIGN_STATUS_COLOR,
     CAMPAIGN_STATUS_LABEL,
+    CAMPAIGN_STATUS_TONE,
     CAMPAIGN_TYPE_LABEL,
+    CAMPAIGN_TYPE_TONE,
     fmtDate,
     fmtDateTime,
     fmtOperatingDays,
@@ -140,7 +140,7 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                                     <Button
                                         type="primary"
                                         icon={<CheckCircleOutlined />}
-                                        style={{ background: '#6d28d9', borderColor: '#6d28d9' }}
+                                        style={{ background: 'var(--c-purple)', borderColor: 'var(--c-purple)' }}
                                         loading={updateStatusMutation.isPending}
                                         onClick={() => handleUpdateStatus('COMPLETED', 'Đã hoàn thành')}
                                     >
@@ -169,7 +169,7 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                 <Skeleton active paragraph={{ rows: 8 }} />
             ) : (
                 <>
-                    <Card size="small" style={{ marginBottom: 16, background: '#f8fafc' }}>
+                    <div className="ds-stat-box">
                         <Row gutter={[16, 16]}>
                             <Col span={6}>
                                 <Statistic
@@ -182,14 +182,14 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                                 <Statistic
                                     title="Đã điểm danh"
                                     value={detail.totalCheckedIn}
-                                    valueStyle={{ color: '#0369a1' }}
+                                    valueStyle={{ color: 'var(--c-info)' }}
                                 />
                             </Col>
                             <Col span={6}>
                                 <Statistic
                                     title="Đã thu gom (túi)"
                                     value={detail.totalCollected}
-                                    valueStyle={{ color: '#1a7534' }}
+                                    valueStyle={{ color: 'var(--c-primary)' }}
                                 />
                             </Col>
                             <Col span={6}>
@@ -203,18 +203,18 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
 
                         {!isClosed ? (
                             <div style={{ marginTop: 12 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+                                <div className="ds-progress-labels">
                                     <span>Tiến độ hoàn thành chỉ tiêu</span>
                                     <b>{detail.completionRate}%</b>
                                 </div>
                                 <Progress
                                     percent={Math.min(100, Math.round(detail.completionRate))}
-                                    strokeColor={status === 'COMPLETED' ? '#6d28d9' : '#1a7534'}
+                                    strokeColor={status === 'COMPLETED' ? 'var(--c-purple)' : 'var(--c-primary)'}
                                 />
                             </div>
                         ) : (
                             <div className="ds-closed-alert" style={{ marginTop: 12 }}>
-                                <CloseCircleOutlined style={{ color: '#c4261b' }} />
+                                <CloseCircleOutlined />
                                 <span>
                                     {status === 'REJECTED'
                                         ? 'Đề xuất chiến dịch này đã bị từ chối · Không mở tiếp nhận đăng ký'
@@ -222,24 +222,27 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                                 </span>
                             </div>
                         )}
-                    </Card>
+                    </div>
 
                     <Descriptions column={2} size="small" bordered style={{ marginBottom: 16 }}>
                         <Descriptions.Item label="Campaign ID" span={2}>
-                            <b>{detail.campaignId}</b>
+                            <b className="tabular-nums">{detail.campaignId}</b>
                         </Descriptions.Item>
                         <Descriptions.Item label="Tên chiến dịch" span={2}>
                             <b>{detail.campaignName}</b>
                         </Descriptions.Item>
                         <Descriptions.Item label="Hình thức">
-                            <Tag className="campaign-tag">
+                            <StatusPill tone={CAMPAIGN_TYPE_TONE[campaignType]} dot={false}>
                                 {CAMPAIGN_TYPE_LABEL[campaignType]}
-                            </Tag>
+                            </StatusPill>
                         </Descriptions.Item>
                         <Descriptions.Item label="Trạng thái">
-                            <Tag color={CAMPAIGN_STATUS_COLOR[status]} style={{ fontWeight: 600 }}>
+                            <StatusPill
+                                tone={CAMPAIGN_STATUS_TONE[status]}
+                                pulse={status === 'IN_PROGRESS'}
+                            >
                                 {CAMPAIGN_STATUS_LABEL[status]}
-                            </Tag>
+                            </StatusPill>
                         </Descriptions.Item>
                         <Descriptions.Item label="Địa điểm" span={2}>
                             {detail.locationName}
@@ -284,12 +287,12 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                         )}
                         {detail.rejectionReason && (
                             <Descriptions.Item label="Lý do từ chối" span={2}>
-                                <span style={{ color: '#c4261b', fontWeight: 500 }}>{detail.rejectionReason}</span>
+                                <span style={{ color: 'var(--c-danger)', fontWeight: 500 }}>{detail.rejectionReason}</span>
                             </Descriptions.Item>
                         )}
                         {detail.cancellationReason && (
                             <Descriptions.Item label="Lý do hủy đợt hiến" span={2}>
-                                <span style={{ color: '#c4261b', fontWeight: 500 }}>{detail.cancellationReason}</span>
+                                <span style={{ color: 'var(--c-danger)', fontWeight: 500 }}>{detail.cancellationReason}</span>
                             </Descriptions.Item>
                         )}
                         {detail.description && (
