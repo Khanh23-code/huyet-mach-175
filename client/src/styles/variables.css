@@ -1,85 +1,169 @@
 :root {
-    /* Layout */
-    --sider-w: 240px;
-    --header-h: 80px;
+    /* ==========================================================================
+       1. Layout & Z-Index
+       ========================================================================== */
+    --sider-w: 260px;
+    --sider-collapsed-w: 76px;
+    --header-h: 72px;
+    --page-gap: 20px;
+    --z-sticky: 50;
+    --z-header: 100;
 
-    /* Font */
-    --font-sans: 'Be Vietnam Pro', system-ui, -apple-system,
-    'Segoe UI', Roboto, sans-serif;
+    /* ==========================================================================
+       2. Typography
+       ========================================================================== */
+    --font-sans: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-    /* Brand â€” theo Figma */
+    --text-xs: 12px;
+    --text-sm: 13px;
+    --text-base: 14px;
+    --text-md: 16px;
+    --text-lg: 18px;
+    --text-xl: 20px;
+    --text-2xl: 24px;
+
+    /* ==========================================================================
+       3. Spacing (4px / 8px grid)
+       ========================================================================== */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+
+    /* ==========================================================================
+       4. Radius & Elevation
+       ========================================================================== */
+    --radius-xs: 4px;
+    --radius-sm: 8px;     /* Controls: Button, Input, Select, Tag */
+    --radius-md: 12px;    /* Cards, Panels, Section Wrappers */
+    --radius-lg: 16px;    /* Modals, Drawers, Hero Cards */
+    --radius-pill: 999px;
+
+    --shadow-xs: 0 1px 2px rgba(15, 31, 22, 0.04);
+    --shadow-md: 0 8px 24px rgba(15, 31, 22, 0.08);
+    --shadow-focus: 0 0 0 3px rgba(26, 117, 52, 0.14);
+
+    /* ==========================================================================
+       5. Brand & Neutral Surfaces
+       ========================================================================== */
     --c-primary: #1A7534;
     --c-primary-hover: #125A26;
     --c-primary-soft: #E9F5ED;
+    --c-primary-border: #B7DFC2;
     --c-on-primary: #FFFFFF;
 
-    /* Background */
     --c-bg: #F3F7F4;
     --c-surface: #FFFFFF;
-    --c-border: #DFE8E2;
+    --c-surface-muted: #F6F9F7;
+    --c-surface-hover: #F4FAF6;
+    --c-border: #DCE6DF;
+    --c-border-subtle: #EAF1EC;
 
-    /* Text */
-    --c-text: #15261C;
-    --c-text-muted: #5F7367;
+    --c-text: #0F1F16;
+    --c-text-secondary: #475569;
+    --c-text-muted: #64748B;
+    --c-text-subtle: #94A3B8;
 
-    /* Status */
+    /* ==========================================================================
+       6. Clinical Semantic & Hematology Status
+       ========================================================================== */
+    --c-success: #15803D;
+    --c-success-soft: #DCFCE7;
+    --c-success-border: #86EFAC;
+
+    --c-warning: #B45309;
+    --c-warning-soft: #FFF4E5;
+    --c-warning-border: #FED7AA;
+
+    --c-urgent: #EA580C;
+    --c-urgent-soft: #FFF7ED;
+    --c-urgent-border: #FDBA74;
+
     --c-danger: #C4261B;
     --c-danger-soft: #FDECEA;
-
-    --c-blood: #B4232C;
-    --c-blood-soft: #FCEDEE;
-
-    --c-warning: #A85F00;
-    --c-warning-soft: #FFF3DC;
+    --c-danger-border: #F7A7A3;
 
     --c-info: #1F5FA6;
     --c-info-soft: #E7F0FA;
+    --c-info-border: #B4D2F5;
 
-    /* Radius */
-    --radius-md: 12px;
-    --radius-pill: 999px;
+    --c-blood: #B4232C;
+    --c-blood-soft: #FCEDEE;
+    --c-blood-border: #F6BFC3;
+
+    --c-purple: #6D28D9;
+    --c-purple-soft: #EDE9FE;
+    --c-purple-border: #C4B5FD;
+
+    --c-neutral-soft: #F1F5F9;
+    --c-neutral-border: #CBD5E1;
+
+    --scrollbar-thumb: rgba(15, 31, 22, 0.22);
+    --scrollbar-thumb-hover: rgba(15, 31, 22, 0.38);
 
     color-scheme: light;
 }
 
 :root[data-theme='dark'] {
-    /* Giá»¯ dark theme hiá»‡n cÃ³ cá»§a dá»± Ã¡n */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+    --shadow-focus: 0 0 0 3px rgba(63, 174, 98, 0.22);
+
     --c-primary: #3FAE62;
     --c-primary-hover: #4CC072;
     --c-primary-soft: rgba(63, 174, 98, 0.16);
+    --c-primary-border: rgba(63, 174, 98, 0.36);
     --c-on-primary: #06140B;
 
     --c-bg: #0E1511;
     --c-surface: #141D18;
+    --c-surface-muted: #19241E;
+    --c-surface-hover: #1D2B24;
     --c-border: #24312A;
+    --c-border-subtle: #1E2A23;
 
     --c-text: #E7EFE9;
-    --c-text-muted: #94A69B;
+    --c-text-secondary: #B6C5BC;
+    --c-text-muted: #8FA397;
+    --c-text-subtle: #6B7F73;
+
+    --c-success: #4ADE80;
+    --c-success-soft: rgba(74, 222, 128, 0.14);
+    --c-success-border: rgba(74, 222, 128, 0.32);
+
+    --c-warning: #FBBF24;
+    --c-warning-soft: rgba(251, 191, 36, 0.14);
+    --c-warning-border: rgba(251, 191, 36, 0.32);
+
+    --c-urgent: #FB923C;
+    --c-urgent-soft: rgba(251, 146, 60, 0.15);
+    --c-urgent-border: rgba(251, 146, 60, 0.34);
 
     --c-danger: #FF6B5E;
-    --c-danger-soft: rgba(255, 107, 94, 0.14);
+    --c-danger-soft: rgba(255, 107, 94, 0.15);
+    --c-danger-border: rgba(255, 107, 94, 0.35);
 
-    --c-warning: #FFB74D;
-    --c-warning-soft: rgba(255, 183, 77, 0.14);
+    --c-info: #60A5FA;
+    --c-info-soft: rgba(96, 165, 250, 0.15);
+    --c-info-border: rgba(96, 165, 250, 0.34);
+
+    --c-blood: #F87171;
+    --c-blood-soft: rgba(248, 113, 113, 0.15);
+    --c-blood-border: rgba(248, 113, 113, 0.34);
+
+    --c-purple: #A78BFA;
+    --c-purple-soft: rgba(167, 139, 250, 0.15);
+    --c-purple-border: rgba(167, 139, 250, 0.34);
+
+    --c-neutral-soft: rgba(148, 163, 184, 0.14);
+    --c-neutral-border: rgba(148, 163, 184, 0.28);
+
+    --scrollbar-thumb: rgba(231, 239, 233, 0.22);
+    --scrollbar-thumb-hover: rgba(231, 239, 233, 0.38);
 
     color-scheme: dark;
-}
-
-body {
-    margin: 0;
-    min-height: 100vh;
-    font-family: var(--font-sans);
-    color: var(--c-text);
-    background: var(--c-bg);
-}
-
-* {
-    box-sizing: border-box;
-}
-
-
-.campaign-tag {
-    background-color: var(--c-primary-soft, #E9F5ED) !important;
-    color: var(--c-primary, #1A7534) !important;
-    border-color: transparent !important;
 }
