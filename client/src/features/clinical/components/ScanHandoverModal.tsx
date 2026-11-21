@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Modal, Input, Button, Alert, Tag, Form } from 'antd'
+import { Modal, Input, Button, Alert, Form } from 'antd'
 import { ScanOutlined, CheckCircleOutlined } from '@ant-design/icons'
+import { BloodGroupTag, StatusPill } from '@/shared/components'
 import { useConfirmReceipt } from '../hooks'
 import type { PendingReceiptBagDto } from '../types'
 import { formatDateTime } from '@/shared/formatters/date'
@@ -72,7 +73,7 @@ export const ScanHandoverModal: React.FC<ScanHandoverModalProps> = ({
                 <div className="scan-modal__bag-info">
                     <div className="scan-modal__bag-row">
                         <span>Mã túi máu</span>
-                        <strong style={{ color: '#166534', fontFamily: 'monospace', fontSize: 15 }}>
+                        <strong style={{ color: 'var(--c-primary)', fontFamily: 'var(--font-mono)', fontSize: 15 }}>
                             {targetBag.barcode}
                         </strong>
                     </div>
@@ -86,17 +87,15 @@ export const ScanHandoverModal: React.FC<ScanHandoverModalProps> = ({
                     </div>
                     <div className="scan-modal__bag-row">
                         <span>Nhóm máu túi</span>
-                        <Tag color="red" style={{ fontWeight: 700 }}>{targetBag.bloodType}</Tag>
+                        <BloodGroupTag value={targetBag.bloodType} size="sm" />
                     </div>
                     <div className="scan-modal__bag-row">
                         <span>Bác sĩ lập phiếu</span>
-                        <span>
-                            {targetBag.doctorName || 'Bác sĩ điều trị'}{' '}
-                            {targetBag.isOwnRequest ? (
-                                <Tag color="green">Phiếu của bạn</Tag>
-                            ) : (
-                                <Tag color="gold">Nhận hộ trong khoa</Tag>
-                            )}
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            <span>{targetBag.doctorName || 'Bác sĩ điều trị'}</span>
+                            <StatusPill tone={targetBag.isOwnRequest ? 'success' : 'warning'} dot={false}>
+                                {targetBag.isOwnRequest ? 'Phiếu của bạn' : 'Nhận hộ trong khoa'}
+                            </StatusPill>
                         </span>
                     </div>
                     <div className="scan-modal__bag-row">
@@ -126,7 +125,7 @@ export const ScanHandoverModal: React.FC<ScanHandoverModalProps> = ({
             <Form layout="vertical">
                 <Form.Item label="Mã vạch quét được (Barcode)" required>
                     <Input
-                        prefix={<ScanOutlined style={{ color: '#16a34a' }} />}
+                        prefix={<ScanOutlined style={{ color: 'var(--c-success)' }} />}
                         placeholder="Quét hoặc nhập mã túi máu..."
                         value={scannedBarcode}
                         onChange={(e) => setScannedBarcode(e.target.value)}

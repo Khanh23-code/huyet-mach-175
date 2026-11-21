@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { App, Empty, Tag } from 'antd'
+import { App, Button, Empty } from 'antd'
 import { MedicineBoxOutlined, ReloadOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/features/auth/useCurrentUser'
@@ -7,11 +7,17 @@ import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
 import { formatDateTime } from '@/shared/formatters/date'
-import BarcodeScanBox from '@/shared/components/BarcodeScanBox'
+import {
+    BarcodeScanBox,
+    BloodGroupTag,
+    PageContainer,
+    PageHeader,
+    StatusPill,
+    UrgencyTag,
+} from '@/shared/components'
 import { clinicalApi } from '../clinicalApi'
 import { usePendingReceipts } from '../hooks'
-import { getUrgencyMeta } from '../format'
-import '@/features/coordination/pages/HandoverPages.css'
+import '@/shared/styles/HandoverLayout.css'
 import './ClinicalHandoverPages.css'
 
 export default function ClinicalHandoverScanPage() {
@@ -75,19 +81,20 @@ export default function ClinicalHandoverScanPage() {
     )
 
     return (
-        <div className="handover-page">
-            <div className="handover-head">
-                <div>
-                    <div className="handover-breadcrumb">Yêu cầu máu Lâm sàng / W3.2 · Nhận bàn giao túi máu</div>
-                    <h1 className="handover-title">Nhận bàn giao túi máu</h1>
-                    <p className="handover-subtitle">
-                        Quét barcode túi máu được Ngân hàng máu bàn giao để xác minh đợt xuất kho hợp lệ trước khi đối chiếu tiếp nhận.
-                    </p>
-                </div>
-                <span className="handover-status-pill">
-                    <i /> {pendingBags.length > 0 ? `${pendingBags.length} túi chờ quét nhận` : 'Chờ quét nhận'}
-                </span>
-            </div>
+        <PageContainer className="handover-page">
+            <PageHeader
+                breadcrumb={[
+                    { title: 'Yêu cầu máu Lâm sàng', path: '/clinical/requests' },
+                    { title: 'W3.2 · Nhận bàn giao túi máu' },
+                ]}
+                title="Nhận bàn giao túi máu"
+                subtitle="Quét barcode túi máu được Ngân hàng máu bàn giao để xác minh đợt xuất kho hợp lệ trước khi đối chiếu tiếp nhận."
+                extra={
+                    <StatusPill tone={pendingBags.length > 0 ? 'info' : 'neutral'}>
+                        {pendingBags.length > 0 ? `${pendingBags.length} túi chờ quét nhận` : 'Chờ quét nhận'}
+                    </StatusPill>
+                }
+            />
 
             <section className="handover-card">
                 <div className="handover-role-bar">
@@ -103,64 +110,48 @@ export default function ClinicalHandoverScanPage() {
                         </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <button
-                            type="button"
+                        <Button
+                            size="small"
+                            icon={<ReloadOutlined spin={isPendingFetching} />}
                             onClick={() => void refetchPending()}
-                            style={{
-                                border: '1px solid #cbd5e1',
-                                background: '#fff',
-                                borderRadius: 8,
-                                padding: '5px 12px',
-                                fontSize: 12,
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 6,
-                            }}
                             disabled={isPendingLoading || isPendingFetching}
                         >
-                            <ReloadOutlined spin={isPendingFetching} /> Làm mới danh sách chờ
-                        </button>
+                            Làm mới danh sách chờ
+                        </Button>
                         <span className="handover-role-badge is-clin">CLIN</span>
                     </div>
                 </div>
 
                 {pendingBags.length > 0 ? (
                     <div className="clin-pending-list">
-                        {pendingBags.map((item) => {
-                            const urgency = getUrgencyMeta(item.urgencyLevel)
-                            return (
-                                <div key={item.allocationId} className="clin-pending-item">
-                                    <div>
-                                        <div className="clin-pending-item__eyebrow">
-                                            Túi máu đang chờ nhận · {item.isOwnRequest ? 'Phiếu của bạn' : 'Nhận hộ trong khoa'}
-                                        </div>
-                                        <div className="clin-pending-item__title">
-                                            {item.requestCode} — {item.patientName}
-                                        </div>
-                                        <div className="clin-pending-item__sub">
-                                            {item.patientCode} · {item.departmentName || 'Khoa điều trị'} · Xuất kho lúc{' '}
-                                            {item.issuedAt ? formatDateTime(item.issuedAt) : '—'}
-                                        </div>
+                        {pendingBags.map((item) => (
+                            <div key={item.allocationId} className="clin-pending-item">
+                                <div>
+                                    <div className="clin-pending-item__eyebrow">
+                                        Túi máu đang chờ nhận · {item.isOwnRequest ? 'Phiếu của bạn' : 'Nhận hộ trong khoa'}
                                     </div>
-                                    <div className="clin-pending-item__right">
-                                        <Tag color={urgency.color}>{urgency.label}</Tag>
-                                        <div className="handover-blood-badge" style={{ height: 42, minWidth: 44, fontSize: 15 }}>
-                                            {item.bloodType}
+                                    <div className="clin-pending-item__title">
+                                        {item.requestCode} — {item.patientName}
+                                    </div>
+                                    <div className="clin-pending-item__sub">
+                                        {item.patientCode} · {item.departmentName || 'Khoa điều trị'} · Xuất kho lúc{' '}
+                                        {item.issuedAt ? formatDateTime(item.issuedAt) : '—'}
+                                    </div>
+                                </div>
+                                <div className="clin-pending-item__right">
+                                    <UrgencyTag level={item.urgencyLevel} />
+                                    <BloodGroupTag value={item.bloodType} size="lg" />
+                                    <div style={{ textAlign: 'right' }}>
+                                        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--c-text)' }}>
+                                            {item.componentName} ({item.volumeMl} ml)
                                         </div>
-                                        <div style={{ textAlign: 'right' }}>
-                                            <div style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>
-                                                {item.componentName} ({item.volumeMl} ml)
-                                            </div>
-                                            <div style={{ fontSize: 12, color: '#475569', fontFamily: 'monospace' }}>
-                                                Mã túi dự kiến: {item.barcode}
-                                            </div>
+                                        <div className="text-mono" style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-secondary)' }}>
+                                            Mã túi dự kiến: {item.barcode}
                                         </div>
                                     </div>
                                 </div>
-                            )
-                        })}
+                            </div>
+                        ))}
                     </div>
                 ) : (
                     !isPendingLoading && (
@@ -182,6 +173,6 @@ export default function ClinicalHandoverScanPage() {
                     onScan={handleScan}
                 />
             </section>
-        </div>
+        </PageContainer>
     )
 }

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Modal, Input, Button } from 'antd'
 import { SearchOutlined, CloseOutlined } from '@ant-design/icons'
+import { StatusPill } from '@/shared/components'
 import { searchMockHisPatients } from '../mockHisPatients'
 import type { HisPatientDto } from '../types'
 import './SelectPatientHisModal.css'
@@ -50,7 +51,9 @@ export const SelectPatientHisModal: React.FC<SelectPatientHisModalProps> = ({
             destroyOnClose
         >
             <div className="his-modal__header">
-                <span className="his-modal__badge">HIS / EMR</span>
+                <div className="his-modal__badge">
+                    <StatusPill tone="primary" dot={false}>HIS / EMR</StatusPill>
+                </div>
                 <h2 className="his-modal__title">Chọn bệnh nhân</h2>
                 <p className="his-modal__subtitle">
                     Tìm và chọn bệnh nhân từ dữ liệu đồng bộ HIS/EMR. Cập nhật lần cuối: 10:02 hôm nay.
@@ -74,8 +77,8 @@ export const SelectPatientHisModal: React.FC<SelectPatientHisModalProps> = ({
             <div className="his-modal__list">
                 {patientList.length === 0 ? (
                     <div className="his-modal__empty">
-                        <SearchOutlined style={{ fontSize: 28, color: '#94a3b8', marginBottom: 8 }} />
-                        <p>Không tìm thấy bệnh nhân nào phù hợp với từ khóa "{appliedKeyword}"</p>
+                        <SearchOutlined style={{ fontSize: 28, color: 'var(--c-text-subtle)', marginBottom: 8 }} />
+                        <p>Không tìm thấy bệnh nhân nào phù hợp với từ khóa &quot;{appliedKeyword}&quot;</p>
                     </div>
                 ) : (
                     patientList.map((p) => {
@@ -114,14 +117,14 @@ export const SelectPatientHisModal: React.FC<SelectPatientHisModalProps> = ({
             </div>
 
             <div className="his-modal__footer">
-                <Button onClick={onClose} className="his-modal__cancel-btn">
+                <Button size="large" onClick={onClose}>
                     Hủy
                 </Button>
                 <Button
                     type="primary"
+                    size="large"
                     onClick={handleConfirm}
                     disabled={!selectedPatient && !currentSelectedCode}
-                    className="his-modal__submit-btn"
                 >
                     Chọn bệnh nhân này
                 </Button>

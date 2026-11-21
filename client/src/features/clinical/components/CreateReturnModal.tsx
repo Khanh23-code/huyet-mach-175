@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { Modal, Form, Input, Checkbox, Button, Alert, Tag } from 'antd'
+import { Modal, Form, Input, Checkbox, Button, Alert } from 'antd'
 import { RollbackOutlined } from '@ant-design/icons'
+import { BloodGroupTag } from '@/shared/components'
 import { useCreateReturn } from '../hooks'
 import type { PendingReceiptBagDto } from '../types'
 import './CreateReturnModal.css'
@@ -71,7 +72,7 @@ export const CreateReturnModal: React.FC<CreateReturnModalProps> = ({ open, onCl
             <div className="return-modal__info-box">
                 <div className="return-modal__info-row">
                     <span>Mã túi máu</span>
-                    <strong style={{ color: '#166534', fontFamily: 'monospace' }}>{bag.barcode}</strong>
+                    <strong style={{ color: 'var(--c-primary)', fontFamily: 'var(--font-mono)' }}>{bag.barcode}</strong>
                 </div>
                 <div className="return-modal__info-row">
                     <span>Người bệnh</span>
@@ -79,7 +80,10 @@ export const CreateReturnModal: React.FC<CreateReturnModalProps> = ({ open, onCl
                 </div>
                 <div className="return-modal__info-row">
                     <span>Chế phẩm</span>
-                    <span>{bag.componentName} · {bag.volumeMl} ml (<Tag color="red">{bag.bloodType}</Tag>)</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <span>{bag.componentName} · {bag.volumeMl} ml</span>
+                        <BloodGroupTag value={bag.bloodType} size="sm" />
+                    </span>
                 </div>
             </div>
 

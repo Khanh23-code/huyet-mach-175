@@ -1,9 +1,10 @@
-import { Drawer, Spin, Tag, Descriptions, Table, Alert, Button, Space } from 'antd'
+import { Drawer, Spin, Descriptions, Table, Alert, Button, Space } from 'antd'
 import { EditOutlined, SendOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
+import { BloodGroupTag, StatusPill, UrgencyTag, type StatusPillTone } from '@/shared/components'
 import { useClinicalRequestDetail } from '../hooks'
 import { RequestStatusStepper } from './RequestStatusStepper'
-import { getStatusMeta, getUrgencyMeta } from '../format'
+import { getStatusMeta, getStatusTone } from '../format'
 import { formatBloodGroup } from '@/shared/formatters/medical'
 import { formatDateTime } from '@/shared/formatters/date'
 import { usePermission } from '@/features/auth/usePermission'
@@ -19,6 +20,13 @@ interface BloodRequestDetailDrawerProps {
     onSubmitDraft?: (detail: BloodRequestDetailDto) => void
 }
 
+const ALLOCATION_STATUS_MAP: Record<string, { label: string; tone: StatusPillTone }> = {
+    RESERVED: { label: 'Đã giữ chỗ', tone: 'warning' },
+    ISSUED: { label: 'Đã xuất kho', tone: 'info' },
+    COMPLETED: { label: 'Đã tiếp nhận', tone: 'success' },
+    RETURNED: { label: 'Đã hoàn trả', tone: 'purple' },
+}
+
 export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> = ({
     requestId,
     open,
@@ -30,7 +38,6 @@ export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> =
     const { can } = usePermission()
     const canEdit = can(PERMISSIONS.BLOOD_REQUEST_EDIT)
 
-    const urgencyMeta = getUrgencyMeta(detail?.urgencyLevel)
     const statusMeta = getStatusMeta(detail?.status)
 
     const itemColumns: ColumnsType<BloodRequestItemDetailDto> = [
@@ -45,7 +52,7 @@ export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> =
             dataIndex: 'requestedUnits',
             key: 'requestedUnits',
             align: 'center',
-            render: (units) => `${units} túi`,
+            render: (units) => <span className="tabular-nums">{units} túi</span>,
         },
         {
             title: 'Đã giữ chỗ / cấp phát',
@@ -53,9 +60,12 @@ export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> =
             key: 'allocatedUnits',
             align: 'center',
             render: (allocated, record) => (
-                <Tag color={allocated >= record.requestedUnits ? 'success' : allocated > 0 ? 'warning' : 'default'}>
+                <StatusPill
+                    tone={allocated >= record.requestedUnits ? 'success' : allocated > 0 ? 'warning' : 'neutral'}
+                    dot={false}
+                >
                     {allocated} / {record.requestedUnits} túi
-                </Tag>
+                </StatusPill>
             ),
         },
     ]
@@ -65,7 +75,11 @@ export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> =
             title: 'Mã vạch túi máu',
             dataIndex: 'barcode',
             key: 'barcode',
-            render: (barcode) => <code style={{ fontWeight: 600, color: '#166534' }}>{barcode}</code>,
+            render: (barcode) => (
+                <code className="text-mono" style={{ fontWeight: 600, color: 'var(--c-primary)' }}>
+                    {barcode}
+                </code>
+            ),
         },
         {
             title: 'Chế phẩm / Nhóm máu',
@@ -73,7 +87,7 @@ export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> =
             render: (_, row) => (
                 <div>
                     <div>{row.componentName}</div>
-                    <small style={{ color: '#64748b' }}>
+                    <small style={{ color: 'var(--c-text-muted)' }}>
                         {formatBloodGroup(row.bloodType, row.rhFactor)} ({row.volumeMl} ml)
                     </small>
                 </div>
@@ -84,24 +98,18 @@ export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> =
             dataIndex: 'status',
             key: 'status',
             render: (status) => {
-                const map: Record<string, { label: string; color: string }> = {
-                    RESERVED: { label: 'Đã giữ chỗ', color: 'orange' },
-                    ISSUED: { label: 'Đã xuất kho', color: 'blue' },
-                    COMPLETED: { label: 'Đã tiếp nhận', color: 'green' },
-                    RETURNED: { label: 'Đã hoàn trả', color: 'purple' },
-                }
-                const info = map[status] || { label: status, color: 'default' }
-                return <Tag color={info.color}>{info.label}</Tag>
+                const info = ALLOCATION_STATUS_MAP[status] || { label: status, tone: 'neutral' as StatusPillTone }
+                return <StatusPill tone={info.tone}>{info.label}</StatusPill>
             },
         },
         {
             title: 'Tiến trình thực hiện',
             key: 'timeline',
             render: (_, row) => (
-                <div style={{ fontSize: 12, color: '#475569' }}>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-secondary)' }}>
                     {row.reservedAt && <div>Giữ chỗ: {formatDateTime(row.reservedAt)} ({row.reservedByName || 'KTV'})</div>}
                     {row.issuedAt && <div>Xuất kho: {formatDateTime(row.issuedAt)} ({row.issuedByName || 'KTV'})</div>}
-                    {row.receivedByName && <div style={{ color: '#15803d' }}>Thực nhận: {row.receivedByName}</div>}
+                    {row.receivedByName && <div style={{ color: 'var(--c-success)' }}>Thực nhận: {row.receivedByName}</div>}
                 </div>
             ),
         },
@@ -113,12 +121,10 @@ export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> =
                 detail ? (
                     <div className="request-drawer__header">
                         <span className="request-drawer__code">{detail.requestCode}</span>
-                        <Tag color={statusMeta.color} style={{ marginLeft: 8 }}>
+                        <StatusPill tone={getStatusTone(detail.status)}>
                             {statusMeta.label}
-                        </Tag>
-                        <Tag color={urgencyMeta.color} style={{ backgroundColor: urgencyMeta.bg, borderColor: urgencyMeta.border }}>
-                            {urgencyMeta.label}
-                        </Tag>
+                        </StatusPill>
+                        <UrgencyTag level={detail.urgencyLevel} />
                     </div>
                 ) : 'Chi tiết phiếu yêu cầu máu'
             }
@@ -138,7 +144,6 @@ export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> =
                             type="primary"
                             icon={<SendOutlined />}
                             onClick={() => onSubmitDraft?.(detail)}
-                            style={{ backgroundColor: '#1A7534', borderColor: '#1A7534' }}
                         >
                             Gửi phiếu yêu cầu
                         </Button>
@@ -187,7 +192,6 @@ export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> =
                                             type="primary"
                                             onClick={() => onSubmitDraft?.(detail)}
                                             icon={<SendOutlined />}
-                                            style={{ backgroundColor: '#1A7534', borderColor: '#1A7534' }}
                                         >
                                             Gửi phiếu ngay
                                         </Button>
@@ -199,15 +203,13 @@ export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> =
 
                     {/* Thông tin y lệnh */}
                     <div className="request-drawer__section">
-                        <div className="request-drawer__section-title">Thông tin người bệnh & Y lệnh</div>
+                        <div className="request-drawer__section-title">Thông tin người bệnh &amp; Y lệnh</div>
                         <Descriptions bordered size="small" column={2}>
                             <Descriptions.Item label="Người bệnh">
                                 <strong>{detail.patientName}</strong> ({detail.patientCode})
                             </Descriptions.Item>
                             <Descriptions.Item label="Nhóm máu BN">
-                                <Tag color="blue" style={{ fontWeight: 700 }}>
-                                    {formatBloodGroup(detail.patientBloodType, detail.patientRh)}
-                                </Tag>
+                                <BloodGroupTag value={formatBloodGroup(detail.patientBloodType, detail.patientRh)} />
                             </Descriptions.Item>
                             <Descriptions.Item label="Bác sĩ chỉ định">
                                 {detail.doctorName || 'Chưa cập nhật'}
@@ -219,7 +221,9 @@ export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> =
                                 {formatDateTime(detail.createdAt)}
                             </Descriptions.Item>
                             <Descriptions.Item label="Tổng số lượng">
-                                <strong>{detail.totalAllocatedUnits} / {detail.totalRequestedUnits} túi</strong>
+                                <strong className="tabular-nums">
+                                    {detail.totalAllocatedUnits} / {detail.totalRequestedUnits} túi
+                                </strong>
                             </Descriptions.Item>
                             <Descriptions.Item label="Chỉ định lâm sàng" span={2}>
                                 {detail.diagnosis || 'Không có ghi chú thêm'}

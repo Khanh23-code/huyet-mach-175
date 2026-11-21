@@ -1,71 +1,45 @@
-.clin-ret-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 22px 24px;
-    display: grid;
-    gap: 18px;
-}
-
 .clin-ret-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: var(--space-3);
     flex-wrap: wrap;
-}
-
-.clin-ret-title {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 700;
-    color: #0f172a;
 }
 
 .clin-ret-checklist {
     display: grid;
-    gap: 10px;
+    gap: var(--space-3);
 }
 
 .clin-ret-check-item {
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 12px 14px;
-    background: #ffffff;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    background: var(--c-surface);
     transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .clin-ret-check-item.is-checked {
-    border-color: #86efac;
-    background: #f0fdf4;
+    border-color: var(--c-primary-border);
+    background: var(--c-primary-soft);
 }
 
 .clin-ret-bag-summary {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border-radius: 10px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    background: var(--c-surface-muted);
+    border: 1px solid var(--c-border);
     flex-wrap: wrap;
 }
 
 .clin-ret-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
-    padding-top: 8px;
+    gap: var(--space-3);
+    padding-top: var(--space-2);
     flex-wrap: wrap;
-}
-
-.clin-ret-submit-btn {
-    background-color: #1a7534 !important;
-    border-color: #1a7534 !important;
-    font-weight: 600;
-}
-
-.clin-ret-submit-btn:disabled {
-    opacity: 0.55;
 }
