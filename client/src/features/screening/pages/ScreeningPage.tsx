@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Breadcrumb, Empty, Skeleton } from 'antd'
+import { Empty, Skeleton } from 'antd'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
+import { PageContainer, PageHeader, SectionCard } from '@/shared/components'
 import { todayIso } from '@/shared/utils/date'
 import { CampaignGate, useWorkCampaign, WorkCampaignBanner } from '@/features/work-campaign'
 import { useScreeningQueue, useSurveyDetail } from '../hooks'
@@ -58,28 +59,26 @@ export default function ScreeningPage() {
         if (next) setSelectedId(next.appointmentId)
     }
 
-    const head = (
-        <>
-            <Breadcrumb items={[{ title: 'Tiếp nhận & Sàng lọc' }, { title: 'Khám sàng lọc' }]} />
-            <div className="sc-title">
-                <h1>Khám sàng lọc người hiến</h1>
-                <p>Đánh giá điều kiện sức khỏe và đưa ra quyết định tiếp nhận hiến máu.</p>
-            </div>
-        </>
+    const header = (
+        <PageHeader
+            breadcrumb={[{ title: 'Tiếp nhận & Sàng lọc' }, { title: 'Khám sàng lọc' }]}
+            title="Khám sàng lọc người hiến"
+            subtitle="Đánh giá điều kiện sức khỏe và đưa ra quyết định tiếp nhận hiến máu."
+        />
     )
 
     if (wc.blocked) {
         return (
-            <div className="sc">
-                {head}
+            <PageContainer>
+                {header}
                 <CampaignGate />
-            </div>
+            </PageContainer>
         )
     }
 
     return (
-        <div className="sc">
-            {head}
+        <PageContainer>
+            {header}
             {wc.requireCampaign && wc.campaign && <WorkCampaignBanner campaign={wc.campaign} onChange={wc.clear} />}
 
             <div className="sc-layout">
@@ -97,13 +96,21 @@ export default function ScreeningPage() {
 
                 <div className="sc-detail">
                     {!canViewSurvey ? (
-                        <Empty description="Bạn không có quyền xem hồ sơ sàng lọc" />
+                        <SectionCard>
+                            <Empty description="Bạn không có quyền xem hồ sơ sàng lọc" />
+                        </SectionCard>
                     ) : selectedId === null ? (
-                        <Empty description="Chọn một người hiến trong hàng chờ để bắt đầu khám" />
+                        <SectionCard>
+                            <Empty description="Chọn một người hiến trong hàng chờ để bắt đầu khám" />
+                        </SectionCard>
                     ) : detailLoading ? (
-                        <Skeleton active paragraph={{ rows: 10 }} />
+                        <SectionCard>
+                            <Skeleton active paragraph={{ rows: 10 }} />
+                        </SectionCard>
                     ) : detailError || !detail ? (
-                        <Empty description="Không tải được hồ sơ sàng lọc" />
+                        <SectionCard>
+                            <Empty description="Không tải được hồ sơ sàng lọc" />
+                        </SectionCard>
                     ) : (
                         <ScreeningWorkspace
                             key={detail.appointmentId}
@@ -114,6 +121,6 @@ export default function ScreeningPage() {
                     )}
                 </div>
             </div>
-        </div>
+        </PageContainer>
     )
 }

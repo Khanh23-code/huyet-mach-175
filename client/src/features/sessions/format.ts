@@ -1,3 +1,4 @@
+import type { StatusPillTone } from '@/shared/components'
 import type { SessionStatus, TargetVolume } from './types'
 
 /** "VOL_350" -> 350 */
@@ -8,10 +9,10 @@ export const volumeMl = (v?: TargetVolume | string | null) => {
 
 export const VOLUME_CHOICES = [250, 350, 450]
 
-export const SESSION_META: Record<SessionStatus, { label: string; color: string }> = {
-    WAITING_COLLECTION: { label: 'Chờ lấy máu', color: 'blue' },
-    COMPLETED: { label: 'Hoàn tất', color: 'green' },
-    ABORTED: { label: 'Sự cố', color: 'red' },
+export const SESSION_META: Record<SessionStatus, { label: string; color: string; tone: StatusPillTone }> = {
+    WAITING_COLLECTION: { label: 'Chờ lấy máu', color: 'blue', tone: 'info' },
+    COMPLETED: { label: 'Hoàn tất', color: 'green', tone: 'success' },
+    ABORTED: { label: 'Sự cố', color: 'red', tone: 'danger' },
 }
 
 /** ISO không kèm múi giờ coi như UTC (BE lưu UTC). */

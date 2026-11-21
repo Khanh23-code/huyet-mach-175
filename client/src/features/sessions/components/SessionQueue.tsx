@@ -1,5 +1,6 @@
-import { Input, Segmented, Skeleton, Tag } from 'antd'
+import { Input, Segmented, Skeleton } from 'antd'
 import { RightOutlined, SearchOutlined } from '@ant-design/icons'
+import { BloodGroupTag, SectionCard, StatusPill } from '@/shared/components'
 import { initials } from '@/shared/utils/string'
 import { fmtTime } from '@/shared/formatters/date'
 import { fmtBlood } from '@/shared/formatters/medical'
@@ -28,14 +29,11 @@ export default function SessionQueue({
                                          onKeywordChange,
                                      }: Props) {
     return (
-        <div className="ss-card ss-queue">
-            <div className="ss-queue-head">
-                <div className="ss-queue-title">Đạt tiêu chuẩn</div>
-                <div className="ss-muted">
-                    {items.length} người hiến {filter === 'WAITING_COLLECTION' ? 'chờ lấy máu' : '· ' + SESSION_META[filter].label.toLowerCase()}
-                </div>
-            </div>
-
+        <SectionCard
+            title="Đạt tiêu chuẩn"
+            subtitle={`${items.length} người hiến ${filter === 'WAITING_COLLECTION' ? 'chờ lấy máu' : '· ' + SESSION_META[filter].label.toLowerCase()}`}
+            noPadding
+        >
             <div className="ss-queue-tools">
                 <Segmented<SessionStatus>
                     block
@@ -72,12 +70,15 @@ export default function SessionQueue({
                             <span className="ss-avatar">{initials(it.donorName)}</span>
                             <span className="ss-queue-body">
                                 <b>{it.donorName}</b>
-                                <small>
-                                    {it.donorCode} · <b className="ss-blood">{fmtBlood(it.bloodType, it.rhFactor)}</b> · Thông qua{' '}
-                                    {fmtTime(it.screenedAt)}
-                                </small>
+                                <span className="ss-queue-meta">
+                                    <span>{it.donorCode}</span>
+                                    <BloodGroupTag value={fmtBlood(it.bloodType, it.rhFactor)} size="sm" />
+                                    <span>Thông qua {fmtTime(it.screenedAt)}</span>
+                                </span>
                                 {it.status !== 'WAITING_COLLECTION' && (
-                                    <Tag color={SESSION_META[it.status].color}>{SESSION_META[it.status].label}</Tag>
+                                    <StatusPill tone={SESSION_META[it.status].tone}>
+                                        {SESSION_META[it.status].label}
+                                    </StatusPill>
                                 )}
                             </span>
                             <RightOutlined className="ss-queue-arrow" />
@@ -89,6 +90,6 @@ export default function SessionQueue({
             <div className="ss-queue-foot">
                 <span className="ss-dot" /> Tự động cập nhật hàng chờ
             </div>
-        </div>
+        </SectionCard>
     )
 }

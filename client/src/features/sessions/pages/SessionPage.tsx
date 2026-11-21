@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Breadcrumb, Empty, Skeleton, Tag } from 'antd'
+import { Empty, Skeleton } from 'antd'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
+import { PageContainer, PageHeader, SectionCard, StatusPill } from '@/shared/components'
 import { todayIso } from '@/shared/utils/date'
 import { useSessionDetail, useSessionQueue } from '../hooks'
 import SessionQueue from '../components/SessionQueue'
@@ -49,15 +50,13 @@ export default function SessionPage() {
     }
 
     return (
-        <div className="ss">
-            <Breadcrumb items={[{ title: 'Tiếp nhận & Sàng lọc' }, { title: 'Phiên lấy máu' }]} />
-            <div className="ss-title">
-                <div>
-                    <h1>Phiên lấy máu</h1>
-                    <p>Quản lý người hiến đạt tiêu chuẩn, ghi nhận thông tin thu thập và sự cố phát sinh.</p>
-                </div>
-                <Tag color="blue">Ca sáng · Phòng lấy máu A</Tag>
-            </div>
+        <PageContainer>
+            <PageHeader
+                breadcrumb={[{ title: 'Tiếp nhận & Sàng lọc' }, { title: 'Phiên lấy máu' }]}
+                title="Phiên lấy máu"
+                subtitle="Quản lý người hiến đạt tiêu chuẩn, ghi nhận thông tin thu thập và sự cố phát sinh."
+                extra={<StatusPill tone="info">Ca sáng · Phòng lấy máu A</StatusPill>}
+            />
 
             <div className="ss-layout">
                 <SessionQueue
@@ -73,11 +72,17 @@ export default function SessionPage() {
 
                 <div className="ss-detail">
                     {selectedId === null ? (
-                        <Empty description="Chọn một người hiến trong hàng chờ để bắt đầu lấy máu" />
+                        <SectionCard>
+                            <Empty description="Chọn một người hiến trong hàng chờ để bắt đầu lấy máu" />
+                        </SectionCard>
                     ) : detailLoading ? (
-                        <Skeleton active paragraph={{ rows: 10 }} />
+                        <SectionCard>
+                            <Skeleton active paragraph={{ rows: 10 }} />
+                        </SectionCard>
                     ) : detailError || !detail ? (
-                        <Empty description="Không tải được thông tin phiên lấy máu" />
+                        <SectionCard>
+                            <Empty description="Không tải được thông tin phiên lấy máu" />
+                        </SectionCard>
                     ) : (
                         <SessionWorkspace
                             key={detail.sessionId}
@@ -88,6 +93,6 @@ export default function SessionPage() {
                     )}
                 </div>
             </div>
-        </div>
+        </PageContainer>
     )
 }

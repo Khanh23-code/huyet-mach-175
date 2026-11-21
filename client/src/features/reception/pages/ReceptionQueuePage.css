@@ -1,39 +1,148 @@
-.rq-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-.rq-title { margin: 4px 0 4px; font-size: 32px; font-weight: 500; }
-.rq-sub { color: var(--c-text-muted); margin: 0; }
-.rq-date { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: 8px 16px; text-align: right; }
-.rq-date small { display: block; color: var(--c-text-muted); font-size: 12px; }
-.rq-quick { display: flex; align-items: center; gap: 20px; padding: 24px; margin-bottom: 24px; border: 2px dashed var(--c-primary); border-radius: var(--radius-md); }
-.rq-quick-icon { font-size: 28px; color: var(--c-primary); background: var(--c-surface); border-radius: 50%; width: 64px; height: 64px; display: grid; place-items: center; }
-.rq-quick-body { flex: 1; }
-.rq-quick-eyebrow { color: var(--c-primary); font-weight: 700; font-size: 13px; letter-spacing: .08em; }
-.rq-quick-title { font-size: 20px; margin: 2px 0; }
-.rq-quick-desc { color: var(--c-text-muted); font-size: 13px; }
-.rq-quick-actions { display: flex; gap: 12px; }
-.rq-table { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-md); overflow: hidden; }
-.rq-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 8px 20px 0; gap: 16px; }
-.rq-toolbar .ant-tabs { flex: 1; }
-.rq-name { display: flex; align-items: center; gap: 12px; }
-.rq-name small { display: block; color: var(--c-text-muted); }
-.rq-wait { color: var(--c-warning); font-weight: 600; }
-.rq-foot { display: flex; justify-content: space-between; padding: 14px 20px; color: var(--c-text-muted); font-size: 13px; border-top: 1px solid var(--c-border); }
+/* ==========================================================================
+   Reception Queue Page
+   ========================================================================== */
 
-/* Đợt hiến máu đang làm việc */
-.rq-campaign { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 20px; margin-bottom: 16px; background: var(--c-primary-soft); border: 1px solid var(--c-border); border-radius: var(--radius-md); }
-.rq-campaign small { display: block; color: var(--c-text-muted); font-size: 12px; }
-.rq-campaign b { display: block; }
-.rq-campaign span { color: var(--c-text-muted); font-size: 13px; }
+.rq-quick {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    padding: var(--space-6);
+    background: var(--c-surface);
+    border: 1.5px dashed var(--c-primary-border);
+    border-radius: var(--radius-md);
+}
 
-/* Chặn nhập mã đợt hiến máu */
-.rq-gate { max-width: 520px; margin: 48px auto; padding: 32px; text-align: center; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-md); }
-.rq-gate-icon { font-size: 28px; color: var(--c-primary); background: var(--c-primary-soft); border-radius: 50%; width: 64px; height: 64px; display: grid; place-items: center; margin: 0 auto 16px; }
-.rq-gate-title { margin: 0 0 8px; font-size: 22px; font-weight: 500; }
-.rq-gate-desc { color: var(--c-text-muted); margin: 0 0 24px; }
-.rq-gate-form { display: flex; gap: 12px; }
-.rq-gate-form .ant-input-affix-wrapper, .rq-gate-form .ant-input { flex: 1; }
+.rq-quick-icon {
+    font-size: 28px;
+    color: var(--c-primary);
+    background: var(--c-primary-soft);
+    border: 1px solid var(--c-primary-border);
+    border-radius: var(--radius-pill);
+    width: 64px;
+    height: 64px;
+    flex: none;
+    display: grid;
+    place-items: center;
+}
+
+.rq-quick-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.rq-quick-eyebrow {
+    color: var(--c-primary);
+    font-weight: 700;
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+}
+
+.rq-quick-title {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--c-text);
+    margin: 2px 0;
+}
+
+.rq-quick-desc {
+    color: var(--c-text-muted);
+    font-size: var(--text-sm);
+}
+
+.rq-quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+.rq-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) var(--space-5) 0;
+    gap: var(--space-4);
+}
+
+.rq-tabs {
+    flex: 1;
+    min-width: 0;
+}
+
+.rq-tab-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.rq-tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    padding: 0 var(--space-2);
+    height: 20px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    border-radius: var(--radius-pill);
+    background: var(--c-neutral-soft);
+    color: var(--c-text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.rq-search {
+    max-width: 320px;
+}
+
+.rq-name {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.rq-avatar {
+    background: var(--c-primary-soft);
+    color: var(--c-primary);
+    font-weight: 600;
+    flex: none;
+}
+
+.rq-name small {
+    display: block;
+    color: var(--c-text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+}
+
+.rq-wait {
+    color: var(--c-warning);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.rq-foot {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    color: var(--c-text-muted);
+    font-size: var(--text-sm);
+    border-top: 1px solid var(--c-border-subtle);
+}
 
 @media (max-width: 768px) {
-    .rq-quick { flex-direction: column; align-items: flex-start; }
-    .rq-toolbar { flex-direction: column; align-items: stretch; }
-    .rq-gate-form { flex-direction: column; }
+    .rq-quick {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .rq-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        padding-bottom: var(--space-3);
+    }
+
+    .rq-search {
+        max-width: none;
+    }
 }
