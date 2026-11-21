@@ -151,7 +151,7 @@ export default function BarcodeScanBox({
                             autoFocus
                             autoComplete="off"
                             allowClear
-                            prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+                            prefix={<SearchOutlined style={{ color: 'var(--c-text-subtle)' }} />}
                             placeholder={placeholder}
                             value={code}
                             disabled={loading || scanningFile}

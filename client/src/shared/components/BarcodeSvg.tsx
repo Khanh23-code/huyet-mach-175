@@ -35,5 +35,5 @@ export default function BarcodeSvg({ value, height = 56 }: BarcodeSvgProps) {
         }
     }, [value, height])
 
-    return <svg ref={ref} className="ss-barcode" role="img" aria-label={`Mã vạch ${value}`} />
+    return <svg ref={ref} className="ui-barcode-svg ss-barcode" role="img" aria-label={`Mã vạch ${value}`} />
 }

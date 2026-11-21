@@ -1,0 +1,325 @@
+/* ==========================================================================
+   Shared Handover & Return Layout Styles (Token-driven)
+   Dùng chung cho luồng Bàn giao (coordination, clinical) & Hoàn trả (inventory)
+   ========================================================================== */
+
+.handover-page {
+    display: grid;
+    gap: var(--space-5);
+    width: 100%;
+}
+
+.handover-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-5) var(--space-6);
+    display: grid;
+    gap: var(--space-5);
+}
+
+.handover-role-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--c-border-subtle);
+    flex-wrap: wrap;
+}
+
+.handover-role-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.handover-role-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    background: var(--c-primary);
+    color: var(--c-on-primary);
+    display: grid;
+    place-items: center;
+    font-size: var(--text-xl);
+    flex-shrink: 0;
+}
+
+.handover-role-icon.is-clin {
+    background: var(--c-info);
+}
+
+.handover-role-title {
+    font-size: var(--text-md);
+    font-weight: 700;
+    color: var(--c-text);
+}
+
+.handover-role-sub {
+    font-size: var(--text-sm);
+    color: var(--c-text-muted);
+}
+
+.handover-role-badge {
+    padding: 4px 10px;
+    border-radius: var(--radius-xs);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    background: var(--c-blood-soft);
+    color: var(--c-blood);
+    border: 1px solid var(--c-blood-border);
+}
+
+.handover-role-badge.is-clin {
+    background: var(--c-info-soft);
+    color: var(--c-info);
+    border-color: var(--c-info-border);
+}
+
+.handover-scan-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.85fr) minmax(260px, 1fr);
+    gap: var(--space-5);
+    align-items: stretch;
+}
+
+.handover-info-aside {
+    background: var(--c-info-soft);
+    border: 1px solid var(--c-info-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4) var(--space-5);
+    display: grid;
+    align-content: start;
+    gap: var(--space-2);
+}
+
+.handover-info-aside__title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--c-info);
+}
+
+.handover-info-aside__num {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-xs);
+    background: var(--c-surface);
+    border: 1px solid var(--c-info-border);
+    color: var(--c-info);
+    display: grid;
+    place-items: center;
+    font-size: var(--text-xs);
+    font-weight: 700;
+}
+
+.handover-info-aside p {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--c-text-secondary);
+    line-height: 1.55;
+}
+
+.handover-bag-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-md);
+    background: var(--c-primary-soft);
+    border: 1px solid var(--c-primary-border);
+    flex-wrap: wrap;
+}
+
+.handover-bag-banner__left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.handover-bag-banner__label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--c-primary);
+    text-transform: uppercase;
+}
+
+.handover-bag-banner__code {
+    font-family: var(--font-mono);
+    font-size: var(--text-md);
+    font-weight: 700;
+    color: var(--c-blood);
+}
+
+.handover-bag-banner__meta {
+    font-size: var(--text-sm);
+    color: var(--c-text-secondary);
+}
+
+.handover-detail-box {
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4) var(--space-5);
+    display: grid;
+    gap: var(--space-3);
+    background: var(--c-surface);
+}
+
+.handover-detail-box__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+.handover-detail-box__eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--c-primary);
+}
+
+.handover-detail-box__code {
+    margin-top: 2px;
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--c-text);
+}
+
+.handover-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3) var(--space-6);
+}
+
+.handover-kv {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--c-border-subtle);
+    font-size: var(--text-sm);
+}
+
+.handover-kv span {
+    color: var(--c-text-muted);
+}
+
+.handover-kv strong {
+    color: var(--c-text);
+    text-align: right;
+}
+
+.handover-footer-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    padding-top: var(--space-1);
+    flex-wrap: wrap;
+}
+
+.handover-list-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+.handover-list-filters {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.handover-code-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.handover-code-mono {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--c-text);
+    background: var(--c-surface-muted);
+    border: 1px solid var(--c-border-subtle);
+    padding: 2px 7px;
+    border-radius: var(--radius-xs);
+}
+
+.handover-tab-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: 600;
+}
+
+.handover-timeline-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+}
+
+.handover-timeline-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--c-border);
+    background: var(--c-surface-muted);
+}
+
+.handover-timeline-item.is-done {
+    background: var(--c-primary-soft);
+    border-color: var(--c-primary-border);
+}
+
+.handover-timeline-item__left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--c-text);
+}
+
+.handover-timeline-step {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--c-border);
+    color: var(--c-text-secondary);
+    flex-shrink: 0;
+}
+
+.handover-timeline-item.is-done .handover-timeline-step {
+    background: var(--c-primary);
+    color: var(--c-on-primary);
+}
+
+@media (max-width: 900px) {
+    .handover-scan-grid,
+    .handover-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
