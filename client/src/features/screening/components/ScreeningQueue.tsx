@@ -1,5 +1,6 @@
-import { Input, Segmented, Skeleton, Tag } from 'antd'
+import { Input, Segmented, Skeleton } from 'antd'
 import { RightOutlined, SearchOutlined } from '@ant-design/icons'
+import { SectionCard, StatusPill } from '@/shared/components'
 import { initials } from '@/shared/utils/string'
 import { fmtTime } from '@/shared/formatters/date'
 import { SCREENING_META } from '../format'
@@ -31,14 +32,11 @@ export default function ScreeningQueue({
                                            onKeywordChange,
                                        }: Props) {
     return (
-        <div className="sc-card sc-queue">
-            <div className="sc-queue-head">
-                <div>
-                    <div className="sc-queue-title">Chờ sàng lọc</div>
-                    <div className="sc-muted">{pendingCount} người hiến chờ khám</div>
-                </div>
-            </div>
-
+        <SectionCard
+            title="Chờ sàng lọc"
+            subtitle={`${pendingCount} người hiến chờ khám`}
+            noPadding
+        >
             <div className="sc-queue-tools">
                 <Segmented<QueueFilter>
                     block
@@ -80,9 +78,11 @@ export default function ScreeningQueue({
                                     <b>{it.donorName}</b>
                                     <small>{it.donorCode} · Check-in {fmtTime(it.checkedInAt)}</small>
                                     <span className="sc-queue-tags">
-                                        {it.isWalkIn && <Tag>Vãng lai</Tag>}
-                                        {it.hasRisk && <Tag color="orange">Có cảnh báo</Tag>}
-                                        {it.screeningStatus !== 'PENDING' && <Tag color={meta.color}>{meta.label}</Tag>}
+                                        {it.isWalkIn && <StatusPill tone="neutral" dot={false}>Vãng lai</StatusPill>}
+                                        {it.hasRisk && <StatusPill tone="warning">Có cảnh báo</StatusPill>}
+                                        {it.screeningStatus !== 'PENDING' && (
+                                            <StatusPill tone={meta.tone}>{meta.label}</StatusPill>
+                                        )}
                                     </span>
                                 </span>
                                 <RightOutlined className="sc-queue-arrow" />
@@ -95,6 +95,6 @@ export default function ScreeningQueue({
             <div className="sc-queue-foot">
                 <span className="sc-dot" /> Tự động cập nhật hàng chờ
             </div>
-        </div>
+        </SectionCard>
     )
 }

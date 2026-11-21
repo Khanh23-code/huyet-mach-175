@@ -1,3 +1,4 @@
+import type { StatusPillTone } from '@/shared/components'
 import type { DisposalReason, DisposalStatus } from './disposalsTypes'
 
 export const REASON_OPTIONS: { value: DisposalReason; label: string }[] = [
@@ -22,4 +23,12 @@ export const STATUS_COLOR: Record<DisposalStatus, string> = {
     DISPOSED: 'green',
     REJECTED: 'red',
     CANCELLED: 'default',
+}
+
+export const DISPOSAL_STATUS_TONE: Record<DisposalStatus, StatusPillTone> = {
+    PENDING_APPROVAL: 'warning',
+    APPROVED: 'info',
+    DISPOSED: 'success',
+    REJECTED: 'danger',
+    CANCELLED: 'neutral',
 }

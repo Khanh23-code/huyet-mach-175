@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { App, Button, Input, Popconfirm, Select, Table, Tag, Tooltip } from 'antd'
+import { App, Button, Input, Popconfirm, Select, Space, Table, Tooltip } from 'antd'
 import { DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons'
 import Can from '@/features/auth/components/Can'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
+import { SectionCard, StatusPill } from '@/shared/components'
 import { useDeleteLocation, useManagedLocations } from '../stockHooks'
 import type { StorageLocation } from '../types'
 import StorageLocationFormModal from './StorageLocationFormModal'
@@ -43,7 +44,7 @@ export default function StorageLocationsPanel() {
     }
 
     return (
-        <section className="inv-card inv-card__body">
+        <SectionCard>
             <div className="disp-tools" style={{ justifyContent: 'space-between' }}>
                 <div className="disp-tools" style={{ marginBottom: 0 }}>
                     <Input
@@ -86,12 +87,14 @@ export default function StorageLocationsPanel() {
                         render: (v: number) => (v > 0 ? <b style={{ color: 'var(--c-danger)' }}>{v}</b> : v),
                     },
                     {
-                        title: 'Trạng thái', width: 160,
+                        title: 'Trạng thái', width: 180,
                         render: (_: unknown, l) => (
-                            <>
-                                <Tag color={l.isActive ? 'green' : 'default'}>{l.isActive ? 'Đang dùng' : 'Ngừng dùng'}</Tag>
-                                {l.isFull && <Tag color="orange">Đầy</Tag>}
-                            </>
+                            <Space size={6} wrap>
+                                <StatusPill tone={l.isActive ? 'success' : 'neutral'}>
+                                    {l.isActive ? 'Đang dùng' : 'Ngừng dùng'}
+                                </StatusPill>
+                                {l.isFull && <StatusPill tone="warning">Đầy</StatusPill>}
+                            </Space>
                         ),
                     },
                     {
@@ -125,6 +128,6 @@ export default function StorageLocationsPanel() {
 
             <StorageLocationFormModal open={formOpen} location={editing} onClose={() => setFormOpen(false)} />
             <LocationBagsModal location={viewing} onClose={() => setViewing(null)} />
-        </section>
+        </SectionCard>
     )
 }

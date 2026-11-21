@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
     Alert,
-    Card,
     Table,
     Input,
     Button,
@@ -22,6 +21,13 @@ import {
     SyncOutlined,
     CloseCircleOutlined,
 } from '@ant-design/icons'
+import {
+    BloodGroupTag,
+    PageContainer,
+    PageHeader,
+    SectionCard,
+    UrgencyTag,
+} from '@/shared/components'
 import {
     useClinicalRequests,
     useCreateBloodRequest,
@@ -470,7 +476,7 @@ export default function ClinicalBloodRequestsPage() {
                 width: 110,
                 render: (_, record) => {
                     const groupStr = formatBloodGroup(record.patientBloodType, record.patientRh)
-                    return <Tag className="req-blood-tag">{groupStr}</Tag>
+                    return <BloodGroupTag value={groupStr} />
                 },
             },
             {
@@ -484,22 +490,8 @@ export default function ClinicalBloodRequestsPage() {
                 title: 'MỨC ĐỘ',
                 dataIndex: 'urgencyLevel',
                 key: 'urgency',
-                width: 110,
-                render: (level: UrgencyLevel) => {
-                    const meta = getUrgencyMeta(level)
-                    return (
-                        <span
-                            className="req-urgency-badge"
-                            style={{
-                                color: meta.color,
-                                backgroundColor: meta.bg,
-                                borderColor: meta.border,
-                            }}
-                        >
-                            {meta.label}
-                        </span>
-                    )
-                },
+                width: 120,
+                render: (level: UrgencyLevel) => <UrgencyTag level={level} />,
             },
             {
                 title: 'TIẾN ĐỘ XỬ LÝ',
@@ -529,17 +521,15 @@ export default function ClinicalBloodRequestsPage() {
     )
 
     return (
-        <div className="clinical-page-container">
-            {/* Breadcrumb & Header */}
-            <div className="clinical-header">
-                <div>
-                    <div className="clinical-breadcrumb">Yêu cầu máu / Lâm sàng</div>
-                    <h1 className="clinical-title">Yêu cầu máu lâm sàng</h1>
-                    <p className="clinical-subtitle">
-                        Theo dõi tiến độ xử lý và thực hiện bàn giao máu an toàn hai chiều.
-                    </p>
-                </div>
-                <div className="clinical-header__actions">
+        <PageContainer>
+            <PageHeader
+                breadcrumb={[
+                    { title: 'Yêu cầu máu' },
+                    { title: 'Lâm sàng' },
+                ]}
+                title="Yêu cầu máu lâm sàng"
+                subtitle="Theo dõi tiến độ xử lý và thực hiện bàn giao máu an toàn hai chiều."
+                extra={
                     <button
                         type="button"
                         className="btn-sync-his"
@@ -556,54 +546,52 @@ export default function ClinicalBloodRequestsPage() {
                         <SyncOutlined />
                         <span>Đồng bộ HIS/LIS</span>
                     </button>
-                </div>
-            </div>
-
-            {/* Custom Navigation Tab Bar (đã bỏ tiền tố Tổng quan, W3.1, W3.2, W3.3) */}
-            <div className="clinical-tabbar">
-                <button
-                    type="button"
-                    className={`clinical-tab-btn ${activeTab === 'list' ? 'is-active' : ''}`}
-                    onClick={() => setActiveTab('list')}
-                >
-                    <span className="tab-label">Danh sách phiếu</span>
-                </button>
-                <button
-                    type="button"
-                    className={`clinical-tab-btn ${activeTab === 'create' ? 'is-active' : ''}`}
-                    onClick={() => setActiveTab('create')}
-                >
-                    <span className="tab-label">Lập phiếu yêu cầu mới</span>
-                </button>
-                <button
-                    type="button"
-                    className="clinical-tab-btn"
-                    onClick={() => navigate('/clinical/handovers')}
-                >
-                    <span className="tab-label">Nhận bàn giao</span>
-                    {pendingCount > 0 && <span className="tab-badge">{pendingCount}</span>}
-                </button>
-                <button
-                    type="button"
-                    className={`clinical-tab-btn ${activeTab === 'returns' ? 'is-active' : ''}`}
-                    onClick={() => setActiveTab('returns')}
-                >
-                    <span className="tab-label">Lập phiếu hoàn trả</span>
-                </button>
-            </div>
+                }
+                bottom={
+                    <div className="clinical-tabbar">
+                        <button
+                            type="button"
+                            className={`clinical-tab-btn ${activeTab === 'list' ? 'is-active' : ''}`}
+                            onClick={() => setActiveTab('list')}
+                        >
+                            <span>Danh sách phiếu</span>
+                        </button>
+                        <button
+                            type="button"
+                            className={`clinical-tab-btn ${activeTab === 'create' ? 'is-active' : ''}`}
+                            onClick={() => setActiveTab('create')}
+                        >
+                            <span>Lập phiếu yêu cầu mới</span>
+                        </button>
+                        <button
+                            type="button"
+                            className="clinical-tab-btn"
+                            onClick={() => navigate('/clinical/handovers')}
+                        >
+                            <span>Nhận bàn giao</span>
+                            {pendingCount > 0 && <span className="tab-badge">{pendingCount}</span>}
+                        </button>
+                        <button
+                            type="button"
+                            className={`clinical-tab-btn ${activeTab === 'returns' ? 'is-active' : ''}`}
+                            onClick={() => setActiveTab('returns')}
+                        >
+                            <span>Lập phiếu hoàn trả</span>
+                        </button>
+                    </div>
+                }
+            />
 
             {/* Tab: Danh sách phiếu */}
             {activeTab === 'list' && (
-                <Card className="clinical-main-card" bordered={false}>
-                    <div className="clinical-card-header">
-                        <div>
-                            <h2 className="card-inner-title">Tiến độ yêu cầu máu</h2>
-                            <p className="card-inner-sub">Cập nhật trạng thái theo thời gian thực từ kho máu</p>
-                        </div>
+                <SectionCard
+                    title="Tiến độ yêu cầu máu"
+                    subtitle="Cập nhật trạng thái theo thời gian thực từ kho máu"
+                    extra={
                         <div className="clinical-filters">
                             <Input
                                 placeholder="Tìm mã phiếu, người bệnh..."
-                                prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+                                prefix={<SearchOutlined style={{ color: 'var(--c-text-subtle)' }} />}
                                 value={searchKeyword}
                                 onChange={(e) => {
                                     setSearchKeyword(e.target.value)
@@ -618,13 +606,14 @@ export default function ClinicalBloodRequestsPage() {
                                 trigger={['click']}
                                 dropdownRender={() => (
                                     <div className="filter-dropdown-menu">
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                                            <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>Bộ lọc tìm kiếm</span>
+                                        <div className="filter-dropdown-menu__head">
+                                            <span className="filter-dropdown-menu__title">Bộ lọc tìm kiếm</span>
                                             {(urgencyFilter || statusFilter) && (
                                                 <Button
                                                     type="link"
+                                                    danger
                                                     size="small"
-                                                    style={{ padding: 0, height: 'auto', fontSize: 12, color: '#dc2626' }}
+                                                    style={{ padding: 0, height: 'auto', fontSize: 'var(--text-xs)' }}
                                                     onClick={() => {
                                                         setUrgencyFilter(undefined)
                                                         setStatusFilter(undefined)
@@ -672,7 +661,7 @@ export default function ClinicalBloodRequestsPage() {
                                             ]}
                                         />
 
-                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 14, paddingTop: 10, borderTop: '1px solid #f1f5f9' }}>
+                                        <div className="filter-dropdown-menu__foot">
                                             <Button
                                                 size="small"
                                                 onClick={() => {
@@ -687,7 +676,6 @@ export default function ClinicalBloodRequestsPage() {
                                                 size="small"
                                                 type="primary"
                                                 onClick={() => setFilterDropdownOpen(false)}
-                                                style={{ backgroundColor: '#1A7534', borderColor: '#1A7534' }}
                                             >
                                                 Áp dụng
                                             </Button>
@@ -695,17 +683,17 @@ export default function ClinicalBloodRequestsPage() {
                                     </div>
                                 )}
                             >
-                                <Button icon={<FilterOutlined />} className="btn-filter">
+                                <Button icon={<FilterOutlined />}>
                                     Bộ lọc {urgencyFilter || statusFilter ? '•' : ''}
                                 </Button>
                             </Dropdown>
                         </div>
-                    </div>
-
+                    }
+                >
                     {/* Thanh hiển thị các tag lọc đang kích hoạt */}
                     {hasActiveFilter && (
-                        <div className="active-filters-bar" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: 12, color: '#64748b' }}>Đang lọc:</span>
+                        <div className="active-filters-bar">
+                            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-muted)' }}>Đang lọc:</span>
                             {searchKeyword.trim() && (
                                 <Tag
                                     closable
@@ -715,7 +703,7 @@ export default function ClinicalBloodRequestsPage() {
                                     }}
                                     color="default"
                                 >
-                                    Từ khóa: "{searchKeyword}"
+                                    Từ khóa: &quot;{searchKeyword}&quot;
                                 </Tag>
                             )}
                             {urgencyFilter && (
@@ -744,10 +732,11 @@ export default function ClinicalBloodRequestsPage() {
                             )}
                             <Button
                                 type="link"
+                                danger
                                 size="small"
                                 icon={<CloseCircleOutlined />}
                                 onClick={handleResetAllFilters}
-                                style={{ padding: 0, height: 'auto', fontSize: 12, color: '#dc2626' }}
+                                style={{ padding: 0, height: 'auto', fontSize: 'var(--text-xs)' }}
                             >
                                 Xóa tất cả bộ lọc
                             </Button>
@@ -783,25 +772,24 @@ export default function ClinicalBloodRequestsPage() {
                                 type="primary"
                                 icon={<ScanOutlined />}
                                 size="large"
-                                className="btn-scan-floating"
                                 onClick={() => navigate('/clinical/handovers')}
                             >
                                 Quét nhận bàn giao
                             </Button>
                         </div>
                     )}
-                </Card>
+                </SectionCard>
             )}
 
             {/* Tab: Lập phiếu yêu cầu mới / Chỉnh sửa phiếu nháp */}
             {activeTab === 'create' && (
-                <Card className="clinical-main-card" bordered={false}>
-                    <h2 className="card-inner-title">
-                        {editingDraft
+                <SectionCard
+                    title={
+                        editingDraft
                             ? `Chỉnh sửa phiếu nháp (${editingDraft.requestCode})`
-                            : 'Lập phiếu yêu cầu máu mới'}
-                    </h2>
-
+                            : 'Lập phiếu yêu cầu máu mới'
+                    }
+                >
                     {editingDraft && (
                         <Alert
                             type="info"
@@ -815,7 +803,7 @@ export default function ClinicalBloodRequestsPage() {
                                     onClick={handleCancelEditDraft}
                                     disabled={isSubmittingRequest}
                                 >
-                                    Hủy chỉnh sửa & Tạo mới
+                                    Hủy chỉnh sửa &amp; Tạo mới
                                 </Button>
                             }
                         />
@@ -831,7 +819,7 @@ export default function ClinicalBloodRequestsPage() {
                             componentTypeId: componentTypes[0]?.componentTypeId || 2,
                         }}
                     >
-                        {/* Hàng 1: Bệnh nhân + nút Chọn từ HIS (Đã sửa lỗi hiển thị tên bệnh nhân) */}
+                        {/* Hàng 1: Bệnh nhân + nút Chọn từ HIS */}
                         <Form.Item
                             label={<span className="form-label-bold">Bệnh nhân <span className="req-star">*</span></span>}
                             required
@@ -864,7 +852,7 @@ export default function ClinicalBloodRequestsPage() {
                                 </Button>
                             </div>
                             {selectedPatient && (
-                                <div style={{ marginTop: 6, fontSize: 12, color: '#166534', fontWeight: 500 }}>
+                                <div className="patient-selected-hint">
                                     ✓ Đã chọn: <strong>{selectedPatient.patientName}</strong> ({selectedPatient.patientCode} · {selectedPatient.room} · {selectedPatient.bed})
                                 </div>
                             )}
@@ -942,25 +930,25 @@ export default function ClinicalBloodRequestsPage() {
                         {/* Nút hành động */}
                         <div className="form-actions-row">
                             <Button
+                                size="large"
                                 onClick={handleSaveDraft}
                                 loading={isSubmittingRequest}
                                 disabled={!canEditRequests || isSubmittingRequest}
-                                className="btn-draft"
                             >
                                 {editingDraft ? 'Lưu thay đổi nháp' : 'Lưu nháp'}
                             </Button>
                             <Button
                                 type="primary"
+                                size="large"
                                 onClick={handleReviewAndSend}
                                 loading={isSubmittingRequest}
                                 disabled={!canEditRequests || isSubmittingRequest}
-                                className="btn-review-send"
                             >
-                                Xem lại & Gửi phiếu
+                                Xem lại &amp; Gửi phiếu
                             </Button>
                         </div>
                     </Form>
-                </Card>
+                </SectionCard>
             )}
 
             {/* Tab: Lập phiếu hoàn trả (Màn hình 5) */}
@@ -988,7 +976,7 @@ export default function ClinicalBloodRequestsPage() {
                 onConfirm={handleConfirmSubmit}
             />
 
-            {/* Drawer xem chi tiết phiếu (Có hỗ trợ xử lý phiếu DRAFT: Tiếp tục chỉnh sửa & Gửi phiếu ngay) */}
+            {/* Drawer xem chi tiết phiếu */}
             <BloodRequestDetailDrawer
                 requestId={selectedRequestId}
                 open={isDrawerOpen}
@@ -999,6 +987,6 @@ export default function ClinicalBloodRequestsPage() {
                 onEditDraft={handleEditDraft}
                 onSubmitDraft={handleSubmitDraft}
             />
-        </div>
+        </PageContainer>
     )
 }

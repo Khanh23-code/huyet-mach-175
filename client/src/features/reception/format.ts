@@ -1,3 +1,4 @@
+import type { StatusPillTone } from '@/shared/components'
 import type { AppointmentStatus } from './types'
 
 
@@ -28,4 +29,11 @@ export const STATUS_COLOR: Record<AppointmentStatus, string> = {
     CHECKED_IN: 'orange',
     CANCELLED: 'default',
     NO_SHOW: 'red',
+}
+
+export const STATUS_TONE: Record<AppointmentStatus, StatusPillTone> = {
+    BOOKED: 'info',
+    CHECKED_IN: 'warning',
+    CANCELLED: 'neutral',
+    NO_SHOW: 'danger',
 }

@@ -63,7 +63,7 @@ export default function RejectRequestModal({ visible, request, onClose, onSucces
     return (
         <Modal
             title={
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--c-danger)' }}>
                     <ExclamationCircleOutlined />
                     <span>Từ chối phiếu yêu cầu máu</span>
                 </div>
@@ -78,7 +78,7 @@ export default function RejectRequestModal({ visible, request, onClose, onSucces
             destroyOnClose
         >
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 8 }}>
-                <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.6 }}>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--c-text-secondary)', lineHeight: 1.6 }}>
                     Bạn đang thực hiện từ chối phiếu <strong>{request.requestCode}</strong> của bệnh nhân{' '}
                     <strong>{request.patientName}</strong> ({request.departmentName || 'Khoa lâm sàng'}).
                 </div>
@@ -93,8 +93,16 @@ export default function RejectRequestModal({ visible, request, onClose, onSucces
                 {errorMsg && <Alert type="error" showIcon message={errorMsg} />}
 
                 <div>
-                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: '#1e293b' }}>
-                        Lý do từ chối <span style={{ color: '#dc2626' }}>*</span>
+                    <label
+                        style={{
+                            display: 'block',
+                            fontSize: 'var(--text-sm)',
+                            fontWeight: 600,
+                            marginBottom: 6,
+                            color: 'var(--c-text)',
+                        }}
+                    >
+                        Lý do từ chối <span style={{ color: 'var(--c-danger)' }}>*</span>
                     </label>
                     <Input.TextArea
                         rows={3}

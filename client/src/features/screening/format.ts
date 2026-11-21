@@ -1,12 +1,13 @@
+import type { StatusPillTone } from '@/shared/components'
 import type { Conclusion, ScreeningStatus } from './types'
 export { formatDateTimeMedical, fmtDateTime, addDaysDateOnly, addDaysIso } from '@/shared/formatters/date'
 export { formatBloodGroup, fmtBlood } from '@/shared/formatters/medical'
 
-export const SCREENING_META: Record<ScreeningStatus, { label: string; color: string }> = {
-    PENDING: { label: 'Chờ khám', color: 'blue' },
-    QUALIFIED: { label: 'Đạt tiêu chuẩn', color: 'green' },
-    DEFERRED: { label: 'Tạm hoãn', color: 'orange' },
-    UNQUALIFIED: { label: 'Không đạt', color: 'red' },
+export const SCREENING_META: Record<ScreeningStatus, { label: string; color: string; tone: StatusPillTone }> = {
+    PENDING: { label: 'Chờ khám', color: 'blue', tone: 'info' },
+    QUALIFIED: { label: 'Đạt tiêu chuẩn', color: 'green', tone: 'success' },
+    DEFERRED: { label: 'Tạm hoãn', color: 'orange', tone: 'warning' },
+    UNQUALIFIED: { label: 'Không đạt', color: 'red', tone: 'danger' },
 }
 
 export const CONCLUSIONS: Conclusion[] = ['QUALIFIED', 'DEFERRED', 'UNQUALIFIED']

@@ -38,9 +38,12 @@ export default function RouteErrorBoundary() {
                     </p>
                     <pre
                         style={{
-                            background: '#f5f5f5',
-                            padding: 12,
-                            borderRadius: 8,
+                            background: 'var(--c-surface-muted)',
+                            color: 'var(--c-text)',
+                            border: '1px solid var(--c-border)',
+                            padding: 'var(--space-3)',
+                            borderRadius: 'var(--radius-sm)',
+                            fontFamily: 'var(--font-mono)',
                             overflowX: 'auto',
                             fontSize: 12,
                         }}

@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Breadcrumb, Button } from 'antd'
+import { Button } from 'antd'
 import { AppstoreOutlined, PlusOutlined, TeamOutlined } from '@ant-design/icons'
+import { PageContainer, PageHeader } from '@/shared/components'
 import UserStatsCards from '../components/UserStatsCards'
 import UserTable from '../components/UserTable'
 import PermissionMatrix from '../components/PermissionMatrix'
@@ -23,33 +24,50 @@ export default function UserManagementPage() {
     }
 
     return (
-        <div className="um">
-            <Breadcrumb items={[{ title: 'Quản trị hệ thống' }, { title: 'Người dùng & Phân quyền' }]} />
-
-            <div className="um-title">
-                <div>
-                    <h1>Người dùng &amp; Phân quyền</h1>
-                    <p>Quản lý tài khoản nhân viên và phạm vi truy cập theo vai trò.</p>
-                </div>
-                {tab === 'users' && (
-                    <Can do={PERMISSIONS.USERS_EDIT}>
-                        <Button type="primary" size="large" icon={<PlusOutlined />} onClick={() => setCreating(true)}>
-                            Thêm người dùng
-                        </Button>
-                    </Can>
-                )}
-            </div>
-
-            <div className="um-tabs" role="tablist">
-                <button role="tab" aria-selected={tab === 'users'} className={tab === 'users' ? 'is-active' : ''} onClick={() => setTab('users')}>
-                    <TeamOutlined /> Danh sách tài khoản
-                </button>
-                <Can do={PERMISSIONS.ROLES_VIEW}>
-                    <button role="tab" aria-selected={tab === 'matrix'} className={tab === 'matrix' ? 'is-active' : ''} onClick={() => setTab('matrix')}>
-                        <AppstoreOutlined /> Ma trận phân quyền
-                    </button>
-                </Can>
-            </div>
+        <PageContainer>
+            <PageHeader
+                breadcrumb={[{ title: 'Quản trị hệ thống' }, { title: 'Người dùng & Phân quyền' }]}
+                title="Người dùng & Phân quyền"
+                subtitle="Quản lý tài khoản nhân viên và phạm vi truy cập theo vai trò."
+                extra={
+                    tab === 'users' && (
+                        <Can do={PERMISSIONS.USERS_EDIT}>
+                            <Button
+                                type="primary"
+                                size="large"
+                                icon={<PlusOutlined />}
+                                onClick={() => setCreating(true)}
+                            >
+                                Thêm người dùng
+                            </Button>
+                        </Can>
+                    )
+                }
+                bottom={
+                    <div className="um-tabs" role="tablist">
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={tab === 'users'}
+                            className={tab === 'users' ? 'is-active' : ''}
+                            onClick={() => setTab('users')}
+                        >
+                            <TeamOutlined /> Danh sách tài khoản
+                        </button>
+                        <Can do={PERMISSIONS.ROLES_VIEW}>
+                            <button
+                                type="button"
+                                role="tab"
+                                aria-selected={tab === 'matrix'}
+                                className={tab === 'matrix' ? 'is-active' : ''}
+                                onClick={() => setTab('matrix')}
+                            >
+                                <AppstoreOutlined /> Ma trận phân quyền
+                            </button>
+                        </Can>
+                    </div>
+                }
+            />
 
             {tab === 'users' ? (
                 <>
@@ -64,6 +82,6 @@ export default function UserManagementPage() {
             )}
 
             <CreateUserModal open={creating} onClose={() => setCreating(false)} />
-        </div>
+        </PageContainer>
     )
 }

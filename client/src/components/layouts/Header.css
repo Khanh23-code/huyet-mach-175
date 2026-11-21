@@ -1,33 +1,54 @@
-﻿.app-header {
+.app-header {
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: var(--z-header);
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: var(--space-6);
     height: var(--header-h);
-    padding: 0 24px 0 16px;
+    padding: 0 var(--space-6) 0 var(--space-4);
     background: var(--c-surface);
     border-bottom: 1px solid var(--c-border);
     font-family: var(--font-sans);
 }
 
-/* ---------- Brand ---------- */
+/* ---------- Brand & Toggle ---------- */
+.app-header__start {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-2);
+}
+
 .app-header__brand {
     display: flex;
     flex: none;
     align-items: center;
-    gap: 12px;
-    width: calc(var(--sider-w) - 16px);
+    gap: var(--space-3);
+    width: calc(var(--sider-w) - var(--space-4));
     padding: 0;
     border: 0;
     background: transparent;
     font: inherit;
     cursor: pointer;
+    overflow: hidden;
+    transition: width 0.2s cubic-bezier(0.2, 0, 0, 1), margin-left 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.app-header__brand.is-collapsed {
+    width: var(--sider-collapsed-w);
+    margin-left: calc(var(--space-4) * -1);
+    justify-content: center;
+    gap: 0;
+}
+
+.app-header__brand.is-collapsed .app-header__brand-text {
+    display: none;
 }
 
 .app-header__logo {
     display: inline-flex;
+    flex: none;
     align-items: center;
     justify-content: center;
     width: 40px;
@@ -38,11 +59,28 @@
 }
 
 .app-header__brand-text {
-    font-size: 17px;
+    font-size: var(--text-lg);
     font-weight: 700;
     letter-spacing: -0.01em;
     color: var(--c-text);
     white-space: nowrap;
+}
+
+.app-header__toggle.ant-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: var(--radius-md);
+    font-size: 18px;
+    color: var(--c-text-secondary);
+}
+
+.app-header__toggle.ant-btn:hover {
+    color: var(--c-primary);
+    background: var(--c-primary-soft);
 }
 
 /* ---------- Search ---------- */
@@ -59,10 +97,10 @@
     height: 40px;
     padding: 0 76px 0 42px;
     border: 1px solid var(--c-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     background: var(--c-bg);
     font: inherit;
-    font-size: 14px;
+    font-size: var(--text-base);
     color: var(--c-text);
     outline: none;
     transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
@@ -76,7 +114,7 @@
 .app-header__search input:focus {
     border-color: var(--c-primary);
     background: var(--c-surface);
-    box-shadow: 0 0 0 3px var(--c-primary-soft);
+    box-shadow: var(--shadow-focus);
 }
 
 .app-header__search input::-webkit-search-cancel-button {
@@ -273,6 +311,7 @@
     .app-header__skeleton {
         animation: none;
     }
+    .app-header__brand,
     .app-header__search input,
     .app-header__icon-btn,
     .app-header__user {
@@ -294,12 +333,27 @@
     .app-header {
         gap: 12px;
     }
-    .app-header__brand {
+    .app-header__brand,
+    .app-header__brand.is-collapsed {
         width: auto;
+        margin-left: 0;
+        justify-content: flex-start;
     }
     .app-header__brand-text,
     .app-header__user-text,
     .app-header__user-chevron {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-header {
+        padding: 0 var(--space-4);
+    }
+    .app-header__toggle.ant-btn {
+        order: -1;
+    }
+    .app-header__pill {
         display: none;
     }
 }

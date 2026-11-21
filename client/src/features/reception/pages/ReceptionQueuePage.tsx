@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Avatar, Button, Input, Table, Tabs, Tag } from 'antd'
+import { Avatar, Button, Input, Table, Tabs } from 'antd'
 import { QrcodeOutlined, RightOutlined, SearchOutlined } from '@ant-design/icons'
 import Can from '@/features/auth/components/Can'
 import { PERMISSIONS } from '@/config/permissions'
 import DonorDetailModal from '@/features/donors/components/DonorDetailModal'
 import WalkInRegistration from '@/features/donors/components/WalkInRegistration'
+import { PageContainer, PageHeader, SectionCard, StatusPill } from '@/shared/components'
 import { initials } from '@/shared/utils/string'
 import { fmtDate, fmtTime } from '@/shared/formatters/date'
 import { useAppointments } from '../hooks'
-import { normalizeStatus, STATUS_COLOR, STATUS_LABEL, waitingMinutes } from '../format'
+import { normalizeStatus, STATUS_LABEL, STATUS_TONE, waitingMinutes } from '../format'
 import { todayIso } from '@/shared/utils/date'
-import { CampaignGate, useWorkCampaign } from '@/features/work-campaign'
+import { CampaignGate, WorkCampaignBanner, useWorkCampaign } from '@/features/work-campaign'
 import ScanCheckInModal from '../components/ScanCheckInModal'
 import type { AppointmentListItem, AppointmentStatus } from '../types'
 import './ReceptionQueuePage.css'
@@ -82,42 +83,39 @@ export default function ReceptionQueuePage() {
         .filter((m): m is number => m !== null)
     const avgWait = waits.length ? Math.round(waits.reduce((a, b) => a + b, 0) / waits.length) : null
 
-    const head = (
-        <div className="rq-head">
-            <div>
-                <h1 className="rq-title">Hàng chờ tiếp nhận</h1>
-                <p className="rq-sub">Theo dõi và tiếp nhận người hiến máu theo lịch hẹn hôm nay.</p>
-            </div>
-            <div className="rq-date">
-                <small>Hôm nay</small>
-                <b>{fmtDate(today)}</b>
-            </div>
-        </div>
+    const header = (
+        <PageHeader
+            breadcrumb={[
+                { title: 'Tiếp nhận & Sàng lọc' },
+                { title: 'Hàng chờ tiếp nhận' },
+            ]}
+            title="Hàng chờ tiếp nhận"
+            subtitle="Theo dõi và tiếp nhận người hiến máu theo lịch hẹn hôm nay."
+            extra={
+                <div className="date-chip">
+                    <small>Hôm nay</small>
+                    <b>{fmtDate(today)}</b>
+                </div>
+            }
+        />
     )
 
     // Chưa nhập mã đợt: giao diện rỗng, chỉ có ô nhập mã
     if (blocked) {
         return (
-            <div>
-                {head}
+            <PageContainer>
+                {header}
                 <CampaignGate />
-            </div>
+            </PageContainer>
         )
     }
 
     return (
-        <div>
-            {head}
+        <PageContainer>
+            {header}
 
             {requireCampaign && workCampaign && (
-                <div className="rq-campaign">
-                    <div>
-                        <small>Đợt hiến máu đang làm việc</small>
-                        <b>#{workCampaign.id} · {workCampaign.name}</b>
-                        <span>{workCampaign.locationName}</span>
-                    </div>
-                    <Button onClick={clearCampaign}>Đổi đợt</Button>
-                </div>
+                <WorkCampaignBanner campaign={workCampaign} onChange={clearCampaign} />
             )}
 
             <div className="rq-quick">
@@ -155,19 +153,25 @@ export default function ReceptionQueuePage() {
                 </Can>
             )}
 
-            <div className="rq-table">
+            <SectionCard noPadding>
                 <div className="rq-toolbar">
                     <Tabs
+                        className="rq-tabs"
                         activeKey={tab}
                         onChange={(k) => setTab(k as TabKey)}
                         items={tabItems.map((t) => ({
                             key: t.key,
-                            label: <span>{t.label} <Tag style={{ marginInlineStart: 6 }}>{t.n}</Tag></span>,
+                            label: (
+                                <span className="rq-tab-label">
+                                    {t.label}
+                                    <span className="rq-tab-count">{t.n}</span>
+                                </span>
+                            ),
                         }))}
                     />
                     <Input
+                        className="rq-search"
                         allowClear
-                        style={{ maxWidth: 320 }}
                         prefix={<SearchOutlined />}
                         placeholder="Tìm tên, CCCD hoặc SĐT người hiến..."
                         value={keyword}
@@ -183,14 +187,16 @@ export default function ReceptionQueuePage() {
                     scroll={{ x: 800 }}
                     locale={{ emptyText: 'Chưa có người hiến nào trong hàng chờ' }}
                     columns={[
-                        { title: 'STT', width: 70, render: (_, __, i) => String(i + 1).padStart(2, '0') },
+                        {
+                            title: 'STT',
+                            width: 70,
+                            render: (_, __, i) => <span className="tabular-nums">{String(i + 1).padStart(2, '0')}</span>,
+                        },
                         {
                             title: 'Họ và tên',
                             render: (_, r) => (
                                 <div className="rq-name">
-                                    <Avatar style={{ background: 'var(--c-primary-soft)', color: 'var(--c-primary)', fontWeight: 600 }}>
-                                        {initials(r.donorName)}
-                                    </Avatar>
+                                    <Avatar className="rq-avatar">{initials(r.donorName)}</Avatar>
                                     <div>
                                         <b>{r.donorName}</b>
                                         <small>{r.donorCitizenId}</small>
@@ -199,7 +205,7 @@ export default function ReceptionQueuePage() {
                             ),
                         },
                         { title: 'Giờ hẹn', render: (_, r) => <b>{r.isWalkIn ? 'Vãng lai' : r.timeSlot || '—'}</b> },
-                        { title: 'Giờ check-in', render: (_, r) => fmtTime(r.checkedInAt) },
+                        { title: 'Giờ check-in', render: (_, r) => <span className="tabular-nums">{fmtTime(r.checkedInAt)}</span> },
                         {
                             title: 'Thời gian chờ',
                             render: (_, r) => {
@@ -209,7 +215,7 @@ export default function ReceptionQueuePage() {
                         },
                         {
                             title: 'Trạng thái',
-                            render: (_, r) => <Tag color={STATUS_COLOR[r.status]}>{STATUS_LABEL[r.status]}</Tag>,
+                            render: (_, r) => <StatusPill tone={STATUS_TONE[r.status]}>{STATUS_LABEL[r.status]}</StatusPill>,
                         },
                         {
                             title: '',
@@ -230,9 +236,9 @@ export default function ReceptionQueuePage() {
 
                 <div className="rq-foot">
                     <span>Hiển thị {visible.length} người hiến trong hàng chờ</span>
-                    <span>Thời gian chờ trung bình: <b>{avgWait === null ? '—' : `${avgWait} phút`}</b></span>
+                    <span>Thời gian chờ trung bình: <b className="tabular-nums">{avgWait === null ? '—' : `${avgWait} phút`}</b></span>
                 </div>
-            </div>
+            </SectionCard>
 
             {requireCampaign && workCampaign && (
                 <ScanCheckInModal
@@ -243,6 +249,6 @@ export default function ReceptionQueuePage() {
             )}
 
             <DonorDetailModal donorId={detailDonorId} onClose={() => setDetailDonorId(null)} />
-        </div>
+        </PageContainer>
     )
 }

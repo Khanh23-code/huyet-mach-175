@@ -11,7 +11,6 @@ import {
     Space,
     Switch,
     Table,
-    Tag,
     message,
 } from 'antd'
 import {
@@ -25,6 +24,15 @@ import {
 import { PERMISSIONS } from '@/config/permissions'
 import Can from '@/features/auth/components/Can'
 import { usePermission } from '@/features/auth/usePermission'
+import { getStatusTone } from '@/features/clinical/format'
+import {
+    BloodGroupTag,
+    PageContainer,
+    PageHeader,
+    StatusPill,
+    UrgencyTag,
+} from '@/shared/components'
+import { formatBloodGroup } from '@/shared/formatters/medical'
 import {
     useAllocateBags,
     useAvailableBags,
@@ -34,7 +42,6 @@ import {
 import type {
     AllocateBloodBagsResponse,
     BloodRequestItemDetailDto,
-    UrgencyLevel,
 } from '../types'
 import RejectRequestModal from '../components/RejectRequestModal'
 import AllocateSuccessModal from '../components/AllocateSuccessModal'
@@ -161,20 +168,6 @@ export default function CoordinationQueuePage() {
         return queueData.items.filter((item) => item.urgencyLevel === 'EMERGENCY').length
     }, [queueData])
 
-    // Helper render nhãn mức độ ưu tiên
-    const renderUrgencyTag = (level: UrgencyLevel) => {
-        switch (level) {
-            case 'EMERGENCY':
-                return <Tag color="error">Cấp cứu</Tag>
-            case 'URGENT':
-                return <Tag color="warning">Khẩn</Tag>
-            case 'ROUTINE':
-                return <Tag color="processing">Kế hoạch</Tag>
-            default:
-                return <Tag>{level}</Tag>
-        }
-    }
-
     // Xử lý toggle chọn túi máu
     const handleToggleBag = (bagId: number) => {
         if (!canApprove || !isPendingRequest) return
@@ -210,7 +203,7 @@ export default function CoordinationQueuePage() {
 
         Modal.confirm({
             title: 'Xác nhận giữ chỗ túi máu',
-            icon: <ExclamationCircleOutlined style={{ color: '#16a34a' }} />,
+            icon: <ExclamationCircleOutlined style={{ color: 'var(--c-success)' }} />,
             content: (
                 <div style={{ marginTop: 10 }}>
                     <p>
@@ -229,7 +222,6 @@ export default function CoordinationQueuePage() {
             ),
             okText: 'Xác nhận giữ chỗ',
             cancelText: 'Hủy bỏ',
-            okButtonProps: { style: { backgroundColor: '#1A7534', borderColor: '#1A7534' } },
             onOk: async () => {
                 try {
                     const res = await allocateMutation.mutateAsync({
@@ -259,24 +251,17 @@ export default function CoordinationQueuePage() {
     }
 
     return (
-        <div className="coordination-queue-container">
-            {/* Header & Title */}
-            <div>
-                <div className="queue-breadcrumb">Kho máu / Hàng đợi yêu cầu máu</div>
-                <div className="queue-header-row">
-                    <div>
-                        <h1 className="queue-title">Hàng đợi yêu cầu máu</h1>
-                        <p className="queue-subtitle">
-                            Thẩm định yêu cầu, chọn và giữ chỗ túi máu cho các phiếu đang chờ xử lý.
-                        </p>
-                    </div>
-
+        <PageContainer className="coordination-queue-page">
+            <PageHeader
+                breadcrumb={[{ title: 'Kho máu' }, { title: 'Hàng đợi yêu cầu máu' }]}
+                title="Hàng đợi yêu cầu máu"
+                subtitle="Thẩm định yêu cầu, chọn và giữ chỗ túi máu cho các phiếu đang chờ xử lý."
+                extra={
                     <Space size={12}>
                         {emergencyCount > 0 && (
-                            <div className="emergency-alert-badge">
-                                <span className="emergency-dot" />
-                                <span>{emergencyCount} Cấp cứu đang chờ</span>
-                            </div>
+                            <StatusPill tone="danger" pulse>
+                                {emergencyCount} Cấp cứu đang chờ
+                            </StatusPill>
                         )}
                         <Button
                             icon={<ReloadOutlined spin={queueLoading || queueFetching || detailFetching || bagsFetching} />}
@@ -292,8 +277,8 @@ export default function CoordinationQueuePage() {
                             Làm mới
                         </Button>
                     </Space>
-                </div>
-            </div>
+                }
+            />
 
             {/* Layout 2 cột: Cột trái (Hàng đợi) | Cột phải (Chi tiết & Workspace) */}
             <div className="queue-split-layout">
@@ -308,7 +293,7 @@ export default function CoordinationQueuePage() {
                     {/* Ô tìm kiếm */}
                     <Input
                         placeholder="Tìm mã phiếu, bệnh nhân, khoa..."
-                        prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+                        prefix={<SearchOutlined style={{ color: 'var(--c-text-subtle)' }} />}
                         allowClear
                         value={filter.search}
                         onChange={(e) => setFilter((prev) => ({ ...prev, search: e.target.value, pageNumber: 1 }))}
@@ -397,11 +382,11 @@ export default function CoordinationQueuePage() {
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                                                <Tag color="magenta">
-                                                    {item.patientBloodType}
-                                                    {item.patientRh === 'POSITIVE' ? '+' : '-'}
-                                                </Tag>
-                                                {renderUrgencyTag(item.urgencyLevel)}
+                                                <BloodGroupTag
+                                                    value={formatBloodGroup(item.patientBloodType, item.patientRh)}
+                                                    size="sm"
+                                                />
+                                                <UrgencyTag level={item.urgencyLevel} />
                                             </div>
                                         </div>
 
@@ -468,14 +453,15 @@ export default function CoordinationQueuePage() {
                                 </div>
                                 <div className="detail-code-row">
                                     <span className="detail-request-code">{requestDetail.requestCode}</span>
-                                    {renderUrgencyTag(requestDetail.urgencyLevel)}
-                                    <Tag color={requestDetail.status === 'READY' ? 'green' : requestDetail.status === 'REJECTED' ? 'red' : 'blue'}>
+                                    <UrgencyTag level={requestDetail.urgencyLevel} />
+                                    <StatusPill tone={getStatusTone(requestDetail.status)}>
                                         {requestDetail.status}
-                                    </Tag>
+                                    </StatusPill>
                                 </div>
                                 <div className="detail-patient-summary">
-                                    {requestDetail.patientName} · Nhóm máu {requestDetail.patientBloodType}
-                                    {requestDetail.patientRh === 'POSITIVE' ? '+' : '-'} · Tổng {requestDetail.totalRequestedUnits} túi
+                                    {requestDetail.patientName} · Nhóm máu{' '}
+                                    {formatBloodGroup(requestDetail.patientBloodType, requestDetail.patientRh)} · Tổng{' '}
+                                    {requestDetail.totalRequestedUnits} túi
                                 </div>
                             </div>
 
@@ -558,7 +544,7 @@ export default function CoordinationQueuePage() {
                                                     render: (val, row) => (
                                                         <div>
                                                             <strong>{val}</strong>
-                                                            <div style={{ fontSize: 11, color: '#64748b' }}>
+                                                            <div style={{ fontSize: 11, color: 'var(--c-text-muted)' }}>
                                                                 Mã: {row.componentCode}
                                                             </div>
                                                         </div>
@@ -577,7 +563,9 @@ export default function CoordinationQueuePage() {
                                                     key: 'allocatedUnits',
                                                     align: 'center',
                                                     render: (val) => (
-                                                        <Tag color={val > 0 ? 'green' : 'default'}>{val} túi</Tag>
+                                                        <StatusPill tone={val > 0 ? 'success' : 'neutral'} dot={false}>
+                                                            {val} túi
+                                                        </StatusPill>
                                                     ),
                                                 },
                                                 {
@@ -587,9 +575,13 @@ export default function CoordinationQueuePage() {
                                                     render: (_, row) => {
                                                         const diff = row.requestedUnits - row.allocatedUnits
                                                         return diff > 0 ? (
-                                                            <Tag color="red">{diff} túi</Tag>
+                                                            <StatusPill tone="danger" dot={false}>
+                                                                {diff} túi
+                                                            </StatusPill>
                                                         ) : (
-                                                            <Tag color="green">Đã đủ</Tag>
+                                                            <StatusPill tone="success" dot={false}>
+                                                                Đã đủ
+                                                            </StatusPill>
                                                         )
                                                     },
                                                 },
@@ -611,7 +603,11 @@ export default function CoordinationQueuePage() {
                                                         title: 'Mã túi (Barcode)',
                                                         dataIndex: 'barcode',
                                                         key: 'barcode',
-                                                        render: (val) => <code style={{ fontWeight: 700 }}>{val}</code>,
+                                                        render: (val) => (
+                                                            <code style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
+                                                                {val}
+                                                            </code>
+                                                        ),
                                                     },
                                                     {
                                                         title: 'Chế phẩm',
@@ -629,9 +625,17 @@ export default function CoordinationQueuePage() {
                                                         dataIndex: 'status',
                                                         key: 'status',
                                                         render: (val) => (
-                                                            <Tag color={val === 'RESERVED' ? 'blue' : val === 'ISSUED' ? 'cyan' : 'green'}>
+                                                            <StatusPill
+                                                                tone={
+                                                                    val === 'RESERVED'
+                                                                        ? 'info'
+                                                                        : val === 'ISSUED'
+                                                                          ? 'purple'
+                                                                          : 'success'
+                                                                }
+                                                            >
                                                                 {val}
-                                                            </Tag>
+                                                            </StatusPill>
                                                         ),
                                                     },
                                                     {
@@ -681,7 +685,6 @@ export default function CoordinationQueuePage() {
 
                                             <Button
                                                 type="primary"
-                                                style={{ backgroundColor: '#1A7534', borderColor: '#1A7534' }}
                                                 icon={<RightOutlined />}
                                                 disabled={!isPendingRequest}
                                                 onClick={() => {
@@ -706,7 +709,14 @@ export default function CoordinationQueuePage() {
                                     {/* Bộ chọn dòng y lệnh (nếu phiếu có nhiều dòng chế phẩm) */}
                                     {requestDetail.items && requestDetail.items.length > 1 && (
                                         <div>
-                                            <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 6 }}>
+                                            <div
+                                                style={{
+                                                    fontSize: 'var(--text-sm)',
+                                                    fontWeight: 600,
+                                                    color: 'var(--c-text-secondary)',
+                                                    marginBottom: 6,
+                                                }}
+                                            >
                                                 Chọn dòng chế phẩm cần điều phối:
                                             </div>
                                             <div className="item-selector-bar">
@@ -721,9 +731,9 @@ export default function CoordinationQueuePage() {
                                                             onClick={() => setActiveItemId(it.requestItemId)}
                                                         >
                                                             <span>{it.componentName}</span>
-                                                            <Tag color={shortage > 0 ? 'red' : 'green'}>
+                                                            <StatusPill tone={shortage > 0 ? 'danger' : 'success'} dot={false}>
                                                                 {shortage > 0 ? `Thiếu ${shortage}/${it.requestedUnits}` : 'Đã đủ'}
-                                                            </Tag>
+                                                            </StatusPill>
                                                         </button>
                                                     )
                                                 })}
@@ -734,14 +744,18 @@ export default function CoordinationQueuePage() {
                                     {/* Thanh thông tin dòng y lệnh & Toggle tương thích */}
                                     <div className="allocation-controls-row">
                                         <div>
-                                            <span style={{ fontSize: 13, color: '#475569' }}>
+                                            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--c-text-secondary)' }}>
                                                 Chế phẩm:{' '}
-                                                <strong style={{ color: '#0f172a' }}>
+                                                <strong style={{ color: 'var(--c-text)' }}>
                                                     {currentItem?.componentName}
                                                 </strong>{' '}
                                                 · Yêu cầu: <strong>{currentItem?.requestedUnits}</strong> túi · Đã
                                                 giữ: <strong>{currentItem?.allocatedUnits}</strong> túi · Còn thiếu:{' '}
-                                                <strong style={{ color: remainingUnits > 0 ? '#dc2626' : '#16a34a' }}>
+                                                <strong
+                                                    style={{
+                                                        color: remainingUnits > 0 ? 'var(--c-danger)' : 'var(--c-success)',
+                                                    }}
+                                                >
                                                     {remainingUnits} túi
                                                 </strong>
                                             </span>
@@ -833,15 +847,11 @@ export default function CoordinationQueuePage() {
                                                         </div>
 
                                                         <div className="bag-card-right">
-                                                            <Tag color="red" style={{ fontWeight: 700 }}>
-                                                                {bag.bloodType}
-                                                            </Tag>
-                                                            {bag.isExactMatch ? (
-                                                                <Tag color="blue">Trùng nhóm</Tag>
-                                                            ) : (
-                                                                <Tag color="purple">Hòa hợp an toàn</Tag>
-                                                            )}
-                                                            <Tag color="success">Khả dụng</Tag>
+                                                            <BloodGroupTag value={bag.bloodType} size="sm" />
+                                                            <StatusPill tone={bag.isExactMatch ? 'info' : 'purple'} dot={false}>
+                                                                {bag.isExactMatch ? 'Trùng nhóm' : 'Hòa hợp an toàn'}
+                                                            </StatusPill>
+                                                            <StatusPill tone="success">Khả dụng</StatusPill>
                                                         </div>
                                                     </div>
                                                 )
@@ -861,7 +871,6 @@ export default function CoordinationQueuePage() {
 
                                         <Button
                                             type="primary"
-                                            style={{ backgroundColor: '#1A7534', borderColor: '#1A7534' }}
                                             icon={<CheckCircleOutlined />}
                                             disabled={
                                                 !canApprove ||
@@ -903,12 +912,12 @@ export default function CoordinationQueuePage() {
                     }
                 }}
             />
-        </div>
+        </PageContainer>
     )
 }
 
 function varColor(selected: number, remaining: number): string {
-    if (selected === 0) return '#64748b'
-    if (selected === remaining) return '#16a34a'
-    return '#ea580c'
+    if (selected === 0) return 'var(--c-text-muted)'
+    if (selected === remaining) return 'var(--c-success)'
+    return 'var(--c-urgent)'
 }

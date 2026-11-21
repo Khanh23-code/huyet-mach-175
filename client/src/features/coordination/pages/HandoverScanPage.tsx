@@ -11,7 +11,6 @@ import {
     Spin,
     Table,
     Tabs,
-    Tag,
     Tooltip,
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
@@ -30,16 +29,23 @@ import { PERMISSIONS } from '@/config/permissions'
 import { stockApi } from '@/features/inventory/stockApi'
 import { useBags, useRecentLogs } from '@/features/inventory/stockHooks'
 import { BLOOD_GROUPS, bloodGroupParams } from '@/features/inventory/stockFormat'
-import { BagStatusTag, BloodGroupTag } from '@/features/inventory/components/StockBadges'
+import { BagStatusTag } from '@/features/inventory/components/StockBadges'
 import type { BagScan, BloodBag, StatusLog } from '@/features/inventory/stockTypes'
-import { getStatusMeta, getUrgencyMeta } from '@/features/clinical/format'
+import { getStatusMeta, getStatusTone } from '@/features/clinical/format'
 import { parseApiError } from '@/services/apiError'
 import { formatDateTime } from '@/shared/formatters/date'
-import BarcodeScanBox from '@/shared/components/BarcodeScanBox'
-import BarcodeSvg from '@/shared/components/BarcodeSvg'
+import {
+    BarcodeScanBox,
+    BarcodeSvg,
+    BloodGroupTag,
+    PageContainer,
+    PageHeader,
+    StatusPill,
+    UrgencyTag,
+} from '@/shared/components'
 import { useDispatchedHandoverMap } from '../hooks'
 import type { DispatchBloodBagResponse } from '../types'
-import './HandoverPages.css'
+import '@/shared/styles/HandoverLayout.css'
 
 const COMPONENT_OPTIONS = [
     { value: 'ALL', label: 'Tất cả chế phẩm' },
@@ -287,15 +293,15 @@ export default function HandoverScanPage() {
                 key: 'bloodGroup',
                 align: 'center',
                 width: 105,
-                render: (group: string) => <BloodGroupTag value={group} />,
+                render: (group: string) => <BloodGroupTag value={group} size="sm" />,
             },
             {
                 title: 'CHẾ PHẨM / THỂ TÍCH',
                 key: 'component',
                 render: (_, row) => (
                     <div>
-                        <div style={{ fontWeight: 600, color: '#0f172a' }}>{row.componentTypeName}</div>
-                        <div style={{ fontSize: 12, color: '#64748b' }}>
+                        <div style={{ fontWeight: 600, color: 'var(--c-text)' }}>{row.componentTypeName}</div>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-muted)' }}>
                             {row.componentTypeCode} · {row.volumeMl} ml
                         </div>
                     </div>
@@ -306,7 +312,7 @@ export default function HandoverScanPage() {
                 dataIndex: 'storageLocationName',
                 key: 'location',
                 render: (loc?: string | null) =>
-                    loc ? <Tag color="blue">{loc}</Tag> : <span style={{ color: '#94a3b8' }}>—</span>,
+                    loc ? <StatusPill tone="info" dot={false}>{loc}</StatusPill> : <span style={{ color: 'var(--c-text-subtle)' }}>—</span>,
             },
             {
                 title: 'THÔNG TIN GIỮ CHỖ',
@@ -315,17 +321,17 @@ export default function HandoverScanPage() {
                     const log = reservedLogMap.get(row.barcode.trim().toLowerCase())
                     const reqCode = extractRequestCodeFromNotes(log?.notes)
                     if (!log) {
-                        return <span style={{ fontSize: 12, color: '#94a3b8' }}>Đang giữ chỗ cho phiếu yêu cầu</span>
+                        return <span style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-subtle)' }}>Đang giữ chỗ cho phiếu yêu cầu</span>
                     }
                     return (
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                {reqCode && <Tag color="geekblue" style={{ marginInlineEnd: 0 }}>{reqCode}</Tag>}
-                                <span style={{ fontSize: 12, fontWeight: 600, color: '#0f172a' }}>
+                                {reqCode && <StatusPill tone="info" dot={false}>{reqCode}</StatusPill>}
+                                <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--c-text)' }}>
                                     {log.performedBy || 'BBNK'}
                                 </span>
                             </div>
-                            <div style={{ fontSize: 12, color: '#64748b' }}>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-muted)' }}>
                                 Giữ chỗ: {formatDateTime(log.timestamp)}
                             </div>
                         </div>
@@ -340,10 +346,10 @@ export default function HandoverScanPage() {
                     const expired = new Date(expiredAt).getTime() <= nowMs
                     return (
                         <div>
-                            <div style={{ color: expired ? '#dc2626' : '#0f172a', fontWeight: expired ? 600 : 500 }}>
+                            <div style={{ color: expired ? 'var(--c-danger)' : 'var(--c-text)', fontWeight: expired ? 600 : 500 }}>
                                 {formatDateTime(expiredAt)}
                             </div>
-                            {expired && <Tag color="error">Đã hết hạn</Tag>}
+                            {expired && <StatusPill tone="danger">Đã hết hạn</StatusPill>}
                         </div>
                     )
                 },
@@ -361,7 +367,6 @@ export default function HandoverScanPage() {
                             type="primary"
                             size="small"
                             icon={<CheckCircleOutlined />}
-                            className={!expired ? 'handover-btn-primary' : undefined}
                             danger={expired}
                             loading={isRowVerifying}
                             disabled={looking && !isRowVerifying}
@@ -402,15 +407,15 @@ export default function HandoverScanPage() {
                 key: 'bloodGroup',
                 align: 'center',
                 width: 100,
-                render: (group: string) => <BloodGroupTag value={group} />,
+                render: (group: string) => <BloodGroupTag value={group} size="sm" />,
             },
             {
                 title: 'CHẾ PHẨM / THỂ TÍCH',
                 key: 'component',
                 render: (_, row) => (
                     <div>
-                        <div style={{ fontWeight: 600, color: '#0f172a' }}>{row.componentTypeName}</div>
-                        <div style={{ fontSize: 12, color: '#64748b' }}>
+                        <div style={{ fontWeight: 600, color: 'var(--c-text)' }}>{row.componentTypeName}</div>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-muted)' }}>
                             {row.componentTypeCode} · {row.volumeMl} ml
                         </div>
                     </div>
@@ -430,17 +435,16 @@ export default function HandoverScanPage() {
                         extractRequestCodeFromNotes(reservedLog?.notes)
 
                     if (dispatchInfo) {
-                        const urgency = getUrgencyMeta(dispatchInfo.urgencyLevel)
                         return (
                             <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                    <Tag color="geekblue" style={{ marginInlineEnd: 0 }}>{dispatchInfo.requestCode}</Tag>
-                                    <Tag color={urgency.color} style={{ marginInlineEnd: 0 }}>{urgency.label}</Tag>
+                                    <StatusPill tone="info" dot={false}>{dispatchInfo.requestCode}</StatusPill>
+                                    <UrgencyTag level={dispatchInfo.urgencyLevel} />
                                 </div>
-                                <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', marginTop: 2 }}>
+                                <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--c-text)', marginTop: 2 }}>
                                     {dispatchInfo.patientName} ({dispatchInfo.patientCode})
                                 </div>
-                                <div style={{ fontSize: 12, color: '#64748b' }}>
+                                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-muted)' }}>
                                     {dispatchInfo.departmentName || 'Khoa điều trị'} · {dispatchInfo.doctorName || 'Bác sĩ'}
                                 </div>
                             </div>
@@ -450,15 +454,15 @@ export default function HandoverScanPage() {
                     if (reqCode || issuedLog?.notes) {
                         return (
                             <div>
-                                {reqCode && <Tag color="geekblue">{reqCode}</Tag>}
+                                {reqCode && <StatusPill tone="info" dot={false}>{reqCode}</StatusPill>}
                                 {issuedLog?.notes && (
-                                    <div style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>{issuedLog.notes}</div>
+                                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-secondary)', marginTop: 2 }}>{issuedLog.notes}</div>
                                 )}
                             </div>
                         )
                     }
 
-                    return <span style={{ fontSize: 12, color: '#94a3b8' }}>Bấm &quot;Chi tiết&quot; để tra cứu vòng đời</span>
+                    return <span style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-subtle)' }}>Bấm &quot;Chi tiết&quot; để tra cứu vòng đời</span>
                 },
             },
             {
@@ -471,12 +475,12 @@ export default function HandoverScanPage() {
                     const actor = dispatchInfo?.issuedByName || issuedLog?.performedBy
                     const issuedAt = dispatchInfo?.issuedAt || issuedLog?.timestamp
                     if (!actor && !issuedAt) {
-                        return <span style={{ fontSize: 12, color: '#94a3b8' }}>—</span>
+                        return <span style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-subtle)' }}>—</span>
                     }
                     return (
                         <div>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{actor || 'KTV BBNK'}</div>
-                            <div style={{ fontSize: 12, color: '#64748b' }}>
+                            <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--c-text)' }}>{actor || 'KTV BBNK'}</div>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-muted)' }}>
                                 {issuedAt ? formatDateTime(issuedAt) : '—'}
                             </div>
                         </div>
@@ -487,9 +491,9 @@ export default function HandoverScanPage() {
                 title: 'NGÀY LẤY / HẠN DÙNG',
                 key: 'dates',
                 render: (_, row) => (
-                    <div style={{ fontSize: 12 }}>
-                        <div style={{ color: '#475569' }}>Lấy: {formatDateTime(row.collectedAt)}</div>
-                        <div style={{ color: '#0f172a', fontWeight: 500 }}>Hạn: {formatDateTime(row.expiredAt)}</div>
+                    <div style={{ fontSize: 'var(--text-xs)' }}>
+                        <div style={{ color: 'var(--c-text-secondary)' }}>Lấy: {formatDateTime(row.collectedAt)}</div>
+                        <div style={{ color: 'var(--c-text)', fontWeight: 500 }}>Hạn: {formatDateTime(row.expiredAt)}</div>
                     </div>
                 ),
             },
@@ -533,19 +537,20 @@ export default function HandoverScanPage() {
         extractRequestCodeFromNotes(detailReservedLog?.notes)
 
     return (
-        <div className="handover-page">
-            <div className="handover-head">
-                <div>
-                    <div className="handover-breadcrumb">Điều phối Kho máu / W4.3 · Bàn giao cấp phát máu</div>
-                    <h1 className="handover-title">Bàn giao cấp phát máu</h1>
-                    <p className="handover-subtitle">
-                        Quét túi xuất kho, chọn nhanh túi máu đang giữ chỗ hoặc tra cứu danh sách túi máu đã bàn giao.
-                    </p>
-                </div>
-                <span className="handover-status-pill">
-                    <i /> {reservedTotal > 0 ? `${reservedTotal} túi đang giữ chỗ` : 'Sẵn sàng xuất kho'}
-                </span>
-            </div>
+        <PageContainer className="handover-page">
+            <PageHeader
+                breadcrumb={[
+                    { title: 'Điều phối Kho máu', path: '/coordination/queue' },
+                    { title: 'W4.3 · Bàn giao cấp phát máu' },
+                ]}
+                title="Bàn giao cấp phát máu"
+                subtitle="Quét túi xuất kho, chọn nhanh túi máu đang giữ chỗ hoặc tra cứu danh sách túi máu đã bàn giao."
+                extra={
+                    <StatusPill tone={reservedTotal > 0 ? 'info' : 'neutral'}>
+                        {reservedTotal > 0 ? `${reservedTotal} túi đang giữ chỗ` : 'Sẵn sàng xuất kho'}
+                    </StatusPill>
+                }
+            />
 
             <section className="handover-card">
                 <div className="handover-role-bar">
@@ -608,7 +613,7 @@ export default function HandoverScanPage() {
                             label: (
                                 <span className="handover-tab-label">
                                     <span>Túi máu đang giữ chỗ chờ bàn giao</span>
-                                    <Badge count={reservedTotal} showZero color="#1a7534" />
+                                    <Badge count={reservedTotal} showZero color="var(--c-primary)" />
                                 </span>
                             ),
                             children: (
@@ -618,7 +623,7 @@ export default function HandoverScanPage() {
                                             <Input
                                                 allowClear
                                                 placeholder="Tìm theo mã barcode túi máu..."
-                                                prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+                                                prefix={<SearchOutlined style={{ color: 'var(--c-text-subtle)' }} />}
                                                 value={reservedSearch}
                                                 onChange={(e) => {
                                                     setReservedSearch(e.target.value)
@@ -645,7 +650,7 @@ export default function HandoverScanPage() {
                                                 }}
                                             />
                                         </div>
-                                        <span style={{ fontSize: 12, color: '#64748b' }}>
+                                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-muted)' }}>
                                             Bấm &quot;Chọn bàn giao&quot; sẽ xác minh túi qua API trước khi sang màn hình xác nhận.
                                         </span>
                                     </div>
@@ -687,7 +692,7 @@ export default function HandoverScanPage() {
                             label: (
                                 <span className="handover-tab-label">
                                     <span>Danh sách đã bàn giao</span>
-                                    <Badge count={handedTotal} showZero color="#7c3aed" />
+                                    <Badge count={handedTotal} showZero color="var(--c-purple)" />
                                 </span>
                             ),
                             children: (
@@ -697,7 +702,7 @@ export default function HandoverScanPage() {
                                             <Input
                                                 allowClear
                                                 placeholder="Tìm theo mã barcode túi máu..."
-                                                prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+                                                prefix={<SearchOutlined style={{ color: 'var(--c-text-subtle)' }} />}
                                                 value={handedSearch}
                                                 onChange={(e) => {
                                                     setHandedSearch(e.target.value)
@@ -786,7 +791,7 @@ export default function HandoverScanPage() {
                     <div style={{ display: 'grid', gap: 18 }}>
                         <div className="handover-bag-banner">
                             <div className="handover-bag-banner__left">
-                                <div className="handover-blood-badge">{detailBag.bloodGroup}</div>
+                                <BloodGroupTag value={detailBag.bloodGroup} size="lg" />
                                 <div>
                                     <div className="handover-bag-banner__label">Mã túi máu</div>
                                     <div className="handover-bag-banner__code">{detailBag.barcode}</div>
@@ -815,7 +820,7 @@ export default function HandoverScanPage() {
                             <div className="handover-kv">
                                 <span>Phiếu yêu cầu liên quan</span>
                                 <strong>
-                                    {detailReqCode ? <Tag color="geekblue">{detailReqCode}</Tag> : '—'}
+                                    {detailReqCode ? <StatusPill tone="info" dot={false}>{detailReqCode}</StatusPill> : '—'}
                                 </strong>
                             </div>
                             {detailDispatched && (
@@ -833,9 +838,9 @@ export default function HandoverScanPage() {
                                     <div className="handover-kv">
                                         <span>Trạng thái phiếu yêu cầu</span>
                                         <strong>
-                                            <Tag color={getStatusMeta(detailDispatched.requestStatus).color}>
+                                            <StatusPill tone={getStatusTone(detailDispatched.requestStatus)}>
                                                 {getStatusMeta(detailDispatched.requestStatus).label}
-                                            </Tag>
+                                            </StatusPill>
                                         </strong>
                                     </div>
                                 </>
@@ -885,7 +890,12 @@ export default function HandoverScanPage() {
                                                 </span>
                                                 <span>{step.name}</span>
                                             </div>
-                                            <span style={{ fontSize: 12, color: step.completed ? '#15803d' : '#94a3b8' }}>
+                                            <span
+                                                style={{
+                                                    fontSize: 'var(--text-xs)',
+                                                    color: step.completed ? 'var(--c-success)' : 'var(--c-text-subtle)',
+                                                }}
+                                            >
                                                 {step.completed && step.timestamp
                                                     ? formatDateTime(step.timestamp)
                                                     : 'Chưa hoàn tất'}
@@ -898,6 +908,6 @@ export default function HandoverScanPage() {
                     </div>
                 )}
             </Drawer>
-        </div>
+        </PageContainer>
     )
 }

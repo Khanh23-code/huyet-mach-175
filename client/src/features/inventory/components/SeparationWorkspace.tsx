@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
-import { Alert, Button, Checkbox, InputNumber, Popconfirm, Select, Tag, message } from 'antd'
+import { Alert, Button, Checkbox, InputNumber, Popconfirm, Select, Space, message } from 'antd'
 import { CheckCircleOutlined, PrinterOutlined } from '@ant-design/icons'
 import { parseApiError } from '@/services/apiError'
+import { BloodGroupTag, SectionCard, StatusPill } from '@/shared/components'
 import { useComponentTypes, useSeparate, useStorageLocations } from '../hooks'
 import {
     CHILD_CODES,
@@ -96,136 +97,134 @@ export default function SeparationWorkspace({ parent, canEdit, onDone }: Props) 
         }))
 
         return (
-            <section className="inv-card">
-                <header className="inv-card__head">
-                    <h2><CheckCircleOutlined style={{ color: 'var(--c-primary)' }} /> Điều chế hoàn tất</h2>
-                    <p>Túi gốc {result.parentBarcode} chuyển sang {result.parentStatus}. Kỹ thuật viên: {result.technicianName}.</p>
-                </header>
-                <div className="inv-card__body inv-result">
-                    <Alert type="success" showIcon title={result.message} />
-                    <div className="inv-label-list">
-                        {labels.map((l) => (
-                            <BagLabel key={l.barcode} bag={l} />
-                        ))}
-                    </div>
-                    <div className="inv-actions">
-                        <Button type="primary" icon={<PrinterOutlined />} onClick={() => setPrintOpen(true)}>
-                            In tất cả tem ({labels.length})
-                        </Button>
-                        <Button onClick={onDone}>Điều chế túi khác</Button>
-                    </div>
-                    <LabelsPrintModal open={printOpen} labels={labels} onClose={() => setPrintOpen(false)} />
+            <SectionCard
+                title={<><CheckCircleOutlined style={{ color: 'var(--c-primary)' }} /> Điều chế hoàn tất</>}
+                subtitle={`Túi gốc ${result.parentBarcode} chuyển sang ${result.parentStatus}. Kỹ thuật viên: ${result.technicianName}.`}
+                bodyClassName="inv-result"
+            >
+                <Alert type="success" showIcon title={result.message} />
+                <div className="inv-label-list">
+                    {labels.map((l) => (
+                        <BagLabel key={l.barcode} bag={l} />
+                    ))}
                 </div>
-            </section>
+                <div className="inv-actions">
+                    <Button type="primary" icon={<PrinterOutlined />} onClick={() => setPrintOpen(true)}>
+                        In tất cả tem ({labels.length})
+                    </Button>
+                    <Button onClick={onDone}>Điều chế túi khác</Button>
+                </div>
+                <LabelsPrintModal open={printOpen} labels={labels} onClose={() => setPrintOpen(false)} />
+            </SectionCard>
         )
     }
 
     return (
-        <section className="inv-card">
-            <header className="inv-card__head">
-                <h2>Điều chế túi {parent.barcode}</h2>
-                <p>Chọn các chế phẩm cần tạo. Mã túi con tự sinh theo quy ước mã túi mẹ + mã chế phẩm.</p>
-            </header>
-            <div className="inv-card__body">
-                <BagOriginPanel
-                    source={parent.source}
-                    bagBloodGroup={parent.bloodGroup}
-                    collectedAt={parent.collectedAt}
-                    expiredAt={parent.expiredAt}
-                    isExpired={parent.isExpired}
-                    labTest={parent.labTest}
-                />
+        <SectionCard
+            title={`Điều chế túi ${parent.barcode}`}
+            subtitle="Chọn các chế phẩm cần tạo. Mã túi con tự sinh theo quy ước mã túi mẹ + mã chế phẩm."
+        >
+            <BagOriginPanel
+                source={parent.source}
+                bagBloodGroup={parent.bloodGroup}
+                collectedAt={parent.collectedAt}
+                expiredAt={parent.expiredAt}
+                isExpired={parent.isExpired}
+                labTest={parent.labTest}
+            />
 
-                <dl className="inv-parent">
-                    <div>
-                        <dt>Nhóm máu</dt>
-                        <dd>
-                            {parent.bloodGroup} <Tag color="blue">Kế thừa từ túi gốc</Tag>
-                        </dd>
-                    </div>
-                    <div><dt>Thể tích</dt><dd>{parent.volumeMl} ml</dd></div>
-                    <div><dt>Vị trí</dt><dd>{parent.storageLocationName ?? '—'}</dd></div>
-                </dl>
-
-                <div style={{ marginTop: 16 }}>
-                    {CHILD_CODES.map((code) => {
-                        const row = rows[code]
-                        const expiry = expiryOf(code)
-                        const expired = expiry !== null && new Date(expiry).getTime() <= Date.now()
-                        const opts = locationOptions(locations, code)
-                        const disabled = !canEdit || parent.isExpired
-
-                        return (
-                            <div key={code} className={`inv-comp${row.enabled ? '' : ' is-off'}`}>
-                                <Checkbox
-                                    checked={row.enabled}
-                                    disabled={disabled}
-                                    onChange={(e) => patch(code, { enabled: e.target.checked })}
-                                >
-                                    <b>{code}</b> · {COMPONENT_LABEL[code]}
-                                </Checkbox>
-                                <InputNumber
-                                    min={1}
-                                    max={parent.volumeMl}
-                                    placeholder="Thể tích (ml)"
-                                    disabled={!row.enabled || disabled}
-                                    value={row.volume}
-                                    onChange={(v) => patch(code, { volume: v === null ? null : Number(v) })}
-                                    style={{ width: '100%' }}
-                                />
-                                <Select
-                                    placeholder={`Tủ phù hợp (${storageHint(code)})`}
-                                    disabled={!row.enabled || disabled}
-                                    value={row.locationId}
-                                    options={opts}
-                                    notFoundContent="Không có tủ phù hợp đang trống"
-                                    onChange={(v) => patch(code, { locationId: v })}
-                                />
-                                {row.enabled && (
-                                    <div className={`inv-comp__preview${expired ? ' is-bad' : ''}`}>
-                                        Mã túi: <span className="inv-mono">{childBarcode(parent.barcode, code)}</span>
-                                        {expiry && (
-                                            <>
-                                                {' · '}Hạn dùng: {new Date(expiry).toLocaleString('vi-VN')}
-                                                {expired && ' (đã quá hạn, không thể tạo)'}
-                                            </>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )
-                    })}
+            <dl className="inv-parent">
+                <div>
+                    <dt>Nhóm máu</dt>
+                    <dd>
+                        <Space size={6} wrap>
+                            <BloodGroupTag value={parent.bloodGroup} size="sm" />
+                            <StatusPill tone="info" dot={false}>Kế thừa từ túi gốc</StatusPill>
+                        </Space>
+                    </dd>
                 </div>
+                <div><dt>Thể tích</dt><dd>{parent.volumeMl} ml</dd></div>
+                <div><dt>Vị trí</dt><dd>{parent.storageLocationName ?? '—'}</dd></div>
+            </dl>
 
-                <div className="inv-total">
-                    <span>Tổng thể tích chế phẩm</span>
-                    <b style={{ color: overVolume ? 'var(--c-danger)' : undefined }}>
-                        {total} / {parent.volumeMl} ml
-                    </b>
-                </div>
+            <div style={{ marginTop: 16 }}>
+                {CHILD_CODES.map((code) => {
+                    const row = rows[code]
+                    const expiry = expiryOf(code)
+                    const expired = expiry !== null && new Date(expiry).getTime() <= Date.now()
+                    const opts = locationOptions(locations, code)
+                    const disabled = !canEdit || parent.isExpired
 
-                {overVolume && (
-                    <Alert style={{ marginTop: 12 }} type="error" showIcon title="Tổng thể tích các chế phẩm vượt thể tích túi gốc." />
-                )}
-                {!canEdit && (
-                    <Alert style={{ marginTop: 12 }} type="warning" showIcon title="Bạn chỉ có quyền xem hàng chờ điều chế." />
-                )}
-
-                <div className="inv-actions" style={{ marginTop: 16 }}>
-                    <Popconfirm
-                        title="Xác nhận điều chế?"
-                        description="Túi gốc sẽ chuyển sang PROCESSED và không thể hoàn tác."
-                        okText="Xác nhận"
-                        cancelText="Hủy"
-                        disabled={!canSubmit}
-                        onConfirm={submit}
-                    >
-                        <Button type="primary" size="large" disabled={!canSubmit} loading={separate.isPending}>
-                            Xác nhận điều chế &amp; sinh mã
-                        </Button>
-                    </Popconfirm>
-                </div>
+                    return (
+                        <div key={code} className={`inv-comp${row.enabled ? '' : ' is-off'}`}>
+                            <Checkbox
+                                checked={row.enabled}
+                                disabled={disabled}
+                                onChange={(e) => patch(code, { enabled: e.target.checked })}
+                            >
+                                <b>{code}</b> · {COMPONENT_LABEL[code]}
+                            </Checkbox>
+                            <InputNumber
+                                min={1}
+                                max={parent.volumeMl}
+                                placeholder="Thể tích (ml)"
+                                disabled={!row.enabled || disabled}
+                                value={row.volume}
+                                onChange={(v) => patch(code, { volume: v === null ? null : Number(v) })}
+                                style={{ width: '100%' }}
+                            />
+                            <Select
+                                placeholder={`Tủ phù hợp (${storageHint(code)})`}
+                                disabled={!row.enabled || disabled}
+                                value={row.locationId}
+                                options={opts}
+                                notFoundContent="Không có tủ phù hợp đang trống"
+                                onChange={(v) => patch(code, { locationId: v })}
+                            />
+                            {row.enabled && (
+                                <div className={`inv-comp__preview${expired ? ' is-bad' : ''}`}>
+                                    Mã túi: <span className="inv-mono">{childBarcode(parent.barcode, code)}</span>
+                                    {expiry && (
+                                        <>
+                                            {' · '}Hạn dùng: {new Date(expiry).toLocaleString('vi-VN')}
+                                            {expired && ' (đã quá hạn, không thể tạo)'}
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )
+                })}
             </div>
-        </section>
+
+            <div className="inv-total">
+                <span>Tổng thể tích chế phẩm</span>
+                <b style={{ color: overVolume ? 'var(--c-danger)' : undefined }}>
+                    {total} / {parent.volumeMl} ml
+                </b>
+            </div>
+
+            {overVolume && (
+                <Alert style={{ marginTop: 12 }} type="error" showIcon title="Tổng thể tích các chế phẩm vượt thể tích túi gốc." />
+            )}
+            {!canEdit && (
+                <Alert style={{ marginTop: 12 }} type="warning" showIcon title="Bạn chỉ có quyền xem hàng chờ điều chế." />
+            )}
+
+            <div className="inv-actions" style={{ marginTop: 16 }}>
+                <Popconfirm
+                    title="Xác nhận điều chế?"
+                    description="Túi gốc sẽ chuyển sang PROCESSED và không thể hoàn tác."
+                    okText="Xác nhận"
+                    cancelText="Hủy"
+                    disabled={!canSubmit}
+                    onConfirm={submit}
+                >
+                    <Button type="primary" size="large" disabled={!canSubmit} loading={separate.isPending}>
+                        Xác nhận điều chế &amp; sinh mã
+                    </Button>
+                </Popconfirm>
+            </div>
+        </SectionCard>
     )
 }

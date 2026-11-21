@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Breadcrumb, Button } from 'antd'
+import { Button } from 'antd'
+import { PageContainer, PageHeader, SectionCard, StatusPill } from '@/shared/components'
 import CampaignForm from '../components/CampaignForm'
 import MyCampaigns from '../components/MyCampaigns'
 import CampaignDetailModal from '../components/CampaignDetailModal'
@@ -24,55 +25,49 @@ export default function ProposalPage() {
     }
 
     return (
-        <div className="ds">
-            <Breadcrumb items={[{ title: 'Khoa Truyền máu' }, { title: 'Đề xuất & Quản lý đợt hiến máu' }]} />
+        <PageContainer>
+            <PageHeader
+                breadcrumb={[
+                    { title: 'Khoa Truyền máu' },
+                    { title: 'Đề xuất & Quản lý đợt hiến máu' },
+                ]}
+                title="Đề xuất & Quản lý đợt hiến máu"
+                subtitle="Khởi tạo đợt hiến máu mới (Chiến dịch sự kiện hoặc Điểm hiến định kỳ), cấu hình khung giờ và gửi Ban Giám đốc phê duyệt."
+                extra={
+                    pendingTotal > 0 ? (
+                        <StatusPill tone="warning">
+                            {pendingTotal} đợt đang chờ duyệt
+                        </StatusPill>
+                    ) : undefined
+                }
+            />
 
-            <div className="ds-title">
-                <div>
-                    <h1>Đề xuất &amp; Quản lý đợt hiến máu</h1>
-                    <p>
-                        Khởi tạo đợt hiến máu mới (Chiến dịch sự kiện hoặc Điểm hiến định kỳ), cấu hình khung giờ và gửi Ban Giám đốc phê duyệt.
-                    </p>
-                </div>
-                {pendingTotal > 0 && (
-                    <span className="ds-badge">
-                        <i />
-                        {pendingTotal} đợt đang chờ duyệt
-                    </span>
-                )}
-            </div>
-
-            <section className="ds-card">
-                <div className="ds-card__head ds-card__head--row">
-                    <div>
-                        <div className="ds-eyebrow">
-                            {editingCampaign ? 'Đang chỉnh sửa bản nháp' : 'Khởi tạo mới'}
-                        </div>
-                        <h3>
-                            {editingCampaign
-                                ? `Chỉnh sửa đợt hiến: ${editingCampaign.campaignName}`
-                                : 'Tạo đề xuất đợt hiến máu mới'}
-                        </h3>
-                        <p>
-                            {editingCampaign
-                                ? 'Cập nhật lại các thông tin của đợt hiến máu trước khi gửi phê duyệt.'
-                                : 'Đợt hiến máu sẽ được lưu ở trạng thái Bản nháp (DRAFT) trước khi gửi phê duyệt.'}
-                        </p>
-                    </div>
-                    {editingCampaign && (
+            <SectionCard
+                eyebrow={editingCampaign ? 'Đang chỉnh sửa bản nháp' : 'Khởi tạo mới'}
+                title={
+                    editingCampaign
+                        ? `Chỉnh sửa đợt hiến: ${editingCampaign.campaignName}`
+                        : 'Tạo đề xuất đợt hiến máu mới'
+                }
+                subtitle={
+                    editingCampaign
+                        ? 'Cập nhật lại các thông tin của đợt hiến máu trước khi gửi phê duyệt.'
+                        : 'Đợt hiến máu sẽ được lưu ở trạng thái Bản nháp (DRAFT) trước khi gửi phê duyệt.'
+                }
+                extra={
+                    editingCampaign ? (
                         <Button onClick={handleFormDone}>
                             Hủy chế độ sửa (Tạo mới)
                         </Button>
-                    )}
-                </div>
-                <div className="ds-card__body">
-                    <CampaignForm
-                        campaign={editingCampaign}
-                        onSuccess={handleFormDone}
-                        onCancel={handleFormDone}
-                    />
-                </div>
-            </section>
+                    ) : undefined
+                }
+            >
+                <CampaignForm
+                    campaign={editingCampaign}
+                    onSuccess={handleFormDone}
+                    onCancel={handleFormDone}
+                />
+            </SectionCard>
 
             <MyCampaigns
                 onOpenDetail={setDetailId}
@@ -80,6 +75,6 @@ export default function ProposalPage() {
             />
 
             <CampaignDetailModal campaignId={detailId} onClose={() => setDetailId(null)} />
-        </div>
+        </PageContainer>
     )
 }

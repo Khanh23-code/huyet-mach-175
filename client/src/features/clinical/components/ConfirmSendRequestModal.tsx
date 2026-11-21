@@ -1,7 +1,7 @@
 import React from 'react'
 import { Modal, Button } from 'antd'
 import { CheckOutlined } from '@ant-design/icons'
-import { getUrgencyMeta } from '../format'
+import { BloodGroupTag, UrgencyTag } from '@/shared/components'
 import type { UrgencyLevel } from '../types'
 import './ConfirmSendRequestModal.css'
 
@@ -34,8 +34,6 @@ export const ConfirmSendRequestModal: React.FC<ConfirmSendRequestModalProps> = (
 }) => {
     if (!data) return null
 
-    const urgencyMeta = getUrgencyMeta(data.urgencyLevel)
-
     return (
         <Modal
             open={open}
@@ -66,7 +64,7 @@ export const ConfirmSendRequestModal: React.FC<ConfirmSendRequestModalProps> = (
                 {data.requestCode && (
                     <div className="confirm-modal__row">
                         <span className="confirm-modal__label">Mã phiếu</span>
-                        <span className="confirm-modal__value font-bold">{data.requestCode}</span>
+                        <span className="confirm-modal__value font-bold text-mono">{data.requestCode}</span>
                     </div>
                 )}
                 <div className="confirm-modal__row">
@@ -77,18 +75,20 @@ export const ConfirmSendRequestModal: React.FC<ConfirmSendRequestModalProps> = (
                 </div>
                 <div className="confirm-modal__row">
                     <span className="confirm-modal__label">Nhóm máu</span>
-                    <span className="confirm-modal__value font-bold">{data.bloodGroup}</span>
+                    <span className="confirm-modal__value">
+                        <BloodGroupTag value={data.bloodGroup} />
+                    </span>
                 </div>
                 <div className="confirm-modal__row">
-                    <span className="confirm-modal__label">Sản phẩm & Số lượng</span>
+                    <span className="confirm-modal__label">Sản phẩm &amp; Số lượng</span>
                     <span className="confirm-modal__value font-bold">
                         {data.units} túi · {data.componentName}
                     </span>
                 </div>
                 <div className="confirm-modal__row">
                     <span className="confirm-modal__label">Mức độ ưu tiên</span>
-                    <span className="confirm-modal__value font-bold" style={{ color: urgencyMeta.color }}>
-                        {urgencyMeta.label}
+                    <span className="confirm-modal__value">
+                        <UrgencyTag level={data.urgencyLevel} />
                     </span>
                 </div>
                 <div className="confirm-modal__row">
@@ -102,15 +102,15 @@ export const ConfirmSendRequestModal: React.FC<ConfirmSendRequestModalProps> = (
             </div>
 
             <div className="confirm-modal__footer">
-                <Button onClick={onClose} disabled={loading} className="confirm-modal__btn-back">
+                <Button size="large" onClick={onClose} disabled={loading}>
                     Quay lại chỉnh sửa
                 </Button>
                 <Button
                     type="primary"
+                    size="large"
                     loading={loading}
                     icon={<CheckOutlined />}
                     onClick={onConfirm}
-                    className="confirm-modal__btn-submit"
                 >
                     Xác nhận gửi phiếu
                 </Button>

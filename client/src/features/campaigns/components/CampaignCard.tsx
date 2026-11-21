@@ -1,12 +1,14 @@
 import type { KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Progress, Tag } from 'antd'
+import { Button, Progress } from 'antd'
 import { BarChartOutlined, CalendarOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons'
+import { StatusPill } from '@/shared/components'
 import SlotsTable from './SlotsTable'
 import {
-    CAMPAIGN_STATUS_COLOR,
     CAMPAIGN_STATUS_LABEL,
+    CAMPAIGN_STATUS_TONE,
     CAMPAIGN_TYPE_LABEL,
+    CAMPAIGN_TYPE_TONE,
     fmtDate,
     fmtOperatingDays,
     normalizeCampaignStatus,
@@ -46,19 +48,16 @@ export default function CampaignCard({ campaign, onOpen }: Props) {
             onKeyDown={onKey}
         >
             <div className="ds-site__top">
-                <Tag className="campaign-tag">
+                <StatusPill tone={CAMPAIGN_TYPE_TONE[campaignType]} dot={false}>
                     {CAMPAIGN_TYPE_LABEL[campaignType]}
-                </Tag>
+                </StatusPill>
 
-                <Tag
-                    color={CAMPAIGN_STATUS_COLOR[status]}
-                    style={{ fontWeight: 600, padding: '2px 8px' }}
+                <StatusPill
+                    tone={CAMPAIGN_STATUS_TONE[status]}
+                    pulse={status === 'IN_PROGRESS'}
                 >
-                    {status === 'IN_PROGRESS' && (
-                        <span className="ds-pulse-dot" />
-                    )}
                     {CAMPAIGN_STATUS_LABEL[status]}
-                </Tag>
+                </StatusPill>
             </div>
 
             <div className="ds-code" title="campaign_id">ID: {campaign.campaignId}</div>
@@ -66,13 +65,13 @@ export default function CampaignCard({ campaign, onOpen }: Props) {
             <p className="ds-site__addr">{campaign.locationName}</p>
 
             <div className="ds-site__meta">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <CalendarOutlined style={{ color: 'var(--ds-muted)' }} />
+                <div className="ds-site__meta-row">
+                    <CalendarOutlined />
                     <span>{fmtDate(campaign.startDate)} – {fmtDate(campaign.endDate)}</span>
                 </div>
                 {campaignType === 'RECURRING' && campaign.operatingDays && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                        <SyncOutlined style={{ color: 'var(--ds-muted)' }} />
+                    <div className="ds-site__meta-row">
+                        <SyncOutlined />
                         <span>{fmtOperatingDays(campaign.operatingDays)}</span>
                     </div>
                 )}
@@ -80,7 +79,7 @@ export default function CampaignCard({ campaign, onOpen }: Props) {
 
             {isClosed ? (
                 <div className="ds-closed-alert">
-                    <CloseCircleOutlined style={{ color: '#c4261b' }} />
+                    <CloseCircleOutlined />
                     <span>
                         {status === 'REJECTED'
                             ? 'Đề xuất bị từ chối · Không mở đăng ký'
@@ -96,10 +95,10 @@ export default function CampaignCard({ campaign, onOpen }: Props) {
                     <Progress
                         percent={percent}
                         showInfo={false}
-                        strokeColor={status === 'COMPLETED' ? '#6d28d9' : '#1a7534'}
+                        strokeColor={status === 'COMPLETED' ? 'var(--c-purple)' : 'var(--c-primary)'}
                         size="small"
                     />
-                    <div className="ds-muted ds-small" style={{ marginTop: 2 }}>
+                    <div className="ds-muted ds-small">
                         Đã thu gom: <b>{campaign.totalCollected}</b> túi máu
                     </div>
                 </div>
@@ -110,7 +109,7 @@ export default function CampaignCard({ campaign, onOpen }: Props) {
             )}
 
             {(status === 'IN_PROGRESS' || status === 'COMPLETED' || status === 'CANCELLED') && (
-                <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed var(--ds-border)' }}>
+                <div className="ds-site__footer">
                     <Button
                         size="small"
                         icon={<BarChartOutlined />}

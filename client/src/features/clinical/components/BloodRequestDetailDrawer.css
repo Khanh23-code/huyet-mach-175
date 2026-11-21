@@ -1,56 +1,53 @@
-.clinical-detail-drawer .ant-drawer-header {
-    border-bottom: 1px solid #f1f5f9;
-    padding: 16px 24px;
-}
-
 .request-drawer__header {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
+    flex-wrap: wrap;
 }
 
 .request-drawer__code {
-    font-size: 17px;
+    font-family: var(--font-mono);
+    font-size: var(--text-lg);
     font-weight: 700;
-    color: #0f172a;
+    color: var(--c-text);
 }
 
 .request-drawer__content {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: var(--space-5);
 }
 
 .request-drawer__stepper-box {
-    padding: 16px;
-    background-color: #f8fafc;
-    border-radius: 10px;
-    border: 1px solid #e2e8f0;
+    padding: var(--space-4);
+    background-color: var(--c-surface-muted);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--c-border);
 }
 
 .request-drawer__section-title {
-    font-size: 14px;
+    font-size: var(--text-base);
     font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 12px;
+    color: var(--c-text);
+    margin-bottom: var(--space-3);
 }
 
 .request-drawer__section {
-    background-color: #ffffff;
+    background-color: transparent;
 }
 
 .request-drawer__no-alloc {
-    padding: 20px;
+    padding: var(--space-5);
     text-align: center;
-    color: #94a3b8;
-    background-color: #f8fafc;
-    border-radius: 8px;
-    font-size: 13px;
+    color: var(--c-text-subtle);
+    background-color: var(--c-surface-muted);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
 }
 
 .request-drawer__loading,
 .request-drawer__empty {
     text-align: center;
     padding: 60px 0;
-    color: #64748b;
+    color: var(--c-text-muted);
 }

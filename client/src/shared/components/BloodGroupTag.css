@@ -1,0 +1,42 @@
+.ui-blood-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    color: var(--c-blood);
+    background: var(--c-blood-soft);
+    border: 1px solid var(--c-blood-border);
+    border-radius: var(--radius-xs);
+    white-space: nowrap;
+}
+
+.ui-blood-tag--sm {
+    padding: 1px 6px;
+    font-size: var(--text-xs);
+    line-height: 1.45;
+}
+
+.ui-blood-tag--md {
+    padding: 2px 9px;
+    font-size: var(--text-sm);
+    line-height: 1.5;
+}
+
+.ui-blood-tag--lg {
+    min-width: 52px;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    font-size: var(--text-lg);
+    line-height: 1.2;
+}
+
+@media print {
+    .ui-blood-tag {
+        color: #000000 !important;
+        background: #ffffff !important;
+        border-color: #000000 !important;
+    }
+}

@@ -1,5 +1,6 @@
-import { Descriptions, Empty, Modal, Skeleton, Table, Tag } from 'antd'
-import { STATUS_COLOR, STATUS_LABEL, normalizeStatus } from '@/features/reception/format'
+import { Descriptions, Empty, Modal, Skeleton, Table } from 'antd'
+import { STATUS_LABEL, STATUS_TONE, normalizeStatus } from '@/features/reception/format'
+import { BloodGroupTag, StatusPill } from '@/shared/components'
 import { useDonorDetail } from '../hooks'
 import { SCREENING_LABEL, SESSION_LABEL } from '../format'
 import { fmtDate } from '@/shared/formatters/date'
@@ -39,7 +40,7 @@ export default function DonorDetailModal({ donorId, onClose }: Props) {
                         <Descriptions.Item label="Số điện thoại">{donor.phoneNumber}</Descriptions.Item>
                         <Descriptions.Item label="Email" span={2}>{donor.email || '—'}</Descriptions.Item>
                         <Descriptions.Item label="Nhóm máu">
-                            <Tag className="campaign-tag">{fmtBloodType(donor.bloodType, donor.rhFactor)}</Tag>
+                            <BloodGroupTag value={fmtBloodType(donor.bloodType, donor.rhFactor)} />
                         </Descriptions.Item>
                         <Descriptions.Item label="Tổng số lần hiến">{donor.totalDonations}</Descriptions.Item>
                         <Descriptions.Item label="Lần hiến gần nhất" span={2}>
@@ -72,7 +73,7 @@ export default function DonorDetailModal({ donorId, onClose }: Props) {
                                 title: 'Lịch hẹn',
                                 render: (_, r) => {
                                     const st = normalizeStatus(r.status)
-                                    return <Tag color={STATUS_COLOR[st]}>{STATUS_LABEL[st]}</Tag>
+                                    return <StatusPill tone={STATUS_TONE[st]}>{STATUS_LABEL[st]}</StatusPill>
                                 },
                             },
                             {

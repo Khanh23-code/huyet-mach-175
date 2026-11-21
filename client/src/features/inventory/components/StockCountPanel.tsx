@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
-import { Alert, Button, InputNumber, Table, Tag } from 'antd'
+import { Alert, Button, InputNumber, Table } from 'antd'
 import { EyeOutlined, ReloadOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
+import { SectionCard, StatusPill } from '@/shared/components'
 import { useManagedLocations } from '../stockHooks'
 import type { StorageLocation } from '../types'
 import LocationBagsModal from './LocationBagsModal'
@@ -29,18 +30,11 @@ export default function StockCountPanel() {
     const refresh = () => { setActual({}); refetch() }
 
     return (
-        <section className="inv-card">
-            <div className="inv-card__head stk-head">
-                <div>
-                    <h2>Đối soát tồn kho theo vị trí</h2>
-                    <p>
-                        So sánh số liệu hệ thống với số đếm thực tế
-                        {dataUpdatedAt ? `. Cập nhật ${dayjs(dataUpdatedAt).format('DD/MM/YYYY HH:mm')}` : ''}.
-                    </p>
-                </div>
-                <Button icon={<ReloadOutlined />} loading={isFetching} onClick={refresh}>Làm mới</Button>
-            </div>
-
+        <SectionCard
+            title="Đối soát tồn kho theo vị trí"
+            subtitle={`So sánh số liệu hệ thống với số đếm thực tế${dataUpdatedAt ? `. Cập nhật ${dayjs(dataUpdatedAt).format('DD/MM/YYYY HH:mm')}` : ''}.`}
+            extra={<Button icon={<ReloadOutlined />} loading={isFetching} onClick={refresh}>Làm mới</Button>}
+        >
             <Table<StorageLocation>
                 rowKey="locationId"
                 loading={isLoading}
@@ -68,7 +62,9 @@ export default function StockCountPanel() {
                             const a = actual[r.locationId]
                             if (a == null) return <span className="stk-muted">—</span>
                             const d = a - r.currentBagsCount
-                            return d === 0 ? <Tag color="green">Khớp</Tag> : <Tag color="orange">{d > 0 ? `+${d}` : d}</Tag>
+                            return d === 0
+                                ? <StatusPill tone="success">Khớp</StatusPill>
+                                : <StatusPill tone="warning">{d > 0 ? `+${d}` : d}</StatusPill>
                         },
                     },
                     {
@@ -78,7 +74,7 @@ export default function StockCountPanel() {
                 ]}
             />
 
-            <div className="inv-card__body">
+            <div style={{ marginTop: 'var(--space-4)' }}>
                 {diffs.length > 0 ? (
                     <Alert
                         type="warning" showIcon
@@ -90,6 +86,6 @@ export default function StockCountPanel() {
                 )}
             </div>
             <LocationBagsModal location={viewing} onClose={() => setViewing(null)} />
-        </section>
+        </SectionCard>
     )
 }

@@ -6,6 +6,7 @@ import {
     ToolOutlined,
 } from '@ant-design/icons'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { PageContainer, SectionCard } from '@/shared/components'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import './NotFoundPage.css'
@@ -70,7 +71,7 @@ export default function NotFoundPage() {
     const isUnderDevelopment = !!known || pathname.startsWith('/admin') || pathname.startsWith('/btd')
 
     return (
-        <div className="not-found-page">
+        <PageContainer maxWidth="lg">
             <Breadcrumb
                 items={[
                     { title: 'Hệ thống' },
@@ -79,7 +80,7 @@ export default function NotFoundPage() {
                 ]}
             />
 
-            <div className="not-found-card">
+            <SectionCard>
                 <Result
                     icon={
                         isUnderDevelopment ? (
@@ -118,10 +119,9 @@ export default function NotFoundPage() {
                             </Button>
                         </Space>
                     }
-                >
-                </Result>
-            </div>
-        </div>
+                />
+            </SectionCard>
+        </PageContainer>
     )
 }
 

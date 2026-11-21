@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Breadcrumb, Skeleton } from 'antd'
+import { Skeleton } from 'antd'
 import { BarChartOutlined, ClockCircleOutlined, FileTextOutlined, RightOutlined } from '@ant-design/icons'
+import { BloodGroupTag, PageContainer, PageHeader, SectionCard, StatusPill } from '@/shared/components'
 import { useCurrentUser } from '@/features/auth/useCurrentUser'
 import { fmtDate } from '@/shared/formatters/date'
 import { todayIso } from '@/shared/utils/date'
@@ -37,24 +38,27 @@ export default function BbnkDashboard() {
     const o = data?.overview
 
     return (
-        <div className="bb">
-            <div className="bb-head">
-                <div>
-                    <Breadcrumb items={[{ title: 'Dashboard' }, { title: 'Khoa Truyền máu' }]} />
-                    <h1>Tổng quan ngân hàng máu</h1>
-                    <p>Giám sát tồn kho và nhu cầu cấp cứu theo thời gian thực.</p>
-                </div>
-                <div className="bb-meta">
-                    {roleLabel && <span className="bb-role">{roleLabel}</span>}
-                    <div className="bb-date"><small>Hôm nay</small><b>{fmtDate(today)}</b></div>
-                </div>
-            </div>
+        <PageContainer>
+            <PageHeader
+                breadcrumb={[{ title: 'Dashboard' }, { title: 'Khoa Truyền máu' }]}
+                title="Tổng quan ngân hàng máu"
+                subtitle="Giám sát tồn kho và nhu cầu cấp cứu theo thời gian thực."
+                extra={
+                    <div className="bb-meta">
+                        {roleLabel && <span className="role-chip">{roleLabel}</span>}
+                        <div className="date-chip">
+                            <small>Hôm nay</small>
+                            <b>{fmtDate(today)}</b>
+                        </div>
+                    </div>
+                }
+            />
 
             <div className="bb-cards">
                 <div className="bb-card">
                     <div className="bb-card-top">
                         <span className="bb-icon bb-icon--green"><FileTextOutlined /></span>
-                        <span className="bb-chip bb-chip--green">Sẵn sàng cấp phát</span>
+                        <StatusPill tone="primary" dot={false}>Sẵn sàng cấp phát</StatusPill>
                     </div>
                     <small>Túi máu khả dụng</small>
                     <b>{isLoading ? '—' : fmtNum(o?.availableBags)}</b>
@@ -62,7 +66,7 @@ export default function BbnkDashboard() {
                 <div className="bb-card">
                     <div className="bb-card-top">
                         <span className="bb-icon bb-icon--blue"><FileTextOutlined /></span>
-                        <span className="bb-chip bb-chip--blue">{MOCK_RESERVED.requests} phiếu yêu cầu · dữ liệu mẫu</span>
+                        <StatusPill tone="info" dot={false}>{MOCK_RESERVED.requests} phiếu yêu cầu · dữ liệu mẫu</StatusPill>
                     </div>
                     <small>Đang giữ chỗ</small>
                     <b>{MOCK_RESERVED.bags}</b>
@@ -70,7 +74,7 @@ export default function BbnkDashboard() {
                 <div className="bb-card">
                     <div className="bb-card-top">
                         <span className="bb-icon bb-icon--amber"><ClockCircleOutlined /></span>
-                        <span className="bb-chip bb-chip--amber">Cần ưu tiên FEFO</span>
+                        <StatusPill tone="warning" dot={false}>Cần ưu tiên FEFO</StatusPill>
                     </div>
                     <small>Cận hạn 72 giờ</small>
                     <b>{isLoading ? '—' : fmtNum(o?.expiringSoonBags)}</b>
@@ -78,15 +82,11 @@ export default function BbnkDashboard() {
             </div>
 
             <div className="bb-main">
-                <div className="bb-panel">
-                    <div className="bb-panel-head">
-                        <div>
-                            <h2>Tồn kho theo 8 nhóm máu</h2>
-                            <small>Tỷ lệ so với định mức tối ưu</small>
-                        </div>
-                        <Link to="/inventory/stock" className="bb-link">Chi tiết tồn kho <RightOutlined /></Link>
-                    </div>
-
+                <SectionCard
+                    title="Tồn kho theo 8 nhóm máu"
+                    subtitle="Tỷ lệ so với định mức tối ưu"
+                    extra={<Link to="/inventory/stock" className="bb-link">Chi tiết tồn kho <RightOutlined /></Link>}
+                >
                     {isLoading ? (
                         <Skeleton active paragraph={{ rows: 5 }} />
                     ) : (
@@ -98,7 +98,7 @@ export default function BbnkDashboard() {
                                 return (
                                     <div key={g} className={`bb-group bb-group--${lv}`}>
                                         <div className="bb-group-top">
-                                            <span className="bb-group-tag">{g}</span>
+                                            <BloodGroupTag value={g} size="sm" />
                                             <b>{pct}%</b>
                                         </div>
                                         <div className="bb-bar"><i style={{ width: `${pct}%` }} /></div>
@@ -108,20 +108,19 @@ export default function BbnkDashboard() {
                             })}
                         </div>
                     )}
-                </div>
+                </SectionCard>
 
-                <div className="bb-panel">
-                    <div className="bb-panel-head">
-                        <div>
-                            <h2>Yêu cầu cấp cứu</h2>
-                            <small>Cần xử lý ngay · dữ liệu mẫu</small>
-                        </div>
-                    </div>
+                <SectionCard
+                    title="Yêu cầu cấp cứu"
+                    subtitle="Cần xử lý ngay · dữ liệu mẫu"
+                >
                     <ul className="bb-urgent">
                         {MOCK_EMERGENCY.map((r) => (
                             <li key={r.code}>
                                 <div className="bb-urgent-top">
-                                    <span className={`bb-level bb-level--${r.tone}`}>{r.level}</span>
+                                    <StatusPill tone={r.tone === 'red' ? 'danger' : 'warning'} pulse={r.tone === 'red'}>
+                                        {r.level}
+                                    </StatusPill>
                                     <b className={`bb-eta bb-eta--${r.tone}`}>{r.eta}</b>
                                 </div>
                                 <b className="bb-code">{r.code}</b>
@@ -129,9 +128,11 @@ export default function BbnkDashboard() {
                             </li>
                         ))}
                     </ul>
-                    <Link to="/inventory/expiring" className="bb-link bb-link--foot"><BarChartOutlined /> Xem cảnh báo cận hạn <RightOutlined /></Link>
-                </div>
+                    <Link to="/inventory/expiring" className="bb-link bb-link--foot">
+                        <BarChartOutlined /> Xem cảnh báo cận hạn <RightOutlined />
+                    </Link>
+                </SectionCard>
             </div>
-        </div>
+        </PageContainer>
     )
 }

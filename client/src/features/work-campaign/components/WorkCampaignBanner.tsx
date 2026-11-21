@@ -13,13 +13,13 @@ export default function WorkCampaignBanner({ campaign, onChange }: Props) {
     const navigate = useNavigate()
 
     return (
-        <div className="rq-campaign">
-            <div>
-                <small>Đợt hiến máu đang làm việc</small>
-                <b>#{campaign.id} · {campaign.name}</b>
-                <span>{campaign.locationName}</span>
+        <div className="wc-banner">
+            <div className="wc-banner__info">
+                <small className="wc-banner__label">Đợt hiến máu đang làm việc</small>
+                <b className="wc-banner__title">#{campaign.id} · {campaign.name}</b>
+                <span className="wc-banner__loc">{campaign.locationName}</span>
             </div>
-            <Space>
+            <Space wrap>
                 <Button
                     icon={<BarChartOutlined />}
                     onClick={() => navigate(`/campaigns/${campaign.id}/summary`)}

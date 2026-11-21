@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Breadcrumb, Tabs } from 'antd'
+import { Tabs } from 'antd'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
+import { PageContainer, PageHeader } from '@/shared/components'
 import DisposalCandidatesPanel from '../components/DisposalCandidatesPanel'
 import DisposalRecordsPanel from '../components/DisposalRecordsPanel'
 import './InventoryPages.css'
@@ -21,12 +22,12 @@ export default function DisposalPage() {
     }
 
     return (
-        <div className="inv">
-            <Breadcrumb items={[{ title: 'Túi máu & Kho' }, { title: 'Xử lý hủy túi máu' }]} />
-            <div className="inv-title">
-                <h1>Xử lý hủy túi máu</h1>
-                <p>Lập biên bản đề xuất hủy cho túi bị khóa, theo dõi phê duyệt và xác nhận tiêu hủy vật lý.</p>
-            </div>
+        <PageContainer>
+            <PageHeader
+                breadcrumb={[{ title: 'Túi máu & Kho' }, { title: 'Xử lý hủy túi máu' }]}
+                title="Xử lý hủy túi máu"
+                subtitle="Lập biên bản đề xuất hủy cho túi bị khóa, theo dõi phê duyệt và xác nhận tiêu hủy vật lý."
+            />
 
             <Tabs
                 activeKey={tab}
@@ -49,6 +50,6 @@ export default function DisposalPage() {
                     { key: 'records', label: 'Biên bản', children: <DisposalRecordsPanel canEdit={canEdit} /> },
                 ]}
             />
-        </div>
+        </PageContainer>
     )
 }

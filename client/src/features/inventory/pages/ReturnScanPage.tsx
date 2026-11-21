@@ -1,15 +1,22 @@
 import { useCallback, useState } from 'react'
-import { App, Button, Empty, Tag } from 'antd'
+import { App, Button, Empty } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
 import { formatDateTime } from '@/shared/formatters/date'
-import BarcodeScanBox from '@/shared/components/BarcodeScanBox'
+import {
+    BarcodeScanBox,
+    BloodGroupTag,
+    PageContainer,
+    PageHeader,
+    SectionCard,
+    StatusPill,
+} from '@/shared/components'
 import { returnsApi } from '../returnsApi'
 import { usePendingReturns } from '../returnsHooks'
-import '@/features/coordination/pages/HandoverPages.css'
+import '@/shared/styles/HandoverLayout.css'
 import './ReturnPages.css'
 
 export default function ReturnScanPage() {
@@ -77,29 +84,23 @@ export default function ReturnScanPage() {
     const pendingItems = pendingPage?.items || []
 
     return (
-        <div className="return-page">
-            <div className="handover-head">
-                <div>
-                    <div className="handover-breadcrumb">Túi máu & Kho / Tiếp nhận hoàn trả</div>
-                    <h1 className="handover-title">Tiếp nhận hoàn trả túi máu</h1>
-                    <p className="handover-subtitle">
-                        Quét barcode túi máu được hoàn trả từ khoa lâm sàng để tra cứu phiếu và chuyển sang bước thẩm định bảo quản.
-                    </p>
-                </div>
-                <span className="handover-status-pill">
-                    <i /> {pendingPage?.totalCount ? `${pendingPage.totalCount} túi chờ kiểm định` : 'Sẵn sàng tiếp nhận trả'}
-                </span>
-            </div>
+        <PageContainer>
+            <PageHeader
+                breadcrumb={[{ title: 'Túi máu & Kho' }, { title: 'Tiếp nhận hoàn trả' }]}
+                title="Tiếp nhận hoàn trả túi máu"
+                subtitle="Quét barcode túi máu được hoàn trả từ khoa lâm sàng để tra cứu phiếu và chuyển sang bước thẩm định bảo quản."
+                extra={
+                    <StatusPill tone={pendingPage?.totalCount ? 'warning' : 'primary'} pulse={Boolean(pendingPage?.totalCount)}>
+                        {pendingPage?.totalCount ? `${pendingPage.totalCount} túi chờ kiểm định` : 'Sẵn sàng tiếp nhận trả'}
+                    </StatusPill>
+                }
+            />
 
             <div className="return-scan-grid">
-                <section className="return-card">
-                    <div>
-                        <h2 className="return-card__title">Quét mã túi máu hoàn trả</h2>
-                        <p className="return-card__sub">
-                            Quét barcode hoặc nhập mã thủ công để tra cứu túi máu và phiếu hoàn trả đang chờ kiểm định.
-                        </p>
-                    </div>
-
+                <SectionCard
+                    title="Quét mã túi máu hoàn trả"
+                    subtitle="Quét barcode hoặc nhập mã thủ công để tra cứu túi máu và phiếu hoàn trả đang chờ kiểm định."
+                >
                     <BarcodeScanBox
                         title="Chờ quét mã barcode"
                         description="Đưa mã vạch túi máu hoàn trả vào máy đọc hoặc nhập mã thủ công bên dưới."
@@ -110,16 +111,12 @@ export default function ReturnScanPage() {
                         onClearError={() => setErrorMsg(null)}
                         onScan={handleScan}
                     />
-                </section>
+                </SectionCard>
 
-                <aside className="return-card">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-                        <div>
-                            <h2 className="return-card__title">Phiếu hoàn trả chờ kiểm định</h2>
-                            <p className="return-card__sub">
-                                Danh sách túi máu đang ở trạng thái phong tỏa (LOCKED) từ khoa lâm sàng.
-                            </p>
-                        </div>
+                <SectionCard
+                    title="Phiếu hoàn trả chờ kiểm định"
+                    subtitle="Danh sách túi máu đang ở trạng thái phong tỏa (LOCKED) từ khoa lâm sàng."
+                    extra={
                         <Button
                             size="small"
                             icon={<ReloadOutlined spin={isPendingFetching} />}
@@ -128,28 +125,28 @@ export default function ReturnScanPage() {
                         >
                             Làm mới
                         </Button>
-                    </div>
-
+                    }
+                >
                     {pendingItems.length > 0 ? (
                         <div className="return-pending-list">
                             {pendingItems.map((item) => (
                                 <div key={item.returnId} className="return-pending-item">
                                     <div className="return-pending-item__top">
                                         <span className="return-pending-item__code">{item.barcode}</span>
-                                        <Tag color={item.isExpired ? 'red' : 'orange'}>
+                                        <StatusPill tone={item.isExpired ? 'danger' : 'warning'}>
                                             {item.isExpired ? 'Đã hết hạn' : `Phiếu trả #${item.returnId}`}
-                                        </Tag>
+                                        </StatusPill>
                                     </div>
-                                    <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
-                                        {item.bloodType} · {item.componentName} ({item.volumeMl} ml)
+                                    <div className="return-pending-item__title">
+                                        <BloodGroupTag value={item.bloodType} size="sm" /> · {item.componentName} ({item.volumeMl} ml)
                                     </div>
-                                    <div style={{ fontSize: 12, color: '#475569' }}>
+                                    <div className="return-pending-item__meta">
                                         {item.departmentName || 'Khoa lâm sàng'} · Phiếu YC: {item.requestCode}
                                     </div>
-                                    <div style={{ fontSize: 12, color: '#64748b' }}>
+                                    <div className="return-pending-item__sub">
                                         Lý do: {item.returnReason}
                                     </div>
-                                    <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                                    <div className="return-pending-item__time">
                                         Lập lúc {formatDateTime(item.processedAt)} · {item.returnedByName || 'Lâm sàng'}
                                     </div>
                                 </div>
@@ -163,8 +160,8 @@ export default function ReturnScanPage() {
                             />
                         )
                     )}
-                </aside>
+                </SectionCard>
             </div>
-        </div>
+        </PageContainer>
     )
 }

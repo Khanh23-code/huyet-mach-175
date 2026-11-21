@@ -1,0 +1,68 @@
+.ui-urgency-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 9px;
+    border-radius: var(--radius-xs);
+    border: 1px solid var(--c-info-border);
+    background: var(--c-info-soft);
+    color: var(--c-info);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.ui-urgency-tag__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex: none;
+}
+
+.ui-urgency-tag--ROUTINE {
+    background: var(--c-info-soft);
+    border-color: var(--c-info-border);
+    color: var(--c-info);
+}
+
+.ui-urgency-tag--URGENT {
+    background: var(--c-warning-soft);
+    border-color: var(--c-warning-border);
+    color: var(--c-warning);
+}
+
+.ui-urgency-tag--EMERGENCY {
+    background: var(--c-danger-soft);
+    border-color: var(--c-danger-border);
+    color: var(--c-danger);
+}
+
+.ui-urgency-tag--EMERGENCY .ui-urgency-tag__dot {
+    animation: ui-urgency-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes ui-urgency-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.35;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-urgency-tag--EMERGENCY .ui-urgency-tag__dot {
+        animation: none;
+    }
+}
+
+@media print {
+    .ui-urgency-tag {
+        background: #ffffff !important;
+        color: #000000 !important;
+        border-color: #000000 !important;
+    }
+}

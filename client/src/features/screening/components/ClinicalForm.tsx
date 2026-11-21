@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { Alert, App, Button, Input, Radio, Select } from 'antd'
 import { CheckOutlined, HeartOutlined } from '@ant-design/icons'
 import { parseApiError } from '@/services/apiError'
+import { SectionCard } from '@/shared/components'
 import { useSaveClinical } from '../hooks'
 import {
     ABO_OPTIONS,
@@ -108,7 +109,7 @@ export default function ClinicalForm({ detail, editable, sendAnswers, answers, o
 
     return (
         <>
-            <div className="sc-card sc-panel">
+            <SectionCard>
                 <div className="sc-panel-head">
                     <span className="sc-icon"><HeartOutlined /></span>
                     <div className="sc-panel-title">
@@ -206,65 +207,67 @@ export default function ClinicalForm({ detail, editable, sendAnswers, answers, o
                         onChange={(e) => set('deferralReason', e.target.value)}
                     />
                 </Field>
-            </div>
+            </SectionCard>
 
-            <div className="sc-card sc-conclusion">
-                <div>
-                    <b>Kết luận sàng lọc</b>
-                    <div className="sc-muted">
-                        {editable ? 'Đưa ra quyết định để hoàn tất hồ sơ.' : 'Hồ sơ đã có kết luận.'}
+            <SectionCard className="sc-conclusion-card">
+                <div className="sc-conclusion">
+                    <div>
+                        <b>Kết luận sàng lọc</b>
+                        <div className="sc-muted">
+                            {editable ? 'Đưa ra quyết định để hoàn tất hồ sơ.' : 'Hồ sơ đã có kết luận.'}
+                        </div>
                     </div>
+
+                    {editable ? (
+                        <div className="sc-actions">
+                            <Button
+                                type="primary"
+                                size="large"
+                                icon={<CheckOutlined />}
+                                loading={pending === 'QUALIFIED'}
+                                disabled={save.isPending}
+                                onClick={() => submit('QUALIFIED')}
+                            >
+                                Đạt tiêu chuẩn
+                            </Button>
+                            <Button
+                                color="orange"
+                                variant="solid"
+                                size="large"
+                                loading={pending === 'DEFERRED'}
+                                disabled={save.isPending}
+                                onClick={() => submit('DEFERRED')}
+                            >
+                                Tạm hoãn
+                            </Button>
+                            <Button
+                                type="primary"
+                                danger
+                                size="large"
+                                loading={pending === 'UNQUALIFIED'}
+                                disabled={save.isPending}
+                                onClick={() => submit('UNQUALIFIED')}
+                            >
+                                Không đạt
+                            </Button>
+                        </div>
+                    ) : (
+                        c.screeningStatus !== 'PENDING' && (
+                            <Alert
+                                style={{ flex: 1 }}
+                                type={c.screeningStatus === 'QUALIFIED' ? 'success' : c.screeningStatus === 'DEFERRED' ? 'warning' : 'error'}
+                                showIcon
+                                title={`${meta.label}${c.doctorName ? ` · ${c.doctorName}` : ''} · ${fmtDateTime(c.screenedAt)}`}
+                                description={
+                                    c.screeningStatus === 'QUALIFIED'
+                                        ? 'Đã chuyển sang phòng lấy máu.'
+                                        : c.deferralReason ?? undefined
+                                }
+                            />
+                        )
+                    )}
                 </div>
-
-                {editable ? (
-                    <div className="sc-actions">
-                        <Button
-                            type="primary"
-                            size="large"
-                            icon={<CheckOutlined />}
-                            loading={pending === 'QUALIFIED'}
-                            disabled={save.isPending}
-                            onClick={() => submit('QUALIFIED')}
-                        >
-                            Đạt tiêu chuẩn
-                        </Button>
-                        <Button
-                            type="primary"
-                            size="large"
-                            className="sc-btn-warning"
-                            loading={pending === 'DEFERRED'}
-                            disabled={save.isPending}
-                            onClick={() => submit('DEFERRED')}
-                        >
-                            Tạm hoãn
-                        </Button>
-                        <Button
-                            type="primary"
-                            danger
-                            size="large"
-                            loading={pending === 'UNQUALIFIED'}
-                            disabled={save.isPending}
-                            onClick={() => submit('UNQUALIFIED')}
-                        >
-                            Không đạt
-                        </Button>
-                    </div>
-                ) : (
-                    c.screeningStatus !== 'PENDING' && (
-                        <Alert
-                            style={{ flex: 1 }}
-                            type={c.screeningStatus === 'QUALIFIED' ? 'success' : c.screeningStatus === 'DEFERRED' ? 'warning' : 'error'}
-                            showIcon
-                            title={`${meta.label}${c.doctorName ? ` · ${c.doctorName}` : ''} · ${fmtDateTime(c.screenedAt)}`}
-                            description={
-                                c.screeningStatus === 'QUALIFIED'
-                                    ? 'Đã chuyển sang phòng lấy máu.'
-                                    : c.deferralReason ?? undefined
-                            }
-                        />
-                    )
-                )}
-            </div>
+            </SectionCard>
         </>
     )
 }

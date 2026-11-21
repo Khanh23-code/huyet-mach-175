@@ -51,7 +51,7 @@ export default function LoginPage() {
 
                 <div className="login__brand">
                     <div className="login__logo">
-                        <svg width="30" height="30" viewBox="0 0 24 24" fill="#1b7a3a">
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="var(--c-primary)">
                             <path d="M12 2C12 2 5 10 5 15a7 7 0 0014 0c0-5-7-13-7-13z" />
                         </svg>
                     </div>
@@ -154,7 +154,7 @@ export default function LoginPage() {
                         size="large"
                         block
                         loading={loginMutation.isPending}
-                        style={{ marginTop: 20, height: 48, fontWeight: 600 }}
+                        className="login__submit"
                     >
                         Đăng nhập
                     </Button>

@@ -1,172 +1,125 @@
+/* ==========================================================================
+   Shared Handover & Return Layout Styles (Token-driven)
+   Dùng chung cho luồng Bàn giao (coordination, clinical) & Hoàn trả (inventory)
+   ========================================================================== */
+
 .handover-page {
     display: grid;
-    gap: 18px;
+    gap: var(--space-5);
     width: 100%;
 }
 
-.handover-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-.handover-breadcrumb {
-    font-size: 13px;
-    color: #64748b;
-    margin-bottom: 4px;
-}
-
-.handover-title {
-    margin: 0;
-    font-size: 26px;
-    font-weight: 700;
-    color: #0f172a;
-    line-height: 1.25;
-}
-
-.handover-subtitle {
-    margin: 6px 0 0;
-    font-size: 14px;
-    color: #64748b;
-}
-
-.handover-status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 14px;
-    border-radius: 999px;
-    background: #eff6ff;
-    color: #1d4ed8;
-    font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.handover-status-pill.is-success {
-    background: #ecfdf3;
-    color: #15803d;
-}
-
-.handover-status-pill i {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: currentColor;
-}
-
 .handover-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 22px 24px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-5) var(--space-6);
     display: grid;
-    gap: 20px;
+    gap: var(--space-5);
 }
 
 .handover-role-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 14px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #f1f5f9;
+    gap: var(--space-3);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--c-border-subtle);
     flex-wrap: wrap;
 }
 
 .handover-role-info {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .handover-role-icon {
     width: 44px;
     height: 44px;
-    border-radius: 12px;
-    background: #1a7534;
-    color: #fff;
+    border-radius: var(--radius-md);
+    background: var(--c-primary);
+    color: var(--c-on-primary);
     display: grid;
     place-items: center;
-    font-size: 20px;
+    font-size: var(--text-xl);
     flex-shrink: 0;
 }
 
 .handover-role-icon.is-clin {
-    background: #1d4ed8;
+    background: var(--c-info);
 }
 
 .handover-role-title {
-    font-size: 15px;
+    font-size: var(--text-md);
     font-weight: 700;
-    color: #0f172a;
+    color: var(--c-text);
 }
 
 .handover-role-sub {
-    font-size: 13px;
-    color: #64748b;
+    font-size: var(--text-sm);
+    color: var(--c-text-muted);
 }
 
 .handover-role-badge {
     padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 12px;
+    border-radius: var(--radius-xs);
+    font-size: var(--text-xs);
     font-weight: 700;
-    background: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
+    background: var(--c-blood-soft);
+    color: var(--c-blood);
+    border: 1px solid var(--c-blood-border);
 }
 
 .handover-role-badge.is-clin {
-    background: #eff6ff;
-    color: #1d4ed8;
-    border-color: #bfdbfe;
+    background: var(--c-info-soft);
+    color: var(--c-info);
+    border-color: var(--c-info-border);
 }
 
 .handover-scan-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.85fr) minmax(260px, 1fr);
-    gap: 18px;
+    gap: var(--space-5);
     align-items: stretch;
 }
 
 .handover-info-aside {
-    background: #eff6ff;
-    border: 1px solid #dbeafe;
-    border-radius: 14px;
-    padding: 18px 20px;
+    background: var(--c-info-soft);
+    border: 1px solid var(--c-info-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4) var(--space-5);
     display: grid;
     align-content: start;
-    gap: 10px;
+    gap: var(--space-2);
 }
 
 .handover-info-aside__title {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 14px;
+    gap: var(--space-2);
+    font-size: var(--text-base);
     font-weight: 700;
-    color: #1e40af;
+    color: var(--c-info);
 }
 
 .handover-info-aside__num {
     width: 24px;
     height: 24px;
-    border-radius: 6px;
-    background: #dbeafe;
-    color: #1d4ed8;
+    border-radius: var(--radius-xs);
+    background: var(--c-surface);
+    border: 1px solid var(--c-info-border);
+    color: var(--c-info);
     display: grid;
     place-items: center;
-    font-size: 12px;
+    font-size: var(--text-xs);
     font-weight: 700;
 }
 
 .handover-info-aside p {
     margin: 0;
-    font-size: 13px;
-    color: #334155;
+    font-size: var(--text-sm);
+    color: var(--c-text-secondary);
     line-height: 1.55;
 }
 
@@ -174,68 +127,54 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 14px;
-    padding: 16px 20px;
-    border-radius: 12px;
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-md);
+    background: var(--c-primary-soft);
+    border: 1px solid var(--c-primary-border);
     flex-wrap: wrap;
 }
 
 .handover-bag-banner__left {
     display: flex;
     align-items: center;
-    gap: 14px;
-}
-
-.handover-blood-badge {
-    min-width: 52px;
-    height: 52px;
-    padding: 0 10px;
-    border-radius: 12px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #dc2626;
-    font-size: 18px;
-    font-weight: 800;
-    display: grid;
-    place-items: center;
+    gap: var(--space-3);
 }
 
 .handover-bag-banner__label {
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.04em;
-    color: #15803d;
+    color: var(--c-primary);
     text-transform: uppercase;
 }
 
 .handover-bag-banner__code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 16px;
+    font-family: var(--font-mono);
+    font-size: var(--text-md);
     font-weight: 700;
-    color: #b91c1c;
+    color: var(--c-blood);
 }
 
 .handover-bag-banner__meta {
-    font-size: 13px;
-    color: #475569;
+    font-size: var(--text-sm);
+    color: var(--c-text-secondary);
 }
 
 .handover-detail-box {
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 18px 20px;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4) var(--space-5);
     display: grid;
-    gap: 14px;
-    background: #ffffff;
+    gap: var(--space-3);
+    background: var(--c-surface);
 }
 
 .handover-detail-box__header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 12px;
+    gap: var(--space-3);
     flex-wrap: wrap;
 }
 
@@ -244,38 +183,38 @@
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: #15803d;
+    color: var(--c-primary);
 }
 
 .handover-detail-box__code {
     margin-top: 2px;
-    font-size: 20px;
+    font-size: var(--text-xl);
     font-weight: 700;
-    color: #0f172a;
+    color: var(--c-text);
 }
 
 .handover-detail-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px 28px;
+    gap: var(--space-3) var(--space-6);
 }
 
 .handover-kv {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    padding: 8px 0;
-    border-bottom: 1px solid #f1f5f9;
-    font-size: 13px;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--c-border-subtle);
+    font-size: var(--text-sm);
 }
 
 .handover-kv span {
-    color: #64748b;
+    color: var(--c-text-muted);
 }
 
 .handover-kv strong {
-    color: #0f172a;
+    color: var(--c-text);
     text-align: right;
 }
 
@@ -283,29 +222,23 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    padding-top: 4px;
+    gap: var(--space-3);
+    padding-top: var(--space-1);
     flex-wrap: wrap;
-}
-
-.handover-btn-primary {
-    background-color: #1a7534 !important;
-    border-color: #1a7534 !important;
-    font-weight: 600;
 }
 
 .handover-list-toolbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: var(--space-3);
     flex-wrap: wrap;
 }
 
 .handover-list-filters {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-2);
     flex-wrap: wrap;
 }
 
@@ -316,19 +249,20 @@
 }
 
 .handover-code-mono {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 13px;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
     font-weight: 700;
-    color: #0f172a;
-    background: #f1f5f9;
+    color: var(--c-text);
+    background: var(--c-surface-muted);
+    border: 1px solid var(--c-border-subtle);
     padding: 2px 7px;
-    border-radius: 6px;
+    border-radius: var(--radius-xs);
 }
 
 .handover-tab-label {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     font-weight: 600;
 }
 
@@ -337,32 +271,32 @@
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 10px;
+    gap: var(--space-2);
 }
 
 .handover-timeline-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid #e2e8f0;
-    background: #f8fafc;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--c-border);
+    background: var(--c-surface-muted);
 }
 
 .handover-timeline-item.is-done {
-    background: #f0fdf4;
-    border-color: #bbf7d0;
+    background: var(--c-primary-soft);
+    border-color: var(--c-primary-border);
 }
 
 .handover-timeline-item__left {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 13px;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
     font-weight: 600;
-    color: #0f172a;
+    color: var(--c-text);
 }
 
 .handover-timeline-step {
@@ -373,14 +307,14 @@
     place-items: center;
     font-size: 11px;
     font-weight: 700;
-    background: #e2e8f0;
-    color: #475569;
+    background: var(--c-border);
+    color: var(--c-text-secondary);
     flex-shrink: 0;
 }
 
 .handover-timeline-item.is-done .handover-timeline-step {
-    background: #16a34a;
-    color: #fff;
+    background: var(--c-primary);
+    color: var(--c-on-primary);
 }
 
 @media (max-width: 900px) {

@@ -1,66 +1,49 @@
-.his-patient-modal .ant-modal-content {
-    border-radius: 16px;
-    padding: 28px 24px 20px 24px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-}
-
 .his-modal__close-icon {
-    font-size: 16px;
-    color: #64748b;
+    font-size: var(--text-md);
+    color: var(--c-text-muted);
 }
 
 .his-modal__header {
-    margin-bottom: 20px;
+    margin-bottom: var(--space-5);
 }
 
 .his-modal__badge {
     display: inline-block;
-    color: #15803d;
-    font-size: 13px;
+    color: var(--c-primary);
+    font-size: var(--text-sm);
     font-weight: 700;
     letter-spacing: 0.05em;
     margin-bottom: 6px;
 }
 
 .his-modal__title {
-    font-size: 22px;
+    font-size: var(--text-xl);
     font-weight: 700;
-    color: #0f172a;
+    color: var(--c-text);
     margin: 0 0 6px 0;
 }
 
 .his-modal__subtitle {
-    font-size: 13px;
-    color: #64748b;
+    font-size: var(--text-sm);
+    color: var(--c-text-muted);
     margin: 0;
 }
 
 .his-modal__search-box {
     display: flex;
-    gap: 10px;
-    margin-bottom: 18px;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
 }
 
 .his-modal__input {
-    border-radius: 8px;
-    border-color: #22c55e;
     height: 42px;
-    font-size: 14px;
-}
-
-.his-modal__input:focus,
-.his-modal__input-focused {
-    border-color: #16a34a !important;
-    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2) !important;
+    font-size: var(--text-base);
 }
 
 .his-modal__search-btn {
     height: 42px;
-    padding: 0 22px;
-    border-radius: 8px;
+    padding: 0 var(--space-5);
     font-weight: 500;
-    color: #1e293b;
-    border-color: #cbd5e1;
 }
 
 .his-modal__list {
@@ -68,52 +51,51 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding-right: 4px;
-    margin-bottom: 24px;
+    gap: var(--space-3);
+    padding-right: var(--space-1);
+    margin-bottom: var(--space-6);
 }
 
-/* Tùy biến thanh cuộn mượt mà */
 .his-modal__list::-webkit-scrollbar {
     width: 6px;
 }
 
 .his-modal__list::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1;
-    border-radius: 999px;
+    background-color: var(--c-border);
+    border-radius: var(--radius-pill);
 }
 
 .his-patient-card {
     display: flex;
     align-items: flex-start;
-    gap: 16px;
-    padding: 14px 18px;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 12px;
-    background-color: #ffffff;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    border: 1.5px solid var(--c-border);
+    border-radius: var(--radius-md);
+    background-color: var(--c-surface);
     cursor: pointer;
     transition: all 0.15s ease-in-out;
 }
 
 .his-patient-card:hover {
-    border-color: #86efac;
-    background-color: #f0fdf4;
+    border-color: var(--c-primary-border);
+    background-color: var(--c-primary-soft);
 }
 
 .his-patient-card.is-selected {
-    border-color: #16a34a;
-    background-color: #f0fdf4;
-    box-shadow: 0 0 0 1px #16a34a;
+    border-color: var(--c-primary);
+    background-color: var(--c-primary-soft);
+    box-shadow: 0 0 0 1px var(--c-primary);
 }
 
 .his-patient-card__avatar {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background-color: #dcfce7;
-    color: #166534;
+    background-color: var(--c-primary-soft);
+    color: var(--c-primary);
     font-weight: 600;
-    font-size: 15px;
+    font-size: var(--text-base);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -125,66 +107,48 @@
 }
 
 .his-patient-card__name-line {
-    font-size: 15px;
+    font-size: var(--text-base);
     margin-bottom: 3px;
 }
 
 .his-patient-card__name {
     font-weight: 700;
-    color: #0f172a;
+    color: var(--c-text);
 }
 
 .his-patient-card__dot {
     margin: 0 6px;
-    color: #94a3b8;
+    color: var(--c-text-subtle);
 }
 
 .his-patient-card__age {
-    color: #475569;
-    font-size: 13px;
+    color: var(--c-text-secondary);
+    font-size: var(--text-sm);
 }
 
 .his-patient-card__location-line {
-    font-size: 13px;
-    color: #64748b;
-    margin-bottom: 4px;
+    font-size: var(--text-sm);
+    color: var(--c-text-muted);
+    margin-bottom: var(--space-1);
 }
 
 .his-patient-card__diagnosis {
-    font-size: 13px;
-    color: #334155;
+    font-size: var(--text-sm);
+    color: var(--c-text-secondary);
     font-weight: 500;
 }
 
 .his-modal__empty {
     text-align: center;
-    padding: 36px 0;
-    color: #64748b;
-    font-size: 14px;
+    padding: var(--space-8) 0;
+    color: var(--c-text-muted);
+    font-size: var(--text-base);
 }
 
 .his-modal__footer {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
-    border-top: 1px solid #f1f5f9;
-    padding-top: 16px;
-}
-
-.his-modal__cancel-btn {
-    height: 40px;
-    padding: 0 20px;
-    border-radius: 8px;
-    border-color: #cbd5e1;
-    color: #334155;
-    font-weight: 500;
-}
-
-.his-modal__submit-btn {
-    height: 40px;
-    padding: 0 22px;
-    border-radius: 8px;
-    background-color: var(--c-primary, #1A7534) !important;
-    border-color: var(--c-primary, #1A7534) !important;
-    font-weight: 600;
+    gap: var(--space-3);
+    border-top: 1px solid var(--c-border-subtle);
+    padding-top: var(--space-4);
 }

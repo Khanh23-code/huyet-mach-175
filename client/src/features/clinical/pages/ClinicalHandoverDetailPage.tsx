@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Alert, App, Button, Checkbox, Input, Result, Spin, Tag } from 'antd'
+import { Alert, Button, Checkbox, Input, Result, Spin } from 'antd'
 import { ArrowLeftOutlined, CheckCircleOutlined, MedicineBoxOutlined } from '@ant-design/icons'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useCurrentUser } from '@/features/auth/useCurrentUser'
@@ -7,11 +7,18 @@ import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
 import { formatDateTime } from '@/shared/formatters/date'
+import {
+    BloodGroupTag,
+    PageContainer,
+    PageHeader,
+    StatusPill,
+    UrgencyTag,
+} from '@/shared/components'
 import { clinicalApi } from '../clinicalApi'
 import { useConfirmReceipt } from '../hooks'
-import { getStatusMeta, getUrgencyMeta } from '../format'
+import { getStatusMeta, getStatusTone } from '../format'
 import type { ConfirmReceiptResponse, PendingReceiptBagDto } from '../types'
-import '@/features/coordination/pages/HandoverPages.css'
+import '@/shared/styles/HandoverLayout.css'
 import './ClinicalHandoverPages.css'
 
 interface LocationState {
@@ -20,7 +27,6 @@ interface LocationState {
 }
 
 export default function ClinicalHandoverDetailPage() {
-    const { message } = App.useApp()
     const navigate = useNavigate()
     const { allocationId: rawAllocId } = useParams<{ allocationId: string }>()
     const location = useLocation()
@@ -113,19 +119,21 @@ export default function ClinicalHandoverDetailPage() {
     }
 
     return (
-        <div className="handover-page">
-            <div className="handover-head">
-                <div>
-                    <div className="handover-breadcrumb">Yêu cầu máu Lâm sàng / W3.2 · Thông tin túi máu tiếp nhận</div>
-                    <h1 className="handover-title">Thông tin túi máu tiếp nhận</h1>
-                    <p className="handover-subtitle">
-                        Đối chiếu thông tin túi máu thực tế với dữ liệu bàn giao từ Ngân hàng máu trước khi xác nhận tiếp nhận.
-                    </p>
-                </div>
-                <span className={`handover-status-pill ${receiptResult ? 'is-success' : ''}`}>
-                    <i /> {receiptResult ? 'Đã xác nhận tiếp nhận' : 'Chờ đối chiếu tiếp nhận'}
-                </span>
-            </div>
+        <PageContainer className="handover-page">
+            <PageHeader
+                breadcrumb={[
+                    { title: 'Yêu cầu máu Lâm sàng', path: '/clinical/requests' },
+                    { title: 'Nhận bàn giao', path: '/clinical/handovers' },
+                    { title: 'W3.2 · Thông tin túi máu tiếp nhận' },
+                ]}
+                title="Thông tin túi máu tiếp nhận"
+                subtitle="Đối chiếu thông tin túi máu thực tế với dữ liệu bàn giao từ Ngân hàng máu trước khi xác nhận tiếp nhận."
+                extra={
+                    <StatusPill tone={receiptResult ? 'success' : 'info'}>
+                        {receiptResult ? 'Đã xác nhận tiếp nhận' : 'Chờ đối chiếu tiếp nhận'}
+                    </StatusPill>
+                }
+            />
 
             <section className="handover-card">
                 <div className="handover-role-bar">
@@ -174,10 +182,8 @@ export default function ClinicalHandoverDetailPage() {
                                 </div>
                             </div>
                             <div className="clin-pending-item__right">
-                                <Tag color={getUrgencyMeta(bag.urgencyLevel).color}>
-                                    {getUrgencyMeta(bag.urgencyLevel).label}
-                                </Tag>
-                                <div className="handover-blood-badge">{bag.bloodType}</div>
+                                <UrgencyTag level={bag.urgencyLevel} />
+                                <BloodGroupTag value={bag.bloodType} size="lg" />
                             </div>
                         </div>
 
@@ -187,7 +193,7 @@ export default function ClinicalHandoverDetailPage() {
                                     <CheckCircleOutlined />
                                 </div>
                                 <div>
-                                    <div className="clin-reconcile-title">Đối chiếu thông tin túi máu thực tế & dữ liệu bàn giao</div>
+                                    <div className="clin-reconcile-title">Đối chiếu thông tin túi máu thực tế &amp; dữ liệu bàn giao</div>
                                     <div className="clin-reconcile-sub">
                                         Kiểm tra kỹ nhãn túi máu thực tế khớp với thông tin phiếu bàn giao trước khi xác nhận tiếp nhận.
                                     </div>
@@ -206,8 +212,8 @@ export default function ClinicalHandoverDetailPage() {
                                 <tbody>
                                     <tr>
                                         <td>Mã túi máu</td>
-                                        <td><strong style={{ fontFamily: 'monospace' }}>{bag.barcode}</strong></td>
-                                        <td><strong className="clin-reconcile-ok" style={{ fontFamily: 'monospace' }}>{scannedBarcode}</strong></td>
+                                        <td><strong className="text-mono">{bag.barcode}</strong></td>
+                                        <td><strong className="clin-reconcile-ok text-mono">{scannedBarcode}</strong></td>
                                         <td className="clin-reconcile-ok">✓ Khớp mã</td>
                                     </tr>
                                     <tr>
@@ -217,7 +223,7 @@ export default function ClinicalHandoverDetailPage() {
                                         <td className="clin-reconcile-ok">✓</td>
                                     </tr>
                                     <tr>
-                                        <td>Chế phẩm & thể tích</td>
+                                        <td>Chế phẩm &amp; thể tích</td>
                                         <td><strong>{bag.componentName} ({bag.volumeMl} ml)</strong></td>
                                         <td><strong className="clin-reconcile-ok">{bag.componentCode} · {bag.volumeMl} ml</strong></td>
                                         <td className="clin-reconcile-ok">✓</td>
@@ -251,9 +257,9 @@ export default function ClinicalHandoverDetailPage() {
                                         <div>
                                             <label
                                                 htmlFor="expected-patient-code"
-                                                style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 6 }}
+                                                style={{ display: 'block', fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 6 }}
                                             >
-                                                Mã người bệnh đối soát <span style={{ color: '#dc2626' }}>*</span>
+                                                Mã người bệnh đối soát <span style={{ color: 'var(--c-danger)' }}>*</span>
                                             </label>
                                             <Input
                                                 id="expected-patient-code"
@@ -298,12 +304,14 @@ export default function ClinicalHandoverDetailPage() {
                                 message={`Tiếp nhận thành công túi máu ${receiptResult.barcode}`}
                                 description={
                                     <div style={{ display: 'grid', gap: 4, marginTop: 4 }}>
-                                        <div>
-                                            Trạng thái phân bổ: <strong>{receiptResult.allocationStatus}</strong> · Trạng thái phiếu{' '}
-                                            <strong>{receiptResult.requestCode}</strong>:{' '}
-                                            <Tag color={getStatusMeta(receiptResult.requestStatus).color}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                            <span>
+                                                Trạng thái phân bổ: <strong>{receiptResult.allocationStatus}</strong> · Trạng thái phiếu{' '}
+                                                <strong>{receiptResult.requestCode}</strong>:
+                                            </span>
+                                            <StatusPill tone={getStatusTone(receiptResult.requestStatus)} dot={false}>
                                                 {getStatusMeta(receiptResult.requestStatus).label} ({receiptResult.requestStatus})
-                                            </Tag>
+                                            </StatusPill>
                                         </div>
                                         <div>
                                             Người tiếp nhận: <strong>{receiptResult.receivedByName || displayName}</strong> · Thời gian:{' '}
@@ -328,14 +336,9 @@ export default function ClinicalHandoverDetailPage() {
                                     type="primary"
                                     size="large"
                                     icon={<CheckCircleOutlined />}
-                                    className="handover-btn-primary"
                                     loading={confirmMutation.isPending}
                                     disabled={!canConfirm}
                                     onClick={() => {
-                                        if (!verifiedPhysicalMatch) {
-                                            message.warning('Vui lòng tick xác nhận đã đối chiếu thông tin thực tế.')
-                                            return
-                                        }
                                         void handleConfirmReceive()
                                     }}
                                 >
@@ -346,6 +349,6 @@ export default function ClinicalHandoverDetailPage() {
                     </>
                 )}
             </section>
-        </div>
+        </PageContainer>
     )
 }

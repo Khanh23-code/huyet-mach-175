@@ -33,7 +33,6 @@ export default function ScreeningWorkspace({ detail, canEdit, onSaved }: Props) 
                 <Alert
                     type="warning"
                     showIcon
-                    style={{ marginTop: 16 }}
                     title="Người hiến chưa đủ 84 ngày kể từ lần hiến gần nhất"
                     description="Cân nhắc kết luận Tạm hoãn."
                 />

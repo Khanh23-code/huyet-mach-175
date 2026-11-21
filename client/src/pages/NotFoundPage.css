@@ -1,17 +1,6 @@
-.not-found-page {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    width: 100%;
-}
-
-.not-found-card {
-    background: #ffffff;
-    border: 1px solid var(--c-border, #dfe8e2);
-    border-radius: var(--radius-md, 16px);
-    padding: 36px 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
+/* ==========================================================================
+   Not Found / Under Development Page
+   ========================================================================== */
 
 .not-found-icon {
     font-size: 56px;
@@ -21,10 +10,10 @@
     width: 88px;
     height: 88px;
     border-radius: 50%;
-    margin-bottom: 8px;
+    margin-bottom: var(--space-2);
 }
 
 .not-found-icon--dev {
-    background: var(--c-primary-soft, #e9f5ed);
-    color: var(--c-primary, #1a7534);
+    background: var(--c-primary-soft);
+    color: var(--c-primary);
 }

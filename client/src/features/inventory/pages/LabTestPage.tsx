@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Breadcrumb, Empty, Input, Skeleton, message } from 'antd'
+import { Empty, Input, Skeleton, message } from 'antd'
 import { BarcodeOutlined } from '@ant-design/icons'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
+import { PageContainer, PageHeader, SectionCard } from '@/shared/components'
 import { useLabQueue } from '../labTestsHooks'
 import { labTestsApi } from '../labTestsApi'
 import LabTestWorkspace from '../components/LabTestWorkspace'
@@ -58,15 +59,15 @@ export default function LabTestPage() {
     }
 
     return (
-        <div className="inv">
-            <Breadcrumb items={[{ title: 'Túi máu & Kho' }, { title: 'Xét nghiệm túi máu' }]} />
-            <div className="inv-title">
-                <h1>Nhập kết quả xét nghiệm</h1>
-                <p>Ghi nhận kết quả sàng lọc 5 chỉ số và nhóm máu khẳng định cho túi máu đã tiếp nhận.</p>
-            </div>
+        <PageContainer>
+            <PageHeader
+                breadcrumb={[{ title: 'Túi máu & Kho' }, { title: 'Xét nghiệm túi máu' }]}
+                title="Nhập kết quả xét nghiệm"
+                subtitle="Ghi nhận kết quả sàng lọc 5 chỉ số và nhóm máu khẳng định cho túi máu đã tiếp nhận."
+            />
 
             <div className="inv-proc">
-                <section className="inv-card inv-queue">
+                <SectionCard bodyClassName="inv-queue">
                     <Input
                         size="large"
                         prefix={<BarcodeOutlined />}
@@ -102,7 +103,7 @@ export default function LabTestPage() {
                             ))
                         )}
                     </div>
-                </section>
+                </SectionCard>
 
                 <div>
                     {selected ? (
@@ -114,12 +115,12 @@ export default function LabTestPage() {
                             onDone={() => setSelected(null)}
                         />
                     ) : (
-                        <section className="inv-card inv-card__body">
+                        <SectionCard>
                             <Empty description="Chọn hoặc quét một túi máu để nhập kết quả xét nghiệm" />
-                        </section>
+                        </SectionCard>
                     )}
                 </div>
             </div>
-        </div>
+        </PageContainer>
     )
 }

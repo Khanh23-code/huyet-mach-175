@@ -43,16 +43,17 @@ export default function CampaignGate() {
     }
 
     return (
-        <div className="rq-gate">
-            <div className="rq-gate-icon"><FieldNumberOutlined /></div>
-            <h2 className="rq-gate-title">Nhập mã đợt hiến máu để bắt đầu</h2>
-            <p className="rq-gate-desc">
+        <div className="wc-gate">
+            <div className="wc-gate__icon"><FieldNumberOutlined /></div>
+            <h2 className="wc-gate__title">Nhập mã đợt hiến máu để bắt đầu</h2>
+            <p className="wc-gate__desc">
                 Hàng chờ, quét mã check-in và đăng ký tại chỗ chỉ hoạt động trong một đợt hiến máu.
                 Bạn vẫn có thể xem hồ sơ cá nhân khi chưa nhập mã.
             </p>
 
-            <div className="rq-gate-form">
+            <div className="wc-gate__form">
                 <Input
+                    className="wc-gate__input"
                     size="large"
                     inputMode="numeric"
                     autoFocus
@@ -69,7 +70,7 @@ export default function CampaignGate() {
                 </Button>
             </div>
 
-            {error && <Alert type="error" showIcon title={error} style={{ marginTop: 16, textAlign: 'left' }} />}
+            {error && <Alert className="wc-gate__alert" type="error" showIcon title={error} />}
         </div>
     )
 }

@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
-import { Alert, Button, Card, Checkbox, Empty, Input, Select, Table, Tag, message } from 'antd'
+import { Alert, Button, Checkbox, Empty, Input, Select, Table, message } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { CheckCircleOutlined, InfoCircleOutlined, ReloadOutlined, RollbackOutlined } from '@ant-design/icons'
+import { BloodGroupTag, SectionCard, StatusPill } from '@/shared/components'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { formatDateTime } from '@/shared/formatters/date'
@@ -164,7 +165,9 @@ export function ClinicalReturnCreatePanel() {
                         <div>
                             <strong>{r.patientName}</strong> ({r.patientCode})
                         </div>
-                        <div style={{ color: '#64748b', fontSize: 12 }}>Phiếu yêu cầu: {r.requestCode}</div>
+                        <div style={{ color: 'var(--c-text-muted)', fontSize: 'var(--text-xs)' }}>
+                            Phiếu yêu cầu: {r.requestCode}
+                        </div>
                     </div>
                 ),
             },
@@ -172,11 +175,11 @@ export function ClinicalReturnCreatePanel() {
                 title: 'CHẾ PHẨM',
                 key: 'product',
                 render: (_, r) => (
-                    <div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
                         <div>
                             {r.componentName} ({r.volumeMl} ml)
                         </div>
-                        <Tag color="red">{r.bloodType}</Tag>
+                        <BloodGroupTag value={r.bloodType} size="sm" />
                     </div>
                 ),
             },
@@ -184,7 +187,7 @@ export function ClinicalReturnCreatePanel() {
                 title: 'LÝ DO HOÀN TRẢ',
                 dataIndex: 'returnReason',
                 key: 'returnReason',
-                render: (text) => <span style={{ color: '#475569' }}>{text}</span>,
+                render: (text) => <span style={{ color: 'var(--c-text-secondary)' }}>{text}</span>,
             },
             {
                 title: 'TRẠNG THÁI XỬ LÝ',
@@ -192,9 +195,9 @@ export function ClinicalReturnCreatePanel() {
                 key: 'status',
                 align: 'center',
                 render: (action) => (
-                    <Tag color="processing">
+                    <StatusPill tone="info">
                         {action === 'PENDING_INSPECTION' ? 'Chờ Ngân hàng máu kiểm định' : action}
-                    </Tag>
+                    </StatusPill>
                 ),
             },
             {
@@ -227,23 +230,29 @@ export function ClinicalReturnCreatePanel() {
             {
                 title: 'TRẠNG THÁI TÚI',
                 key: 'bagStatus',
-                render: (_, r) => <Tag>{r.bagStatus || r.allocationStatus}</Tag>,
+                render: (_, r) => (
+                    <StatusPill tone="neutral" dot={false}>
+                        {r.bagStatus || r.allocationStatus}
+                    </StatusPill>
+                ),
             },
             {
                 title: 'LÝ DO KHÔNG ĐỦ ĐIỀU KIỆN',
                 dataIndex: 'ineligibleReason',
                 key: 'reason',
-                render: (text) => <span style={{ color: '#b91c1c', fontSize: 13 }}>{text}</span>,
+                render: (text) => (
+                    <span style={{ color: 'var(--c-danger)', fontSize: 'var(--text-sm)' }}>{text}</span>
+                ),
             },
         ],
         [],
     )
 
     return (
-        <div style={{ display: 'grid', gap: 20 }}>
-            <Card className="clinical-main-card" bordered={false}>
-                <div className="clin-ret-head" style={{ marginBottom: 16 }}>
-                    <h2 className="clin-ret-title">Lập phiếu hoàn trả túi máu – W3.3</h2>
+        <div style={{ display: 'grid', gap: 'var(--page-gap)' }}>
+            <SectionCard
+                title="Lập phiếu hoàn trả túi máu – W3.3"
+                extra={
                     <Button
                         icon={<ReloadOutlined />}
                         loading={isEligibleLoading || isEligibleFetching}
@@ -254,8 +263,8 @@ export function ClinicalReturnCreatePanel() {
                     >
                         Làm mới danh sách túi
                     </Button>
-                </div>
-
+                }
+            >
                 <Alert
                     type="info"
                     showIcon
@@ -285,10 +294,12 @@ export function ClinicalReturnCreatePanel() {
                                     Phiếu yêu cầu: <strong>{createdReturn.requestCode}</strong> · Người bệnh:{' '}
                                     <strong>{createdReturn.patientName}</strong> ({createdReturn.patientCode})
                                 </div>
-                                <div>
-                                    Trạng thái xử lý: <Tag color="processing">{createdReturn.finalAction}</Tag> · Trạng thái túi:{' '}
-                                    <Tag color="warning">{createdReturn.bagStatus}</Tag> · Lập lúc:{' '}
-                                    {formatDateTime(createdReturn.processedAt)}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                    <span>Trạng thái xử lý:</span>
+                                    <StatusPill tone="info" dot={false}>{createdReturn.finalAction}</StatusPill>
+                                    <span>· Trạng thái túi:</span>
+                                    <StatusPill tone="warning" dot={false}>{createdReturn.bagStatus}</StatusPill>
+                                    <span>· Lập lúc: {formatDateTime(createdReturn.processedAt)}</span>
                                 </div>
                             </div>
                         }
@@ -299,12 +310,14 @@ export function ClinicalReturnCreatePanel() {
                     <div>
                         <label
                             htmlFor="select-return-bag"
-                            style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 6 }}
+                            style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 6 }}
                         >
-                            Chọn túi máu hoàn trả <span style={{ color: '#dc2626' }}>*</span>{' '}
-                            <Tag color="green" style={{ marginLeft: 6 }}>
+                            <span>
+                                Chọn túi máu hoàn trả <span style={{ color: 'var(--c-danger)' }}>*</span>
+                            </span>
+                            <StatusPill tone="success" dot={false}>
                                 {eligibleBags.length} túi đủ điều kiện
-                            </Tag>
+                            </StatusPill>
                         </label>
                         <Select
                             id="select-return-bag"
@@ -332,20 +345,24 @@ export function ClinicalReturnCreatePanel() {
 
                     {selectedBag && (
                         <div className="clin-ret-bag-summary">
-                            <div>
-                                <div style={{ fontSize: 12, color: '#64748b' }}>Túi máu được chọn</div>
-                                <strong style={{ fontFamily: 'monospace', fontSize: 15, color: '#15803d' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-muted)' }}>
+                                    Túi máu được chọn:
+                                </span>
+                                <strong className="text-mono" style={{ fontSize: 'var(--text-md)', color: 'var(--c-primary)' }}>
                                     {selectedBag.barcode}
-                                </strong>{' '}
-                                · {selectedBag.componentName} ({selectedBag.volumeMl} ml) ·{' '}
-                                <Tag color="red">{selectedBag.bloodType}</Tag>
+                                </strong>
+                                <span>· {selectedBag.componentName} ({selectedBag.volumeMl} ml) ·</span>
+                                <BloodGroupTag value={selectedBag.bloodType} size="sm" />
                             </div>
-                            <div style={{ fontSize: 13, color: '#334155' }}>
-                                Phiếu <strong>{selectedBag.requestCode}</strong> · NB{' '}
-                                <strong>{selectedBag.patientName}</strong> ({selectedBag.patientCode}) ·{' '}
-                                <Tag color={selectedBag.isReceivedAtClinical ? 'green' : 'blue'}>
+                            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--c-text-secondary)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                <span>
+                                    Phiếu <strong>{selectedBag.requestCode}</strong> · NB{' '}
+                                    <strong>{selectedBag.patientName}</strong> ({selectedBag.patientCode}) ·
+                                </span>
+                                <StatusPill tone={selectedBag.isReceivedAtClinical ? 'success' : 'info'} dot={false}>
                                     {selectedBag.isReceivedAtClinical ? 'Đã nhận tại khoa' : 'Đã xuất kho (Chờ nhận)'}
-                                </Tag>
+                                </StatusPill>
                             </div>
                         </div>
                     )}
@@ -353,9 +370,9 @@ export function ClinicalReturnCreatePanel() {
                     <div>
                         <label
                             htmlFor="select-return-reason"
-                            style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 6 }}
+                            style={{ display: 'block', fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 6 }}
                         >
-                            Lý do hoàn trả <span style={{ color: '#dc2626' }}>*</span>
+                            Lý do hoàn trả <span style={{ color: 'var(--c-danger)' }}>*</span>
                         </label>
                         <Select
                             id="select-return-reason"
@@ -386,8 +403,8 @@ export function ClinicalReturnCreatePanel() {
                     </div>
 
                     <div>
-                        <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8 }}>
-                            Xác nhận điều kiện bảo quản <span style={{ color: '#dc2626' }}>*</span>
+                        <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 8 }}>
+                            Xác nhận điều kiện bảo quản <span style={{ color: 'var(--c-danger)' }}>*</span>
                         </div>
                         <div className="clin-ret-checklist">
                             <div className={`clin-ret-check-item ${checklist.isUnusedFullVolume ? 'is-checked' : ''}`}>
@@ -446,7 +463,6 @@ export function ClinicalReturnCreatePanel() {
                         </Button>
                         <Button
                             type="primary"
-                            className="clin-ret-submit-btn"
                             icon={<RollbackOutlined />}
                             loading={createReturnMutation.isPending}
                             disabled={
@@ -462,16 +478,18 @@ export function ClinicalReturnCreatePanel() {
                         </Button>
                     </div>
                 </div>
-            </Card>
+            </SectionCard>
 
             {ineligibleBags.length > 0 && (
-                <Card className="clinical-main-card" bordered={false}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                        <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0, color: '#1e293b' }}>
-                            Túi máu không đủ điều kiện hoàn trả (bị khóa chọn)
-                        </h3>
-                        <Tag color="default">{ineligibleBags.length} túi</Tag>
-                    </div>
+                <SectionCard
+                    title="Túi máu không đủ điều kiện hoàn trả (bị khóa chọn)"
+                    extra={
+                        <StatusPill tone="neutral" dot={false}>
+                            {ineligibleBags.length} túi
+                        </StatusPill>
+                    }
+                    noPadding
+                >
                     <Table
                         columns={ineligibleColumns}
                         dataSource={ineligibleBags}
@@ -479,19 +497,18 @@ export function ClinicalReturnCreatePanel() {
                         pagination={false}
                         size="small"
                     />
-                </Card>
+                </SectionCard>
             )}
 
-            <Card className="clinical-main-card" bordered={false}>
-                <div className="clin-ret-head" style={{ marginBottom: 12 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0, color: '#1e293b' }}>
-                            Phiếu hoàn trả đang chờ Ngân hàng máu kiểm định
-                        </h3>
-                        <Tag color="orange">{pendingReturnsPage?.totalCount || 0} phiếu đang chờ</Tag>
-                    </div>
-                </div>
-
+            <SectionCard
+                title="Phiếu hoàn trả đang chờ Ngân hàng máu kiểm định"
+                extra={
+                    <StatusPill tone="warning" dot={false}>
+                        {pendingReturnsPage?.totalCount || 0} phiếu đang chờ
+                    </StatusPill>
+                }
+                noPadding
+            >
                 <Table
                     columns={returnColumns}
                     dataSource={pendingReturnsPage?.items || []}
@@ -510,7 +527,7 @@ export function ClinicalReturnCreatePanel() {
                         ),
                     }}
                 />
-            </Card>
+            </SectionCard>
         </div>
     )
 }

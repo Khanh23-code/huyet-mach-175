@@ -17,6 +17,7 @@ import type { PermissionDto } from '../permissionsApi'
 import CreateRoleModal from './CreateRoleModal'
 import CreatePermissionModal from './CreatePermissionModal'
 import { parseApiError } from '@/services/apiError'
+import { SectionCard } from '@/shared/components'
 
 /** Vai trò hệ thống: BE chặn sửa quyền (RolesService.UpdateRolePermissionsAsync). Xem SYSTEM_ROLE_CODES. */
 
@@ -217,7 +218,7 @@ export default function PermissionMatrix({ onNavigateToUsers }: PermissionMatrix
 
                 <Can do={PERMISSIONS.ROLES_EDIT}>
                     <Button
-                        className="um-dashed"
+                        type="dashed"
                         icon={<PlusOutlined />}
                         onClick={() => setCreatingRole(true)}
                     >
@@ -227,51 +228,49 @@ export default function PermissionMatrix({ onNavigateToUsers }: PermissionMatrix
 
             </div>
 
-            <section className="um-panel">
-                <header className="um-panel__head um-panel__head--col">
-                    <div>
-                        <div className="um-eyebrow">RBAC theo phân hệ</div>
-                        <h3 className="um-panel__title-lg">
-                            Chi tiết quyền hạn của vai trò: {roleLabel}
-                        </h3>
-                        <Tooltip title={selectedRole ? `Xem danh sách tài khoản thuộc vai trò ${roleLabel}` : undefined}>
-                            <button
-                                type="button"
-                                className="um-pill um-pill--btn"
-                                onClick={() => {
-                                    if (selectedRole?.code) {
-                                        onNavigateToUsers?.(selectedRole.code as RoleCode)
-                                    }
-                                }}
-                            >
-                                <span>{data?.usersCount ?? '–'} tài khoản được gán vai trò này</span>
-                                <ArrowRightOutlined style={{ fontSize: 11 }} />
-                            </button>
-                        </Tooltip>
-                    </div>
-
+            <SectionCard
+                eyebrow="RBAC theo phân hệ"
+                title={`Chi tiết quyền hạn của vai trò: ${roleLabel}`}
+                subtitle={
+                    <Tooltip title={selectedRole ? `Xem danh sách tài khoản thuộc vai trò ${roleLabel}` : undefined}>
+                        <button
+                            type="button"
+                            className="um-pill--btn"
+                            onClick={() => {
+                                if (selectedRole?.code) {
+                                    onNavigateToUsers?.(selectedRole.code as RoleCode)
+                                }
+                            }}
+                        >
+                            <span>{data?.usersCount ?? '–'} tài khoản được gán vai trò này</span>
+                            <ArrowRightOutlined style={{ fontSize: 11 }} />
+                        </button>
+                    </Tooltip>
+                }
+                extra={
                     <Input
                         allowClear
                         prefix={<SearchOutlined />}
                         placeholder="Lọc phân hệ..."
                         value={filter}
                         onChange={(e) => setFilter(e.target.value)}
-                        style={{ maxWidth: 360 }}
+                        style={{ width: 280 }}
                     />
-                </header>
-
+                }
+                noPadding
+            >
                 {locked && (
                     <Alert
                         type="info"
                         showIcon
-                        style={{ margin: '0 0 12px' }}
+                        className="um-matrix-alert"
                         message="Đây là vai trò hệ thống, quyền hạn bị khóa và không thể chỉnh sửa."
                     />
                 )}
 
-                {permissionsQuery.isLoading && <p>Đang tải phân quyền...</p>}
+                {permissionsQuery.isLoading && <p style={{ padding: '16px 24px', margin: 0 }}>Đang tải phân quyền...</p>}
                 {permissionsQuery.isError && (
-                    <p>Không thể tải phân quyền. Vui lòng thử lại.</p>
+                    <p style={{ padding: '16px 24px', margin: 0 }}>Không thể tải phân quyền. Vui lòng thử lại.</p>
                 )}
 
                 <div className="um-matrix-wrap">
@@ -367,9 +366,9 @@ export default function PermissionMatrix({ onNavigateToUsers }: PermissionMatrix
                 </div>
 
                 <Can do={PERMISSIONS.ROLES_EDIT}>
-                    <div style={{ padding: '12px 0' }}>
+                    <div className="um-matrix-add">
                         <Button
-                            className="um-dashed"
+                            type="dashed"
                             icon={<PlusOutlined />}
                             disabled={!data}
                             onClick={() => setCreatingPermission(true)}
@@ -388,7 +387,7 @@ export default function PermissionMatrix({ onNavigateToUsers }: PermissionMatrix
                     </span>
                     <span>– Phân hệ không có thao tác này</span>
                 </footer>
-            </section>
+            </SectionCard>
 
             <Can do={PERMISSIONS.ROLES_EDIT}>
                 <div className="um-savebar">

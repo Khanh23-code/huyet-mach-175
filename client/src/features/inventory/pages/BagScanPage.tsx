@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
-import { Alert, App, Badge, Breadcrumb, Button, Input, Select, Tabs } from 'antd'
+import { Alert, App, Badge, Button, Input, Select, Tabs } from 'antd'
 import { BarcodeOutlined, CameraOutlined, SearchOutlined } from '@ant-design/icons'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
+import { PageContainer, PageHeader, SectionCard, StatusPill } from '@/shared/components'
 import { stockApi } from '../stockApi'
 import { useOfflineSync } from '../stockHooks'
 import { addOffline } from '../offlineQueue'
@@ -87,17 +88,19 @@ export default function BagScanPage() {
     }
 
     return (
-        <div className="inv">
-            <Breadcrumb items={[{ title: 'Túi máu & Kho' }, { title: 'Quét vòng đời' }]} />
-            <div className="stk-head">
-                <div className="inv-title">
-                    <h1>Quét cập nhật trạng thái túi máu</h1>
-                    <p>Quét định danh để truy xuất và cập nhật trạng thái túi máu theo thời gian thực.</p>
-                </div>
-                <span className={`scan-pill${online ? '' : ' is-off'}`}><i /> {online ? 'Máy quét đang hoạt động' : 'Mất kết nối · chế độ ngoại tuyến'}</span>
-            </div>
+        <PageContainer>
+            <PageHeader
+                breadcrumb={[{ title: 'Túi máu & Kho' }, { title: 'Quét vòng đời' }]}
+                title="Quét cập nhật trạng thái túi máu"
+                subtitle="Quét định danh để truy xuất và cập nhật trạng thái túi máu theo thời gian thực."
+                extra={
+                    <StatusPill tone={online ? 'primary' : 'warning'} pulse={online}>
+                        {online ? 'Máy quét đang hoạt động' : 'Mất kết nối · chế độ ngoại tuyến'}
+                    </StatusPill>
+                }
+            />
 
-            <section className="inv-card inv-card__body scan-card">
+            <SectionCard bodyClassName="scan-card">
                 <div className="scan-stage">
                     {cameraOn ? (
                         <CameraScanner
@@ -135,7 +138,7 @@ export default function BagScanPage() {
                         </Button>
                     </div>
                 </div>
-            </section>
+            </SectionCard>
 
             {offlineCode && (
                 <Alert
@@ -165,7 +168,7 @@ export default function BagScanPage() {
                 />
             )}
 
-            <section className="inv-card inv-card__body">
+            <SectionCard>
                 <Tabs
                     activeKey={tab}
                     onChange={setTab}
@@ -178,7 +181,7 @@ export default function BagScanPage() {
                         },
                     ]}
                 />
-            </section>
-        </div>
+            </SectionCard>
+        </PageContainer>
     )
 }

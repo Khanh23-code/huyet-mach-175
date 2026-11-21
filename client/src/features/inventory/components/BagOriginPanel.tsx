@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
-import { Alert, Tag } from 'antd'
+import { Alert } from 'antd'
 import { WarningOutlined } from '@ant-design/icons'
 import { fmtDateTime } from '@/shared/formatters/date'
+import { StatusPill } from '@/shared/components'
 import { fmtDay } from '../stockFormat'
 import type { BagLabSummary, BagSource } from '../bagSource'
 import { BagSourceTag, ExpiryTag } from './BagSourceBadges'
@@ -89,9 +90,12 @@ export default function BagOriginPanel({ source, bagBloodGroup, collectedAt, exp
                         <Item label="Nhóm máu khai báo">
                             {donor.declaredBloodGroup ?? '—'}
                             {groupMismatch && (
-                                <Tag color="warning" icon={<WarningOutlined />} style={{ marginInlineStart: 6 }}>
-                                    Khác nhóm túi ({bagBloodGroup})
-                                </Tag>
+                                <span style={{ marginInlineStart: 6, display: 'inline-flex' }}>
+                                    <StatusPill tone="warning" dot={false}>
+                                        <WarningOutlined />
+                                        <span>Khác nhóm túi ({bagBloodGroup})</span>
+                                    </StatusPill>
+                                </span>
                             )}
                         </Item>
                         <Item label="Số lần hiến">{donor.totalDonations}</Item>
@@ -123,9 +127,9 @@ export default function BagOriginPanel({ source, bagBloodGroup, collectedAt, exp
                     <h4>Kết quả xét nghiệm</h4>
                     <dl className="origin__grid">
                         <Item label="Kết luận">
-                            <Tag color={labTest.overallConclusion === 'PASSED' ? 'green' : 'red'}>
+                            <StatusPill tone={labTest.overallConclusion === 'PASSED' ? 'success' : 'danger'}>
                                 {labTest.overallConclusion === 'PASSED' ? 'Đạt chuẩn' : 'Không đạt'}
-                            </Tag>
+                            </StatusPill>
                         </Item>
                         <Item label="Nhóm máu khẳng định">{labTest.confirmedBloodGroup}</Item>
                         <Item label="Kỹ thuật viên">{labTest.technicianName}</Item>
@@ -135,9 +139,9 @@ export default function BagOriginPanel({ source, bagBloodGroup, collectedAt, exp
                         {IND.map((i) => {
                             const pos = labTest[i.key] === 'POSITIVE'
                             return (
-                                <Tag key={i.key} color={pos ? 'red' : 'green'}>
+                                <StatusPill key={i.key} tone={pos ? 'danger' : 'success'}>
                                     {i.label}: {pos ? 'Dương tính' : 'Âm tính'}
-                                </Tag>
+                                </StatusPill>
                             )
                         })}
                     </div>

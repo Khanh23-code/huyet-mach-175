@@ -1,5 +1,6 @@
-import { Switch, Tag } from 'antd'
+import { Switch } from 'antd'
 import { ExclamationCircleOutlined, FileTextOutlined } from '@ant-design/icons'
+import { SectionCard, StatusPill } from '@/shared/components'
 import { QUESTIONS, fmtDateTime, questionMeta, type Answers } from '../format'
 import type { SurveyOnlineDetail } from '../types'
 
@@ -20,13 +21,18 @@ export default function SurveyPanel({ survey, answers, editable, onChange }: Pro
     const liveRisk = answers ? keys.filter((k) => questionMeta(k).risk && answers[k]).length : 0
     const risk = editable ? liveRisk : survey.riskScore
 
-    let badge = <Tag>Chưa khai bảng hỏi</Tag>
-    if (editable) badge = <Tag color="blue">Nhập tại chỗ</Tag>
+    let badge = <StatusPill tone="neutral">Chưa khai bảng hỏi</StatusPill>
+    if (editable) badge = <StatusPill tone="info">Nhập tại chỗ</StatusPill>
     else if (survey.hasSubmittedSurvey)
-        badge = risk > 0 || survey.hasRisk ? <Tag color="orange">Có {risk} cảnh báo</Tag> : <Tag color="green">Không có cảnh báo</Tag>
+        badge =
+            risk > 0 || survey.hasRisk ? (
+                <StatusPill tone="warning">Có {risk} cảnh báo</StatusPill>
+            ) : (
+                <StatusPill tone="success">Không có cảnh báo</StatusPill>
+            )
 
     return (
-        <div className="sc-card sc-panel">
+        <SectionCard>
             <div className="sc-panel-head">
                 <span className="sc-icon"><FileTextOutlined /></span>
                 <div className="sc-panel-title">
@@ -72,6 +78,6 @@ export default function SurveyPanel({ survey, answers, editable, onChange }: Pro
                 <ExclamationCircleOutlined />
                 <span>Kết quả bảng hỏi online chỉ để tham khảo, quyết định cuối cùng thuộc về nhân viên y tế.</span>
             </div>
-        </div>
+        </SectionCard>
     )
 }
