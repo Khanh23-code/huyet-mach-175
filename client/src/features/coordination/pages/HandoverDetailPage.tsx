@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Alert, App, Button, Result, Spin, Tag } from 'antd'
+import { Alert, App, Button, Result, Spin } from 'antd'
 import {
     ArrowLeftOutlined,
     CheckCircleOutlined,
@@ -13,11 +13,18 @@ import { stockApi } from '@/features/inventory/stockApi'
 import type { BagScan } from '@/features/inventory/stockTypes'
 import { parseApiError } from '@/services/apiError'
 import { formatDateTime } from '@/shared/formatters/date'
-import { getUrgencyMeta, getStatusMeta } from '@/features/clinical/format'
-import BarcodeSvg from '@/shared/components/BarcodeSvg'
+import { getStatusMeta, getStatusTone } from '@/features/clinical/format'
+import {
+    BarcodeSvg,
+    BloodGroupTag,
+    PageContainer,
+    PageHeader,
+    StatusPill,
+    UrgencyTag,
+} from '@/shared/components'
 import { useDispatchBag } from '../hooks'
 import type { DispatchBloodBagResponse } from '../types'
-import './HandoverPages.css'
+import '@/shared/styles/HandoverLayout.css'
 
 interface LocationState {
     scannedBag?: BagScan
@@ -109,19 +116,21 @@ export default function HandoverDetailPage() {
     }
 
     return (
-        <div className="handover-page">
-            <div className="handover-head">
-                <div>
-                    <div className="handover-breadcrumb">Điều phối Kho máu / W4.3 · Thông tin túi máu bàn giao</div>
-                    <h1 className="handover-title">Bàn giao cấp phát máu</h1>
-                    <p className="handover-subtitle">
-                        Kiểm tra thông tin túi máu đã quét và xác nhận xuất kho bàn giao cho khoa lâm sàng.
-                    </p>
-                </div>
-                <span className={`handover-status-pill ${dispatched ? 'is-success' : ''}`}>
-                    <i /> {dispatched ? 'Đã xuất kho bàn giao' : 'Chờ xác nhận xuất kho'}
-                </span>
-            </div>
+        <PageContainer className="handover-page">
+            <PageHeader
+                breadcrumb={[
+                    { title: 'Điều phối Kho máu', path: '/coordination/queue' },
+                    { title: 'Bàn giao cấp phát máu', path: '/coordination/handover' },
+                    { title: 'W4.3 · Thông tin túi máu bàn giao' },
+                ]}
+                title="Bàn giao cấp phát máu"
+                subtitle="Kiểm tra thông tin túi máu đã quét và xác nhận xuất kho bàn giao cho khoa lâm sàng."
+                extra={
+                    <StatusPill tone={dispatched ? 'success' : 'info'}>
+                        {dispatched ? 'Đã xuất kho bàn giao' : 'Chờ xác nhận xuất kho'}
+                    </StatusPill>
+                }
+            />
 
             <section className="handover-card">
                 <div className="handover-role-bar">
@@ -158,7 +167,7 @@ export default function HandoverDetailPage() {
                     <>
                         <div className="handover-bag-banner">
                             <div className="handover-bag-banner__left">
-                                <div className="handover-blood-badge">{bag.bloodGroup}</div>
+                                <BloodGroupTag value={bag.bloodGroup} size="lg" />
                                 <div>
                                     <div className="handover-bag-banner__label">Túi máu đã quét</div>
                                     <div className="handover-bag-banner__code">{bag.barcode}</div>
@@ -167,9 +176,11 @@ export default function HandoverDetailPage() {
                                     </div>
                                 </div>
                             </div>
-                            <Tag color={dispatched ? 'success' : bag.currentStatus === 'RESERVED' ? 'green' : 'warning'}>
+                            <StatusPill
+                                tone={dispatched ? 'success' : bag.currentStatus === 'RESERVED' ? 'primary' : 'warning'}
+                            >
                                 {dispatched ? 'Đã xuất kho (ISSUED)' : bag.currentStatusLabel}
-                            </Tag>
+                            </StatusPill>
                         </div>
 
                         <div className="handover-detail-box">
@@ -190,7 +201,7 @@ export default function HandoverDetailPage() {
                                 </div>
                                 <div className="handover-kv">
                                     <span>Nhóm máu</span>
-                                    <strong><Tag color="red">{bag.bloodGroup}</Tag></strong>
+                                    <strong><BloodGroupTag value={bag.bloodGroup} size="sm" /></strong>
                                 </div>
                                 <div className="handover-kv">
                                     <span>Chế phẩm</span>
@@ -238,9 +249,9 @@ export default function HandoverDetailPage() {
                                             <div className="handover-detail-box__eyebrow">Phiếu yêu cầu tương ứng</div>
                                             <div className="handover-detail-box__code">{dispatched.requestCode}</div>
                                         </div>
-                                        <Tag color={getStatusMeta(dispatched.requestStatus).color}>
+                                        <StatusPill tone={getStatusTone(dispatched.requestStatus)}>
                                             {getStatusMeta(dispatched.requestStatus).label}
-                                        </Tag>
+                                        </StatusPill>
                                     </div>
 
                                     <div className="handover-detail-grid">
@@ -260,14 +271,12 @@ export default function HandoverDetailPage() {
                                         </div>
                                         <div className="handover-kv">
                                             <span>Nhóm máu bệnh nhân</span>
-                                            <strong><Tag color="red">{dispatched.patientBloodType}</Tag></strong>
+                                            <strong><BloodGroupTag value={dispatched.patientBloodType} size="sm" /></strong>
                                         </div>
                                         <div className="handover-kv">
                                             <span>Mức ưu tiên</span>
                                             <strong>
-                                                <Tag color={getUrgencyMeta(dispatched.urgencyLevel).color}>
-                                                    {getUrgencyMeta(dispatched.urgencyLevel).label}
-                                                </Tag>
+                                                <UrgencyTag level={dispatched.urgencyLevel} />
                                             </strong>
                                         </div>
                                         <div className="handover-kv">
@@ -332,7 +341,6 @@ export default function HandoverDetailPage() {
                                     type="primary"
                                     size="large"
                                     icon={<CheckCircleOutlined />}
-                                    className="handover-btn-primary"
                                     loading={dispatchMutation.isPending}
                                     disabled={!canApprove || !isEligibleForDispatch || dispatchMutation.isPending}
                                     onClick={() => void handleConfirmHandover()}
@@ -344,6 +352,6 @@ export default function HandoverDetailPage() {
                     </>
                 )}
             </section>
-        </div>
+        </PageContainer>
     )
 }

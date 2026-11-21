@@ -5,6 +5,7 @@ import {
     ReloadOutlined,
     WarningFilled,
 } from '@ant-design/icons'
+import { BloodGroupTag, PageContainer, PageHeader, StatusPill } from '@/shared/components'
 import { useComponentTypes, useSupplyDemand } from '../hooks'
 import './SupplyDemandPage.css'
 
@@ -65,39 +66,29 @@ export default function SupplyDemandPage() {
     }
 
     return (
-        <div className="supply-demand-container">
-            {/* Breadcrumb & Header */}
-            <div>
-                <div className="coordination-breadcrumb">Kho máu / Điều phối Cung – Cầu</div>
-                <div className="coordination-header">
-                    <div>
-                        <h1 className="coordination-title">Bảng điều phối Cung – Cầu</h1>
-                        <p className="coordination-subtitle">
-                            So sánh tồn kho khả dụng với tổng nhu cầu đang chờ cấp phát theo nhóm máu và sản phẩm.
-                        </p>
-                    </div>
-
+        <PageContainer className="supply-demand-page">
+            <PageHeader
+                breadcrumb={[{ title: 'Kho máu' }, { title: 'Điều phối Cung – Cầu' }]}
+                title="Bảng điều phối Cung – Cầu"
+                subtitle="So sánh tồn kho khả dụng với tổng nhu cầu đang chờ cấp phát theo nhóm máu và sản phẩm."
+                extra={
                     <div className="coordination-header-right">
                         <Space size={8}>
                             {formattedTime && (
-                                <div className="refresh-status-badge">
-                                    <span className="refresh-dot" />
-                                    <span>Cập nhật {formattedTime}</span>
-                                </div>
+                                <StatusPill tone="success">Cập nhật {formattedTime}</StatusPill>
                             )}
                             <Button
                                 icon={<ReloadOutlined spin={dataLoading || isFetching} />}
                                 onClick={() => refetch()}
                                 size="small"
-                                className="btn-manual-refresh"
                             >
                                 Làm mới
                             </Button>
                         </Space>
                         <span className="refresh-subtext">Tự động làm mới mỗi 5 phút</span>
                     </div>
-                </div>
-            </div>
+                }
+            />
 
             {/* Error State khi tải danh mục chế phẩm */}
             {typesError && (
@@ -205,11 +196,13 @@ export default function SupplyDemandPage() {
                                 className={`blood-group-card ${item.isShortage ? 'has-shortage' : ''}`}
                             >
                                 <div className="blood-group-card-header">
-                                    <span className="blood-type-badge">{item.bloodType}</span>
+                                    <BloodGroupTag value={item.bloodType} size="md" />
                                     {item.isShortage && (
-                                        <span className="shortage-badge">
-                                            <AlertOutlined /> Thiếu {item.shortageUnits} đv
-                                        </span>
+                                        <StatusPill tone="danger" dot={false}>
+                                            <span className="shortage-pill-content">
+                                                <AlertOutlined /> Thiếu {item.shortageUnits} đv
+                                            </span>
+                                        </StatusPill>
                                     )}
                                 </div>
 
@@ -241,6 +234,6 @@ export default function SupplyDemandPage() {
                     </div>
                 </>
             )}
-        </div>
+        </PageContainer>
     )
 }
