@@ -1,4 +1,5 @@
 import { Skeleton } from 'antd'
+import { SectionCard, StatusPill } from '@/shared/components'
 import { useCurrentUser } from '@/features/auth/useCurrentUser'
 import { getInitials } from '@/shared/utils/string'
 import { useRoles } from '@/features/users/hooks'
@@ -16,9 +17,11 @@ export default function ProfileCard({ profile, loading }: Props) {
 
     if (loading || !profile) {
         return (
-            <section className="pf-card">
-                <div className="pf-card__pad"><Skeleton avatar active paragraph={{ rows: 6 }} /></div>
-            </section>
+            <SectionCard>
+                <div className="pf-loading">
+                    <Skeleton avatar active paragraph={{ rows: 6 }} />
+                </div>
+            </SectionCard>
         )
     }
 
@@ -38,12 +41,11 @@ export default function ProfileCard({ profile, loading }: Props) {
         {
             label: 'Vai trò',
             value: roles.length ? (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                <div className="pf-roles">
                     {roles.map((r) => (
-                        <span className="pf-pill" key={r.code}>
-                            <i />
+                        <StatusPill tone="info" key={r.code}>
                             {r.name ? `${r.name} (${r.code})` : r.code}
-                        </span>
+                        </StatusPill>
                     ))}
                 </div>
             ) : '—',
@@ -54,13 +56,13 @@ export default function ProfileCard({ profile, loading }: Props) {
     ]
 
     return (
-        <section className="pf-card">
+        <SectionCard noPadding>
             <header className="pf-id">
                 <div className="pf-id__avatar" aria-hidden>{getInitials(name)}</div>
                 <div className="pf-id__body">
-                    <span className={`pf-status ${isActive ? 'pf-status--on' : 'pf-status--off'}`}>
-                        <i />{isActive ? 'Hoạt động' : 'Đã khóa'}
-                    </span>
+                    <StatusPill tone={isActive ? 'success' : 'danger'}>
+                        {isActive ? 'Hoạt động' : 'Đã khóa'}
+                    </StatusPill>
                     <h2>{displayName || name}</h2>
                     <p>{[roleSummary, profile.departmentName].filter(Boolean).join(' · ')}</p>
                 </div>
@@ -74,6 +76,6 @@ export default function ProfileCard({ profile, loading }: Props) {
                     </div>
                 ))}
             </dl>
-        </section>
+        </SectionCard>
     )
 }
