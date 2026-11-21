@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Breadcrumb, Skeleton } from 'antd'
+import { Skeleton } from 'antd'
 import { CheckCircleOutlined, ClockCircleOutlined, RightOutlined, TeamOutlined } from '@ant-design/icons'
+import { PageContainer, PageHeader, SectionCard, StatusPill, type StatusPillTone } from '@/shared/components'
 import { usePermission } from '@/features/auth/usePermission'
 import { useCurrentUser } from '@/features/auth/useCurrentUser'
 import { PERMISSIONS } from '@/config/permissions'
@@ -17,13 +18,12 @@ import './ReceptionDashboard.css'
 const REFRESH_MS = 15_000
 const pct = (n: number) => n.toLocaleString('vi-VN', { maximumFractionDigits: 1 })
 
-type Tone = 'warn' | 'info' | 'ok'
 interface WaitRow {
     id: number
     name: string
     sub: string
     label: string
-    tone: Tone
+    tone: StatusPillTone
     rank: number
 }
 
@@ -109,11 +109,11 @@ export default function ReceptionDashboard() {
             if (st === 'CANCELLED' || st === 'NO_SHOW') continue
             const sub = a.isWalkIn ? 'Vãng lai' : `Lịch hẹn ${a.timeSlot.split('-')[0] || '—'}`
             if (st === 'BOOKED') {
-                out.push({ id: a.appointmentId, name: a.donorName, sub, label: 'Chờ tiếp nhận', tone: 'warn', rank: 1 })
+                out.push({ id: a.appointmentId, name: a.donorName, sub, label: 'Chờ tiếp nhận', tone: 'warning', rank: 1 })
             } else if ((byAppt.get(a.appointmentId) ?? 'PENDING') === 'PENDING') {
                 out.push({ id: a.appointmentId, name: a.donorName, sub, label: 'Chờ khám', tone: 'info', rank: 0 })
             } else {
-                out.push({ id: a.appointmentId, name: a.donorName, sub, label: 'Hoàn tất', tone: 'ok', rank: 2 })
+                out.push({ id: a.appointmentId, name: a.donorName, sub, label: 'Hoàn tất', tone: 'success', rank: 2 })
             }
         }
         return out.sort((x, y) => x.rank - y.rank).slice(0, 6)
@@ -123,48 +123,46 @@ export default function ReceptionDashboard() {
     const delta = prevCount > 0 ? Math.round(((stats.checkedIn - prevCount) / prevCount) * 100) : null
     const donePct = stats.checkedIn > 0 ? (stats.done / stats.checkedIn) * 100 : 0
 
-    const head = (
-        <>
-            <div className="dash-head">
-                <div>
-                    <Breadcrumb items={[{ title: 'Dashboard' }, { title: 'Bàn tiếp đón' }]} />
-                    <h1 className="dash-title">Tổng quan tiếp đón &amp; sàng lọc</h1>
-                    <p className="dash-sub">Theo dõi hoạt động người hiến trong ngày hôm nay.</p>
-                </div>
+    const header = (
+        <PageHeader
+            breadcrumb={[{ title: 'Dashboard' }, { title: 'Bàn tiếp đón' }]}
+            title="Tổng quan tiếp đón & sàng lọc"
+            subtitle="Theo dõi hoạt động người hiến trong ngày hôm nay."
+            extra={
                 <div className="dash-meta">
-                    {roleLabel && <span className="dash-role">{roleLabel}</span>}
-                    <div className="dash-date">
+                    {roleLabel && <span className="role-chip">{roleLabel}</span>}
+                    <div className="date-chip">
                         <small>Hôm nay</small>
                         <b>{fmtDate(today)}</b>
                     </div>
                 </div>
-            </div>
-        </>
+            }
+        />
     )
 
     if (wc.blocked) {
         return (
-            <div>
-                {head}
+            <PageContainer>
+                {header}
                 <CampaignGate />
-            </div>
+            </PageContainer>
         )
     }
 
     const dash = (v: number | string) => (canScreen ? v : '—')
 
     return (
-        <div>
-            {head}
+        <PageContainer>
+            {header}
             {wc.requireCampaign && wc.campaign && <WorkCampaignBanner campaign={wc.campaign} onChange={wc.clear} />}
 
             <div className="dash-cards">
                 <div className="dash-card">
                     <div className="dash-card-top">
                         <span className="dash-icon dash-icon--green"><TeamOutlined /></span>
-                        <span className="dash-chip dash-chip--green">
+                        <StatusPill tone="primary" dot={false}>
                             {delta === null ? 'Chưa có dữ liệu hôm qua' : `${delta > 0 ? '+' : ''}${delta}% so hôm qua`}
-                        </span>
+                        </StatusPill>
                     </div>
                     <small>Đã check-in</small>
                     <b>{dash(stats.checkedIn)}</b>
@@ -173,9 +171,9 @@ export default function ReceptionDashboard() {
                 <div className="dash-card">
                     <div className="dash-card-top">
                         <span className="dash-icon dash-icon--amber"><ClockCircleOutlined /></span>
-                        <span className="dash-chip dash-chip--amber">
+                        <StatusPill tone="warning" dot={false}>
                             {stats.avgWait === null ? 'Không có người chờ' : `TB ${stats.avgWait} phút`}
-                        </span>
+                        </StatusPill>
                     </div>
                     <small>Đang chờ khám</small>
                     <b>{dash(stats.waiting)}</b>
@@ -184,7 +182,7 @@ export default function ReceptionDashboard() {
                 <div className="dash-card">
                     <div className="dash-card-top">
                         <span className="dash-icon dash-icon--blue"><CheckCircleOutlined /></span>
-                        <span className="dash-chip dash-chip--blue">{pct(donePct)}% tổng lượt</span>
+                        <StatusPill tone="info" dot={false}>{pct(donePct)}% tổng lượt</StatusPill>
                     </div>
                     <small>Hoàn tất sàng lọc</small>
                     <b>{dash(stats.done)}</b>
@@ -192,15 +190,11 @@ export default function ReceptionDashboard() {
             </div>
 
             <div className="dash-main">
-                <div className="dash-panel">
-                    <div className="dash-panel-head">
-                        <div>
-                            <h2>Hàng chờ người hiến</h2>
-                            <small>Cập nhật theo thời gian thực</small>
-                        </div>
-                        <Link to="/btd/queue" className="dash-link">Mở hàng chờ <RightOutlined /></Link>
-                    </div>
-
+                <SectionCard
+                    title="Hàng chờ người hiến"
+                    subtitle="Cập nhật theo thời gian thực"
+                    extra={<Link to="/btd/queue" className="dash-link">Mở hàng chờ <RightOutlined /></Link>}
+                >
                     {appts.isLoading ? (
                         <Skeleton active paragraph={{ rows: 4 }} />
                     ) : rows.length === 0 ? (
@@ -215,23 +209,17 @@ export default function ReceptionDashboard() {
                                         <b>{r.name}</b>
                                         <small>{r.sub}</small>
                                     </span>
-                                    <span className={`dash-pill dash-pill--${r.tone}`}>
-                                        <i /> {r.label}
-                                    </span>
+                                    <StatusPill tone={r.tone}>{r.label}</StatusPill>
                                 </li>
                             ))}
                         </ol>
                     )}
-                </div>
+                </SectionCard>
 
-                <div className="dash-panel">
-                    <div className="dash-panel-head">
-                        <div>
-                            <h2>Sàng lọc hôm nay</h2>
-                            <small>Theo kết luận khám</small>
-                        </div>
-                    </div>
-
+                <SectionCard
+                    title="Sàng lọc hôm nay"
+                    subtitle="Theo kết luận khám"
+                >
                     <div className="dash-donut-wrap">
                         <Donut
                             values={[
@@ -251,8 +239,8 @@ export default function ReceptionDashboard() {
                         <li><i style={{ background: 'var(--c-warning)' }} /> Tạm hoãn <b>{dash(stats.deferred)}</b></li>
                         <li><i style={{ background: 'var(--c-danger)' }} /> Không đạt <b>{dash(stats.unqualified)}</b></li>
                     </ul>
-                </div>
+                </SectionCard>
             </div>
-        </div>
+        </PageContainer>
     )
 }
