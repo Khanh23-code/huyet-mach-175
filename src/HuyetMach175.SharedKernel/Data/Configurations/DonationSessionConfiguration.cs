@@ -8,8 +8,7 @@ public class DonationSessionConfiguration : IEntityTypeConfiguration<DonationSes
 {
     public void Configure(EntityTypeBuilder<DonationSession> builder)
     {
-        builder.Property(s => s.ScreeningStatus)
-            .HasConversion<string>();
+        builder.HasIndex(s => s.AppointmentId).IsUnique();
 
         builder.Property(s => s.TargetVolumeMl)
             .HasConversion<string>();
@@ -17,10 +16,10 @@ public class DonationSessionConfiguration : IEntityTypeConfiguration<DonationSes
         builder.Property(s => s.Status)
             .HasConversion<string>();
 
-        builder.HasOne(s => s.Doctor)
-            .WithMany(u => u.DoctorSessions)
-            .HasForeignKey(s => s.DoctorId)
-            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(s => s.Appointment)
+            .WithOne(da => da.DonationSession)
+            .HasForeignKey<DonationSession>(s => s.AppointmentId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(s => s.Phlebotomist)
             .WithMany(u => u.PhlebotomistSessions)

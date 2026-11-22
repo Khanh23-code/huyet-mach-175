@@ -2,6 +2,7 @@ import { Alert, Button, Form, Input } from 'antd'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { isAxiosError } from 'axios'
+import { SectionCard } from '@/shared/components'
 import { changePasswordSchema, type ChangePasswordForm } from '@/features/auth/authSchema'
 import { useChangePassword } from '../hooks'
 
@@ -38,16 +39,15 @@ export default function ChangePasswordFormCard() {
     )
 
     return (
-        <section className="pf-card">
-            <header className="pf-card__head">
-                <h3>Đổi mật khẩu</h3>
-                <p>Mật khẩu mới phải có ít nhất 8 ký tự, bao gồm chữ hoa và số.</p>
-            </header>
-
+        <SectionCard
+            title="Đổi mật khẩu"
+            subtitle="Mật khẩu mới phải có ít nhất 8 ký tự, bao gồm chữ hoa và số."
+        >
             <Form layout="vertical" className="pf-pw" onFinish={onSubmit} requiredMark="optional" noValidate>
                 {FIELDS.map((f) => (
                     <Form.Item
                         key={f.name}
+                        className="pf-pw__item"
                         label={f.label}
                         required
                         validateStatus={errors[f.name] ? 'error' : undefined}
@@ -77,6 +77,6 @@ export default function ChangePasswordFormCard() {
                     </Button>
                 </div>
             </Form>
-        </section>
+        </SectionCard>
     )
 }

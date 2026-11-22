@@ -8,15 +8,15 @@ import { SYSTEM_ROLE_CODES } from '@/config/rbac'
 import { PERMISSIONS } from '@/config/permissions'
 import { usePermission } from '@/features/auth/usePermission'
 import type { RoleCode, UserItem } from '@/types/user'
-import { useDebounce, useRoles, useUsers } from '../hooks'
+import { useRoles, useUsers } from '../hooks'
+import { useDebounce } from '@/shared/hooks/useDebounce'
+import { initials } from '@/shared/utils/string'
 import { usersApi } from '../usersApi'
 import { parseApiError } from '@/services/apiError'
+import { SectionCard, StatusPill } from '@/shared/components'
 import EditUserModal from './EditUserModal'
 
 const PAGE_SIZE = 10
-
-const initials = (name: string) =>
-    name.trim().split(/\s+/).slice(-2).map((w) => w[0]?.toUpperCase()).join('')
 
 interface UserTableProps {
     selectedRoleCodes?: RoleCode[]
@@ -86,7 +86,7 @@ export default function UserTable({ selectedRoleCodes, onRoleCodesChange }: User
                 </div>
             ),
         },
-        { title: 'MÃ NHÂN VIÊN', dataIndex: 'staffCode', render: (v: string) => <strong>{v}</strong> },
+        { title: 'MÃ NHÂN VIÊN', dataIndex: 'staffCode', render: (v: string) => <strong className="text-mono">{v}</strong> },
         { title: 'KHOA / PHÒNG', dataIndex: 'departmentName' },
         {
             title: 'VAI TRÒ ĐƯỢC GÁN',
@@ -106,9 +106,9 @@ export default function UserTable({ selectedRoleCodes, onRoleCodesChange }: User
             title: 'TRẠNG THÁI',
             dataIndex: 'isActive',
             render: (a: boolean) => (
-                <span className={`um-status ${a ? 'um-status--on' : 'um-status--off'}`}>
-                    <i /> {a ? 'Active' : 'Locked'}
-                </span>
+                <StatusPill tone={a ? 'success' : 'danger'}>
+                    {a ? 'Active' : 'Locked'}
+                </StatusPill>
             ),
         },
         {
@@ -140,7 +140,7 @@ export default function UserTable({ selectedRoleCodes, onRoleCodesChange }: User
                                     type="text"
                                     disabled={self}
                                     loading={toggle.isPending && toggle.variables?.id === u.id}
-                                    icon={u.isActive ? <LockOutlined /> : <UnlockOutlined style={{ color: '#1d4ed8' }} />}
+                                    icon={u.isActive ? <LockOutlined /> : <UnlockOutlined style={{ color: 'var(--c-info)' }} />}
                                 />
                             </Tooltip>
                         </Popconfirm>
@@ -151,15 +151,15 @@ export default function UserTable({ selectedRoleCodes, onRoleCodesChange }: User
     ]
 
     return (
-        <section className="um-panel">
-            <header className="um-panel__head">
-                <div>
-                    <h3>Danh sách người dùng</h3>
-                    <p>Đồng bộ từ danh mục nhân sự bệnh viện</p>
-                </div>
+        <SectionCard
+            title="Danh sách người dùng"
+            subtitle="Đồng bộ từ danh mục nhân sự bệnh viện"
+            noPadding
+            extra={
                 <div className="um-filters">
                     <Input
                         allowClear
+                        className="um-search-input"
                         prefix={<SearchOutlined />}
                         placeholder="Tìm tên hoặc mã nhân viên..."
                         value={keyword}
@@ -176,8 +176,8 @@ export default function UserTable({ selectedRoleCodes, onRoleCodesChange }: User
                         options={rolesQuery.data?.map((r) => ({ value: r.code, label: `${r.code} · ${r.name}` }))}
                     />
                 </div>
-            </header>
-
+            }
+        >
             <Table<UserItem>
                 rowKey="id"
                 columns={canManageUsers ? columns : columns.filter((c) => c.title !== 'THAO TÁC')}
@@ -205,6 +205,6 @@ export default function UserTable({ selectedRoleCodes, onRoleCodesChange }: User
                 canAssignSystemRole={canManageRoles}
                 onClose={() => setEditing(null)}
             />
-        </section>
+        </SectionCard>
     )
 }

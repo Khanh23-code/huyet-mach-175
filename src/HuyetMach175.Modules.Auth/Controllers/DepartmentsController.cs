@@ -12,11 +12,11 @@ namespace HuyetMach175.Modules.Auth.Controllers
     [Tags("Identity.Departments")]
     public class DepartmentsController : ControllerBase
     {
-        private readonly IUsersService _usersService;
+        private readonly IDepartmentsService _departmentsService;
 
-        public DepartmentsController(IUsersService usersService)
+        public DepartmentsController(IDepartmentsService departmentsService)
         {
-            _usersService = usersService;
+            _departmentsService = departmentsService;
         }
 
         [HttpGet]
@@ -34,7 +34,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetDepartmentsAsync()
         {
-            var departments = await _usersService.GetDepartmentsAsync();
+            var departments = await _departmentsService.GetDepartmentsAsync();
             return Ok(departments);
         }
     }

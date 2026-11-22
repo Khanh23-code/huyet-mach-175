@@ -1,5 +1,6 @@
 import { Button, Empty, Popconfirm, Skeleton } from 'antd'
 import { DesktopOutlined, MobileOutlined, TabletOutlined } from '@ant-design/icons'
+import { SectionCard, StatusPill } from '@/shared/components'
 import type { DeviceType } from '@/types/auth'
 import { useRevokeSession, useSessions } from '../hooks'
 import { formatLoginTime } from '../utils/device'
@@ -15,12 +16,10 @@ export default function ActiveSessions() {
     const revoke = useRevokeSession()
 
     return (
-        <section className="pf-card">
-            <header className="pf-card__head">
-                <h3>Phiên đăng nhập đang hoạt động</h3>
-                <p>Các thiết bị đang truy cập vào tài khoản của bạn.</p>
-            </header>
-
+        <SectionCard
+            title="Phiên đăng nhập đang hoạt động"
+            subtitle="Các thiết bị đang truy cập vào tài khoản của bạn."
+        >
             <div className="pf-sessions">
                 {isLoading && <Skeleton active paragraph={{ rows: 3 }} />}
 
@@ -41,7 +40,7 @@ export default function ActiveSessions() {
                             <div className="pf-session__body">
                                 <div className="pf-session__title">
                                     <strong>{s.browser} · {s.os}</strong>
-                                    {s.isCurrent && <span className="pf-badge"><i />Phiên hiện tại</span>}
+                                    {s.isCurrent && <StatusPill tone="primary">Phiên hiện tại</StatusPill>}
                                 </div>
                                 <small>{meta}</small>
                             </div>
@@ -65,6 +64,6 @@ export default function ActiveSessions() {
                     )
                 })}
             </div>
-        </section>
+        </SectionCard>
     )
 }

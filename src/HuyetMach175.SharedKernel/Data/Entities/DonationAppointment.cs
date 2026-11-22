@@ -14,16 +14,11 @@ public class DonationAppointment
     [Column("donor_id")]
     public int DonorId { get; set; }
 
-    [Column("campaign_id")]
-    public int? CampaignId { get; set; }
+    [Column("slot_id")]
+    public int? SlotId { get; set; }
 
     [Column("appointment_date")]
     public DateOnly AppointmentDate { get; set; }
-
-    [Required]
-    [MaxLength(20)]
-    [Column("time_slot")]
-    public string TimeSlot { get; set; } = string.Empty;
 
     [Required]
     [MaxLength(100)]
@@ -45,8 +40,8 @@ public class DonationAppointment
     [ForeignKey(nameof(DonorId))]
     public Donor? Donor { get; set; }
 
-    [ForeignKey(nameof(CampaignId))]
-    public DonationCampaign? Campaign { get; set; }
+    [ForeignKey(nameof(SlotId))]
+    public DonationCampaignSlot? CampaignSlot { get; set; }
 
     public PreScreeningSurvey? PreScreeningSurvey { get; set; }
     public DonationSession? DonationSession { get; set; }

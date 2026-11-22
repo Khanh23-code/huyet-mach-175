@@ -6,6 +6,7 @@ using HuyetMach175.Modules.Auth.DTOs.Common;
 using HuyetMach175.Modules.Auth.DTOs.Users;
 using HuyetMach175.SharedKernel.Exceptions;
 using HuyetMach175.SharedKernel.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -38,7 +39,7 @@ public class AuthService : IAuthService
 
         if (string.IsNullOrWhiteSpace(identifier))
         {
-            throw new HttpException(400, "Username or StaffCode is required.");
+            throw new HttpException(StatusCodes.Status400BadRequest, "Vui lòng nhập tên đăng nhập hoặc mã nhân viên.");
         }
 
         var normalizedIdentifier = identifier.ToLower();
@@ -50,19 +51,19 @@ public class AuthService : IAuthService
 
         if (user == null)
         {
-            throw new HttpException(400, "Username or password was not correct.");
+            throw new HttpException(StatusCodes.Status400BadRequest, "Tên đăng nhập hoặc mật khẩu không chính xác.");
         }
 
         if (!user.IsActive)
         {
-            throw new HttpException(403, "Your account had been blocked.");
+            throw new HttpException(StatusCodes.Status403Forbidden, "Tài khoản của bạn đã bị khóa hoặc vô hiệu hóa.");
         }
 
         bool isPasswordValid = _passwordHasher.VerifyPassword(request.Password, user.PasswordHash);
 
         if (!isPasswordValid)
         {
-            throw new HttpException(400, "Username or password was not correct.");
+            throw new HttpException(StatusCodes.Status400BadRequest, "Tên đăng nhập hoặc mật khẩu không chính xác.");
         }
 
         user.LastLoginAt = DateTime.UtcNow;
@@ -102,7 +103,7 @@ public class AuthService : IAuthService
     {
         if (request == null)
         {
-            throw new HttpException(400, "Refresh Token must not be empty.");
+            throw new HttpException(StatusCodes.Status400BadRequest, "Refresh Token không được để trống.");
         }
 
         var tokenEntity = await _context.RefreshTokens.FirstOrDefaultAsync(t => t.Token == request.RefreshToken);
@@ -120,7 +121,7 @@ public class AuthService : IAuthService
     {
         if (request == null)
         {
-            throw new HttpException(400, "Refresh Token must not be empty.");
+            throw new HttpException(StatusCodes.Status400BadRequest, "Refresh Token không được để trống.");
         }
 
         var tokenEntity = await _context.RefreshTokens
@@ -131,19 +132,19 @@ public class AuthService : IAuthService
 
         if (tokenEntity == null || tokenEntity.IsRevoked || tokenEntity.ExpiresAt < DateTime.UtcNow)
         {
-            throw new HttpException(401, "Refresh Token is invalid or expired.");
+            throw new HttpException(StatusCodes.Status401Unauthorized, "Refresh Token không hợp lệ hoặc đã hết hạn.");
         }
 
         var user = tokenEntity.User;
 
         if (user == null)
         {
-            throw new HttpException(404, "This account is not exist.");
+            throw new HttpException(StatusCodes.Status404NotFound, "Tài khoản người dùng không tồn tại.");
         }
 
         if (!user.IsActive)
         {
-            throw new HttpException(403, "This user had been blocked.");
+            throw new HttpException(StatusCodes.Status403Forbidden, "Tài khoản người dùng đã bị khóa hoặc vô hiệu hóa.");
         }
 
         var roleCodes = user.UserRoles
@@ -190,7 +191,7 @@ public class AuthService : IAuthService
 
         if (user == null || !user.IsActive)
         {
-            throw new HttpException(404, "Cannot find user information.");
+            throw new HttpException(StatusCodes.Status404NotFound, "Không tìm thấy thông tin người dùng hoặc tài khoản đã bị vô hiệu hóa.");
         }
 
         var activeRoles = user.UserRoles
@@ -232,7 +233,7 @@ public class AuthService : IAuthService
 
         if (user == null)
         {
-            throw new HttpException(404, "This user was not found in the system.");
+            throw new HttpException(StatusCodes.Status404NotFound, "Không tìm thấy thông tin người dùng trong hệ thống.");
         }
 
         user.FullName = request.FullName;

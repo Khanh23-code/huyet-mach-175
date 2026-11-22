@@ -1,0 +1,45 @@
+.clin-ret-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+.clin-ret-checklist {
+    display: grid;
+    gap: var(--space-3);
+}
+
+.clin-ret-check-item {
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    background: var(--c-surface);
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.clin-ret-check-item.is-checked {
+    border-color: var(--c-primary-border);
+    background: var(--c-primary-soft);
+}
+
+.clin-ret-bag-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    background: var(--c-surface-muted);
+    border: 1px solid var(--c-border);
+    flex-wrap: wrap;
+}
+
+.clin-ret-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    padding-top: var(--space-2);
+    flex-wrap: wrap;
+}

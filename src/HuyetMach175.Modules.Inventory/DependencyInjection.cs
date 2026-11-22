@@ -1,0 +1,25 @@
+using HuyetMach175.Modules.Inventory.BackgroundServices;
+using HuyetMach175.Modules.Inventory.Services;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace HuyetMach175.Modules.Inventory;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddInventoryModule(this IServiceCollection services)
+    {
+        services.AddScoped<IStorageLocationsService, StorageLocationsService>();
+        services.AddScoped<IInventoryService, InventoryService>();
+        services.AddScoped<IBloodBagsService, BloodBagsService>();
+        services.AddScoped<ILabTestsService, LabTestsService>();
+        services.AddScoped<IBloodProcessingService, BloodProcessingService>();
+        services.AddScoped<IBloodDisposalsService, BloodDisposalsService>();
+
+        services.AddHostedService<BloodBagExpirationWorker>();
+
+        services.AddControllers()
+            .AddApplicationPart(typeof(DependencyInjection).Assembly);
+
+        return services;
+    }
+}

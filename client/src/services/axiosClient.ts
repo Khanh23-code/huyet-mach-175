@@ -4,6 +4,7 @@ import { useAuthStore } from '@/features/auth/authStore'
 
 export const axiosClient = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5208',
+    timeout: 15_000,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -46,7 +47,11 @@ axiosClient.interceptors.response.use(
             try {
                 // nhiều request 401 cùng lúc chỉ refresh 1 lần
                 refreshing ??= axios
-                    .post(`${import.meta.env.VITE_API_BASE_URL}/api/Auth/refresh-token`, { refreshToken })
+                    .post(
+                        `${axiosClient.defaults.baseURL}/api/Auth/refresh-token`,
+                        { refreshToken },
+                        { timeout: 8_000 },
+                    )
                     .then((r) => {
                         const { accessToken, refreshToken: newRefresh } = r.data // sửa theo response thật
                         useAuthStore.getState().setTokens(accessToken, newRefresh ?? refreshToken)

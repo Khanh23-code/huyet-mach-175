@@ -1,6 +1,8 @@
 ﻿import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { AuthUser } from '@/types/auth'
+import { useWorkCampaignStore } from '@/features/work-campaign/workCampaignStore'
+import { queryClient } from '@/services/queryClient'
 
 interface AuthState {
     accessToken: string | null
@@ -23,15 +25,20 @@ export const useAuthStore = create<AuthState>()(
             setTokens: (accessToken, refreshToken) => set({ accessToken, refreshToken }),
             setUser: (user) => set({ user }),
             markPermissionsSynced: () => set({ permissionsSynced: true }),
-            logout: () =>
-                set({ accessToken: null, refreshToken: null, user: null, permissionsSynced: false }),
+            logout: () => {
+                // Đăng nhập lại phải nhập lại mã đợt hiến máu
+                useWorkCampaignStore.getState().clear()
+                // Xoá cache để tài khoản khác không thấy dữ liệu của tài khoản trước
+                queryClient.clear()
+                set({ accessToken: null, refreshToken: null, user: null, permissionsSynced: false })
+            },
         }),
         {
             name: 'auth-storage',
+            // Không persist user: luôn lấy mới từ /me khi mở app
             partialize: (s) => ({
                 accessToken: s.accessToken,
                 refreshToken: s.refreshToken,
-                user: s.user,
             }),
         },
     ),

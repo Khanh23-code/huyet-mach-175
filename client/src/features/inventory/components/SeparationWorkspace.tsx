@@ -1,0 +1,230 @@
+import { useMemo, useState } from 'react'
+import { Alert, Button, Checkbox, InputNumber, Popconfirm, Select, Space, message } from 'antd'
+import { CheckCircleOutlined, PrinterOutlined } from '@ant-design/icons'
+import { parseApiError } from '@/services/apiError'
+import { BloodGroupTag, SectionCard, StatusPill } from '@/shared/components'
+import { useComponentTypes, useSeparate, useStorageLocations } from '../hooks'
+import {
+    CHILD_CODES,
+    COMPONENT_LABEL,
+    addDaysIso,
+    childBarcode,
+    locationOptions,
+    storageHint,
+} from '../format'
+import type { LabelData } from './BagLabel'
+import BagLabel from './BagLabel'
+import LabelsPrintModal from './LabelsPrintModal'
+import BagOriginPanel from './BagOriginPanel'
+import type { ChildCode, ProcessingQueueItem, SeparateResponse } from '../types'
+
+interface Row {
+    enabled: boolean
+    volume: number | null
+    locationId: number | null
+}
+
+const INITIAL: Record<ChildCode, Row> = {
+    PRBC: { enabled: true, volume: null, locationId: null },
+    FFP: { enabled: true, volume: null, locationId: null },
+    PLT: { enabled: false, volume: null, locationId: null },
+}
+
+interface Props {
+    parent: ProcessingQueueItem
+    canEdit: boolean
+    onDone: () => void
+}
+
+export default function SeparationWorkspace({ parent, canEdit, onDone }: Props) {
+    const [rows, setRows] = useState(INITIAL)
+    const [result, setResult] = useState<SeparateResponse | null>(null)
+    const [printOpen, setPrintOpen] = useState(false)
+
+    const separate = useSeparate()
+    const { data: locData } = useStorageLocations()
+    const { data: types } = useComponentTypes()
+
+    const locations = locData?.items ?? []
+    const lifeDays = useMemo(
+        () => Object.fromEntries((types ?? []).map((t) => [t.typeCode, t.lifeDays])) as Record<string, number>,
+        [types],
+    )
+
+    const patch = (code: ChildCode, p: Partial<Row>) =>
+        setRows((prev) => ({ ...prev, [code]: { ...prev[code], ...p } }))
+
+    const enabled = CHILD_CODES.filter((c) => rows[c].enabled)
+    const total = enabled.reduce((s, c) => s + (rows[c].volume ?? 0), 0)
+    const overVolume = total > parent.volumeMl
+    const incomplete = enabled.some((c) => !rows[c].volume || !rows[c].locationId)
+
+    const expiryOf = (code: ChildCode) =>
+        lifeDays[code] !== undefined ? addDaysIso(parent.collectedAt, lifeDays[code]) : null
+    const expiredCodes = enabled.filter((c) => {
+        const e = expiryOf(c)
+        return e !== null && new Date(e).getTime() <= Date.now()
+    })
+
+    const canSubmit =
+        canEdit && !parent.isExpired && enabled.length > 0 && !incomplete && !overVolume && expiredCodes.length === 0
+
+    const submit = async () => {
+        try {
+            const r = await separate.mutateAsync({
+                parentBarcode: parent.barcode,
+                components: enabled.map((c) => ({
+                    componentType: c,
+                    volumeMl: rows[c].volume as number,
+                    storageLocationId: rows[c].locationId as number,
+                })),
+            })
+            setResult(r)
+            message.success('Điều chế thành công')
+        } catch (e) {
+            message.error(parseApiError(e).message)
+        }
+    }
+
+    if (result) {
+        const labels: LabelData[] = result.derivedComponents.map((d) => ({
+            barcode: d.barcode,
+            bloodGroup: d.bloodGroup,
+            volumeMl: d.volumeMl,
+            collectedAt: d.collectedAt,
+            expiredAt: d.expiredAt,
+            componentName: d.componentTypeName,
+        }))
+
+        return (
+            <SectionCard
+                title={<><CheckCircleOutlined style={{ color: 'var(--c-primary)' }} /> Điều chế hoàn tất</>}
+                subtitle={`Túi gốc ${result.parentBarcode} chuyển sang ${result.parentStatus}. Kỹ thuật viên: ${result.technicianName}.`}
+                bodyClassName="inv-result"
+            >
+                <Alert type="success" showIcon title={result.message} />
+                <div className="inv-label-list">
+                    {labels.map((l) => (
+                        <BagLabel key={l.barcode} bag={l} />
+                    ))}
+                </div>
+                <div className="inv-actions">
+                    <Button type="primary" icon={<PrinterOutlined />} onClick={() => setPrintOpen(true)}>
+                        In tất cả tem ({labels.length})
+                    </Button>
+                    <Button onClick={onDone}>Điều chế túi khác</Button>
+                </div>
+                <LabelsPrintModal open={printOpen} labels={labels} onClose={() => setPrintOpen(false)} />
+            </SectionCard>
+        )
+    }
+
+    return (
+        <SectionCard
+            title={`Điều chế túi ${parent.barcode}`}
+            subtitle="Chọn các chế phẩm cần tạo. Mã túi con tự sinh theo quy ước mã túi mẹ + mã chế phẩm."
+        >
+            <BagOriginPanel
+                source={parent.source}
+                bagBloodGroup={parent.bloodGroup}
+                collectedAt={parent.collectedAt}
+                expiredAt={parent.expiredAt}
+                isExpired={parent.isExpired}
+                labTest={parent.labTest}
+            />
+
+            <dl className="inv-parent">
+                <div>
+                    <dt>Nhóm máu</dt>
+                    <dd>
+                        <Space size={6} wrap>
+                            <BloodGroupTag value={parent.bloodGroup} size="sm" />
+                            <StatusPill tone="info" dot={false}>Kế thừa từ túi gốc</StatusPill>
+                        </Space>
+                    </dd>
+                </div>
+                <div><dt>Thể tích</dt><dd>{parent.volumeMl} ml</dd></div>
+                <div><dt>Vị trí</dt><dd>{parent.storageLocationName ?? '—'}</dd></div>
+            </dl>
+
+            <div style={{ marginTop: 16 }}>
+                {CHILD_CODES.map((code) => {
+                    const row = rows[code]
+                    const expiry = expiryOf(code)
+                    const expired = expiry !== null && new Date(expiry).getTime() <= Date.now()
+                    const opts = locationOptions(locations, code)
+                    const disabled = !canEdit || parent.isExpired
+
+                    return (
+                        <div key={code} className={`inv-comp${row.enabled ? '' : ' is-off'}`}>
+                            <Checkbox
+                                checked={row.enabled}
+                                disabled={disabled}
+                                onChange={(e) => patch(code, { enabled: e.target.checked })}
+                            >
+                                <b>{code}</b> · {COMPONENT_LABEL[code]}
+                            </Checkbox>
+                            <InputNumber
+                                min={1}
+                                max={parent.volumeMl}
+                                placeholder="Thể tích (ml)"
+                                disabled={!row.enabled || disabled}
+                                value={row.volume}
+                                onChange={(v) => patch(code, { volume: v === null ? null : Number(v) })}
+                                style={{ width: '100%' }}
+                            />
+                            <Select
+                                placeholder={`Tủ phù hợp (${storageHint(code)})`}
+                                disabled={!row.enabled || disabled}
+                                value={row.locationId}
+                                options={opts}
+                                notFoundContent="Không có tủ phù hợp đang trống"
+                                onChange={(v) => patch(code, { locationId: v })}
+                            />
+                            {row.enabled && (
+                                <div className={`inv-comp__preview${expired ? ' is-bad' : ''}`}>
+                                    Mã túi: <span className="inv-mono">{childBarcode(parent.barcode, code)}</span>
+                                    {expiry && (
+                                        <>
+                                            {' · '}Hạn dùng: {new Date(expiry).toLocaleString('vi-VN')}
+                                            {expired && ' (đã quá hạn, không thể tạo)'}
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )
+                })}
+            </div>
+
+            <div className="inv-total">
+                <span>Tổng thể tích chế phẩm</span>
+                <b style={{ color: overVolume ? 'var(--c-danger)' : undefined }}>
+                    {total} / {parent.volumeMl} ml
+                </b>
+            </div>
+
+            {overVolume && (
+                <Alert style={{ marginTop: 12 }} type="error" showIcon title="Tổng thể tích các chế phẩm vượt thể tích túi gốc." />
+            )}
+            {!canEdit && (
+                <Alert style={{ marginTop: 12 }} type="warning" showIcon title="Bạn chỉ có quyền xem hàng chờ điều chế." />
+            )}
+
+            <div className="inv-actions" style={{ marginTop: 16 }}>
+                <Popconfirm
+                    title="Xác nhận điều chế?"
+                    description="Túi gốc sẽ chuyển sang PROCESSED và không thể hoàn tác."
+                    okText="Xác nhận"
+                    cancelText="Hủy"
+                    disabled={!canSubmit}
+                    onConfirm={submit}
+                >
+                    <Button type="primary" size="large" disabled={!canSubmit} loading={separate.isPending}>
+                        Xác nhận điều chế &amp; sinh mã
+                    </Button>
+                </Popconfirm>
+            </div>
+        </SectionCard>
+    )
+}

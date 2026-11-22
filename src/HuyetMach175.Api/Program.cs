@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using HuyetMach175.Api.Data;
 using HuyetMach175.SharedKernel.Authorization;
 using HuyetMach175.SharedKernel.Services;
 
 using HuyetMach175.Modules.Auth;
+using HuyetMach175.Modules.Clinical;
 using HuyetMach175.Modules.Donation;
+using HuyetMach175.Modules.Inventory;
 
 using Scalar.AspNetCore;
 using Microsoft.OpenApi;
@@ -13,25 +16,63 @@ using Microsoft.OpenApi;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
 
 builder.Services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddAuthModule(builder.Configuration);
+builder.Services.AddClinicalModule();
 builder.Services.AddDonationModule();
+builder.Services.AddInventoryModule();
 builder.Services.AddPermissionAuthorization();
+
+var configuredOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>()?
+    .Select(o => o.Trim().TrimEnd('/'))
+    .Where(o => !string.IsNullOrWhiteSpace(o))
+    .ToHashSet(StringComparer.OrdinalIgnoreCase) ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+var allowLocalhostOrigins = builder.Environment.IsDevelopment() ||
+    builder.Configuration.GetValue<bool>("Cors:AllowLocalhostOrigins");
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.SetIsOriginAllowed(origin => true)
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+        policy.SetIsOriginAllowed(origin =>
+        {
+            if (string.IsNullOrWhiteSpace(origin))
+            {
+                return false;
+            }
+
+            var normalizedOrigin = origin.Trim().TrimEnd('/');
+            if (configuredOrigins.Contains(normalizedOrigin))
+            {
+                return true;
+            }
+
+            if (allowLocalhostOrigins && Uri.TryCreate(normalizedOrigin, UriKind.Absolute, out var uri))
+            {
+                var isHttpOrHttps = uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
+                var isLocalhost = string.Equals(uri.Host, "localhost", StringComparison.OrdinalIgnoreCase) ||
+                                  string.Equals(uri.Host, "127.0.0.1", StringComparison.OrdinalIgnoreCase);
+                return isHttpOrHttps && isLocalhost;
+            }
+
+            return false;
+        })
+        .AllowAnyHeader()
+        .AllowAnyMethod();
     });
 });
 
 builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    })
     .ConfigureApiBehaviorOptions(o =>
     {
         o.InvalidModelStateResponseFactory = ctx =>
@@ -102,19 +143,29 @@ app.MapScalarApiReference(options =>
            .WithDefaultHttpClient(ScalarTarget.JavaScript, ScalarClient.Axios);
 });
 
-try
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
-    await dbContext.Database.MigrateAsync();
-    await DbInitializer.SeedAsync(dbContext, passwordHasher);
-}
-catch (Exception ex)
-{
-    var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogError(ex, "Lỗi xảy ra trong quá trình Migrate hoặc Seed Database.");
+    try
+    {
+        await dbContext.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Lỗi xảy ra trong quá trình Migrate Database.");
+    }
+
+    try
+    {
+        await DbInitializer.SeedAsync(dbContext, passwordHasher);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Lỗi xảy ra trong quá trình Seed Database.");
+    }
 }
 
 app.UseHttpsRedirection();

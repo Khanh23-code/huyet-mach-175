@@ -1,4 +1,4 @@
-import { Breadcrumb } from 'antd'
+import { PageContainer, PageHeader } from '@/shared/components'
 import ProfileCard from '../components/ProfileCard'
 import ActiveSessions from '../components/ActiveSessions'
 import ChangePasswordFormCard from '../components/ChangePasswordForm'
@@ -9,13 +9,12 @@ export default function ProfilePage() {
     const { data: profile, isLoading } = useProfile()
 
     return (
-        <div className="pf">
-            <Breadcrumb items={[{ title: 'Tài khoản' }, { title: 'Hồ sơ cá nhân' }]} />
-
-            <div className="pf-title">
-                <h1>Hồ sơ cá nhân</h1>
-                <p>Xem thông tin cá nhân, đổi mật khẩu và quản lý phiên đăng nhập.</p>
-            </div>
+        <PageContainer>
+            <PageHeader
+                breadcrumb={[{ title: 'Tài khoản' }, { title: 'Hồ sơ cá nhân' }]}
+                title="Hồ sơ cá nhân"
+                subtitle="Xem thông tin cá nhân, đổi mật khẩu và quản lý phiên đăng nhập."
+            />
 
             <div className="pf-grid">
                 <div className="pf-col">
@@ -26,6 +25,6 @@ export default function ProfilePage() {
                     <ChangePasswordFormCard />
                 </div>
             </div>
-        </div>
+        </PageContainer>
     )
 }

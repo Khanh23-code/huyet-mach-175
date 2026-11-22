@@ -19,6 +19,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     public DbSet<DonationCampaign> DonationCampaigns => Set<DonationCampaign>();
+    public DbSet<DonationCampaignSlot> DonationCampaignSlots => Set<DonationCampaignSlot>();
     public DbSet<Donor> Donors => Set<Donor>();
     public DbSet<DonationAppointment> DonationAppointments => Set<DonationAppointment>();
     public DbSet<PreScreeningSurvey> PreScreeningSurveys => Set<PreScreeningSurvey>();
@@ -28,6 +29,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<StorageLocation> StorageLocations => Set<StorageLocation>();
     public DbSet<BloodBag> BloodBags => Set<BloodBag>();
     public DbSet<BloodTestResult> BloodTestResults => Set<BloodTestResult>();
+    public DbSet<BloodDisposalRecord> BloodDisposalRecords => Set<BloodDisposalRecord>();
+    public DbSet<BloodDisposalItem> BloodDisposalItems => Set<BloodDisposalItem>();
+    public DbSet<BloodBagStatusLog> BloodBagStatusLogs => Set<BloodBagStatusLog>();
 
     public DbSet<BloodRequest> BloodRequests => Set<BloodRequest>();
     public DbSet<BloodRequestItem> BloodRequestItems => Set<BloodRequestItem>();

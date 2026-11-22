@@ -1,0 +1,106 @@
+/* ==========================================================================
+   Work Campaign Banner & Gate (Single Source of Truth)
+   ========================================================================== */
+
+/* Đợt hiến máu đang làm việc */
+.wc-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    padding: var(--space-3) var(--space-5);
+    background: var(--c-primary-soft);
+    border: 1px solid var(--c-primary-border);
+    border-radius: var(--radius-md);
+}
+
+.wc-banner__info {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+
+.wc-banner__label {
+    display: block;
+    color: var(--c-text-muted);
+    font-size: var(--text-xs);
+    font-weight: 600;
+}
+
+.wc-banner__title {
+    display: block;
+    color: var(--c-text);
+    font-size: var(--text-base);
+    font-weight: 700;
+}
+
+.wc-banner__loc {
+    color: var(--c-text-secondary);
+    font-size: var(--text-sm);
+}
+
+/* Chặn nhập mã đợt hiến máu */
+.wc-gate {
+    width: 100%;
+    max-width: 540px;
+    margin: var(--space-8) auto;
+    padding: var(--space-8);
+    text-align: center;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+}
+
+.wc-gate__icon {
+    font-size: 28px;
+    color: var(--c-primary);
+    background: var(--c-primary-soft);
+    border: 1px solid var(--c-primary-border);
+    border-radius: var(--radius-pill);
+    width: 64px;
+    height: 64px;
+    display: grid;
+    place-items: center;
+    margin: 0 auto var(--space-4);
+}
+
+.wc-gate__title {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--c-text);
+}
+
+.wc-gate__desc {
+    color: var(--c-text-muted);
+    font-size: var(--text-base);
+    line-height: 1.55;
+    margin: 0 0 var(--space-6);
+}
+
+.wc-gate__form {
+    display: flex;
+    gap: var(--space-3);
+}
+
+.wc-gate__input {
+    flex: 1;
+}
+
+.wc-gate__alert {
+    margin-top: var(--space-4);
+    text-align: left;
+}
+
+@media (max-width: 768px) {
+    .wc-gate {
+        padding: var(--space-6);
+        margin: var(--space-4) auto;
+    }
+
+    .wc-gate__form {
+        flex-direction: column;
+    }
+}

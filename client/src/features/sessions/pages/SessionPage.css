@@ -1,0 +1,465 @@
+/* ==========================================================================
+   Session Page, Queue, Workspace & 70x40mm Barcode Label Print
+   ========================================================================== */
+
+.ss-layout {
+    display: grid;
+    grid-template-columns: 360px minmax(0, 1fr);
+    gap: var(--space-6);
+    align-items: start;
+}
+
+.ss-detail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
+}
+
+.ss-muted {
+    color: var(--c-text-muted);
+    font-size: var(--text-sm);
+}
+
+.ss-hint {
+    margin-top: var(--space-2);
+}
+
+.ss-empty {
+    padding: var(--space-6);
+    text-align: center;
+    color: var(--c-text-muted);
+}
+
+.ss-err {
+    color: var(--c-danger);
+    font-size: var(--text-xs);
+}
+
+.ss-mono {
+    font-family: var(--font-mono);
+}
+
+.ss-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--c-primary);
+    margin-inline-end: var(--space-2);
+}
+
+.ss-avatar {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 600;
+    color: var(--c-primary);
+    background: var(--c-primary-soft);
+}
+
+.ss-avatar--lg {
+    width: 72px;
+    height: 72px;
+    font-size: var(--text-2xl);
+    color: var(--c-on-primary);
+    background: var(--c-primary);
+}
+
+/* Hàng chờ */
+.ss-queue-tools {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--c-border-subtle);
+}
+
+.ss-queue-list {
+    max-height: 560px;
+    overflow-y: auto;
+    padding: var(--space-2);
+    display: grid;
+    gap: var(--space-1);
+}
+
+.ss-queue-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    padding: var(--space-3);
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.ss-queue-item:hover {
+    background: var(--c-surface-hover);
+}
+
+.ss-queue-item.is-active {
+    background: var(--c-primary-soft);
+    border-color: var(--c-primary);
+}
+
+.ss-queue-item:focus-visible {
+    outline: 2px solid var(--c-primary);
+    outline-offset: 2px;
+}
+
+.ss-queue-body {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+    justify-items: start;
+}
+
+.ss-queue-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    color: var(--c-text-muted);
+    font-size: var(--text-xs);
+}
+
+.ss-queue-arrow {
+    color: var(--c-text-muted);
+}
+
+.ss-queue-foot {
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--c-border-subtle);
+    color: var(--c-text-muted);
+    font-size: var(--text-xs);
+}
+
+/* Người hiến */
+.ss-donor {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+}
+
+.ss-donor-main {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    gap: var(--space-1);
+}
+
+.ss-donor-top {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.ss-donor-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    color: var(--c-text-muted);
+    font-size: var(--text-sm);
+}
+
+.ss-donor-name {
+    margin: 0;
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--c-text);
+}
+
+/* Phiên */
+.ss-panel {
+    display: grid;
+    gap: var(--space-4);
+}
+
+.ss-h {
+    margin: 0;
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--c-text);
+}
+
+.ss-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+.ss-chip {
+    padding: var(--space-2) var(--space-5);
+    font: inherit;
+    color: var(--c-text);
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+}
+
+.ss-chip:hover:not(:disabled) {
+    border-color: var(--c-primary);
+}
+
+.ss-chip.is-active {
+    color: var(--c-primary);
+    background: var(--c-primary-soft);
+    border-color: var(--c-primary);
+    font-weight: 600;
+}
+
+.ss-chip:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.ss-chip:focus-visible {
+    outline: 2px solid var(--c-primary);
+    outline-offset: 2px;
+}
+
+.ss-timer {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-2);
+    padding: var(--space-8) var(--space-4);
+    background: var(--c-surface-muted);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-md);
+}
+
+.ss-timer-value {
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--c-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.ss-timer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+}
+
+.ss-bag {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-5);
+    align-items: center;
+    padding: var(--space-4);
+    border: 1px dashed var(--c-border);
+    border-radius: var(--radius-md);
+    background: var(--c-surface-muted);
+}
+
+.ss-bag-code {
+    display: grid;
+    gap: var(--space-2);
+    justify-items: center;
+}
+
+.ss-bag-code code {
+    font-size: var(--text-xs);
+    word-break: break-all;
+    text-align: center;
+}
+
+.ss-bag-info {
+    display: grid;
+    gap: 6px;
+    justify-items: start;
+    font-size: var(--text-base);
+}
+
+.ss-bag-blood {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.ss-field {
+    display: grid;
+    gap: 6px;
+}
+
+.ss-field label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--c-text);
+}
+
+.ss-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-3);
+}
+
+/* Tem nhãn (xem trước + in) */
+.ss-barcode {
+    display: block;
+    width: 100%;
+    height: 56px;
+    background: #ffffff;
+}
+
+.ss-label {
+    padding: var(--space-4);
+    background: var(--c-surface-muted);
+    border: 1px dashed var(--c-border);
+    border-radius: var(--radius-md);
+    display: grid;
+    gap: 10px;
+    color: var(--c-text);
+}
+
+.ss-label-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--c-text-muted);
+}
+
+.ss-label-group {
+    padding: var(--space-1) 10px;
+    font-size: var(--text-base);
+    letter-spacing: 0;
+    color: var(--c-blood);
+    background: var(--c-blood-soft);
+    border-radius: var(--radius-sm);
+}
+
+.ss-label-rows {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px var(--space-4);
+    margin: 0;
+    font-size: var(--text-xs);
+}
+
+.ss-label-rows dt {
+    color: var(--c-text-muted);
+}
+
+.ss-label-rows dd {
+    margin: 0;
+    text-align: right;
+}
+
+.ss-modal-foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-3);
+}
+
+.ss-copies {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-inline-end: auto;
+    font-size: var(--text-sm);
+}
+
+.ss-print-root {
+    display: none;
+}
+
+@media (max-width: 1100px) {
+    .ss-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .ss-donor {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .ss-bag {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* In tem: khổ 70x40mm, luôn ép nền trắng #FFFFFF, chữ đen #000000 */
+@media print {
+    @page {
+        size: 70mm 40mm;
+        margin: 0;
+    }
+
+    html,
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    body > *:not(.ss-print-root) {
+        display: none !important;
+    }
+
+    .ss-print-root {
+        display: block;
+    }
+
+    .ss-print-root .ss-label {
+        width: 70mm;
+        height: 40mm;
+        box-sizing: border-box;
+        padding: 3mm;
+        gap: 1.5mm;
+        color: #000000 !important;
+        background: #ffffff !important;
+        border: 0;
+        border-radius: 0;
+        break-after: page;
+        page-break-after: always;
+        overflow: hidden;
+    }
+
+    .ss-print-root .ss-label:last-child {
+        break-after: auto;
+        page-break-after: auto;
+    }
+
+    .ss-print-root .ss-label-head,
+    .ss-print-root .ss-label-rows dt,
+    .ss-print-root .ss-label-rows dd {
+        color: #000000 !important;
+    }
+
+    .ss-print-root .ss-label-group {
+        color: #000000 !important;
+        background: #ffffff !important;
+        border: 1px solid #000000 !important;
+    }
+
+    .ss-print-root .ss-barcode {
+        height: 14mm;
+        background: #ffffff !important;
+    }
+
+    .ss-print-root .ss-label-rows {
+        font-size: 7pt;
+    }
+}

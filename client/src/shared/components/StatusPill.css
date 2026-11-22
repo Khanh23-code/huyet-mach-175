@@ -1,0 +1,106 @@
+.ui-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 5px 12px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--c-neutral-border);
+    background: var(--c-neutral-soft);
+    color: var(--c-text-secondary);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+
+.ui-status-pill__dot {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.ui-status-pill--pulse .ui-status-pill__dot {
+    animation: ui-pill-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes ui-pill-pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.4;
+        transform: scale(0.85);
+    }
+}
+
+.ui-status-pill--primary {
+    background: var(--c-primary-soft);
+    border-color: var(--c-primary-border);
+    color: var(--c-primary);
+}
+
+.ui-status-pill--success {
+    background: var(--c-success-soft);
+    border-color: var(--c-success-border);
+    color: var(--c-success);
+}
+
+.ui-status-pill--warning {
+    background: var(--c-warning-soft);
+    border-color: var(--c-warning-border);
+    color: var(--c-warning);
+}
+
+.ui-status-pill--urgent {
+    background: var(--c-urgent-soft);
+    border-color: var(--c-urgent-border);
+    color: var(--c-urgent);
+}
+
+.ui-status-pill--danger {
+    background: var(--c-danger-soft);
+    border-color: var(--c-danger-border);
+    color: var(--c-danger);
+}
+
+.ui-status-pill--info {
+    background: var(--c-info-soft);
+    border-color: var(--c-info-border);
+    color: var(--c-info);
+}
+
+.ui-status-pill--blood {
+    background: var(--c-blood-soft);
+    border-color: var(--c-blood-border);
+    color: var(--c-blood);
+}
+
+.ui-status-pill--purple {
+    background: var(--c-purple-soft);
+    border-color: var(--c-purple-border);
+    color: var(--c-purple);
+}
+
+.ui-status-pill--neutral {
+    background: var(--c-neutral-soft);
+    border-color: var(--c-neutral-border);
+    color: var(--c-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-status-pill--pulse .ui-status-pill__dot {
+        animation: none;
+    }
+}
+
+@media print {
+    .ui-status-pill {
+        background: #ffffff !important;
+        color: #000000 !important;
+        border-color: #000000 !important;
+    }
+}

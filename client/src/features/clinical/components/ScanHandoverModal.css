@@ -1,0 +1,66 @@
+.scan-modal__header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+}
+
+.scan-modal__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: var(--c-success-soft);
+    color: var(--c-success);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-xl);
+    flex-shrink: 0;
+}
+
+.scan-modal__title {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--c-text);
+    margin: 0 0 var(--space-1) 0;
+}
+
+.scan-modal__subtitle {
+    font-size: var(--text-sm);
+    color: var(--c-text-muted);
+    margin: 0;
+}
+
+.scan-modal__bag-info {
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    background-color: var(--c-surface-muted);
+    margin-bottom: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+}
+
+.scan-modal__bag-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.scan-modal__bag-row span:first-child {
+    color: var(--c-text-muted);
+}
+
+.scan-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+}
+
+.scan-modal__submit-btn {
+    font-weight: 600;
+}

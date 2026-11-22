@@ -1,16 +1,7 @@
-import { useEffect, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { referenceApi, usersApi } from './usersApi'
 import type { UserQuery } from '@/types/user'
-
-export const useDebounce = <T,>(value: T, delay = 400) => {
-    const [v, setV] = useState(value)
-    useEffect(() => {
-        const t = setTimeout(() => setV(value), delay)
-        return () => clearTimeout(t)
-    }, [value, delay])
-    return v
-}
+export { useDebounce } from '@/shared/hooks/useDebounce'
 
 export const useUsers = (q: UserQuery) =>
     useQuery({

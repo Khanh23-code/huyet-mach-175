@@ -1,0 +1,5 @@
+export type AboGroup = 'A' | 'B' | 'AB' | 'O'
+export type RhValue = 'POSITIVE' | 'NEGATIVE'
+export type TargetVolume = 'VOL_250' | 'VOL_350' | 'VOL_450'
+export type SessionStatus = 'WAITING_COLLECTION' | 'COMPLETED' | 'ABORTED'
+export type ScreeningStatus = 'PENDING' | 'QUALIFIED' | 'DEFERRED' | 'UNQUALIFIED'

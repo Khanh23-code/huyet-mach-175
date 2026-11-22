@@ -1,0 +1,187 @@
+.return-scan-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(300px, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+}
+
+.return-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(320px, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+}
+
+.return-stack {
+    display: grid;
+    gap: var(--space-4);
+}
+
+.return-loading-body {
+    padding: var(--space-8);
+    text-align: center;
+}
+
+.return-bag-pill {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--c-success-soft);
+    border: 1px solid var(--c-success-border);
+    flex-wrap: wrap;
+}
+
+.return-bag-pill.is-expired {
+    background: var(--c-danger-soft);
+    border-color: var(--c-danger-border);
+}
+
+.return-bag-pill__left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.return-field-label {
+    display: block;
+    font-weight: 600;
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-2);
+    color: var(--c-text);
+}
+
+.return-field-req {
+    color: var(--c-danger);
+}
+
+.return-hint {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--c-text-muted);
+    line-height: 1.5;
+}
+
+.return-reason-box {
+    background: var(--c-surface-muted);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--c-text);
+    line-height: 1.55;
+}
+
+.return-checklist {
+    display: grid;
+    gap: var(--space-2);
+}
+
+.return-check-item {
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    background: var(--c-surface);
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.return-check-item.is-checked {
+    border-color: var(--c-success-border);
+    background: var(--c-success-soft);
+}
+
+.return-check-item__label {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--c-text);
+}
+
+.return-decision-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+}
+
+.return-policy-box {
+    background: var(--c-surface-muted);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+}
+
+.return-policy-box__title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--c-text-secondary);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.return-policy-box p {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--c-text-secondary);
+    line-height: 1.55;
+}
+
+.return-pending-list {
+    display: grid;
+    gap: var(--space-3);
+    max-height: 440px;
+    overflow-y: auto;
+}
+
+.return-pending-item {
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    display: grid;
+    gap: var(--space-1);
+    background: var(--c-surface-muted);
+}
+
+.return-pending-item__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.return-pending-item__code {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: var(--text-sm);
+    color: var(--c-blood);
+}
+
+.return-pending-item__title {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--c-text);
+}
+
+.return-pending-item__meta {
+    font-size: var(--text-xs);
+    color: var(--c-text-secondary);
+}
+
+.return-pending-item__sub {
+    font-size: var(--text-xs);
+    color: var(--c-text-muted);
+}
+
+.return-pending-item__time {
+    font-size: 11px;
+    color: var(--c-text-subtle);
+}
+
+@media (max-width: 960px) {
+    .return-scan-grid,
+    .return-detail-grid,
+    .return-decision-actions {
+        grid-template-columns: 1fr;
+    }
+}

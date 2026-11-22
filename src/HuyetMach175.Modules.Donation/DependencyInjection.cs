@@ -7,8 +7,15 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddDonationModule(this IServiceCollection services)
     {
+        services.AddScoped<ICampaignValidator, CampaignValidator>();
         services.AddScoped<ICampaignsService, CampaignsService>();
         services.AddScoped<IDonorsService, DonorsService>();
+        services.AddScoped<IDonorImportService, DonorImportService>();
+        services.AddScoped<IAppointmentValidator, AppointmentValidator>();
+        services.AddScoped<IAppointmentsService, AppointmentsService>();
+        services.AddScoped<ICheckInService, CheckInService>();
+        services.AddScoped<ISurveysService, SurveysService>();
+        services.AddScoped<IDonationSessionsService, DonationSessionsService>();
 
         services.AddControllers()
             .AddApplicationPart(typeof(DependencyInjection).Assembly);

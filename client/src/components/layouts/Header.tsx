@@ -1,12 +1,14 @@
-﻿import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Dropdown } from 'antd'
+import { Button, Dropdown, Tooltip } from 'antd'
 import type { MenuProps } from 'antd'
 import {
     BellOutlined,
     DownOutlined,
     LinkOutlined,
     LogoutOutlined,
+    MenuFoldOutlined,
+    MenuUnfoldOutlined,
     MoonOutlined,
     ScanOutlined,
     SearchOutlined,
@@ -17,6 +19,7 @@ import { useNavigate } from 'react-router-dom'
 import { useLogout } from '@/features/auth/useLogout'
 import { useCurrentUser } from '@/features/auth/useCurrentUser'
 import { HOME_PATH } from '@/config/routeConfig'
+import { useThemeStore } from '@/config/themeStore'
 import './Header.css'
 
 interface HeaderProps {
@@ -24,28 +27,31 @@ interface HeaderProps {
     onSearch?: (keyword: string) => void
     /** Gọi khi bấm nút quét mã vạch */
     onScan?: () => void
+    /** Trạng thái thu gọn của Sidebar trên desktop */
+    sidebarCollapsed?: boolean
+    /** Đang ở chế độ mobile (<= 768px) */
+    isMobile?: boolean
+    /** Trạng thái mở Drawer trên mobile */
+    mobileSidebarOpen?: boolean
+    /** Gọi khi bấm nút thu gọn / mở rộng Sidebar */
+    onToggleSidebar?: () => void
 }
 
-type Theme = 'light' | 'dark'
-
-const THEME_KEY = 'theme'
-
-export default function Header({ onSearch, onScan }: HeaderProps) {
+export default function Header({
+    onSearch,
+    onScan,
+    sidebarCollapsed = false,
+    isMobile = false,
+    mobileSidebarOpen = false,
+    onToggleSidebar,
+}: HeaderProps) {
     const navigate = useNavigate()
     const { logout: handleLogout, isLoggingOut } = useLogout()
     const { displayName, roleLabel, initials, loading } = useCurrentUser()
+    const theme = useThemeStore((s) => s.mode)
+    const toggleTheme = useThemeStore((s) => s.toggleMode)
 
     const homePath = HOME_PATH
-
-    /* ---------------- Theme ---------------- */
-    const [theme, setTheme] = useState<Theme>(() =>
-        localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light'
-    )
-
-    useEffect(() => {
-        document.documentElement.dataset.theme = theme
-        localStorage.setItem(THEME_KEY, theme)
-    }, [theme])
 
     /* ---------------- Search + Ctrl/Cmd+K ---------------- */
     const searchRef = useRef<HTMLInputElement>(null)
@@ -98,22 +104,47 @@ export default function Header({ onSearch, onScan }: HeaderProps) {
         },
     ]
 
+    const showUnfoldIcon = isMobile ? !mobileSidebarOpen : sidebarCollapsed
+    const toggleLabel = isMobile
+        ? mobileSidebarOpen
+            ? 'Đóng menu điều hướng'
+            : 'Mở menu điều hướng'
+        : sidebarCollapsed
+          ? 'Mở rộng thanh điều hướng'
+          : 'Thu gọn thanh điều hướng'
+
     return (
         <header className="app-header">
-            {/* Brand */}
-            <button
-                type="button"
-                className="app-header__brand"
-                onClick={() => navigate(homePath)}
-                aria-label="Về trang chủ"
-            >
-                <span className="app-header__logo" aria-hidden>
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                        <path d="M12 2.5c-.4 0-.8.2-1 .5C8.2 6.7 5.5 10 5.5 13.8a6.5 6.5 0 0 0 13 0c0-3.8-2.7-7.1-5.5-10.8-.2-.3-.6-.5-1-.5z" />
-                    </svg>
-                </span>
-                <span className="app-header__brand-text">Điều Phối Máu 175</span>
-            </button>
+            <div className="app-header__start">
+                {/* Brand */}
+                <button
+                    type="button"
+                    className={`app-header__brand${sidebarCollapsed ? ' is-collapsed' : ''}`}
+                    onClick={() => navigate(homePath)}
+                    aria-label="Về trang chủ"
+                    title="Điều Phối Máu 175"
+                >
+                    <span className="app-header__logo" aria-hidden>
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M12 2.5c-.4 0-.8.2-1 .5C8.2 6.7 5.5 10 5.5 13.8a6.5 6.5 0 0 0 13 0c0-3.8-2.7-7.1-5.5-10.8-.2-.3-.6-.5-1-.5z" />
+                        </svg>
+                    </span>
+                    <span className="app-header__brand-text">Điều Phối Máu 175</span>
+                </button>
+
+                {onToggleSidebar && (
+                    <Tooltip title={toggleLabel} placement="bottom">
+                        <Button
+                            type="text"
+                            className="app-header__toggle"
+                            icon={showUnfoldIcon ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                            onClick={onToggleSidebar}
+                            aria-label={toggleLabel}
+                            aria-expanded={isMobile ? mobileSidebarOpen : !sidebarCollapsed}
+                        />
+                    </Tooltip>
+                )}
+            </div>
 
             {/* Search */}
             <form className="app-header__search" role="search" onSubmit={handleSearch}>
@@ -146,7 +177,7 @@ export default function Header({ onSearch, onScan }: HeaderProps) {
                 <button
                     type="button"
                     className="app-header__icon-btn"
-                    onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+                    onClick={toggleTheme}
                     aria-label={theme === 'dark' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
                 >
                     {theme === 'dark' ? <SunOutlined /> : <MoonOutlined />}

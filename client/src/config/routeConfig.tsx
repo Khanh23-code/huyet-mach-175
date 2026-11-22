@@ -4,6 +4,9 @@ import {
     HeartOutlined,
     SettingOutlined,
     TeamOutlined,
+    InboxOutlined,
+    FileTextOutlined,
+    BarChartOutlined,
 } from '@ant-design/icons'
 import { PERMISSIONS, type PermissionRequirement } from './permissions'
 
@@ -46,16 +49,81 @@ export const ROUTE_GROUPS: RouteGroup[] = [
         children: [
             { key: 'queue', label: 'Hàng chờ tiếp nhận', path: '/btd/queue', requiredPermission: PERMISSIONS.APPOINTMENTS_VIEW },
             { key: 'screening', label: 'Khám sàng lọc', path: '/btd/screening', requiredPermission: PERMISSIONS.SCREENING_VIEW },
+            { key: 'sessions', label: 'Phiên lấy máu', path: '/btd/sessions', requiredPermission: PERMISSIONS.SESSION_VIEW },
+        ],
+    },
+    {
+        // W2: Túi máu & Kho
+        key: 'inventory',
+        label: 'Túi máu & Kho',
+        icon: <InboxOutlined />,
+        defaultOpen: true,
+        children: [
+            { key: 'bag-intake', label: 'Khởi tạo mã định danh', path: '/inventory/intake', requiredPermission: PERMISSIONS.INVENTORY_EDIT },
+            { key: 'bag-scan', label: 'Quét vòng đời túi máu', path: '/inventory/scan', requiredPermission: PERMISSIONS.INVENTORY_VIEW },
+            { key: 'stock', label: 'Tồn kho & kiểm kê', path: '/inventory/stock', requiredPermission: PERMISSIONS.INVENTORY_VIEW },
+            { key: 'lab-tests', label: 'Xét nghiệm túi máu', path: '/inventory/lab-tests', requiredPermission: PERMISSIONS.LAB_VIEW },
+            { key: 'processing', label: 'Điều chế chế phẩm', path: '/inventory/processing', requiredPermission: PERMISSIONS.PROCESSING_VIEW },
+            { key: 'disposals', label: 'Xử lý hủy túi máu', path: '/inventory/disposals', requiredPermission: PERMISSIONS.DISPOSAL_EDIT },
+            { key: 'disposal-approvals', label: 'Phê duyệt biên bản hủy', path: '/inventory/disposal-approvals', requiredPermission: PERMISSIONS.DISPOSAL_APPROVE },
+            { key: 'expiry-alerts', label: 'Cảnh báo cận hạn', path: '/inventory/expiring', requiredPermission: PERMISSIONS.INVENTORY_VIEW },
+        ],
+    },
+    {
+        // W3: Lâm sàng (Yêu cầu máu & Hoàn trả)
+        key: 'clinical',
+        label: 'Yêu cầu máu (Lâm sàng)',
+        icon: <FileTextOutlined />,
+        defaultOpen: true,
+        requiredPermission: PERMISSIONS.BLOOD_REQUEST_EDIT,
+        children: [
+            { key: 'clinical-requests', label: 'Lập phiếu & Theo dõi', path: '/clinical/requests', requiredPermission: PERMISSIONS.BLOOD_REQUEST_EDIT },
+            { key: 'clinical-handovers', label: 'Nhận bàn giao túi máu', path: '/clinical/handovers', requiredPermission: PERMISSIONS.BLOOD_REQUEST_EDIT },
+        ],
+    },
+    {
+        // W4: Điều phối Kho máu (Ngân hàng máu)
+        key: 'coordination',
+        label: 'Điều phối Kho máu',
+        icon: <BarChartOutlined />,
+        defaultOpen: true,
+        requiredPermission: PERMISSIONS.BLOOD_REQUEST_APPROVE,
+        children: [
+            {
+                key: 'supply-demand',
+                label: 'Bảng Cung – Cầu',
+                path: '/coordination/supply-demand',
+                requiredPermission: PERMISSIONS.BLOOD_REQUEST_APPROVE,
+            },
+            {
+                key: 'coordination-queue',
+                label: 'Hàng đợi yêu cầu',
+                path: '/coordination/queue',
+                requiredPermission: PERMISSIONS.BLOOD_REQUEST_APPROVE,
+            },
+            {
+                key: 'coordination-handover',
+                label: 'Bàn giao cấp phát',
+                path: '/coordination/handover',
+                requiredPermission: PERMISSIONS.BLOOD_REQUEST_APPROVE,
+            },
+            {
+                key: 'returns-scan', label: 'Tiếp nhận hoàn trả',
+                path: '/inventory/returns',
+                requiredPermission: PERMISSIONS.BLOOD_RETURN_APPROVE
+            },
         ],
     },
     {
         key: 'campaigns',
-        label: 'Đợt hiến máu',
+        label: 'Điểm hiến & Lịch slot',
         icon: <CalendarOutlined />,
         defaultOpen: true,
         children: [
-            // TODO: đổi path khi làm trang danh sách đợt hiến máu
-            { key: 'campaign-list', label: 'Danh sách đợt hiến máu', path: '/campaigns', requiredPermission: PERMISSIONS.CAMPAIGN_VIEW },
+            // MGT / BBNK / DON: theo dõi điểm hiến; MGT thấy thêm khu vực duyệt đề xuất
+            { key: 'site-list', label: 'Điểm hiến máu & Lịch slot', path: '/campaigns/sites', requiredPermission: PERMISSIONS.CAMPAIGN_VIEW },
+            // BBNK: tạo / gửi đề xuất
+            { key: 'site-proposals', label: 'Đề xuất lịch & điểm hiến', path: '/campaigns/proposals', requiredPermission: PERMISSIONS.CAMPAIGN_EDIT },
         ],
     },
     {

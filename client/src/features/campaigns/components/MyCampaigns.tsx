@@ -1,0 +1,400 @@
+import { useState } from 'react'
+import {
+    App,
+    Button,
+    Input,
+    Modal,
+    Popconfirm,
+    Select,
+    Space,
+    Table,
+    Tooltip,
+} from 'antd'
+import type { TableColumnsType } from 'antd'
+import {
+    CheckCircleOutlined,
+    CloseCircleOutlined,
+    DeleteOutlined,
+    EditOutlined,
+    PlayCircleOutlined,
+    SendOutlined,
+} from '@ant-design/icons'
+import { SectionCard, StatusPill } from '@/shared/components'
+import CampaignForm from './CampaignForm'
+import CancelCampaignModal from './CancelCampaignModal'
+import Can from '@/features/auth/components/Can'
+import { PERMISSIONS } from '@/config/permissions'
+import {
+    useDeleteCampaign,
+    useMyCampaigns,
+    useSubmitApproval,
+    useUpdateCampaignStatus,
+} from '../hooks'
+import {
+    CAMPAIGN_STATUS_LABEL,
+    CAMPAIGN_STATUS_TONE,
+    CAMPAIGN_TYPE_LABEL,
+    CAMPAIGN_TYPE_TONE,
+    fmtDate,
+    fmtOperatingDays,
+    normalizeCampaignStatus,
+    normalizeCampaignType,
+} from '../format'
+import type { CampaignListItem, CampaignStatus } from '../types'
+import { parseApiError } from '@/services/apiError'
+
+const PAGE_SIZE = 10
+
+interface Props {
+    onOpenDetail?: (campaignId: number) => void
+    onEdit?: (campaign: CampaignListItem) => void
+}
+
+export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
+    const { message } = App.useApp()
+    const [page, setPage] = useState(1)
+    const [statusFilter, setStatusFilter] = useState<CampaignStatus | undefined>(undefined)
+    const [keyword, setKeyword] = useState<string>('')
+    const [editingCampaign, setEditingCampaign] = useState<CampaignListItem | null>(null)
+    const [cancellingCampaign, setCancellingCampaign] = useState<CampaignListItem | null>(null)
+
+    const { data, isLoading, isFetching } = useMyCampaigns({
+        pageNumber: page,
+        pageSize: PAGE_SIZE,
+        status: statusFilter,
+        keyword: keyword || undefined,
+    })
+
+    const submitApprovalMutation = useSubmitApproval()
+    const deleteMutation = useDeleteCampaign()
+    const updateStatusMutation = useUpdateCampaignStatus()
+
+    const handleSubmitApproval = async (campaign: CampaignListItem) => {
+        try {
+            await submitApprovalMutation.mutateAsync(campaign.campaignId)
+            message.success(`Đã gửi đợt hiến "${campaign.campaignName}" lên phê duyệt`)
+        } catch (err) {
+            message.error(parseApiError(err).message)
+        }
+    }
+
+    const handleDelete = async (campaign: CampaignListItem) => {
+        try {
+            await deleteMutation.mutateAsync(campaign.campaignId)
+            message.success(`Đã xóa bản nháp "${campaign.campaignName}"`)
+        } catch (err) {
+            message.error(parseApiError(err).message)
+        }
+    }
+
+    const handleUpdateStatus = async (campaign: CampaignListItem, newStatus: CampaignStatus, label: string) => {
+        try {
+            await updateStatusMutation.mutateAsync({ id: campaign.campaignId, status: newStatus })
+            message.success(`Đã chuyển chiến dịch sang trạng thái: ${label}`)
+        } catch (err) {
+            message.error(parseApiError(err).message)
+        }
+    }
+
+    const handleEditClick = (campaign: CampaignListItem) => {
+        if (onEdit) {
+            onEdit(campaign)
+        } else {
+            setEditingCampaign(campaign)
+        }
+    }
+
+    const columns: TableColumnsType<CampaignListItem> = [
+        {
+            title: 'STT',
+            width: 60,
+            align: 'center',
+            render: (_, __, index) => (page - 1) * PAGE_SIZE + index + 1,
+        },
+        {
+            title: 'CHIẾN DỊCH / ĐIỂM HIẾN',
+            width: 280,
+            render: (_, c) => {
+                const cType = normalizeCampaignType(c.campaignType)
+                return (
+                    <div>
+                        <a
+                            style={{ fontWeight: 600, color: 'inherit' }}
+                            onClick={() => onOpenDetail?.(c.campaignId)}
+                        >
+                            {c.campaignName}
+                        </a>
+                        <div className="ds-muted ds-small">{c.locationName}</div>
+                        <Space size={4} orientation="horizontal" style={{ marginTop: 4 }}>
+                            <StatusPill tone={CAMPAIGN_TYPE_TONE[cType]} dot={false}>
+                                {CAMPAIGN_TYPE_LABEL[cType]}
+                            </StatusPill>
+                            {cType === 'RECURRING' && c.operatingDays && (
+                                <span className="ds-muted ds-small">({fmtOperatingDays(c.operatingDays)})</span>
+                            )}
+                        </Space>
+                    </div>
+                )
+            },
+        },
+        {
+            title: 'ID',
+            dataIndex: 'campaignId',
+            width: 70,
+        },
+        {
+            title: 'THỜI GIAN',
+            width: 200,
+            render: (_, c) => (
+                <div className="ds-small">
+                    <div><b>Bắt đầu:</b> {fmtDate(c.startDate)}</div>
+                    <div><b>Kết thúc:</b> {fmtDate(c.endDate)}</div>
+                </div>
+            ),
+        },
+        {
+            title: 'TIẾN ĐỘ THU GOM',
+            width: 170,
+            render: (_, c) => {
+                const cStatus = normalizeCampaignStatus(c.status)
+                if (cStatus === 'REJECTED' || cStatus === 'CANCELLED') {
+                    return <span className="ds-muted ds-small">Không tiếp nhận đăng ký</span>
+                }
+                return (
+                    <div>
+                        <div>
+                            <b>{c.totalRegistered}</b> / {c.targetDonations} đăng ký
+                        </div>
+                        <div className="ds-muted ds-small">
+                            Đã thu gom: <b>{c.totalCollected}</b> túi
+                        </div>
+                    </div>
+                )
+            },
+        },
+        {
+            title: 'TRẠNG THÁI',
+            dataIndex: 'status',
+            width: 170,
+            render: (s: unknown, c: CampaignListItem) => {
+                const cStatus = normalizeCampaignStatus(s)
+                return (
+                    <div>
+                        <StatusPill
+                            tone={CAMPAIGN_STATUS_TONE[cStatus]}
+                            pulse={cStatus === 'IN_PROGRESS'}
+                        >
+                            {CAMPAIGN_STATUS_LABEL[cStatus]}
+                        </StatusPill>
+                        {cStatus === 'REJECTED' && c.rejectionReason && (
+                            <div className="ds-reason" title={c.rejectionReason}>
+                                Lý do: {c.rejectionReason.length > 25 ? `${c.rejectionReason.slice(0, 25)}...` : c.rejectionReason}
+                            </div>
+                        )}
+                        {cStatus === 'CANCELLED' && c.cancellationReason && (
+                            <div className="ds-reason" title={c.cancellationReason}>
+                                Lý do: {c.cancellationReason.length > 25 ? `${c.cancellationReason.slice(0, 25)}...` : c.cancellationReason}
+                            </div>
+                        )}
+                    </div>
+                )
+            },
+        },
+        {
+            title: 'THAO TÁC',
+            width: 180,
+            align: 'right',
+            render: (_, c) => {
+                const status = normalizeCampaignStatus(c.status)
+                return (
+                    <Space size="small">
+                        {status === 'DRAFT' && (
+                            <>
+                                <Tooltip title="Gửi duyệt">
+                                    <Button
+                                        type="text"
+                                        icon={<SendOutlined style={{ color: 'var(--c-primary)', fontSize: 16 }} />}
+                                        loading={submitApprovalMutation.isPending}
+                                        onClick={() => handleSubmitApproval(c)}
+                                    />
+                                </Tooltip>
+                                <Tooltip title="Chỉnh sửa (Điền lên form)">
+                                    <Button
+                                        type="text"
+                                        icon={<EditOutlined style={{ color: 'var(--c-info)', fontSize: 16 }} />}
+                                        onClick={() => handleEditClick(c)}
+                                    />
+                                </Tooltip>
+                                <Popconfirm
+                                    title="Xóa bản nháp này?"
+                                    description="Bạn có chắc chắn muốn xóa bản nháp chiến dịch này?"
+                                    okText="Xóa"
+                                    cancelText="Hủy"
+                                    okButtonProps={{ danger: true }}
+                                    onConfirm={() => handleDelete(c)}
+                                >
+                                    <Button
+                                        type="text"
+                                        danger
+                                        icon={<DeleteOutlined style={{ fontSize: 16 }} />}
+                                        loading={deleteMutation.isPending}
+                                    />
+                                </Popconfirm>
+                            </>
+                        )}
+
+                        {status === 'REJECTED' && (
+                            <>
+                                <Tooltip title="Sửa & chuẩn bị gửi lại">
+                                    <Button
+                                        type="text"
+                                        icon={<EditOutlined style={{ color: 'var(--c-info)', fontSize: 16 }} />}
+                                        onClick={() => handleEditClick(c)}
+                                    />
+                                </Tooltip>
+                                <Tooltip title="Gửi duyệt lại">
+                                    <Button
+                                        type="text"
+                                        icon={<SendOutlined style={{ color: 'var(--c-primary)', fontSize: 16 }} />}
+                                        loading={submitApprovalMutation.isPending}
+                                        onClick={() => handleSubmitApproval(c)}
+                                    />
+                                </Tooltip>
+                            </>
+                        )}
+
+                        {status === 'APPROVED' && (
+                            <>
+                                <Can do={PERMISSIONS.CAMPAIGN_EDIT}>
+                                    <Tooltip title="Bắt đầu diễn ra">
+                                        <Button
+                                            type="text"
+                                            icon={<PlayCircleOutlined style={{ color: 'var(--c-primary)', fontSize: 16 }} />}
+                                            onClick={() => handleUpdateStatus(c, 'IN_PROGRESS', 'Đang diễn ra')}
+                                        />
+                                    </Tooltip>
+                                </Can>
+                                <Can do={PERMISSIONS.CAMPAIGN_CANCEL}>
+                                    <Tooltip title="Hủy đợt hiến máu">
+                                        <Button
+                                            type="text"
+                                            danger
+                                            icon={<CloseCircleOutlined style={{ fontSize: 16 }} />}
+                                            onClick={() => setCancellingCampaign(c)}
+                                        />
+                                    </Tooltip>
+                                </Can>
+                            </>
+                        )}
+
+                        {status === 'IN_PROGRESS' && (
+                            <>
+                                <Can do={PERMISSIONS.CAMPAIGN_EDIT}>
+                                    <Tooltip title="Hoàn thành đợt hiến máu">
+                                        <Button
+                                            type="text"
+                                            icon={<CheckCircleOutlined style={{ color: 'var(--c-purple)', fontSize: 16 }} />}
+                                            onClick={() => handleUpdateStatus(c, 'COMPLETED', 'Đã hoàn thành')}
+                                        />
+                                    </Tooltip>
+                                </Can>
+                                <Can do={PERMISSIONS.CAMPAIGN_CANCEL}>
+                                    <Tooltip title="Hủy đợt hiến máu">
+                                        <Button
+                                            type="text"
+                                            danger
+                                            icon={<CloseCircleOutlined style={{ fontSize: 16 }} />}
+                                            onClick={() => setCancellingCampaign(c)}
+                                        />
+                                    </Tooltip>
+                                </Can>
+                            </>
+                        )}
+                    </Space>
+                )
+            },
+        },
+    ]
+
+    return (
+        <SectionCard
+            title="Đợt hiến máu của tôi"
+            subtitle="Theo dõi tiến độ, gửi phê duyệt hoặc cập nhật trạng thái các đợt hiến do bạn khởi tạo."
+            noPadding
+            extra={
+                <Space wrap>
+                    <Input.Search
+                        placeholder="Tìm theo tên hoặc địa điểm..."
+                        allowClear
+                        onSearch={(v) => {
+                            setKeyword(v.trim())
+                            setPage(1)
+                        }}
+                        style={{ width: 220 }}
+                    />
+                    <Select
+                        placeholder="Tất cả trạng thái"
+                        allowClear
+                        style={{ width: 160 }}
+                        value={statusFilter}
+                        onChange={(v) => {
+                            setStatusFilter(v)
+                            setPage(1)
+                        }}
+                        options={[
+                            { value: 'DRAFT', label: 'Bản nháp' },
+                            { value: 'PENDING_APPROVAL', label: 'Chờ phê duyệt' },
+                            { value: 'APPROVED', label: 'Đã phê duyệt' },
+                            { value: 'IN_PROGRESS', label: 'Đang diễn ra' },
+                            { value: 'COMPLETED', label: 'Đã hoàn thành' },
+                            { value: 'CANCELLED', label: 'Đã hủy' },
+                            { value: 'REJECTED', label: 'Bị từ chối' },
+                        ]}
+                    />
+                </Space>
+            }
+        >
+            <Table<CampaignListItem>
+                rowKey="campaignId"
+                columns={columns}
+                dataSource={data?.items ?? []}
+                loading={isLoading || isFetching}
+                scroll={{ x: 1090 }}
+                locale={{ emptyText: 'Chưa có đợt hiến máu nào' }}
+                pagination={{
+                    current: page,
+                    pageSize: PAGE_SIZE,
+                    total: data?.totalCount ?? 0,
+                    showSizeChanger: false,
+                    hideOnSinglePage: true,
+                    onChange: setPage,
+                }}
+            />
+
+            {/* Modal chỉnh sửa đợt hiến khi không dùng chế độ onEdit */}
+            <Modal
+                title={`Chỉnh sửa đợt hiến máu: ${editingCampaign?.campaignName ?? ''}`}
+                open={Boolean(editingCampaign)}
+                onCancel={() => setEditingCampaign(null)}
+                footer={null}
+                width={860}
+                destroyOnHidden
+            >
+                {editingCampaign && (
+                    <CampaignForm
+                        campaign={editingCampaign}
+                        onSuccess={() => setEditingCampaign(null)}
+                        onCancel={() => setEditingCampaign(null)}
+                    />
+                )}
+            </Modal>
+
+            {/* Modal Hủy đợt hiến máu (dành cho Lãnh đạo) */}
+            <CancelCampaignModal
+                campaign={cancellingCampaign}
+                open={cancellingCampaign !== null}
+                onClose={() => setCancellingCampaign(null)}
+            />
+        </SectionCard>
+    )
+}

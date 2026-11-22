@@ -1,4 +1,4 @@
-﻿.sider {
+.sider {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -7,142 +7,95 @@
     font-family: var(--font-sans);
 }
 
+.sider--mobile {
+    border-right: 0;
+}
+
+.sider__mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    height: var(--header-h);
+    padding: 0 var(--space-3) 0 var(--space-4);
+    border-bottom: 1px solid var(--c-border);
+}
+
+.sider__mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+}
+
+.sider__mobile-logo {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    background: var(--c-primary);
+    color: var(--c-on-primary);
+}
+
+.sider__mobile-title {
+    font-size: var(--text-md);
+    font-weight: 700;
+    color: var(--c-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .sider__nav {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 20px 14px 12px;
+    overflow-x: hidden;
+    padding: 16px 6px 12px;
+}
+
+.sider--collapsed .sider__nav {
+    padding: 16px 0 12px;
 }
 
 .sider__section {
-    padding: 0 8px 14px;
+    padding: 0 14px 10px;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--c-text-muted);
-}
-
-/* ---------- Trang chủ (item nổi bật) ---------- */
-.sider__home {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    height: 40px;
-    padding: 0 12px;
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--c-text);
-    text-decoration: none;
-    transition: background-color 0.15s, color 0.15s;
-}
-
-.sider__home:hover {
-    background: var(--c-primary-soft);
-}
-
-.sider__home.is-active,
-.sider__home.is-active:hover {
-    background: var(--c-primary);
-    color: var(--c-on-primary);
-}
-
-.sider__home-icon {
-    font-size: 16px;
-}
-
-/* ---------- Nhóm ---------- */
-.sider__group {
-    margin-top: 8px;
-}
-
-.sider__group-btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    height: 40px;
-    padding: 0 10px 0 4px;
-    border: 0;
-    border-radius: var(--radius-md);
-    background: transparent;
-    font: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--c-text);
-    text-align: left;
-    cursor: pointer;
-    transition: background-color 0.15s;
-}
-
-.sider__group-btn:hover {
-    background: var(--c-bg);
-}
-
-.sider__code {
-    width: 24px;
-    flex: none;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    text-align: center;
-    color: var(--c-primary);
-}
-
-.sider__group-icon {
-    display: inline-flex;
-    flex: none;
-    font-size: 16px;
-}
-
-.sider__group-label {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.sider__chevron {
-    flex: none;
-    font-size: 11px;
-    color: var(--c-text-muted);
-    transition: transform 0.2s;
+/* ---------- AntD Menu integration ---------- */
+.sider__menu.ant-menu {
+    background: transparent;
+    border-inline-end: 0;
 }
 
-.sider__chevron.is-open {
-    transform: rotate(90deg);
+.sider__menu.ant-menu-inline-collapsed {
+    width: 100%;
 }
 
-/* ---------- Mục con ---------- */
-.sider__children {
-    margin: 2px 0 0;
-    padding: 0;
-    list-style: none;
-}
-
-.sider__child {
-    display: block;
-    margin-top: 4px; /* Thêm khoảng trống nhỏ giữa các mục (có thể chỉnh thành 2px, 6px tùy ý) */
-    padding: 9px 12px 9px 44px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 400;
-    color: var(--c-text-muted);
-    text-decoration: none;
-    transition: background-color 0.15s, color 0.15s;
-}
-
-.sider__child:hover {
-    background: var(--c-primary-soft);
-    color: var(--um-green, #1a7335);
-}
-
-.sider__child.is-active {
-    background: var(--um-green, #1a7335); /* Gọi biến toàn cục, có fallback phòng hờ */
-    color: #ffffff;                      /* Chữ trắng đồng bộ */
+.sider__menu .ant-menu-submenu-title {
     font-weight: 600;
+    color: var(--c-text);
+}
+
+.sider__menu .ant-menu-submenu-selected > .ant-menu-submenu-title {
+    color: var(--c-primary);
+}
+
+.sider__menu .ant-menu-item-selected {
+    font-weight: 600;
+}
+
+.sider__menu .ant-menu-sub.ant-menu-inline {
+    background: transparent;
 }
 
 /* ---------- Trạng thái hệ thống ---------- */
@@ -155,6 +108,16 @@
     border: 1px solid var(--c-border);
     border-radius: var(--radius-md);
     background: var(--c-bg);
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.sider__status.is-collapsed {
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 16px;
+    padding: 0;
+    justify-content: center;
+    gap: 0;
 }
 
 .sider__status-dot {
@@ -170,27 +133,18 @@
     font-size: 13px;
     font-weight: 600;
     color: var(--c-text);
+    white-space: nowrap;
 }
 
 .sider__status-sub {
     margin-top: 2px;
     font-size: 12px;
     color: var(--c-text-muted);
-}
-
-/* ---------- Focus & a11y ---------- */
-.sider__home:focus-visible,
-.sider__group-btn:focus-visible,
-.sider__child:focus-visible {
-    outline: 2px solid var(--c-primary);
-    outline-offset: 2px;
+    white-space: nowrap;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .sider__chevron,
-    .sider__home,
-    .sider__child,
-    .sider__group-btn {
+    .sider__status {
         transition: none;
     }
 }
