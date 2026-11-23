@@ -44,6 +44,28 @@ public class CreateBloodReturnResponse
     public int ReturnedById { get; set; }
     public string? ReturnedByName { get; set; }
     public DateTime ProcessedAt { get; set; }
+    public bool IsEligibleForRestockEvaluation { get; set; }
+    public List<string> WarningFlags { get; set; } = new List<string>();
+}
+
+public class CancelBloodReturnRequest
+{
+    [MaxLength(255, ErrorMessage = "Lý do hủy phiếu hoàn trả tối đa 255 ký tự.")]
+    public string? CancelReason { get; set; }
+}
+
+public class CancelBloodReturnResponse
+{
+    public int ReturnId { get; set; }
+    public int AllocationId { get; set; }
+    public int BagId { get; set; }
+    public string Barcode { get; set; } = string.Empty;
+    public ReturnFinalAction FinalAction { get; set; }
+    public BagStatus BagStatus { get; set; }
+    public string? CancelReason { get; set; }
+    public int CancelledById { get; set; }
+    public string? CancelledByName { get; set; }
+    public DateTime CancelledAt { get; set; }
 }
 
 public class PendingBloodReturnFilterDto
