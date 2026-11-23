@@ -141,7 +141,8 @@ public enum ReturnFinalAction
 {
     PENDING_INSPECTION,
     RESTOCK,
-    DISCARD
+    DISCARD,
+    CANCELLED
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -167,7 +168,8 @@ public enum NotificationReferenceType
 {
     BLOOD_REQUEST,
     BLOOD_BAG,
-    DONATION_SESSION
+    DONATION_SESSION,
+    HANDOVER_SESSION
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -186,6 +188,7 @@ public enum DisposalReason
     INFECTIOUS_POSITIVE,
     HEMOLYSIS,
     DAMAGED_BAG,
+    COLD_CHAIN_BREACH,
     OTHER
 }
 
@@ -197,4 +200,29 @@ public enum DisposalStatus
     DISPOSED,
     REJECTED,
     CANCELLED
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum HandoverSessionStatus
+{
+    PENDING,
+    CONFIRMED,
+    CANCELLED,
+    EXPIRED
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum CompatibilityRuleType
+{
+    RBC,
+    PLASMA,
+    PLATELET
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum StorageZone
+{
+    QUARANTINE,
+    RELEASED,
+    DISPOSAL_HOLD
 }

@@ -14,112 +14,203 @@ public static class InventorySeeder
 
     public static async Task SeedStorageLocationsAsync(ApplicationDbContext context)
     {
-        if (await context.StorageLocations.AnyAsync())
+        if (!await context.StorageLocations.AnyAsync())
         {
-            return;
+            var locations = new[]
+            {
+                new StorageLocation
+                {
+                    RefrigeratorName = "Tủ lạnh bảo quản máu toàn phần 1",
+                    ShelfNumber = "Ngăn A1",
+                    TargetTemperature = 4.0m,
+                    Zone = StorageZone.RELEASED,
+                    IsFull = false,
+                    IsActive = true
+                },
+                new StorageLocation
+                {
+                    RefrigeratorName = "Tủ lạnh bảo quản máu toàn phần 1",
+                    ShelfNumber = "Ngăn A2",
+                    TargetTemperature = 4.0m,
+                    Zone = StorageZone.RELEASED,
+                    IsFull = false,
+                    IsActive = true
+                },
+                new StorageLocation
+                {
+                    RefrigeratorName = "Tủ lạnh bảo quản khối hồng cầu 1",
+                    ShelfNumber = "Ngăn B1",
+                    TargetTemperature = 4.0m,
+                    Zone = StorageZone.RELEASED,
+                    IsFull = false,
+                    IsActive = true
+                },
+                new StorageLocation
+                {
+                    RefrigeratorName = "Tủ đông huyết tương 1",
+                    ShelfNumber = "Ngăn C1",
+                    TargetTemperature = -25.0m,
+                    Zone = StorageZone.RELEASED,
+                    IsFull = false,
+                    IsActive = true
+                },
+                new StorageLocation
+                {
+                    RefrigeratorName = "Tủ lắc tiểu cầu 1",
+                    ShelfNumber = "Kệ T1",
+                    TargetTemperature = 22.0m,
+                    Zone = StorageZone.RELEASED,
+                    IsFull = false,
+                    IsActive = true
+                }
+            };
+
+            context.StorageLocations.AddRange(locations);
+            await context.SaveChangesAsync();
         }
 
-        var locations = new[]
+        var hasQuarantine = await context.StorageLocations.AnyAsync(l => l.Zone == StorageZone.QUARANTINE);
+        if (!hasQuarantine)
         {
-            new StorageLocation
+            context.StorageLocations.Add(new StorageLocation
             {
-                RefrigeratorName = "Tủ lạnh bảo quản máu toàn phần 1",
-                ShelfNumber = "Ngăn A1",
+                RefrigeratorName = "Tủ biệt trữ chờ xét nghiệm 1",
+                ShelfNumber = "Ngăn BT1",
                 TargetTemperature = 4.0m,
+                Zone = StorageZone.QUARANTINE,
                 IsFull = false,
                 IsActive = true
-            },
-            new StorageLocation
-            {
-                RefrigeratorName = "Tủ lạnh bảo quản máu toàn phần 1",
-                ShelfNumber = "Ngăn A2",
-                TargetTemperature = 4.0m,
-                IsFull = false,
-                IsActive = true
-            },
-            new StorageLocation
-            {
-                RefrigeratorName = "Tủ lạnh bảo quản khối hồng cầu 1",
-                ShelfNumber = "Ngăn B1",
-                TargetTemperature = 4.0m,
-                IsFull = false,
-                IsActive = true
-            },
-            new StorageLocation
-            {
-                RefrigeratorName = "Tủ đông huyết tương 1",
-                ShelfNumber = "Ngăn C1",
-                TargetTemperature = -25.0m,
-                IsFull = false,
-                IsActive = true
-            },
-            new StorageLocation
-            {
-                RefrigeratorName = "Tủ lắc tiểu cầu 1",
-                ShelfNumber = "Kệ T1",
-                TargetTemperature = 22.0m,
-                IsFull = false,
-                IsActive = true
-            }
-        };
+            });
+        }
 
-        context.StorageLocations.AddRange(locations);
-        await context.SaveChangesAsync();
+        var hasDisposalHold = await context.StorageLocations.AnyAsync(l => l.Zone == StorageZone.DISPOSAL_HOLD);
+        if (!hasDisposalHold)
+        {
+            context.StorageLocations.Add(new StorageLocation
+            {
+                RefrigeratorName = "Tủ cách ly chờ hủy 1",
+                ShelfNumber = "Ngăn CH1",
+                TargetTemperature = 4.0m,
+                Zone = StorageZone.DISPOSAL_HOLD,
+                IsFull = false,
+                IsActive = true
+            });
+        }
+
+        if (!hasQuarantine || !hasDisposalHold)
+        {
+            await context.SaveChangesAsync();
+        }
     }
 
     public static async Task SeedBloodComponentTypesAndBagsAsync(ApplicationDbContext context)
     {
-        var wb = await context.BloodComponentTypes.FirstOrDefaultAsync(ct => ct.TypeCode == ComponentCode.WB);
-        if (wb == null)
+        var componentDefaults = new[]
         {
-            wb = new BloodComponentType
+            new
             {
                 TypeCode = ComponentCode.WB,
                 TypeName = "Máu toàn phần",
                 LifeDays = 35,
                 StorageTemperature = "2°C - 6°C",
-                Description = "Máu toàn phần thu gom từ người hiến máu tình nguyện"
-            };
-            context.BloodComponentTypes.Add(wb);
-        }
-
-        if (!await context.BloodComponentTypes.AnyAsync(ct => ct.TypeCode == ComponentCode.PRBC))
-        {
-            context.BloodComponentTypes.Add(new BloodComponentType
+                Description = "Máu toàn phần thu gom từ người hiến máu tình nguyện",
+                MinTemp = 2.0m,
+                MaxTemp = 6.0m,
+                AllowRestock = true,
+                MaxOutsideMinutesForRestock = (int?)30,
+                MaxRestockCount = 1,
+                CompatibilityRuleType = CompatibilityRuleType.RBC
+            },
+            new
             {
                 TypeCode = ComponentCode.PRBC,
                 TypeName = "Khối hồng cầu",
                 LifeDays = 42,
                 StorageTemperature = "2°C - 6°C",
-                Description = "Khối hồng cầu sau khi tách huyết tương"
-            });
-        }
-
-        if (!await context.BloodComponentTypes.AnyAsync(ct => ct.TypeCode == ComponentCode.FFP))
-        {
-            context.BloodComponentTypes.Add(new BloodComponentType
+                Description = "Khối hồng cầu sau khi tách huyết tương",
+                MinTemp = 2.0m,
+                MaxTemp = 6.0m,
+                AllowRestock = true,
+                MaxOutsideMinutesForRestock = (int?)30,
+                MaxRestockCount = 1,
+                CompatibilityRuleType = CompatibilityRuleType.RBC
+            },
+            new
             {
                 TypeCode = ComponentCode.FFP,
                 TypeName = "Huyết tương tươi đông lạnh",
                 LifeDays = 365,
                 StorageTemperature = "-25°C hoặc thấp hơn",
-                Description = "Huyết tương tươi đông lạnh giàu yếu tố đông máu"
-            });
-        }
-
-        if (!await context.BloodComponentTypes.AnyAsync(ct => ct.TypeCode == ComponentCode.PLT))
-        {
-            context.BloodComponentTypes.Add(new BloodComponentType
+                Description = "Huyết tương tươi đông lạnh giàu yếu tố đông máu",
+                MinTemp = -40.0m,
+                MaxTemp = -18.0m,
+                AllowRestock = false,
+                MaxOutsideMinutesForRestock = (int?)null,
+                MaxRestockCount = 0,
+                CompatibilityRuleType = CompatibilityRuleType.PLASMA
+            },
+            new
             {
                 TypeCode = ComponentCode.PLT,
                 TypeName = "Khối tiểu cầu",
                 LifeDays = 5,
                 StorageTemperature = "20°C - 24°C (lắc liên tục)",
-                Description = "Khối tiểu cầu từ máu toàn phần hoặc gạn tách"
-            });
+                Description = "Khối tiểu cầu từ máu toàn phần hoặc gạn tách",
+                MinTemp = 20.0m,
+                MaxTemp = 24.0m,
+                AllowRestock = false,
+                MaxOutsideMinutesForRestock = (int?)null,
+                MaxRestockCount = 0,
+                CompatibilityRuleType = CompatibilityRuleType.PLATELET
+            }
+        };
+
+        var existingTypes = await context.BloodComponentTypes
+            .ToDictionaryAsync(ct => ct.TypeCode);
+
+        BloodComponentType? wb = null;
+        foreach (var item in componentDefaults)
+        {
+            if (!existingTypes.TryGetValue(item.TypeCode, out var entity))
+            {
+                entity = new BloodComponentType
+                {
+                    TypeCode = item.TypeCode,
+                    TypeName = item.TypeName,
+                    LifeDays = item.LifeDays,
+                    StorageTemperature = item.StorageTemperature,
+                    Description = item.Description,
+                    MinTemp = item.MinTemp,
+                    MaxTemp = item.MaxTemp,
+                    AllowRestock = item.AllowRestock,
+                    MaxOutsideMinutesForRestock = item.MaxOutsideMinutesForRestock,
+                    MaxRestockCount = item.MaxRestockCount,
+                    CompatibilityRuleType = item.CompatibilityRuleType
+                };
+                context.BloodComponentTypes.Add(entity);
+            }
+            else if (entity.MinTemp == 0m && entity.MaxTemp == 0m)
+            {
+                entity.MinTemp = item.MinTemp;
+                entity.MaxTemp = item.MaxTemp;
+                entity.AllowRestock = item.AllowRestock;
+                entity.MaxOutsideMinutesForRestock = item.MaxOutsideMinutesForRestock;
+                entity.MaxRestockCount = item.MaxRestockCount;
+                entity.CompatibilityRuleType = item.CompatibilityRuleType;
+            }
+
+            if (item.TypeCode == ComponentCode.WB)
+            {
+                wb = entity;
+            }
         }
 
         await context.SaveChangesAsync();
+
+        if (wb == null)
+        {
+            wb = await context.BloodComponentTypes.FirstAsync(ct => ct.TypeCode == ComponentCode.WB);
+        }
 
         if (await context.BloodBags.AnyAsync())
         {

@@ -31,6 +31,24 @@ public class BloodComponentType
     [Column("description")]
     public string? Description { get; set; }
 
+    [Column("min_temp", TypeName = "numeric(5,2)")]
+    public decimal MinTemp { get; set; }
+
+    [Column("max_temp", TypeName = "numeric(5,2)")]
+    public decimal MaxTemp { get; set; }
+
+    [Column("allow_restock")]
+    public bool AllowRestock { get; set; }
+
+    [Column("max_outside_minutes_for_restock")]
+    public int? MaxOutsideMinutesForRestock { get; set; }
+
+    [Column("max_restock_count")]
+    public int MaxRestockCount { get; set; } = 1;
+
+    [Column("compatibility_rule_type")]
+    public CompatibilityRuleType CompatibilityRuleType { get; set; } = CompatibilityRuleType.RBC;
+
     public ICollection<BloodBag> BloodBags { get; set; } = new List<BloodBag>();
     public ICollection<BloodRequestItem> RequestItems { get; set; } = new List<BloodRequestItem>();
 }

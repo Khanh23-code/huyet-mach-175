@@ -12,5 +12,8 @@ public class BloodComponentTypeConfiguration : IEntityTypeConfiguration<BloodCom
 
         builder.Property(bct => bct.TypeCode)
             .HasConversion<string>();
+
+        builder.Property(bct => bct.CompatibilityRuleType)
+            .HasConversion<string>();
     }
 }

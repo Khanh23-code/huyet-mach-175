@@ -57,4 +57,5 @@ public class BloodRequest
 
     public ICollection<BloodRequestItem> Items { get; set; } = new List<BloodRequestItem>();
     public ICollection<BloodAllocation> Allocations { get; set; } = new List<BloodAllocation>();
+    public ICollection<BloodHandoverSession> HandoverSessions { get; set; } = new List<BloodHandoverSession>();
 }
