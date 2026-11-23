@@ -92,3 +92,57 @@ public class HandoverSessionDto
     public int CurrentStep { get; set; }
     public List<HandoverSessionItemDto> Items { get; set; } = new List<HandoverSessionItemDto>();
 }
+
+public class TransfusionScanDto
+{
+    public int AllocationId { get; set; }
+    public int BagId { get; set; }
+    public string Barcode { get; set; } = string.Empty;
+    public int ComponentTypeId { get; set; }
+    public ComponentCode ComponentCode { get; set; }
+    public string ComponentName { get; set; } = string.Empty;
+    public string BloodType { get; set; } = string.Empty;
+    public int VolumeMl { get; set; }
+    public DateTime ExpiredAt { get; set; }
+    public bool IsExpired { get; set; }
+    public BagStatus BagStatus { get; set; }
+    public int RequestId { get; set; }
+    public string RequestCode { get; set; } = string.Empty;
+    public string PatientName { get; set; } = string.Empty;
+    public string PatientCode { get; set; } = string.Empty;
+    public string PatientBloodType { get; set; } = string.Empty;
+    public string? DepartmentName { get; set; }
+    public string? DoctorName { get; set; }
+    public bool IsOwnRequest { get; set; }
+    public DateTime? IssuedAt { get; set; }
+    public string? ReceivedByName { get; set; }
+}
+
+public class ConfirmTransfusionRequest
+{
+    [Required(ErrorMessage = "Mã vạch túi máu (barcode) là bắt buộc.")]
+    public string Barcode { get; set; } = string.Empty;
+
+    public int? AllocationId { get; set; }
+
+    [Required(ErrorMessage = "Mã người bệnh đối soát (expectedPatientCode) là bắt buộc.")]
+    public string ExpectedPatientCode { get; set; } = string.Empty;
+}
+
+public class ConfirmTransfusionResponse
+{
+    public int BagId { get; set; }
+    public string Barcode { get; set; } = string.Empty;
+    public BagStatus BagStatus { get; set; }
+    public int AllocationId { get; set; }
+    public int RequestId { get; set; }
+    public string RequestCode { get; set; } = string.Empty;
+    public string PatientCode { get; set; } = string.Empty;
+    public string PatientName { get; set; } = string.Empty;
+    public string PatientBloodType { get; set; } = string.Empty;
+    public string BloodType { get; set; } = string.Empty;
+    public string ComponentName { get; set; } = string.Empty;
+    public int ConfirmedById { get; set; }
+    public string? ConfirmedByName { get; set; }
+    public DateTime TransfusedAt { get; set; }
+}

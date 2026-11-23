@@ -1,8 +1,6 @@
-using System.Text.Json;
 using HuyetMach175.Api.Data;
 using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
-using HuyetMach175.Modules.Clinical.BackgroundServices;
 using HuyetMach175.Modules.Clinical.DTOs.BloodHandovers;
 using HuyetMach175.Modules.Clinical.Mappings;
 using HuyetMach175.Modules.Clinical.Processing;
@@ -35,96 +33,18 @@ public class BloodHandoversService : IBloodHandoversService
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiếu yêu cầu (requestId) không hợp lệ.");
         }
 
-        var normalizedBarcodes = NormalizeAndValidateBarcodes(request.Barcodes, "barcodes");
+        var normalizedBarcodes = BloodHandoverProcessing.NormalizeAndValidateBarcodes(request.Barcodes, "barcodes");
 
         var now = DateTime.UtcNow;
-        if (await HandoverSessionExpirationWorker.ExpireOverdueSessionsAsync(_context, now) > 0)
-        {
-            _context.ChangeTracker.Clear();
-        }
+        await BloodHandoverProcessing.ExpireOverdueSessionsAndClearTrackerAsync(_context, now);
 
         await using var transaction = await _context.Database.BeginTransactionAsync();
 
-        var loweredBarcodes = normalizedBarcodes.Select(b => b.ToLowerInvariant()).ToList();
-        var bags = await _context.BloodBags
-            .Include(b => b.ComponentType)
-            .Include(b => b.Location)
-            .Where(b => loweredBarcodes.Contains(b.Barcode.ToLower()))
-            .ToListAsync();
-
-        var foundSet = bags.Select(b => b.Barcode).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var missingBarcodes = normalizedBarcodes.Where(b => !foundSet.Contains(b)).ToList();
-        if (missingBarcodes.Count > 0)
-        {
-            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy túi máu với mã vạch: {string.Join(", ", missingBarcodes)}.");
-        }
-
-        var nonReservedBags = bags.Where(b => b.Status != BagStatus.RESERVED).ToList();
-        if (nonReservedBags.Count > 0)
-        {
-            var details = nonReservedBags.Select(b => $"{b.Barcode} ({b.Status})");
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Chỉ có thể mở phiên bàn giao cho các túi máu đang được giữ chỗ (RESERVED). Túi không hợp lệ: {string.Join(", ", details)}.");
-        }
-
-        var expiredBags = bags.Where(b => b.ExpiredAt <= now).ToList();
-        if (expiredBags.Count > 0)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Không thể bàn giao túi máu đã hết hạn sử dụng: {string.Join(", ", expiredBags.Select(b => b.Barcode))}.");
-        }
-
-        var bagIds = bags.Select(b => b.BagId).ToList();
-        var allocations = await _context.BloodAllocations
-            .Include(a => a.Request)
-                .ThenInclude(r => r!.Doctor)
-                    .ThenInclude(d => d!.Department)
-            .Where(a => bagIds.Contains(a.BagId) && a.Status == AllocationStatus.RESERVED)
-            .ToListAsync();
-
-        var allocationByBagId = allocations.ToDictionary(a => a.BagId);
-        var unallocatedBarcodes = bags.Where(b => !allocationByBagId.ContainsKey(b.BagId)).Select(b => b.Barcode).ToList();
-        if (unallocatedBarcodes.Count > 0)
-        {
-            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy thông tin giữ chỗ (RESERVED) cho túi máu: {string.Join(", ", unallocatedBarcodes)}.");
-        }
-
-        var distinctRequestIds = allocations.Select(a => a.RequestId).Distinct().ToList();
-        if (distinctRequestIds.Count != 1)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "Một phiên bàn giao theo lô chỉ được gom các túi máu thuộc cùng một phiếu yêu cầu.");
-        }
-
-        var bloodRequest = allocations[0].Request;
-        if (bloodRequest == null)
-        {
-            throw new HttpException(StatusCodes.Status404NotFound, "Không tìm thấy phiếu yêu cầu máu tương ứng.");
-        }
-
-        if (request.RequestId.HasValue && request.RequestId.Value != bloodRequest.RequestId)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Các túi máu được chọn thuộc phiếu {bloodRequest.RequestCode}, không khớp với requestId #{request.RequestId.Value}.");
-        }
-
-        if (bloodRequest.Status != RequestStatus.READY && bloodRequest.Status != RequestStatus.PENDING)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Phiếu yêu cầu {bloodRequest.RequestCode} đang ở trạng thái '{bloodRequest.Status}', không hợp lệ để mở phiên bàn giao.");
-        }
-
-        var allocationIds = allocations.Select(a => a.AllocationId).ToList();
-        var conflictingItems = await _context.BloodHandoverSessionItems
-            .AsNoTracking()
-            .Include(i => i.HandoverSession)
-            .Include(i => i.Bag)
-            .Where(i =>
-                allocationIds.Contains(i.AllocationId) &&
-                i.HandoverSession != null &&
-                i.HandoverSession.Status == HandoverSessionStatus.PENDING)
-            .ToListAsync();
-
-        if (conflictingItems.Count > 0)
-        {
-            var conflictDetails = conflictingItems.Select(i => $"{i.Bag?.Barcode} (phiên {i.HandoverSession?.SessionCode})");
-            throw new HttpException(StatusCodes.Status409Conflict, $"Một hoặc nhiều túi máu đang nằm trong phiên bàn giao chờ xác nhận khác: {string.Join(", ", conflictDetails)}.");
-        }
+        var (bags, allocations, bloodRequest) = await BloodHandoverProcessing.LoadAndValidateReservedBatchAsync(
+            _context,
+            normalizedBarcodes,
+            request.RequestId,
+            now);
 
         var sessionCode = await BloodRequestProcessing.GenerateHandoverSessionCodeAsync(_context, now);
         var expiresAt = now.AddMinutes(request.TimeoutMinutes);
@@ -147,28 +67,19 @@ public class BloodHandoversService : IBloodHandoversService
         _context.BloodHandoverSessions.Add(session);
         await _context.SaveChangesAsync();
 
-        _context.Notifications.Add(new Notification
-        {
-            RecipientUserId = bloodRequest.DoctorId,
-            TargetDepartmentId = bloodRequest.Doctor?.DepartmentId,
-            Title = $"Mời quét xác nhận nhận máu tại quầy ({session.SessionCode})",
-            Message = $"Ngân hàng máu đã khởi tạo phiên bàn giao {session.SessionCode} gồm {bags.Count} túi máu cho phiếu {bloodRequest.RequestCode} (BN: {bloodRequest.PatientName} - {bloodRequest.PatientCode}). Vui lòng quét xác nhận trong {request.TimeoutMinutes} phút.",
-            Type = bloodRequest.UrgencyLevel is UrgencyLevel.EMERGENCY or UrgencyLevel.URGENT
-                ? NotificationType.URGENT_REQUEST
-                : NotificationType.INFO,
-            ReferenceType = NotificationReferenceType.HANDOVER_SESSION,
-            ReferenceId = session.HandoverSessionId,
-            IsRead = false,
-            CreatedAt = now
-        });
+        _context.Notifications.Add(BloodHandoverProcessing.BuildHandoverSessionNotification(
+            session,
+            bloodRequest,
+            bags.Count,
+            request.TimeoutMinutes,
+            now));
 
-        _context.AuditLogs.Add(new AuditLog
-        {
-            TableName = "blood_handover_sessions",
-            RecordId = session.HandoverSessionId,
-            ActionType = ActionType.INSERT,
-            OldState = null,
-            NewState = JsonSerializer.Serialize(new
+        _context.AuditLogs.Add(BloodHandoverProcessing.BuildAuditLog(
+            "blood_handover_sessions",
+            session.HandoverSessionId,
+            ActionType.INSERT,
+            null,
+            new
             {
                 sessionCode = session.SessionCode,
                 status = session.Status.ToString(),
@@ -176,23 +87,18 @@ public class BloodHandoversService : IBloodHandoversService
                 requestCode = bloodRequest.RequestCode,
                 timeoutMinutes = request.TimeoutMinutes,
                 expiresAt,
-                bagIds,
+                bagIds = bags.Select(b => b.BagId).ToList(),
                 barcodes = bags.Select(b => b.Barcode).ToList()
-            }),
-            PerformedBy = userId,
-            IpAddress = ipAddress,
-            ChangeReason = $"Khởi tạo phiên bàn giao {session.SessionCode} ({bags.Count} túi) cho phiếu {bloodRequest.RequestCode}.",
-            CreatedAt = now
-        });
+            },
+            userId,
+            ipAddress,
+            $"Khởi tạo phiên bàn giao {session.SessionCode} ({bags.Count} túi) cho phiếu {bloodRequest.RequestCode}.",
+            now));
 
         await _context.SaveChangesAsync();
         await transaction.CommitAsync();
 
-        var createdSession = await BuildSessionDetailQuery()
-            .AsNoTracking()
-            .FirstAsync(s => s.HandoverSessionId == session.HandoverSessionId);
-
-        return MapToDto(createdSession, userId, now);
+        return await BloodHandoverProcessing.LoadSessionDtoAsync(_context, session.HandoverSessionId, userId, now);
     }
 
     public async Task<List<HandoverSessionDto>> GetPendingHandoverSessionsAsync(PendingHandoverSessionFilterDto filter, int userId)
@@ -205,14 +111,11 @@ public class BloodHandoversService : IBloodHandoversService
         }
 
         var now = DateTime.UtcNow;
-        if (await HandoverSessionExpirationWorker.ExpireOverdueSessionsAsync(_context, now) > 0)
-        {
-            _context.ChangeTracker.Clear();
-        }
+        await BloodHandoverProcessing.ExpireOverdueSessionsAndClearTrackerAsync(_context, now);
 
         var hasHospitalWideAccess = await BloodRequestProcessing.HasHospitalWideClinicalAccessAsync(_context, userId, "BLOOD_REQUEST_APPROVE");
 
-        var query = BuildSessionDetailQuery()
+        var query = BloodHandoverProcessing.BuildSessionDetailQuery(_context)
             .AsNoTracking()
             .Where(s => s.Status == HandoverSessionStatus.PENDING && s.Request != null);
 
@@ -249,7 +152,7 @@ public class BloodHandoversService : IBloodHandoversService
         var sessions = await query.ToListAsync();
 
         return sessions
-            .Select(s => MapToDto(s, userId, now))
+            .Select(s => s.ToDto(userId, now))
             .OrderByDescending(dto => dto.IsOwnRequest)
             .ThenBy(dto => BloodCompatibilityRules.GetUrgencyRank(dto.UrgencyLevel))
             .ThenBy(dto => dto.ExpiresAt)
@@ -267,12 +170,9 @@ public class BloodHandoversService : IBloodHandoversService
         }
 
         var now = DateTime.UtcNow;
-        if (await HandoverSessionExpirationWorker.ExpireOverdueSessionsAsync(_context, now) > 0)
-        {
-            _context.ChangeTracker.Clear();
-        }
+        await BloodHandoverProcessing.ExpireOverdueSessionsAndClearTrackerAsync(_context, now);
 
-        var session = await BuildSessionDetailQuery()
+        var session = await BloodHandoverProcessing.BuildSessionDetailQuery(_context)
             .AsNoTracking()
             .FirstOrDefaultAsync(s => s.HandoverSessionId == sessionId);
 
@@ -290,7 +190,7 @@ public class BloodHandoversService : IBloodHandoversService
                 "Bạn chỉ có quyền xem phiên bàn giao thuộc khoa của mình.");
         }
 
-        return MapToDto(session, userId, now);
+        return session.ToDto(userId, now);
     }
 
     public async Task<HandoverSessionDto> ConfirmHandoverSessionAsync(int sessionId, ConfirmHandoverSessionRequest request, int userId, string? ipAddress)
@@ -302,18 +202,14 @@ public class BloodHandoversService : IBloodHandoversService
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiên bàn giao (sessionId) không hợp lệ.");
         }
 
-        var scannedBarcodes = NormalizeAndValidateBarcodes(request.ScannedBarcodes, "scannedBarcodes");
-        var expectedPatientCode = request.ExpectedPatientCode?.Trim() ?? string.Empty;
+        var scannedBarcodes = BloodHandoverProcessing.NormalizeAndValidateBarcodes(request.ScannedBarcodes, "scannedBarcodes");
 
         var now = DateTime.UtcNow;
-        if (await HandoverSessionExpirationWorker.ExpireOverdueSessionsAsync(_context, now) > 0)
-        {
-            _context.ChangeTracker.Clear();
-        }
+        await BloodHandoverProcessing.ExpireOverdueSessionsAndClearTrackerAsync(_context, now);
 
         await using var transaction = await _context.Database.BeginTransactionAsync();
 
-        var session = await BuildSessionDetailQuery()
+        var session = await BloodHandoverProcessing.BuildSessionDetailQuery(_context)
             .Include(s => s.Request)
                 .ThenInclude(r => r!.Items)
             .Include(s => s.Request)
@@ -330,71 +226,8 @@ public class BloodHandoversService : IBloodHandoversService
             session.Request,
             "Bạn chỉ có quyền xác nhận phiên bàn giao cho phiếu yêu cầu thuộc khoa của mình.");
 
-        if (session.Status == HandoverSessionStatus.CONFIRMED)
-        {
-            throw new HttpException(StatusCodes.Status409Conflict, $"Phiên bàn giao {session.SessionCode} đã được xác nhận hoàn tất trước đó.");
-        }
-
-        if (session.Status == HandoverSessionStatus.EXPIRED)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Phiên bàn giao {session.SessionCode} đã hết hạn chờ xác nhận. Toàn bộ túi máu vẫn đang giữ chỗ (RESERVED), vui lòng đề nghị Ngân hàng máu mở phiên bàn giao mới.");
-        }
-
-        if (session.Status != HandoverSessionStatus.PENDING)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Phiên bàn giao {session.SessionCode} đang ở trạng thái '{session.Status}', không thể xác nhận.");
-        }
-
-        var isOwnRequest = session.Request.DoctorId == userId;
-        if (!isOwnRequest && string.IsNullOrWhiteSpace(expectedPatientCode))
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, "Khi nhận hộ phiếu yêu cầu của bác sĩ khác, bắt buộc nhập mã người bệnh đối soát (expectedPatientCode).");
-        }
-
-        if (!string.IsNullOrWhiteSpace(expectedPatientCode) &&
-            !string.Equals(session.Request.PatientCode, expectedPatientCode, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Mã người bệnh đối soát '{expectedPatientCode}' không khớp với bệnh nhân trên phiếu {session.Request.RequestCode}.");
-        }
-
-        var sessionBarcodes = session.Items
-            .Where(i => i.Bag != null)
-            .Select(i => i.Bag!.Barcode)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var scannedSet = scannedBarcodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var missingFromScan = sessionBarcodes.Where(b => !scannedSet.Contains(b)).ToList();
-        var unexpectedInScan = scannedBarcodes.Where(b => !sessionBarcodes.Contains(b)).ToList();
-
-        if (missingFromScan.Count > 0 || unexpectedInScan.Count > 0)
-        {
-            var errorParts = new List<string>();
-            if (missingFromScan.Count > 0)
-            {
-                errorParts.Add($"còn thiếu túi [{string.Join(", ", missingFromScan)}]");
-            }
-            if (unexpectedInScan.Count > 0)
-            {
-                errorParts.Add($"dư túi không thuộc phiên [{string.Join(", ", unexpectedInScan)}]");
-            }
-
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Danh sách mã vạch quét xác nhận chưa khớp 100% với phiên {session.SessionCode}: {string.Join("; ", errorParts)}.");
-        }
-
-        var invalidItems = session.Items
-            .Where(i => i.Bag == null || i.Allocation == null || i.Bag.Status != BagStatus.RESERVED || i.Allocation.Status != AllocationStatus.RESERVED)
-            .ToList();
-
-        if (invalidItems.Count > 0)
-        {
-            throw new HttpException(StatusCodes.Status409Conflict, $"Một hoặc nhiều túi máu trong phiên {session.SessionCode} không còn ở trạng thái giữ chỗ (RESERVED).");
-        }
-
-        var expiredBags = session.Items.Where(i => i.Bag!.ExpiredAt <= now).Select(i => i.Bag!.Barcode).ToList();
-        if (expiredBags.Count > 0)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Không thể xác nhận nhận túi máu đã hết hạn sử dụng: {string.Join(", ", expiredBags)}.");
-        }
+        BloodHandoverProcessing.ValidateConfirmSessionStateAndBarcodes(session, scannedBarcodes, now);
+        BloodHandoverProcessing.ValidateExpectedPatientCode(session.Request, userId, request.ExpectedPatientCode);
 
         var oldRequestStatus = session.Request.Status;
         var bagChanges = new List<(BloodBag Bag, int? OldLocationId)>();
@@ -428,12 +261,11 @@ public class BloodHandoversService : IBloodHandoversService
             session.Request.Status = RequestStatus.COMPLETED;
         }
 
-        var auditLog = new AuditLog
-        {
-            TableName = "blood_handover_sessions",
-            RecordId = session.HandoverSessionId,
-            ActionType = ActionType.STATUS_CHANGE,
-            OldState = JsonSerializer.Serialize(new
+        var auditLog = BloodHandoverProcessing.BuildAuditLog(
+            "blood_handover_sessions",
+            session.HandoverSessionId,
+            ActionType.STATUS_CHANGE,
+            new
             {
                 sessionStatus = HandoverSessionStatus.PENDING.ToString(),
                 requestStatus = oldRequestStatus.ToString(),
@@ -443,8 +275,8 @@ public class BloodHandoversService : IBloodHandoversService
                     bagStatus = BagStatus.RESERVED.ToString(),
                     locationId = bc.OldLocationId
                 }).ToList()
-            }),
-            NewState = JsonSerializer.Serialize(new
+            },
+            new
             {
                 sessionStatus = session.Status.ToString(),
                 requestStatus = session.Request.Status.ToString(),
@@ -452,12 +284,11 @@ public class BloodHandoversService : IBloodHandoversService
                 confirmedAt = now,
                 barcodes = session.Items.Select(i => i.Bag!.Barcode).ToList(),
                 patientCode = session.Request.PatientCode
-            }),
-            PerformedBy = userId,
-            IpAddress = ipAddress,
-            ChangeReason = $"Lâm sàng xác nhận bàn giao phiên {session.SessionCode} ({session.Items.Count} túi) cho phiếu {session.Request.RequestCode}.",
-            CreatedAt = now
-        };
+            },
+            userId,
+            ipAddress,
+            $"Lâm sàng xác nhận bàn giao phiên {session.SessionCode} ({session.Items.Count} túi) cho phiếu {session.Request.RequestCode}.",
+            now);
 
         _context.AuditLogs.Add(auditLog);
         await _context.SaveChangesAsync();
@@ -479,11 +310,7 @@ public class BloodHandoversService : IBloodHandoversService
         await _context.SaveChangesAsync();
         await transaction.CommitAsync();
 
-        var updatedSession = await BuildSessionDetailQuery()
-            .AsNoTracking()
-            .FirstAsync(s => s.HandoverSessionId == session.HandoverSessionId);
-
-        return MapToDto(updatedSession, userId, now);
+        return await BloodHandoverProcessing.LoadSessionDtoAsync(_context, session.HandoverSessionId, userId, now);
     }
 
     public async Task<HandoverSessionDto> CancelHandoverSessionAsync(int sessionId, CancelHandoverSessionRequest? request, int userId, string? ipAddress)
@@ -502,14 +329,11 @@ public class BloodHandoversService : IBloodHandoversService
         }
 
         var now = DateTime.UtcNow;
-        if (await HandoverSessionExpirationWorker.ExpireOverdueSessionsAsync(_context, now) > 0)
-        {
-            _context.ChangeTracker.Clear();
-        }
+        await BloodHandoverProcessing.ExpireOverdueSessionsAndClearTrackerAsync(_context, now);
 
         await using var transaction = await _context.Database.BeginTransactionAsync();
 
-        var session = await BuildSessionDetailQuery()
+        var session = await BloodHandoverProcessing.BuildSessionDetailQuery(_context)
             .FirstOrDefaultAsync(s => s.HandoverSessionId == sessionId);
 
         if (session == null || session.Request == null)
@@ -532,147 +356,125 @@ public class BloodHandoversService : IBloodHandoversService
         session.CancelledAt = now;
         session.CancelReason = string.IsNullOrWhiteSpace(cancelReason) ? null : cancelReason;
 
-        _context.AuditLogs.Add(new AuditLog
-        {
-            TableName = "blood_handover_sessions",
-            RecordId = session.HandoverSessionId,
-            ActionType = ActionType.STATUS_CHANGE,
-            OldState = JsonSerializer.Serialize(new
-            {
-                status = HandoverSessionStatus.PENDING.ToString()
-            }),
-            NewState = JsonSerializer.Serialize(new
+        _context.AuditLogs.Add(BloodHandoverProcessing.BuildAuditLog(
+            "blood_handover_sessions",
+            session.HandoverSessionId,
+            ActionType.STATUS_CHANGE,
+            new { status = HandoverSessionStatus.PENDING.ToString() },
+            new
             {
                 status = session.Status.ToString(),
                 cancelledBy = userId,
                 cancelledAt = now,
                 cancelReason = session.CancelReason
-            }),
-            PerformedBy = userId,
-            IpAddress = ipAddress,
-            ChangeReason = string.IsNullOrWhiteSpace(session.CancelReason)
+            },
+            userId,
+            ipAddress,
+            string.IsNullOrWhiteSpace(session.CancelReason)
                 ? $"Hủy sớm phiên bàn giao {session.SessionCode}; giữ nguyên giữ chỗ RESERVED cho các túi máu."
                 : $"Hủy sớm phiên bàn giao {session.SessionCode} ({session.CancelReason}); giữ nguyên giữ chỗ RESERVED.",
+            now));
+
+        await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
+
+        return await BloodHandoverProcessing.LoadSessionDtoAsync(_context, session.HandoverSessionId, userId, now);
+    }
+
+    public async Task<TransfusionScanDto> ScanBloodBagForTransfusionAsync(string barcode, int userId)
+    {
+        var currentUser = await BloodRequestProcessing.LoadActiveUserAsync(_context, userId, "Thông tin người thực hiện không hợp lệ.");
+        var (bag, allocation) = await BloodHandoverProcessing.LoadIssuedBagForTransfusionAsync(_context, barcode, currentUser, asNoTracking: true);
+        return bag.ToTransfusionScanDto(allocation, userId, DateTime.UtcNow);
+    }
+
+    public async Task<ConfirmTransfusionResponse> ConfirmTransfusionAsync(ConfirmTransfusionRequest request, int userId, string? ipAddress)
+    {
+        var currentUser = await BloodRequestProcessing.LoadActiveUserAsync(_context, userId, "Thông tin người xác nhận truyền máu không hợp lệ.");
+
+        var expectedPatientCode = request.ExpectedPatientCode?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(expectedPatientCode))
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Mã người bệnh đối soát (expectedPatientCode) không được để trống.");
+        }
+
+        if (request.AllocationId.HasValue && request.AllocationId.Value <= 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, "Mã phân bổ (allocationId) không hợp lệ.");
+        }
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        var (bag, allocation) = await BloodHandoverProcessing.LoadIssuedBagForTransfusionAsync(_context, request.Barcode, currentUser, asNoTracking: false);
+        var now = DateTime.UtcNow;
+
+        if (bag.ExpiredAt <= now)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu {bag.Barcode} đã hết hạn sử dụng vào {bag.ExpiredAt:dd/MM/yyyy HH:mm}, không được phép truyền cho người bệnh.");
+        }
+
+        if (request.AllocationId.HasValue && request.AllocationId.Value != allocation.AllocationId)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Mã phân bổ #{request.AllocationId.Value} không khớp với lượt cấp phát của túi máu {bag.Barcode}.");
+        }
+
+        if (!string.Equals(allocation.Request!.PatientCode, expectedPatientCode, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Mã người bệnh đối soát '{expectedPatientCode}' không khớp với bệnh nhân trên phiếu {allocation.Request.RequestCode}.");
+        }
+
+        var hasPendingReturn = await _context.BloodReturns
+            .AsNoTracking()
+            .AnyAsync(r => r.AllocationId == allocation.AllocationId && r.FinalAction == ReturnFinalAction.PENDING_INSPECTION);
+
+        if (hasPendingReturn)
+        {
+            throw new HttpException(StatusCodes.Status409Conflict, $"Túi máu {bag.Barcode} đang có phiếu hoàn trả chờ kiểm định.");
+        }
+
+        bag.Status = BagStatus.TRANSFUSED;
+
+        var auditLog = BloodHandoverProcessing.BuildAuditLog(
+            "blood_bags",
+            bag.BagId,
+            ActionType.STATUS_CHANGE,
+            new
+            {
+                bagStatus = BagStatus.ISSUED.ToString(),
+                allocationId = allocation.AllocationId,
+                requestCode = allocation.Request!.RequestCode
+            },
+            new
+            {
+                bagStatus = bag.Status.ToString(),
+                allocationId = allocation.AllocationId,
+                requestCode = allocation.Request.RequestCode,
+                patientCode = allocation.Request.PatientCode,
+                patientName = allocation.Request.PatientName,
+                transfusedAt = now
+            },
+            userId,
+            ipAddress,
+            $"Lâm sàng xác nhận bắt đầu truyền máu túi {bag.Barcode} cho người bệnh {allocation.Request.PatientName} ({allocation.Request.PatientCode}).",
+            now);
+
+        _context.AuditLogs.Add(auditLog);
+        await _context.SaveChangesAsync();
+
+        _context.BloodBagStatusLogs.Add(new BloodBagStatusLog
+        {
+            BagId = bag.BagId,
+            FromStatus = BagStatus.ISSUED,
+            ToStatus = BagStatus.TRANSFUSED,
+            PerformedById = userId,
+            AuditLogId = auditLog.LogId,
+            Notes = $"Xác nhận truyền máu tại giường cho người bệnh {allocation.Request.PatientName} ({allocation.Request.PatientCode}) - Phiếu {allocation.Request.RequestCode}",
             CreatedAt = now
         });
 
         await _context.SaveChangesAsync();
         await transaction.CommitAsync();
 
-        var updatedSession = await BuildSessionDetailQuery()
-            .AsNoTracking()
-            .FirstAsync(s => s.HandoverSessionId == session.HandoverSessionId);
-
-        return MapToDto(updatedSession, userId, now);
-    }
-
-    private IQueryable<BloodHandoverSession> BuildSessionDetailQuery()
-    {
-        return _context.BloodHandoverSessions
-            .Include(s => s.InitiatedByUser)
-            .Include(s => s.ConfirmedByUser)
-            .Include(s => s.CancelledByUser)
-            .Include(s => s.Request)
-                .ThenInclude(r => r!.Doctor)
-                    .ThenInclude(d => d!.Department)
-            .Include(s => s.Items)
-                .ThenInclude(i => i.Allocation)
-            .Include(s => s.Items)
-                .ThenInclude(i => i.Bag)
-                    .ThenInclude(b => b!.ComponentType)
-            .Include(s => s.Items)
-                .ThenInclude(i => i.Bag)
-                    .ThenInclude(b => b!.Location);
-    }
-
-    private static List<string> NormalizeAndValidateBarcodes(List<string>? rawBarcodes, string fieldName)
-    {
-        if (rawBarcodes == null || rawBarcodes.Count == 0)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Danh sách mã vạch ({fieldName}) không được để trống.");
-        }
-
-        var trimmed = rawBarcodes
-            .Select(b => b?.Trim() ?? string.Empty)
-            .ToList();
-
-        if (trimmed.Any(string.IsNullOrWhiteSpace))
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Danh sách ({fieldName}) chứa mã vạch rỗng.");
-        }
-
-        var duplicates = trimmed
-            .GroupBy(b => b, StringComparer.OrdinalIgnoreCase)
-            .Where(g => g.Count() > 1)
-            .Select(g => g.Key)
-            .ToList();
-
-        if (duplicates.Count > 0)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Danh sách ({fieldName}) bị trùng lặp mã vạch: {string.Join(", ", duplicates)}.");
-        }
-
-        return trimmed;
-    }
-
-    private static HandoverSessionDto MapToDto(BloodHandoverSession session, int currentUserId, DateTime nowUtc)
-    {
-        var remainingSeconds = session.Status == HandoverSessionStatus.PENDING
-            ? Math.Max(0, (int)Math.Ceiling((session.ExpiresAt - nowUtc).TotalSeconds))
-            : 0;
-
-        return new HandoverSessionDto
-        {
-            HandoverSessionId = session.HandoverSessionId,
-            SessionCode = session.SessionCode,
-            Status = session.Status,
-            CreatedAt = session.CreatedAt,
-            ExpiresAt = session.ExpiresAt,
-            RemainingSeconds = remainingSeconds,
-            ConfirmedAt = session.ConfirmedAt,
-            CancelledAt = session.CancelledAt,
-            CancelReason = session.CancelReason,
-            InitiatedById = session.InitiatedBy,
-            InitiatedByName = session.InitiatedByUser?.FullName,
-            ConfirmedById = session.ConfirmedBy,
-            ConfirmedByName = session.ConfirmedByUser?.FullName,
-            CancelledById = session.CancelledBy,
-            CancelledByName = session.CancelledByUser?.FullName,
-            RequestId = session.RequestId,
-            RequestCode = session.Request?.RequestCode ?? string.Empty,
-            DoctorId = session.Request?.DoctorId,
-            DoctorName = session.Request?.Doctor?.FullName,
-            DepartmentName = session.Request?.Doctor?.Department?.DepartmentName,
-            IsOwnRequest = session.Request?.DoctorId == currentUserId,
-            UrgencyLevel = session.Request?.UrgencyLevel ?? UrgencyLevel.ROUTINE,
-            PatientCode = session.Request?.PatientCode ?? string.Empty,
-            PatientName = session.Request?.PatientName ?? string.Empty,
-            PatientBloodType = session.Request != null
-                ? BloodCompatibilityRules.FormatBloodGroup(session.Request.PatientBloodType, session.Request.PatientRh)
-                : string.Empty,
-            RequestStatus = session.Request?.Status ?? RequestStatus.PENDING,
-            CurrentStep = session.Request != null ? BloodRequestMappings.ResolveCurrentStep(session.Request.Status) : 0,
-            Items = session.Items
-                .OrderBy(i => i.ItemId)
-                .Select(i => new HandoverSessionItemDto
-                {
-                    AllocationId = i.AllocationId,
-                    BagId = i.BagId,
-                    Barcode = i.Bag?.Barcode ?? string.Empty,
-                    ComponentTypeId = i.Bag?.ComponentTypeId ?? 0,
-                    ComponentCode = i.Bag?.ComponentType?.TypeCode ?? ComponentCode.WB,
-                    ComponentName = i.Bag?.ComponentType?.TypeName ?? string.Empty,
-                    BloodType = i.Bag != null
-                        ? BloodCompatibilityRules.FormatBloodGroup(i.Bag.BloodType, i.Bag.RhFactor)
-                        : string.Empty,
-                    VolumeMl = i.Bag?.VolumeMl ?? 0,
-                    ExpiredAt = i.Bag?.ExpiredAt ?? DateTime.MinValue,
-                    BagStatus = i.Bag?.Status ?? BagStatus.RESERVED,
-                    LocationName = i.Bag?.Location != null
-                        ? $"{i.Bag.Location.RefrigeratorName} - {i.Bag.Location.ShelfNumber}"
-                        : null
-                })
-                .ToList()
-        };
+        return bag.ToConfirmTransfusionResponse(allocation, currentUser, now);
     }
 }

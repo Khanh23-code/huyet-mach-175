@@ -162,4 +162,65 @@ public class BloodHandoversController : ControllerBase
         var result = await _bloodHandoversService.CancelHandoverSessionAsync(sessionId, request, userId, ipAddress);
         return Ok(result);
     }
+
+    [HttpGet("clinical/transfusion-scan/{barcode}")]
+    [HasPermission("BLOOD_REQUEST_VIEW")]
+    [EndpointSummary("Quét barcode túi máu đối chiếu thông tin trước khi truyền tại giường")]
+    [EndpointDescription(
+        "Bác sĩ/Điều dưỡng Lâm sàng quét barcode túi máu đang ở trạng thái `ISSUED` ngay trước khi mở túi cắm dây truyền để kiểm tra đối chiếu thông tin người bệnh.\n\n" +
+        "**Quy tắc nghiệp vụ:**\n" +
+        "- Chỉ cho phép nhân sự thuộc cùng khoa với phiếu yêu cầu thực hiện quét.\n" +
+        "- Hiển thị thông tin đối chiếu bắt buộc: Tên bệnh nhân, Mã bệnh nhân, Nhóm máu người bệnh, Nhóm máu túi, Loại chế phẩm, Hạn dùng.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **BLOOD_REQUEST_VIEW** (vai trò CLIN).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Trả về thông tin đối chiếu truyền máu.\n" +
+        "- 400 BadRequest: Mã vạch trống hoặc túi không ở trạng thái `ISSUED`.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền BLOOD_REQUEST_VIEW hoặc khác khoa điều trị.\n" +
+        "- 404 NotFound: Không tìm thấy túi máu hoặc lượt cấp phát.\n" +
+        "- 409 Conflict: Túi máu đã được xác nhận truyền trước đó (`TRANSFUSED`).")]
+    [ProducesResponseType(typeof(TransfusionScanDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ScanBloodBagForTransfusion(string barcode)
+    {
+        var userId = User.GetUserId();
+        var result = await _bloodHandoversService.ScanBloodBagForTransfusionAsync(barcode, userId);
+        return Ok(result);
+    }
+
+    [HttpPost("clinical/confirm-transfusion")]
+    [HasPermission("BLOOD_REQUEST_EDIT")]
+    [EndpointSummary("Xác nhận bắt đầu truyền máu thực tế tại giường (`ISSUED` -> `TRANSFUSED`)")]
+    [EndpointDescription(
+        "Lâm sàng xác nhận mở túi và bắt đầu truyền máu cho người bệnh, khóa vĩnh viễn khả năng hoàn trả túi máu.\n\n" +
+        "**Quy tắc nghiệp vụ (Transaction):**\n" +
+        "- Chỉ cho phép nhân sự thuộc cùng khoa với phiếu yêu cầu xác nhận.\n" +
+        "- Bắt buộc truyền `expectedPatientCode` khớp với mã người bệnh trên phiếu để đối chiếu an toàn tại giường.\n" +
+        "- Túi phải đang ở trạng thái `ISSUED` và chưa hết hạn sử dụng (`ExpiredAt > now`).\n" +
+        "- Chuyển trạng thái túi máu sang `TRANSFUSED` (trạng thái kết thúc vĩnh viễn) và ghi vết kép `audit_logs`, `blood_bag_status_logs` (`ISSUED` -> `TRANSFUSED`).\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **BLOOD_REQUEST_EDIT** (vai trò CLIN).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Xác nhận truyền máu thành công.\n" +
+        "- 400 BadRequest: Túi hết hạn, không ở `ISSUED`, hoặc lệch thông tin đối soát.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền BLOOD_REQUEST_EDIT hoặc khác khoa điều trị.\n" +
+        "- 404 NotFound: Không tìm thấy túi máu hoặc lượt cấp phát.\n" +
+        "- 409 Conflict: Túi đã `TRANSFUSED` hoặc đang có phiếu hoàn trả chờ kiểm định.")]
+    [ProducesResponseType(typeof(ConfirmTransfusionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ConfirmTransfusion([FromBody] ConfirmTransfusionRequest request)
+    {
+        var userId = User.GetUserId();
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var result = await _bloodHandoversService.ConfirmTransfusionAsync(request, userId, ipAddress);
+        return Ok(result);
+    }
 }
