@@ -50,5 +50,5 @@ public class BloodAllocation
     [ForeignKey(nameof(ReceivedBy))]
     public User? ReceivedByUser { get; set; }
 
-    public BloodReturn? BloodReturn { get; set; }
+    public ICollection<BloodReturn> BloodReturns { get; set; } = new List<BloodReturn>();
 }

@@ -175,6 +175,9 @@ public static class SchemaSeeder
             CREATE UNIQUE INDEX IF NOT EXISTS ""IX_blood_handover_session_items_handover_session_id_allocation_id"" ON blood_handover_session_items(handover_session_id, allocation_id);
             CREATE INDEX IF NOT EXISTS ""IX_blood_handover_session_items_allocation_id"" ON blood_handover_session_items(allocation_id);
             CREATE INDEX IF NOT EXISTS ""IX_blood_handover_session_items_bag_id"" ON blood_handover_session_items(bag_id);
+
+            DROP INDEX IF EXISTS ""IX_blood_returns_allocation_id"";
+            CREATE UNIQUE INDEX IF NOT EXISTS uq_active_return_per_allocation ON blood_returns(allocation_id) WHERE final_action <> 'CANCELLED';
         ";
 
         await context.Database.ExecuteSqlRawAsync(sql);

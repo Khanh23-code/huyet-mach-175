@@ -1,3 +1,4 @@
+using HuyetMach175.Modules.Clinical.BackgroundServices;
 using HuyetMach175.Modules.Clinical.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,6 +12,8 @@ public static class DependencyInjection
         services.AddScoped<IBloodCoordinationService, BloodCoordinationService>();
         services.AddScoped<IBloodHandoversService, BloodHandoversService>();
         services.AddScoped<IBloodReturnsService, BloodReturnsService>();
+
+        services.AddHostedService<HandoverSessionExpirationWorker>();
 
         services.AddControllers()
             .AddApplicationPart(typeof(DependencyInjection).Assembly);

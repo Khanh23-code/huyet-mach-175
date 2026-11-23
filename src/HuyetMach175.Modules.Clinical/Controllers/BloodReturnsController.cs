@@ -24,22 +24,23 @@ public class BloodReturnsController : ControllerBase
 
     [HttpPost]
     [HasPermission("BLOOD_RETURN_EDIT")]
-    [EndpointSummary("Lập phiếu hoàn trả túi máu chưa sử dụng")]
+    [EndpointSummary("Lập phiếu hoàn trả túi máu (đạt hoặc không đạt điều kiện bảo quản)")]
     [EndpointDescription(
-        "Lâm sàng lập phiếu hoàn trả túi máu đã xuất kho nhưng không sử dụng và phong tỏa ngay túi máu về trạng thái `LOCKED` trong lúc vận chuyển về Ngân hàng máu.\n\n" +
+        "Lâm sàng lập phiếu hoàn trả cho túi máu đang ở trạng thái `ISSUED` (chưa xác nhận truyền `TRANSFUSED`) và phong tỏa ngay túi máu sang `LOCKED` để chuyển về Ngân hàng máu xử lý.\n\n" +
         "**Quy tắc nghiệp vụ (Transaction):**\n" +
-        "- Bắt buộc đạt cả 4 điều kiện bảng kiểm (`isUnusedFullVolume`, `isBagIntact`, `isLabelClear`, `isStoredUnder30Mins`).\n" +
-        "- Chỉ người dùng thuộc cùng khoa với phiếu yêu cầu mới được lập phiếu hoàn trả; mỗi lượt phân bổ chỉ được hoàn trả tối đa 1 lần.\n" +
+        "- Cho phép lập phiếu kể cả khi túi không đạt một hoặc nhiều điều kiện trong bảng kiểm 4 tiêu chí (`isUnusedFullVolume`, `isBagIntact`, `isLabelClear`, `isStoredUnder30Mins`); các tiêu chí chưa đạt sẽ được gắn cờ cảnh báo để Ngân hàng máu kiểm định hoặc tiêu hủy.\n" +
+        "- Túi đã xác nhận truyền máu (`TRANSFUSED`) bị chặn hoàn trả.\n" +
+        "- Chỉ người dùng thuộc cùng khoa với phiếu yêu cầu mới được lập phiếu hoàn trả; mỗi lượt phân bổ chỉ có tối đa 1 phiếu hoàn trả hiệu lực (`final_action <> CANCELLED`).\n" +
         "- Tạo bản ghi `blood_returns` với `qualified = false`, `final_action = PENDING_INSPECTION`.\n" +
         "- Chuyển trạng thái túi máu sang `LOCKED` và ghi vết `audit_logs`, `blood_bag_status_logs` (`ISSUED` -> `LOCKED`).\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **BLOOD_RETURN_EDIT** (vai trò CLIN).\n\n" +
         "**HTTP Response:**\n" +
-        "- 201 Created: Lập phiếu hoàn trả thành công.\n" +
-        "- 400 BadRequest: Bảng kiểm không đạt đủ 4 điều kiện, thiếu lý do hoặc trạng thái túi không hợp lệ.\n" +
+        "- 201 Created: Lập phiếu hoàn trả thành công (kèm `isEligibleForRestockEvaluation` và `warningFlags`).\n" +
+        "- 400 BadRequest: Thiếu dữ liệu bảng kiểm, thiếu lý do hoặc túi đã truyền/trạng thái không hợp lệ.\n" +
         "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
         "- 403 Forbidden: Không có quyền BLOOD_RETURN_EDIT hoặc khác khoa điều trị.\n" +
         "- 404 NotFound: Không tìm thấy lượt phân bổ.\n" +
-        "- 409 Conflict: Lượt phân bổ này đã có phiếu hoàn trả trước đó.")]
+        "- 409 Conflict: Lượt phân bổ này đang có phiếu hoàn trả hiệu lực trước đó.")]
     [ProducesResponseType(typeof(CreateBloodReturnResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -52,6 +53,37 @@ public class BloodReturnsController : ControllerBase
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var result = await _bloodReturnsService.CreateBloodReturnAsync(request, userId, ipAddress);
         return StatusCode(StatusCodes.Status201Created, result);
+    }
+
+    [HttpPost("{returnId:int}/cancel")]
+    [HasPermission("BLOOD_RETURN_EDIT")]
+    [EndpointSummary("Hủy phiếu hoàn trả lập nhầm khi Ngân hàng máu chưa kiểm định")]
+    [EndpointDescription(
+        "Lâm sàng hủy phiếu hoàn trả đang ở trạng thái `PENDING_INSPECTION` (chưa được Ngân hàng máu kiểm định) để khôi phục túi máu từ `LOCKED` về lại `ISSUED` tiếp tục sử dụng.\n\n" +
+        "**Quy tắc nghiệp vụ (Transaction):**\n" +
+        "- Chỉ người dùng thuộc cùng khoa với phiếu yêu cầu mới được hủy phiếu hoàn trả.\n" +
+        "- Chỉ hủy được khi phiếu đang `PENDING_INSPECTION` và túi máu đang `LOCKED` (chưa nằm trong biên bản tiêu hủy).\n" +
+        "- Cập nhật `blood_returns.final_action = CANCELLED`, khôi phục `blood_bags.status = ISSUED` và ghi vết `audit_logs`, `blood_bag_status_logs` (`LOCKED` -> `ISSUED`).\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **BLOOD_RETURN_EDIT** (vai trò CLIN).\n\n" +
+        "**HTTP Response:**\n" +
+        "- 200 OK: Hủy phiếu hoàn trả và khôi phục túi về `ISSUED` thành công.\n" +
+        "- 400 BadRequest: Dữ liệu đầu vào hoặc trạng thái túi không hợp lệ.\n" +
+        "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
+        "- 403 Forbidden: Không có quyền BLOOD_RETURN_EDIT hoặc khác khoa điều trị.\n" +
+        "- 404 NotFound: Không tìm thấy phiếu hoàn trả.\n" +
+        "- 409 Conflict: Phiếu đã hủy hoặc đã được Ngân hàng máu kiểm định trước đó.")]
+    [ProducesResponseType(typeof(CancelBloodReturnResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CancelBloodReturn(int returnId, [FromBody] CancelBloodReturnRequest? request)
+    {
+        var userId = User.GetUserId();
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var result = await _bloodReturnsService.CancelBloodReturnAsync(returnId, request, userId, ipAddress);
+        return Ok(result);
     }
 
     [HttpGet("pending")]

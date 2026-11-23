@@ -4,7 +4,11 @@ namespace HuyetMach175.Modules.Clinical.Services;
 
 public interface IBloodHandoversService
 {
-    Task<DispatchBloodBagResponse> DispatchBagAsync(DispatchBloodBagRequest request, int userId, string? ipAddress);
-    Task<List<PendingReceiptBagDto>> GetPendingClinicalReceiptsAsync(PendingClinicalReceiptFilterDto filter, int userId);
-    Task<ConfirmReceiptResponse> ConfirmClinicalReceiptAsync(ConfirmReceiptRequest request, int userId, string? ipAddress);
+    Task<HandoverSessionDto> CreateHandoverSessionAsync(CreateHandoverSessionRequest request, int userId, string? ipAddress);
+    Task<List<HandoverSessionDto>> GetPendingHandoverSessionsAsync(PendingHandoverSessionFilterDto filter, int userId);
+    Task<HandoverSessionDto> GetHandoverSessionByIdAsync(int sessionId, int userId);
+    Task<HandoverSessionDto> ConfirmHandoverSessionAsync(int sessionId, ConfirmHandoverSessionRequest request, int userId, string? ipAddress);
+    Task<HandoverSessionDto> CancelHandoverSessionAsync(int sessionId, CancelHandoverSessionRequest? request, int userId, string? ipAddress);
+    Task<TransfusionScanDto> ScanBloodBagForTransfusionAsync(string barcode, int userId);
+    Task<ConfirmTransfusionResponse> ConfirmTransfusionAsync(ConfirmTransfusionRequest request, int userId, string? ipAddress);
 }

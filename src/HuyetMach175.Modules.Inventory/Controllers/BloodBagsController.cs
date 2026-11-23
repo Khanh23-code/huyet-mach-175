@@ -118,6 +118,7 @@ public class BloodBagsController : ControllerBase
         "**Quy tắc nghiệp vụ & Chốt chặn an toàn (Guardrails):**\n" +
         "- Chặn chuyển sang `TESTED_PASSED` thủ công (bắt buộc phải qua kết quả xét nghiệm vi sinh /api/lab-tests).\n" +
         "- Chặn chuyển sang `PROCESSED` thủ công (bắt buộc thực hiện tại quy trình ép tách chế phẩm /api/blood-processing/separate).\n" +
+        "- Chặn chuyển thủ công từ `ISSUED` sang `TRANSFUSED` hoặc `AVAILABLE` tại Kho (bắt buộc qua xác nhận truyền máu hoặc hoàn trả – kiểm định).\n" +
         "- Chặn chuyển ngược về `NEWLY_COLLECTED`.\n" +
         "- Chặn mọi thao tác nếu túi máu đã ở trạng thái tiêu hủy (`DISCARDED`) hoặc đã truyền (`TRANSFUSED`).\n" +
         "- Chặn nhập kho (`AVAILABLE`) hoặc cấp phát (`ISSUED`) nếu túi máu đã hết hạn sử dụng (`expired_at <= now`).\n" +
