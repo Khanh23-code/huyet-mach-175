@@ -235,9 +235,14 @@ public class BloodProcessingService : IBloodProcessingService
                 throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{locName}' hiện đã đầy.");
             }
 
-            if (!BagRules.IsStorageSuitable(code, loc.TargetTemperature))
+            if (loc.Zone == StorageZone.DISPOSAL_HOLD)
             {
-                throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí '{locName}' ({loc.TargetTemperature:0.#}°C) không phù hợp để bảo quản {code} (cần {BagRules.StorageHint(code)}).");
+                throw new HttpException(StatusCodes.Status400BadRequest, $"Không thể lưu trữ chế phẩm mới phân tách vào khu vực chờ hủy '{locName}'.");
+            }
+
+            if (!BagRules.IsStorageSuitable(compType, loc.TargetTemperature))
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí '{locName}' ({loc.TargetTemperature:0.#}°C) không phù hợp để bảo quản {code} (cần {BagRules.StorageHint(compType)}).");
             }
         }
 

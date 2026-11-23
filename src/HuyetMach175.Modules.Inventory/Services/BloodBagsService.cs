@@ -67,29 +67,14 @@ public class BloodBagsService : IBloodBagsService
         var location = await _context.StorageLocations
             .FirstOrDefaultAsync(l => l.LocationId == request.StorageLocationId);
 
-        if (location == null)
-        {
-            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy vị trí lưu trữ với ID {request.StorageLocationId}.");
-        }
-
-        if (!location.IsActive)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest,
-                $"Vị trí lưu trữ '{location.RefrigeratorName} - {location.ShelfNumber}' đang bị vô hiệu hóa hoặc bảo trì.");
-        }
-
-        if (location.IsFull)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest,
-                $"Vị trí lưu trữ '{location.RefrigeratorName} - {location.ShelfNumber}' hiện đã đầy.");
-        }
+        ValidateIntakeLocation(location, request.StorageLocationId, bloodBag.ComponentType, "tiếp nhận");
 
         var oldStatus = bloodBag.Status.ToString();
         var oldLocationId = bloodBag.LocationId;
 
         await using var transaction = await _context.Database.BeginTransactionAsync();
 
-        bloodBag.LocationId = location.LocationId;
+        bloodBag.LocationId = location!.LocationId;
         bloodBag.Status = BagStatus.READY_TESTING;
 
         var now = DateTime.UtcNow;
@@ -167,27 +152,9 @@ public class BloodBagsService : IBloodBagsService
         var location = await _context.StorageLocations
             .FirstOrDefaultAsync(l => l.LocationId == request.StorageLocationId);
 
-        if (location == null)
-        {
-            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy vị trí lưu trữ với ID {request.StorageLocationId}.");
-        }
+        ValidateIntakeLocation(location, request.StorageLocationId, wb, "tiếp nhận ngoài viện");
 
-        var locationName = $"{location.RefrigeratorName} - {location.ShelfNumber}";
-
-        if (!location.IsActive)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{locationName}' đang bị vô hiệu hóa hoặc bảo trì.");
-        }
-
-        if (location.IsFull)
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{locationName}' hiện đã đầy.");
-        }
-
-        if (!BagRules.IsStorageSuitable(ComponentCode.WB, location.TargetTemperature))
-        {
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí '{locationName}' ({location.TargetTemperature:0.#}°C) không phù hợp để bảo quản máu toàn phần (cần {BagRules.StorageHint(ComponentCode.WB)}).");
-        }
+        var locationName = $"{location!.RefrigeratorName} - {location.ShelfNumber}";
 
         var unitKey = unitName.ToLower();
         var codeKey = externalCode.ToLower();
@@ -498,5 +465,37 @@ public class BloodBagsService : IBloodBagsService
             Total = logs.Count,
             Items = logs.Select(l => l.ToRecentLogDto()).ToList()
         };
+    }
+
+    private static void ValidateIntakeLocation(StorageLocation? location, int locationId, BloodComponentType? componentType, string intakeLabel)
+    {
+        if (location == null)
+        {
+            throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy vị trí lưu trữ với ID {locationId}.");
+        }
+
+        var locationName = $"{location.RefrigeratorName} - {location.ShelfNumber}";
+
+        if (!location.IsActive)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{locationName}' đang bị vô hiệu hóa hoặc bảo trì.");
+        }
+
+        if (location.IsFull)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{locationName}' hiện đã đầy.");
+        }
+
+        if (location.Zone == StorageZone.DISPOSAL_HOLD)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Không thể đưa túi máu {intakeLabel} vào khu vực chờ hủy '{locationName}'.");
+        }
+
+        if (!BagRules.IsStorageSuitable(componentType, location.TargetTemperature))
+        {
+            var componentLabel = componentType?.TypeName ?? componentType?.TypeCode.ToString() ?? "máu toàn phần";
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Vị trí '{locationName}' ({location.TargetTemperature:0.#}°C) không phù hợp để bảo quản {componentLabel} (cần {BagRules.StorageHint(componentType)}).");
+        }
     }
 }

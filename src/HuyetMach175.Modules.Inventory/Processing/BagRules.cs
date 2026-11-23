@@ -1,3 +1,4 @@
+using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
 
 namespace HuyetMach175.Modules.Inventory.Processing;
@@ -9,6 +10,26 @@ public static class BagRules
 
     public static string ChildBarcode(string parentBarcode, ComponentCode code) =>
         $"{parentBarcode}-{code}";
+
+    public static bool IsStorageSuitable(BloodComponentType? componentType, decimal targetTemperature)
+    {
+        if (componentType != null && HasConfiguredTempRange(componentType))
+        {
+            return targetTemperature >= componentType.MinTemp && targetTemperature <= componentType.MaxTemp;
+        }
+
+        return IsStorageSuitable(componentType?.TypeCode ?? ComponentCode.WB, targetTemperature);
+    }
+
+    public static string StorageHint(BloodComponentType? componentType)
+    {
+        if (componentType != null && HasConfiguredTempRange(componentType))
+        {
+            return $"{componentType.MinTemp:0.#}°C đến {componentType.MaxTemp:0.#}°C";
+        }
+
+        return StorageHint(componentType?.TypeCode ?? ComponentCode.WB);
+    }
 
     public static bool IsStorageSuitable(ComponentCode code, decimal targetTemperature) => code switch
     {
@@ -25,4 +46,8 @@ public static class BagRules
         ComponentCode.PLT => "20°C đến 24°C",
         _ => string.Empty
     };
+
+    private static bool HasConfiguredTempRange(BloodComponentType componentType) =>
+        componentType.MinTemp <= componentType.MaxTemp &&
+        (componentType.MinTemp != 0m || componentType.MaxTemp != 0m);
 }

@@ -188,7 +188,6 @@ public class BloodCoordinationService : IBloodCoordinationService
             throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy dòng y lệnh #{requestItemId} trong phiếu yêu cầu #{requestId}.");
         }
 
-        var componentCode = requestItem.ComponentType?.TypeCode ?? ComponentCode.WB;
         var now = DateTime.UtcNow;
 
         var candidateBags = await _context.BloodBags
@@ -205,12 +204,12 @@ public class BloodCoordinationService : IBloodCoordinationService
 
         return candidateBags
             .Where(b => includeCompatible
-                ? BloodCompatibilityRules.IsCompatible(componentCode, bloodRequest.PatientBloodType, bloodRequest.PatientRh, b.BloodType, b.RhFactor)
+                ? BloodCompatibilityRules.IsCompatible(requestItem.ComponentType, bloodRequest.PatientBloodType, bloodRequest.PatientRh, b.BloodType, b.RhFactor)
                 : BloodCompatibilityRules.IsExactMatch(bloodRequest.PatientBloodType, bloodRequest.PatientRh, b.BloodType, b.RhFactor))
             .OrderByDescending(b => BloodCompatibilityRules.IsExactMatch(bloodRequest.PatientBloodType, bloodRequest.PatientRh, b.BloodType, b.RhFactor))
             .ThenBy(b => b.ExpiredAt)
             .ThenBy(b => b.BagId)
-            .Select(b => b.ToAvailableBagDto(bloodRequest.PatientBloodType, bloodRequest.PatientRh, componentCode))
+            .Select(b => b.ToAvailableBagDto(bloodRequest.PatientBloodType, bloodRequest.PatientRh, requestItem.ComponentType))
             .ToList();
     }
 
@@ -385,8 +384,6 @@ public class BloodCoordinationService : IBloodCoordinationService
             throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy các túi máu với ID: {string.Join(", ", missingIds)}.");
         }
 
-        var componentCode = requestItem.ComponentType?.TypeCode ?? ComponentCode.WB;
-
         foreach (var bag in bags)
         {
             if (bag.ComponentTypeId != requestItem.ComponentTypeId)
@@ -394,7 +391,7 @@ public class BloodCoordinationService : IBloodCoordinationService
                 throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu {bag.Barcode} không khớp loại chế phẩm của y lệnh.");
             }
 
-            if (!BloodCompatibilityRules.IsCompatible(componentCode, bloodRequest.PatientBloodType, bloodRequest.PatientRh, bag.BloodType, bag.RhFactor))
+            if (!BloodCompatibilityRules.IsCompatible(requestItem.ComponentType, bloodRequest.PatientBloodType, bloodRequest.PatientRh, bag.BloodType, bag.RhFactor))
             {
                 var bagGroup = BloodCompatibilityRules.FormatBloodGroup(bag.BloodType, bag.RhFactor);
                 var patientGroup = BloodCompatibilityRules.FormatBloodGroup(bloodRequest.PatientBloodType, bloodRequest.PatientRh);

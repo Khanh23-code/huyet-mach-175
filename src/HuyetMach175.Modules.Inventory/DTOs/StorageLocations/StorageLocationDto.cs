@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using HuyetMach175.Api.Data.Enums;
 
 namespace HuyetMach175.Modules.Inventory.DTOs.StorageLocations;
 
@@ -15,6 +16,9 @@ public class StorageLocationDto
 
     [JsonPropertyName("targetTemperature")]
     public decimal TargetTemperature { get; set; }
+
+    [JsonPropertyName("zone")]
+    public StorageZone Zone { get; set; }
 
     [JsonPropertyName("isFull")]
     public bool IsFull { get; set; }

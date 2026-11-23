@@ -367,6 +367,21 @@ public class InventoryService : IInventoryService
             throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu '{bloodBag.Barcode}' hiện đã ở tại vị trí '{newLocation.RefrigeratorName} - {newLocation.ShelfNumber}' rồi.");
         }
 
+        if (newLocation.Zone == StorageZone.DISPOSAL_HOLD)
+        {
+            if (bloodBag.Status != BagStatus.LOCKED)
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest,
+                    $"Chỉ túi máu đang ở trạng thái tạm khóa (LOCKED) mới được điều chuyển vào khu vực chờ hủy '{newLocation.RefrigeratorName} - {newLocation.ShelfNumber}'.");
+            }
+        }
+        else if (!BagRules.IsStorageSuitable(bloodBag.ComponentType, newLocation.TargetTemperature))
+        {
+            var componentCode = bloodBag.ComponentType?.TypeCode.ToString() ?? "Máu toàn phần";
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Vị trí '{newLocation.RefrigeratorName} - {newLocation.ShelfNumber}' ({newLocation.TargetTemperature:0.#}°C) không phù hợp để bảo quản {componentCode} (cần {BagRules.StorageHint(bloodBag.ComponentType)}).");
+        }
+
         var previousLocId = bloodBag.LocationId;
         var previousLocName = bloodBag.Location != null
             ? $"{bloodBag.Location.RefrigeratorName} - {bloodBag.Location.ShelfNumber}"

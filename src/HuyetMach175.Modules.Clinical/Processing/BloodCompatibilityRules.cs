@@ -1,3 +1,4 @@
+using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
 
 namespace HuyetMach175.Modules.Clinical.Processing;
@@ -27,8 +28,28 @@ public static class BloodCompatibilityRules
         return recipientBloodType == donorBloodType && recipientRh == donorRh;
     }
 
+    public static CompatibilityRuleType ResolveRuleType(ComponentCode componentCode) => componentCode switch
+    {
+        ComponentCode.WB or ComponentCode.PRBC => CompatibilityRuleType.RBC,
+        ComponentCode.FFP => CompatibilityRuleType.PLASMA,
+        ComponentCode.PLT => CompatibilityRuleType.PLATELET,
+        _ => CompatibilityRuleType.RBC
+    };
+
     public static bool IsCompatible(
-        ComponentCode componentCode,
+        BloodComponentType? componentType,
+        BloodType recipientBloodType,
+        RhFactor recipientRh,
+        BloodType donorBloodType,
+        RhFactor donorRh)
+    {
+        var ruleType = componentType?.CompatibilityRuleType
+            ?? ResolveRuleType(componentType?.TypeCode ?? ComponentCode.WB);
+        return IsCompatible(ruleType, recipientBloodType, recipientRh, donorBloodType, donorRh);
+    }
+
+    public static bool IsCompatible(
+        CompatibilityRuleType ruleType,
         BloodType recipientBloodType,
         RhFactor recipientRh,
         BloodType donorBloodType,
@@ -39,13 +60,23 @@ public static class BloodCompatibilityRules
             return true;
         }
 
-        return componentCode switch
+        return ruleType switch
         {
-            ComponentCode.WB or ComponentCode.PRBC => IsRbcCompatible(recipientBloodType, recipientRh, donorBloodType, donorRh),
-            ComponentCode.FFP => IsPlasmaAboCompatible(recipientBloodType, donorBloodType),
-            ComponentCode.PLT => IsPlasmaAboCompatible(recipientBloodType, donorBloodType) && IsRhCompatible(recipientRh, donorRh),
+            CompatibilityRuleType.RBC => IsRbcCompatible(recipientBloodType, recipientRh, donorBloodType, donorRh),
+            CompatibilityRuleType.PLASMA => IsPlasmaAboCompatible(recipientBloodType, donorBloodType),
+            CompatibilityRuleType.PLATELET => IsPlasmaAboCompatible(recipientBloodType, donorBloodType) && IsRhCompatible(recipientRh, donorRh),
             _ => false
         };
+    }
+
+    public static bool IsCompatible(
+        ComponentCode componentCode,
+        BloodType recipientBloodType,
+        RhFactor recipientRh,
+        BloodType donorBloodType,
+        RhFactor donorRh)
+    {
+        return IsCompatible(ResolveRuleType(componentCode), recipientBloodType, recipientRh, donorBloodType, donorRh);
     }
 
     public static int GetUrgencyRank(UrgencyLevel urgencyLevel) => urgencyLevel switch

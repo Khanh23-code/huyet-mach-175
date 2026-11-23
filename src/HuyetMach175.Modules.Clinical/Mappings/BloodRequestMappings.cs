@@ -75,7 +75,7 @@ public static class BloodRequestMappings
         };
     }
 
-    public static AvailableBloodBagDto ToAvailableBagDto(this BloodBag bag, BloodType recipientBloodType, RhFactor recipientRh, ComponentCode componentCode)
+    public static AvailableBloodBagDto ToAvailableBagDto(this BloodBag bag, BloodType recipientBloodType, RhFactor recipientRh, BloodComponentType? componentType)
     {
         var isExact = BloodCompatibilityRules.IsExactMatch(recipientBloodType, recipientRh, bag.BloodType, bag.RhFactor);
         return new AvailableBloodBagDto
@@ -91,7 +91,7 @@ public static class BloodRequestMappings
             BloodTypeCode = bag.BloodType,
             RhFactor = bag.RhFactor,
             IsExactMatch = isExact,
-            IsCompatible = BloodCompatibilityRules.IsCompatible(componentCode, recipientBloodType, recipientRh, bag.BloodType, bag.RhFactor)
+            IsCompatible = BloodCompatibilityRules.IsCompatible(componentType, recipientBloodType, recipientRh, bag.BloodType, bag.RhFactor)
         };
     }
 
