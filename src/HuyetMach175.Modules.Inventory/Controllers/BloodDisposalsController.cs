@@ -29,7 +29,7 @@ public class BloodDisposalsController : ControllerBase
         "Lấy danh sách các biên bản/hồ sơ đề xuất tiêu hủy lô túi máu có phân trang và bộ lọc theo trạng thái, lý do, từ khóa tìm kiếm và khoảng thời gian.\n\n" +
         "**Bộ lọc & Phân trang:**\n" +
         "- `status`: Lọc theo trạng thái biên bản (`PENDING_APPROVAL`, `APPROVED`, `DISPOSED`, `REJECTED`, `CANCELLED`).\n" +
-        "- `reason`: Lọc theo lý do tiêu hủy (`EXPIRED`, `INFECTIOUS_POSITIVE`, `HEMOLYSIS`, `DAMAGED_BAG`, `OTHER`).\n" +
+        "- `reason`: Lọc theo lý do tiêu hủy (`EXPIRED`, `INFECTIOUS_POSITIVE`, `HEMOLYSIS`, `DAMAGED_BAG`, `COLD_CHAIN_BREACH`, `OTHER`).\n" +
         "- `search`: Tìm kiếm theo mã biên bản (`disposalCode`) hoặc mã barcode túi máu con trong lô.\n" +
         "- `fromDate` / `toDate`: Lọc theo ngày tạo đề xuất (định dạng YYYY-MM-DD).\n" +
         "- `pageNumber`: Số thứ tự trang (mặc định 1).\n" +
@@ -54,7 +54,8 @@ public class BloodDisposalsController : ControllerBase
     [HasPermission("DISPOSAL_VIEW")]
     [EndpointSummary("Danh sách túi máu tạm khóa (LOCKED) chưa nằm trong biên bản tiêu hủy nào")]
     [EndpointDescription(
-        "Trả về các túi máu đang LOCKED và chưa thuộc biên bản PENDING_APPROVAL / APPROVED, để BBNK chọn lập biên bản tiêu hủy (ví dụ túi không đạt xét nghiệm).\n\n" +
+        "Trả về các túi máu đang LOCKED và chưa thuộc biên bản PENDING_APPROVAL / APPROVED, đồng thời loại trừ các túi đang chờ kiểm định hoàn trả (`PENDING_INSPECTION`).\n\n" +
+        "Bao gồm túi không đạt xét nghiệm, túi hết hạn, hoặc túi hoàn trả đã được KTV thẩm định kết luận `DISCARD`.\n\n" +
         "Hỗ trợ `search` theo barcode, phân trang `pageNumber`, `pageSize` (1-100).\n\n" +
         "**Yêu cầu quyền truy cập:** **DISPOSAL_VIEW**.")]
     [ProducesResponseType(typeof(PagedResult<DisposalCandidateDto>), StatusCodes.Status200OK)]
@@ -99,10 +100,9 @@ public class BloodDisposalsController : ControllerBase
         "Lập biên bản đề xuất tiêu hủy cho một lô nhiều túi máu (ví dụ: hết hạn, tán huyết, rò rỉ, dương tính bệnh truyền nhiễm...).\n\n" +
         "**Quy tắc nghiệp vụ:**\n" +
         "- Chỉ định danh sách mã vạch `barcodes` của các túi máu trong lô (tối thiểu 1 túi).\n" +
-        "- Tất cả túi máu phải tồn tại và không ở trạng thái đã truyền (TRANSFUSED), đã xuất (ISSUED) hoặc đã tiêu hủy (DISCARDED).\n" +
+        "- Tất cả túi máu phải tồn tại và không ở trạng thái đang giữ chỗ (RESERVED), đã phân tách (PROCESSED), đã truyền (TRANSFUSED), đã xuất (ISSUED), đã tiêu hủy (DISCARDED), hoặc đang chờ kiểm định hoàn trả (PENDING_INSPECTION).\n" +
         "- Không túi máu nào được nằm trong một biên bản tiêu hủy khác đang chờ xử lý (PENDING_APPROVAL hoặc APPROVED).\n" +
-        "- Khi lập biên bản thành công, trạng thái toàn bộ các túi máu trong lô được tự động chuyển sang tạm khóa (**LOCKED**) để tránh bị cấp phát hay điều chế trong lúc chờ duyệt.\n" +
-        "- Tự động ghi vết vào nhật ký kiểm toán hệ thống (AuditLog).\n\n" +
+        "- Khi lập biên bản thành công, trạng thái toàn bộ các túi máu trong lô được tự động chuyển sang tạm khóa (**LOCKED**) và ghi đầy đủ `audit_logs`, `blood_bag_status_logs`.\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **DISPOSAL_EDIT** (vai trò BBNK).\n\n" +
         "**HTTP Response:**\n" +
         "- 201 Created: Tạo biên bản tiêu hủy thành công (trả về tóm tắt thông tin biên bản).\n" +
@@ -189,8 +189,8 @@ public class BloodDisposalsController : ControllerBase
         "BBNK xác nhận đã tiêu hủy vật lý sau khi biên bản được lãnh đạo phê duyệt.\n\n" +
         "**Quy tắc nghiệp vụ:**\n" +
         "- Chỉ áp dụng cho biên bản ở trạng thái **APPROVED**.\n" +
-        "- Biên bản chuyển sang **DISPOSED**, toàn bộ túi máu trong lô chuyển sang **DISCARDED**.\n" +
-        "- Ghi vết vào AuditLog.\n\n" +
+        "- Biên bản chuyển sang **DISPOSED**, toàn bộ túi máu trong lô chuyển sang **DISCARDED** và giải phóng vị trí lưu trữ (`LocationId = null`).\n" +
+        "- Ghi vết đầy đủ vào `audit_logs` và `blood_bag_status_logs`.\n\n" +
         "**Yêu cầu quyền truy cập:** **DISPOSAL_EDIT**.\n\n" +
         "**HTTP Response:** 200 OK, 400 biên bản không ở trạng thái APPROVED, 404 không tìm thấy biên bản.")]
     [ProducesResponseType(typeof(DisposalDetailDto), StatusCodes.Status200OK)]

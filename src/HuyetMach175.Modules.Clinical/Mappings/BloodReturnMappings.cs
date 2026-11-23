@@ -2,6 +2,7 @@ using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
 using HuyetMach175.Modules.Clinical.DTOs.BloodReturns;
 using HuyetMach175.Modules.Clinical.Processing;
+using HuyetMach175.SharedKernel.Common;
 
 namespace HuyetMach175.Modules.Clinical.Mappings;
 
@@ -62,11 +63,17 @@ public static class BloodReturnMappings
         };
     }
 
-    public static PendingBloodReturnDto ToPendingDto(this BloodReturn bloodReturn, DateTime nowUtc)
+    public static PendingBloodReturnDto ToPendingDto(
+        this BloodReturn bloodReturn,
+        int previousRestockCount,
+        List<string> clinicalChecklistWarnings,
+        DateTime nowUtc)
     {
         var allocation = bloodReturn.Allocation!;
         var bag = allocation.Bag!;
         var request = allocation.Request!;
+        var componentType = bag.ComponentType;
+        var mandatoryReasons = BloodReturnProcessing.EvaluateRestockEligibility(bag, previousRestockCount, nowUtc);
 
         return new PendingBloodReturnDto
         {
@@ -74,8 +81,8 @@ public static class BloodReturnMappings
             AllocationId = bloodReturn.AllocationId,
             BagId = bag.BagId,
             Barcode = bag.Barcode,
-            ComponentCode = bag.ComponentType?.TypeCode ?? ComponentCode.WB,
-            ComponentName = bag.ComponentType?.TypeName ?? string.Empty,
+            ComponentCode = componentType?.TypeCode ?? ComponentCode.WB,
+            ComponentName = componentType?.TypeName ?? string.Empty,
             BloodType = BloodCompatibilityRules.FormatBloodGroup(bag.BloodType, bag.RhFactor),
             VolumeMl = bag.VolumeMl,
             ExpiredAt = bag.ExpiredAt,
@@ -90,7 +97,17 @@ public static class BloodReturnMappings
             ReturnReason = bloodReturn.ReturnReason,
             FinalAction = bloodReturn.FinalAction,
             BagStatus = bag.Status,
-            ProcessedAt = bloodReturn.ProcessedAt
+            ProcessedAt = bloodReturn.ProcessedAt,
+            AllowRestock = componentType?.AllowRestock ?? true,
+            PreviousRestockCount = previousRestockCount,
+            MaxRestockCount = componentType?.MaxRestockCount ?? 1,
+            MaxOutsideMinutesForRestock = componentType?.MaxOutsideMinutesForRestock,
+            MinTemp = componentType?.MinTemp ?? 0m,
+            MaxTemp = componentType?.MaxTemp ?? 0m,
+            StorageTemperatureLabel = BloodComponentStorageRules.StorageHint(componentType),
+            RequiresMandatoryDiscard = mandatoryReasons.Count > 0,
+            MandatoryDiscardReasons = mandatoryReasons,
+            ClinicalChecklistWarnings = clinicalChecklistWarnings
         };
     }
 
@@ -98,11 +115,18 @@ public static class BloodReturnMappings
         this BloodReturn bloodReturn,
         int? previousLocationId,
         string? previousLocationName,
+        int previousRestockCount,
+        List<string> clinicalChecklistWarnings,
         DateTime nowUtc)
     {
         var allocation = bloodReturn.Allocation!;
         var bag = allocation.Bag!;
         var request = allocation.Request!;
+        var componentType = bag.ComponentType;
+        var mandatoryReasons = BloodReturnProcessing.EvaluateRestockEligibility(bag, previousRestockCount, nowUtc);
+        double? minutesSinceIssued = allocation.IssuedAt.HasValue
+            ? Math.Round(Math.Max(0, (bloodReturn.ProcessedAt - allocation.IssuedAt.Value).TotalMinutes), 1)
+            : null;
 
         return new ReturnInspectionDto
         {
@@ -111,8 +135,8 @@ public static class BloodReturnMappings
             BagId = bag.BagId,
             Barcode = bag.Barcode,
             ComponentTypeId = bag.ComponentTypeId,
-            ComponentCode = bag.ComponentType?.TypeCode ?? ComponentCode.WB,
-            ComponentName = bag.ComponentType?.TypeName ?? string.Empty,
+            ComponentCode = componentType?.TypeCode ?? ComponentCode.WB,
+            ComponentName = componentType?.TypeName ?? string.Empty,
             BloodType = BloodCompatibilityRules.FormatBloodGroup(bag.BloodType, bag.RhFactor),
             VolumeMl = bag.VolumeMl,
             CollectedAt = bag.CollectedAt,
@@ -132,7 +156,18 @@ public static class BloodReturnMappings
             ReturnReason = bloodReturn.ReturnReason,
             Qualified = bloodReturn.Qualified,
             FinalAction = bloodReturn.FinalAction,
-            ReturnedAt = bloodReturn.ProcessedAt
+            ReturnedAt = bloodReturn.ProcessedAt,
+            AllowRestock = componentType?.AllowRestock ?? true,
+            PreviousRestockCount = previousRestockCount,
+            MaxRestockCount = componentType?.MaxRestockCount ?? 1,
+            MaxOutsideMinutesForRestock = componentType?.MaxOutsideMinutesForRestock,
+            MinutesSinceIssued = minutesSinceIssued,
+            MinTemp = componentType?.MinTemp ?? 0m,
+            MaxTemp = componentType?.MaxTemp ?? 0m,
+            StorageTemperatureLabel = BloodComponentStorageRules.StorageHint(componentType),
+            RequiresMandatoryDiscard = mandatoryReasons.Count > 0,
+            MandatoryDiscardReasons = mandatoryReasons,
+            ClinicalChecklistWarnings = clinicalChecklistWarnings
         };
     }
 

@@ -29,6 +29,7 @@ public class StorageLocationsController : ControllerBase
         "Lấy danh sách các tủ lạnh và ngăn kệ lưu trữ trong kho máu kèm hỗ trợ tìm kiếm và phân trang.\n\n" +
         "**Bộ lọc & Phân trang:**\n" +
         "- `search`: Tìm kiếm theo tên tủ, mã vị trí, mã vạch.\n" +
+        "- `zone`: Lọc theo phân khu (`QUARANTINE`, `RELEASED`, `DISPOSAL_HOLD`).\n" +
         "- `availableOnly = true`: Chỉ lấy các vị trí đang hoạt động và chưa đầy.\n" +
         "- `isFull`: Lọc theo trạng thái đã đầy hay chưa.\n" +
         "- `isActive`: Lọc theo trạng thái đang sử dụng hay ngừng sử dụng.\n" +
@@ -70,6 +71,7 @@ public class StorageLocationsController : ControllerBase
         "Tạo mới một vị trí ngăn kệ hoặc tủ lạnh lưu trữ trong kho máu.\n\n" +
         "**Quy tắc nghiệp vụ:**\n" +
         "- Bắt buộc cung cấp tên tủ (`refrigeratorName`), số ngăn (`shelfNumber`), và nhiệt độ mục tiêu (`targetTemperature`).\n" +
+        "- Có thể chỉ định phân khu `zone` (`QUARANTINE`, `RELEASED`, `DISPOSAL_HOLD`), mặc định `RELEASED`.\n" +
         "- Tự động kiểm tra trùng lặp cặp tên tủ và số ngăn để tránh tạo trùng.\n" +
         "- Ghi nhật ký hệ thống `audit_logs` khi tạo thành công.\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **INVENTORY_EDIT** (BBNK, MGT).")]

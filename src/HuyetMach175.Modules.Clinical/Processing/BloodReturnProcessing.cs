@@ -3,6 +3,7 @@ using HuyetMach175.Api.Data;
 using HuyetMach175.Api.Data.Entities;
 using HuyetMach175.Api.Data.Enums;
 using HuyetMach175.Modules.Clinical.DTOs.BloodReturns;
+using HuyetMach175.SharedKernel.Common;
 using HuyetMach175.SharedKernel.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +36,94 @@ public static class BloodReturnProcessing
         }
 
         return (returnReason, GetFailedCreateChecklistCriteria(request.Checklist));
+    }
+
+    public static List<string> EvaluateRestockEligibility(BloodBag bag, int previousRestockCount, DateTime nowUtc)
+    {
+        var reasons = new List<string>();
+        var componentType = bag.ComponentType;
+
+        if (bag.ExpiredAt <= nowUtc)
+        {
+            reasons.Add($"Túi máu đã hết hạn sử dụng vào {bag.ExpiredAt:dd/MM/yyyy HH:mm}.");
+        }
+
+        if (componentType != null && !componentType.AllowRestock)
+        {
+            reasons.Add($"Chế phẩm {componentType.TypeName} ({componentType.TypeCode}) không được phép tái nhập kho theo cấu hình.");
+        }
+
+        var maxRestockCount = componentType?.MaxRestockCount ?? 1;
+        if (previousRestockCount >= maxRestockCount)
+        {
+            reasons.Add($"Túi máu đã tái nhập kho {previousRestockCount}/{maxRestockCount} lần, vượt giới hạn cho phép.");
+        }
+
+        return reasons;
+    }
+
+    public static async Task<int> CountPreviousRestocksAsync(ApplicationDbContext context, int bagId)
+    {
+        return await context.BloodReturns
+            .AsNoTracking()
+            .CountAsync(br =>
+                br.Allocation != null &&
+                br.Allocation.BagId == bagId &&
+                br.FinalAction == ReturnFinalAction.RESTOCK);
+    }
+
+    public static async Task<Dictionary<int, int>> CountPreviousRestocksByBagIdsAsync(ApplicationDbContext context, IEnumerable<int> bagIds)
+    {
+        var idList = bagIds.Distinct().ToList();
+        if (idList.Count == 0)
+        {
+            return new Dictionary<int, int>();
+        }
+
+        return await context.BloodReturns
+            .AsNoTracking()
+            .Where(br =>
+                br.Allocation != null &&
+                idList.Contains(br.Allocation.BagId) &&
+                br.FinalAction == ReturnFinalAction.RESTOCK)
+            .GroupBy(br => br.Allocation!.BagId)
+            .Select(g => new { BagId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.BagId, x => x.Count);
+    }
+
+    public static async Task<Dictionary<int, List<string>>> GetClinicalChecklistWarningsAsync(
+        ApplicationDbContext context,
+        IEnumerable<int> returnIds)
+    {
+        var idList = returnIds.Distinct().ToList();
+        if (idList.Count == 0)
+        {
+            return new Dictionary<int, List<string>>();
+        }
+
+        var logs = await context.AuditLogs
+            .AsNoTracking()
+            .Where(a =>
+                a.TableName == "blood_returns" &&
+                a.ActionType == ActionType.INSERT &&
+                idList.Contains(a.RecordId) &&
+                a.NewState != null)
+            .OrderByDescending(a => a.LogId)
+            .Select(a => new { a.RecordId, a.NewState })
+            .ToListAsync();
+
+        var result = new Dictionary<int, List<string>>();
+        foreach (var log in logs)
+        {
+            if (result.ContainsKey(log.RecordId))
+            {
+                continue;
+            }
+
+            result[log.RecordId] = ExtractFailedChecklistFlags(log.NewState);
+        }
+
+        return result;
     }
 
     public static void ValidateAllocationForReturn(BloodAllocation? allocation, int allocationId, User currentUser)
@@ -96,13 +185,29 @@ public static class BloodReturnProcessing
     public static async Task<StorageLocation> ValidateRestockTargetLocationAsync(
         ApplicationDbContext context,
         BloodBag bag,
+        int previousRestockCount,
         BloodReturnInspectionChecklistDto? checklist,
         int? storageLocationId,
         DateTime nowUtc)
     {
+        var componentType = bag.ComponentType;
+
         if (bag.ExpiredAt <= nowUtc)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu {bag.Barcode} đã hết hạn sử dụng vào {bag.ExpiredAt:dd/MM/yyyy HH:mm}, không thể tái nhập kho. Vui lòng chọn 'DISCARD'.");
+        }
+
+        if (componentType != null && !componentType.AllowRestock)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Chế phẩm {componentType.TypeName} ({componentType.TypeCode}) không được phép tái nhập kho theo cấu hình nghiệp vụ. Vui lòng chọn 'DISCARD'.");
+        }
+
+        var maxRestockCount = componentType?.MaxRestockCount ?? 1;
+        if (previousRestockCount >= maxRestockCount)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Túi máu {bag.Barcode} đã tái nhập kho {previousRestockCount}/{maxRestockCount} lần, vượt giới hạn cho phép tái nhập kho. Vui lòng chọn 'DISCARD'.");
         }
 
         if (checklist == null)
@@ -110,7 +215,7 @@ public static class BloodReturnProcessing
             throw new HttpException(StatusCodes.Status400BadRequest, "Bảng kiểm 5 điều kiện bảo quản (checklist) là bắt buộc khi nhập lại kho.");
         }
 
-        var failedCriteria = GetFailedInspectionCriteria(checklist);
+        var failedCriteria = GetFailedInspectionCriteria(checklist, componentType);
         if (failedCriteria.Count > 0)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu không đạt đủ 5 điều kiện tái nhập kho: {string.Join("; ", failedCriteria)}.");
@@ -129,17 +234,76 @@ public static class BloodReturnProcessing
             throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy vị trí lưu trữ với ID {storageLocationId.Value}.");
         }
 
+        var targetLocationName = $"{targetLocation.RefrigeratorName} - {targetLocation.ShelfNumber}";
+
         if (!targetLocation.IsActive)
         {
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{targetLocation.RefrigeratorName} - {targetLocation.ShelfNumber}' đang ngừng hoạt động.");
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{targetLocationName}' đang ngừng hoạt động.");
         }
 
         if (targetLocation.IsFull)
         {
-            throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{targetLocation.RefrigeratorName} - {targetLocation.ShelfNumber}' hiện đã đầy.");
+            throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{targetLocationName}' hiện đã đầy.");
+        }
+
+        if (targetLocation.Zone != StorageZone.RELEASED)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Vị trí tái nhập kho '{targetLocationName}' thuộc phân khu '{targetLocation.Zone}', bắt buộc phải thuộc phân khu sẵn sàng cấp phát (RELEASED).");
+        }
+
+        if (!BloodComponentStorageRules.IsStorageSuitable(componentType, targetLocation.TargetTemperature))
+        {
+            var componentLabel = componentType?.TypeName ?? componentType?.TypeCode.ToString() ?? "chế phẩm máu";
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Vị trí '{targetLocationName}' ({targetLocation.TargetTemperature:0.#}°C) không phù hợp để bảo quản {componentLabel} (cần {BloodComponentStorageRules.StorageHint(componentType)}).");
         }
 
         return targetLocation;
+    }
+
+    public static async Task<StorageLocation?> ResolveDiscardHoldLocationAsync(ApplicationDbContext context, int? requestedLocationId)
+    {
+        if (requestedLocationId.HasValue)
+        {
+            if (requestedLocationId.Value <= 0)
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, "Mã vị trí lưu trữ chờ hủy (newStorageLocationId) không hợp lệ.");
+            }
+
+            var requestedLocation = await context.StorageLocations
+                .FirstOrDefaultAsync(l => l.LocationId == requestedLocationId.Value);
+
+            if (requestedLocation == null)
+            {
+                throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy vị trí lưu trữ với ID {requestedLocationId.Value}.");
+            }
+
+            var requestedName = $"{requestedLocation.RefrigeratorName} - {requestedLocation.ShelfNumber}";
+
+            if (!requestedLocation.IsActive)
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{requestedName}' đang ngừng hoạt động.");
+            }
+
+            if (requestedLocation.IsFull)
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, $"Vị trí lưu trữ '{requestedName}' hiện đã đầy.");
+            }
+
+            if (requestedLocation.Zone != StorageZone.DISPOSAL_HOLD)
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest,
+                    $"Vị trí '{requestedName}' thuộc phân khu '{requestedLocation.Zone}'. Túi máu không đạt hoàn trả bắt buộc đưa vào phân khu cách ly chờ hủy (DISPOSAL_HOLD).");
+            }
+
+            return requestedLocation;
+        }
+
+        return await context.StorageLocations
+            .Where(l => l.IsActive && !l.IsFull && l.Zone == StorageZone.DISPOSAL_HOLD)
+            .OrderBy(l => l.LocationId)
+            .FirstOrDefaultAsync();
     }
 
     public static async Task<(int? LocationId, string? LocationName)> ResolvePreviousLocationAsync(
@@ -312,8 +476,9 @@ public static class BloodReturnProcessing
         return false;
     }
 
-    private static List<string> GetFailedCreateChecklistCriteria(BloodReturnChecklistDto checklist)
+    public static List<string> GetFailedCreateChecklistCriteria(BloodReturnChecklistDto checklist, BloodComponentType? componentType = null)
     {
+        var outsideMinutes = componentType?.MaxOutsideMinutesForRestock ?? 30;
         var failedCriteria = new List<string>();
         if (!checklist.IsUnusedFullVolume)
         {
@@ -332,14 +497,18 @@ public static class BloodReturnProcessing
 
         if (!checklist.IsStoredUnder30Mins)
         {
-            failedCriteria.Add("Thời gian ngoài tủ lạnh dưới 30 phút");
+            failedCriteria.Add($"Thời gian ngoài tủ lạnh dưới {outsideMinutes} phút");
         }
 
         return failedCriteria;
     }
 
-    private static List<string> GetFailedInspectionCriteria(BloodReturnInspectionChecklistDto checklist)
+    private static List<string> GetFailedInspectionCriteria(BloodReturnInspectionChecklistDto checklist, BloodComponentType? componentType = null)
     {
+        var outsideLimitLabel = componentType?.MaxOutsideMinutesForRestock is int maxMinutes
+            ? $"Thời gian ngoài tủ lạnh hợp lệ (<= {maxMinutes} phút)"
+            : "Thời gian ngoài tủ lạnh hợp lệ";
+
         var failed = new List<string>();
         if (!checklist.IsBagIntact)
         {
@@ -358,7 +527,7 @@ public static class BloodReturnProcessing
 
         if (!checklist.IsOutsideTimeValid)
         {
-            failed.Add("Thời gian ngoài tủ lạnh hợp lệ");
+            failed.Add(outsideLimitLabel);
         }
 
         if (!checklist.IsUnusedFullVolume)
@@ -367,5 +536,40 @@ public static class BloodReturnProcessing
         }
 
         return failed;
+    }
+
+    private static List<string> ExtractFailedChecklistFlags(string? json)
+    {
+        var flags = new List<string>();
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return flags;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (!doc.RootElement.TryGetProperty("failedChecklistFlags", out var arrProp) || arrProp.ValueKind != JsonValueKind.Array)
+            {
+                return flags;
+            }
+
+            foreach (var item in arrProp.EnumerateArray())
+            {
+                if (item.ValueKind == JsonValueKind.String)
+                {
+                    var text = item.GetString();
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        flags.Add(text);
+                    }
+                }
+            }
+        }
+        catch (JsonException)
+        {
+        }
+
+        return flags;
     }
 }

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using HuyetMach175.Api.Data.Enums;
 
 namespace HuyetMach175.Modules.Inventory.DTOs.StorageLocations;
 
@@ -19,6 +20,10 @@ public class UpdateStorageLocationRequest
     [Range(-100.0, 50.0, ErrorMessage = "Nhiệt độ mục tiêu phải nằm trong dải từ -100°C đến 50°C.")]
     [JsonPropertyName("targetTemperature")]
     public decimal TargetTemperature { get; set; }
+
+    [EnumDataType(typeof(StorageZone), ErrorMessage = "Phân khu lưu trữ không hợp lệ (QUARANTINE, RELEASED, DISPOSAL_HOLD).")]
+    [JsonPropertyName("zone")]
+    public StorageZone Zone { get; set; } = StorageZone.RELEASED;
 
     [JsonPropertyName("isFull")]
     public bool IsFull { get; set; }

@@ -102,6 +102,7 @@ public static class BloodDisposalMappings
         DisposalReason.INFECTIOUS_POSITIVE => "Dương tính bệnh truyền nhiễm",
         DisposalReason.HEMOLYSIS => "Máu tán huyết / biến chất",
         DisposalReason.DAMAGED_BAG => "Hỏng túi / rò rỉ",
+        DisposalReason.COLD_CHAIN_BREACH => "Vi phạm chuỗi lạnh / Quá thời gian ngoài tủ",
         DisposalReason.OTHER => "Lý do khác",
         _ => reason.ToString()
     };

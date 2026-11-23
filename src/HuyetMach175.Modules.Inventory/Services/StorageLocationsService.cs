@@ -40,6 +40,11 @@ public class StorageLocationsService : IStorageLocationsService
             }
         }
 
+        if (filter.Zone.HasValue)
+        {
+            query = query.Where(l => l.Zone == filter.Zone.Value);
+        }
+
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             var search = filter.Search.Trim().ToLower();
@@ -67,6 +72,7 @@ public class StorageLocationsService : IStorageLocationsService
                 RefrigeratorName = l.RefrigeratorName,
                 ShelfNumber = l.ShelfNumber,
                 TargetTemperature = l.TargetTemperature,
+                Zone = l.Zone,
                 IsFull = l.IsFull,
                 IsActive = l.IsActive,
                 CurrentBagsCount = l.BloodBags.Count(b =>
@@ -109,6 +115,7 @@ public class StorageLocationsService : IStorageLocationsService
                 RefrigeratorName = l.RefrigeratorName,
                 ShelfNumber = l.ShelfNumber,
                 TargetTemperature = l.TargetTemperature,
+                Zone = l.Zone,
                 IsFull = l.IsFull,
                 IsActive = l.IsActive,
                 CurrentBagsCount = l.BloodBags.Count(b =>
@@ -155,6 +162,7 @@ public class StorageLocationsService : IStorageLocationsService
             RefrigeratorName = trimmedRefName,
             ShelfNumber = trimmedShelf,
             TargetTemperature = request.TargetTemperature,
+            Zone = request.Zone,
             IsFull = request.IsFull,
             IsActive = request.IsActive
         };
@@ -173,6 +181,7 @@ public class StorageLocationsService : IStorageLocationsService
                 location.RefrigeratorName,
                 location.ShelfNumber,
                 location.TargetTemperature,
+                Zone = location.Zone.ToString(),
                 location.IsFull,
                 location.IsActive
             }),
@@ -189,6 +198,7 @@ public class StorageLocationsService : IStorageLocationsService
             RefrigeratorName = location.RefrigeratorName,
             ShelfNumber = location.ShelfNumber,
             TargetTemperature = location.TargetTemperature,
+            Zone = location.Zone,
             IsFull = location.IsFull,
             IsActive = location.IsActive,
             CurrentBagsCount = 0,
@@ -223,6 +233,7 @@ public class StorageLocationsService : IStorageLocationsService
             location.RefrigeratorName,
             location.ShelfNumber,
             location.TargetTemperature,
+            Zone = location.Zone.ToString(),
             location.IsFull,
             location.IsActive
         });
@@ -230,6 +241,7 @@ public class StorageLocationsService : IStorageLocationsService
         location.RefrigeratorName = trimmedRefName;
         location.ShelfNumber = trimmedShelf;
         location.TargetTemperature = request.TargetTemperature;
+        location.Zone = request.Zone;
         location.IsFull = request.IsFull;
         location.IsActive = request.IsActive;
 
@@ -245,6 +257,7 @@ public class StorageLocationsService : IStorageLocationsService
                 location.RefrigeratorName,
                 location.ShelfNumber,
                 location.TargetTemperature,
+                Zone = location.Zone.ToString(),
                 location.IsFull,
                 location.IsActive
             }),
@@ -282,6 +295,7 @@ public class StorageLocationsService : IStorageLocationsService
             RefrigeratorName = location.RefrigeratorName,
             ShelfNumber = location.ShelfNumber,
             TargetTemperature = location.TargetTemperature,
+            Zone = location.Zone,
             IsFull = location.IsFull,
             IsActive = location.IsActive,
             CurrentBagsCount = currentBags,

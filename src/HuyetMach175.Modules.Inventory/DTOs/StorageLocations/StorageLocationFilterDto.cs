@@ -1,3 +1,4 @@
+using HuyetMach175.Api.Data.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HuyetMach175.Modules.Inventory.DTOs.StorageLocations;
@@ -15,6 +16,9 @@ public class StorageLocationFilterDto
 
     [FromQuery(Name = "availableOnly")]
     public bool? AvailableOnly { get; set; }
+
+    [FromQuery(Name = "zone")]
+    public StorageZone? Zone { get; set; }
 
     [FromQuery(Name = "pageNumber")]
     public int PageNumber { get; set; } = 1;

@@ -161,13 +161,53 @@ public class BloodDisposalsService : IBloodDisposalsService
             throw new HttpException(StatusCodes.Status400BadRequest, $"Các túi máu sau đã được tiêu hủy trước đó: {string.Join(", ", discarded)}.");
         }
 
-        var invalidStatus = bags.Where(b => b.Status is BagStatus.TRANSFUSED or BagStatus.ISSUED).Select(b => $"{b.Barcode} ({b.Status})").ToList();
+        var reservedBags = bags.Where(b => b.Status == BagStatus.RESERVED).Select(b => b.Barcode).ToList();
+        if (reservedBags.Count > 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Không thể đề xuất tiêu hủy túi máu đang giữ chỗ cho phiếu yêu cầu (RESERVED): {string.Join(", ", reservedBags)}. Vui lòng hủy giữ chỗ hoặc đổi túi thay thế trước.");
+        }
+
+        var invalidStatus = bags.Where(b => b.Status is BagStatus.TRANSFUSED or BagStatus.ISSUED or BagStatus.PROCESSED).Select(b => $"{b.Barcode} ({b.Status})").ToList();
         if (invalidStatus.Count > 0)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, $"Không thể đề xuất tiêu hủy các túi máu đang ở trạng thái: {string.Join(", ", invalidStatus)}.");
         }
 
         var bagIds = bags.Select(b => b.BagId).ToList();
+
+        var activeReservedBarcodes = await _context.BloodAllocations
+            .AsNoTracking()
+            .Include(a => a.Bag)
+            .Where(a => bagIds.Contains(a.BagId) && a.Status == AllocationStatus.RESERVED)
+            .Select(a => a.Bag!.Barcode)
+            .Distinct()
+            .ToListAsync();
+
+        if (activeReservedBarcodes.Count > 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Không thể đề xuất tiêu hủy túi máu đang có lượt giữ chỗ hiệu lực (RESERVED): {string.Join(", ", activeReservedBarcodes)}.");
+        }
+
+        var pendingInspectionBarcodes = await _context.BloodReturns
+            .AsNoTracking()
+            .Include(br => br.Allocation)
+                .ThenInclude(a => a!.Bag)
+            .Where(br =>
+                br.FinalAction == ReturnFinalAction.PENDING_INSPECTION &&
+                br.Allocation != null &&
+                bagIds.Contains(br.Allocation.BagId))
+            .Select(br => br.Allocation!.Bag!.Barcode)
+            .Distinct()
+            .ToListAsync();
+
+        if (pendingInspectionBarcodes.Count > 0)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                $"Không thể đưa vào biên bản tiêu hủy vì túi máu đang chờ kiểm định hoàn trả (PENDING_INSPECTION): {string.Join(", ", pendingInspectionBarcodes)}.");
+        }
+
         var pendingItems = await _context.BloodDisposalItems
             .Include(i => i.DisposalRecord)
             .Include(i => i.BloodBag)
@@ -210,6 +250,8 @@ public class BloodDisposalsService : IBloodDisposalsService
         _context.BloodDisposalRecords.Add(record);
         await _context.SaveChangesAsync();
 
+        var bagTransitions = new List<(BloodBag Bag, BagStatus FromStatus, BagStatus ToStatus)>();
+
         foreach (var bag in bags)
         {
             var prevStatus = bag.Status;
@@ -224,6 +266,7 @@ public class BloodDisposalsService : IBloodDisposalsService
                 VerifiedAt = now
             };
             _context.BloodDisposalItems.Add(item);
+            bagTransitions.Add((bag, prevStatus, BagStatus.LOCKED));
         }
 
         await _context.SaveChangesAsync();
@@ -250,6 +293,9 @@ public class BloodDisposalsService : IBloodDisposalsService
         };
 
         _context.AuditLogs.Add(auditLog);
+        await _context.SaveChangesAsync();
+
+        AddBagStatusLogs(bagTransitions, userId, auditLog.LogId, auditLog.ChangeReason!, now);
         await _context.SaveChangesAsync();
 
         await transaction.CommitAsync();
@@ -306,12 +352,15 @@ public class BloodDisposalsService : IBloodDisposalsService
                 : $"{record.Notes}\n{cancelNote}";
         }
 
-        // Revert all blood bags in this disposal batch
+        var bagTransitions = new List<(BloodBag Bag, BagStatus FromStatus, BagStatus ToStatus)>();
+
         foreach (var item in record.Items)
         {
             if (item.BloodBag != null)
             {
+                var currentStatus = item.BloodBag.Status;
                 item.BloodBag.Status = item.PreviousStatus;
+                bagTransitions.Add((item.BloodBag, currentStatus, item.PreviousStatus));
             }
         }
 
@@ -338,6 +387,9 @@ public class BloodDisposalsService : IBloodDisposalsService
         };
 
         _context.AuditLogs.Add(auditLog);
+        await _context.SaveChangesAsync();
+
+        AddBagStatusLogs(bagTransitions, userId, auditLog.LogId, auditLog.ChangeReason!, now);
         await _context.SaveChangesAsync();
 
         await transaction.CommitAsync();
@@ -396,6 +448,7 @@ public class BloodDisposalsService : IBloodDisposalsService
                 CreatedAt = now
             };
             _context.AuditLogs.Add(auditLog);
+            await _context.SaveChangesAsync();
         }
         else
         {
@@ -409,12 +462,15 @@ public class BloodDisposalsService : IBloodDisposalsService
             record.ApprovedAt = now;
             record.RejectionReason = request.RejectionReason.Trim();
 
-            // Revert all bags back to previous status
+            var bagTransitions = new List<(BloodBag Bag, BagStatus FromStatus, BagStatus ToStatus)>();
+
             foreach (var item in record.Items)
             {
                 if (item.BloodBag != null)
                 {
+                    var currentStatus = item.BloodBag.Status;
                     item.BloodBag.Status = item.PreviousStatus;
+                    bagTransitions.Add((item.BloodBag, currentStatus, item.PreviousStatus));
                 }
             }
 
@@ -437,9 +493,12 @@ public class BloodDisposalsService : IBloodDisposalsService
                 CreatedAt = now
             };
             _context.AuditLogs.Add(auditLog);
+            await _context.SaveChangesAsync();
+
+            AddBagStatusLogs(bagTransitions, userId, auditLog.LogId, auditLog.ChangeReason!, now);
+            await _context.SaveChangesAsync();
         }
 
-        await _context.SaveChangesAsync();
         await transaction.CommitAsync();
 
         return await GetDisposalByIdAsync(record.DisposalId);
@@ -463,11 +522,17 @@ public class BloodDisposalsService : IBloodDisposalsService
                          i.DisposalRecord.Status == DisposalStatus.APPROVED))
             .Select(i => i.BagId);
 
+        var pendingReturnBagIds = _context.BloodReturns
+            .Where(br => br.FinalAction == ReturnFinalAction.PENDING_INSPECTION && br.Allocation != null)
+            .Select(br => br.Allocation!.BagId);
+
         var query = _context.BloodBags
             .AsNoTracking()
             .Include(b => b.ComponentType)
             .Include(b => b.Location)
-            .Where(b => b.Status == BagStatus.LOCKED && !activeBagIds.Contains(b.BagId));
+            .Where(b => b.Status == BagStatus.LOCKED &&
+                        !activeBagIds.Contains(b.BagId) &&
+                        !pendingReturnBagIds.Contains(b.BagId));
 
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
@@ -535,17 +600,22 @@ public class BloodDisposalsService : IBloodDisposalsService
 
         record.Status = DisposalStatus.DISPOSED;
 
+        var bagTransitions = new List<(BloodBag Bag, BagStatus FromStatus, BagStatus ToStatus)>();
+
         foreach (var item in record.Items)
         {
             if (item.BloodBag == null) continue;
+            var prevStatus = item.BloodBag.Status;
             item.BloodBag.Status = BagStatus.DISCARDED;
+            item.BloodBag.LocationId = null;
             if (string.IsNullOrWhiteSpace(item.BloodBag.DiscardReason))
             {
                 item.BloodBag.DiscardReason = BloodDisposalMappings.FormatDisposalReasonText(record.Reason);
             }
+            bagTransitions.Add((item.BloodBag, prevStatus, BagStatus.DISCARDED));
         }
 
-        _context.AuditLogs.Add(new AuditLog
+        var auditLog = new AuditLog
         {
             TableName = "blood_disposal_records",
             RecordId = record.DisposalId,
@@ -561,11 +631,44 @@ public class BloodDisposalsService : IBloodDisposalsService
             IpAddress = ipAddress,
             ChangeReason = $"Xác nhận đã tiêu hủy vật lý biên bản {record.DisposalCode}. {record.Items.Count} túi máu chuyển sang DISCARDED.",
             CreatedAt = now
-        });
+        };
+
+        _context.AuditLogs.Add(auditLog);
+        await _context.SaveChangesAsync();
+
+        AddBagStatusLogs(
+            bagTransitions,
+            userId,
+            auditLog.LogId,
+            $"Tiêu hủy vật lý theo biên bản {record.DisposalCode} ({BloodDisposalMappings.FormatDisposalReasonText(record.Reason)}).",
+            now);
 
         await _context.SaveChangesAsync();
         await transaction.CommitAsync();
 
         return await GetDisposalByIdAsync(record.DisposalId);
+    }
+
+    private void AddBagStatusLogs(
+        IEnumerable<(BloodBag Bag, BagStatus FromStatus, BagStatus ToStatus)> transitions,
+        int userId,
+        long auditLogId,
+        string note,
+        DateTime nowUtc)
+    {
+        var truncatedNote = note.Length <= 255 ? note : note[..255];
+        foreach (var (bag, fromStatus, toStatus) in transitions)
+        {
+            _context.BloodBagStatusLogs.Add(new BloodBagStatusLog
+            {
+                BagId = bag.BagId,
+                FromStatus = fromStatus,
+                ToStatus = toStatus,
+                PerformedById = userId,
+                AuditLogId = auditLogId,
+                Notes = truncatedNote,
+                CreatedAt = nowUtc
+            });
+        }
     }
 }

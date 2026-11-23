@@ -103,6 +103,16 @@ public class PendingBloodReturnDto
     public ReturnFinalAction FinalAction { get; set; }
     public BagStatus BagStatus { get; set; }
     public DateTime ProcessedAt { get; set; }
+    public bool AllowRestock { get; set; }
+    public int PreviousRestockCount { get; set; }
+    public int MaxRestockCount { get; set; }
+    public int? MaxOutsideMinutesForRestock { get; set; }
+    public decimal MinTemp { get; set; }
+    public decimal MaxTemp { get; set; }
+    public string StorageTemperatureLabel { get; set; } = string.Empty;
+    public bool RequiresMandatoryDiscard { get; set; }
+    public List<string> MandatoryDiscardReasons { get; set; } = new List<string>();
+    public List<string> ClinicalChecklistWarnings { get; set; } = new List<string>();
 }
 
 public class ReturnInspectionDto
@@ -134,6 +144,17 @@ public class ReturnInspectionDto
     public bool Qualified { get; set; }
     public ReturnFinalAction FinalAction { get; set; }
     public DateTime ReturnedAt { get; set; }
+    public bool AllowRestock { get; set; }
+    public int PreviousRestockCount { get; set; }
+    public int MaxRestockCount { get; set; }
+    public int? MaxOutsideMinutesForRestock { get; set; }
+    public double? MinutesSinceIssued { get; set; }
+    public decimal MinTemp { get; set; }
+    public decimal MaxTemp { get; set; }
+    public string StorageTemperatureLabel { get; set; } = string.Empty;
+    public bool RequiresMandatoryDiscard { get; set; }
+    public List<string> MandatoryDiscardReasons { get; set; } = new List<string>();
+    public List<string> ClinicalChecklistWarnings { get; set; } = new List<string>();
 }
 
 public class BloodReturnInspectionChecklistDto

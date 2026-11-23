@@ -141,12 +141,12 @@ public class BloodReturnsController : ControllerBase
     [HasPermission("BLOOD_RETURN_APPROVE")]
     [EndpointSummary("Thẩm định tiếp nhận hoàn trả (Tái nhập kho hoặc Tiêu hủy)")]
     [EndpointDescription(
-        "Ngân hàng máu đánh giá 5 điều kiện bảo quản của túi máu hoàn trả và quyết định `RESTOCK` (tái nhập kho `AVAILABLE`) hoặc `DISCARD` (chuyển hủy `DISCARDED`).\n\n" +
+        "Ngân hàng máu đánh giá 5 điều kiện bảo quản của túi máu hoàn trả và quyết định `RESTOCK` (tái nhập kho `AVAILABLE`) hoặc `DISCARD` (từ chối tái nhập, giữ `LOCKED` và đưa vào vùng chờ hủy để lập biên bản tiêu hủy).\n\n" +
         "**Quy tắc nghiệp vụ (Transaction):**\n" +
         "- Chỉ xử lý phiếu hoàn trả đang ở `PENDING_INSPECTION` gắn với túi máu đang `LOCKED`; đồng thời chuyển `blood_allocations.status` sang `RETURNED`.\n" +
-        "- Nhánh `RESTOCK`: Bắt buộc túi chưa hết hạn, cả 5 điều kiện bảng kiểm đạt `true`, có `newStorageLocationId` hợp lệ (đang hoạt động và chưa đầy) -> `qualified = true`, `final_action = RESTOCK`, `bag.Status = AVAILABLE`.\n" +
-        "- Nhánh `DISCARD`: Không bắt buộc 5 điều kiện đạt `true` -> `qualified = false`, `final_action = DISCARD`, `bag.Status = DISCARDED`, `bag.LocationId = null`.\n" +
-        "- Ghi vết đầy đủ `audit_logs` và `blood_bag_status_logs` (`LOCKED` -> `AVAILABLE` / `DISCARDED`).\n\n" +
+        "- Nhánh `RESTOCK`: Bắt buộc túi chưa hết hạn, chế phẩm cho phép tái nhập kho (`AllowRestock = true`), chưa vượt giới hạn số lần tái nhập (`MaxRestockCount`), cả 5 điều kiện bảng kiểm đạt `true`, và `newStorageLocationId` thuộc phân khu `RELEASED` có nhiệt độ mục tiêu phù hợp (`MinTemp`–`MaxTemp`) -> `qualified = true`, `final_action = RESTOCK`, `bag.Status = AVAILABLE`.\n" +
+        "- Nhánh `DISCARD`: Không bắt buộc 5 điều kiện đạt `true` -> `qualified = false`, `final_action = DISCARD`, `bag.Status` **giữ nguyên `LOCKED`**, gán `discardReason`, và xếp vào ngăn thuộc phân khu `DISPOSAL_HOLD` (nếu có hoặc được chỉ định qua `newStorageLocationId`) để chảy vào luồng lập biên bản tiêu hủy.\n" +
+        "- Ghi vết đầy đủ `audit_logs` và `blood_bag_status_logs` (`LOCKED` -> `AVAILABLE` hoặc `LOCKED` -> `LOCKED`).\n\n" +
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **BLOOD_RETURN_APPROVE** (vai trò BBNK).\n\n" +
         "**HTTP Response:**\n" +
         "- 200 OK: Xử lý phiếu hoàn trả thành công.\n" +
