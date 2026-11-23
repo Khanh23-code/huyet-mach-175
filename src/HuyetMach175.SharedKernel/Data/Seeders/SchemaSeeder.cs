@@ -129,6 +129,52 @@ public static class SchemaSeeder
 
             CREATE INDEX IF NOT EXISTS idx_blood_bag_status_logs_bag_id ON blood_bag_status_logs(bag_id);
             CREATE INDEX IF NOT EXISTS idx_blood_bag_status_logs_created_at ON blood_bag_status_logs(created_at DESC);
+
+            ALTER TABLE storage_locations ADD COLUMN IF NOT EXISTS zone character varying(30) NOT NULL DEFAULT 'RELEASED';
+
+            ALTER TABLE blood_component_types ADD COLUMN IF NOT EXISTS min_temp numeric(5,2) NOT NULL DEFAULT 0;
+            ALTER TABLE blood_component_types ADD COLUMN IF NOT EXISTS max_temp numeric(5,2) NOT NULL DEFAULT 0;
+            ALTER TABLE blood_component_types ADD COLUMN IF NOT EXISTS allow_restock boolean NOT NULL DEFAULT FALSE;
+            ALTER TABLE blood_component_types ADD COLUMN IF NOT EXISTS max_outside_minutes_for_restock integer NULL;
+            ALTER TABLE blood_component_types ADD COLUMN IF NOT EXISTS max_restock_count integer NOT NULL DEFAULT 1;
+            ALTER TABLE blood_component_types ADD COLUMN IF NOT EXISTS compatibility_rule_type character varying(20) NOT NULL DEFAULT 'RBC';
+
+            CREATE TABLE IF NOT EXISTS blood_handover_sessions (
+                handover_session_id SERIAL PRIMARY KEY,
+                session_code character varying(30) NOT NULL,
+                request_id integer NOT NULL,
+                initiated_by integer NOT NULL,
+                confirmed_by integer NULL,
+                cancelled_by integer NULL,
+                status character varying(20) NOT NULL DEFAULT 'PENDING',
+                cancel_reason character varying(255) NULL,
+                created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                expires_at timestamp with time zone NOT NULL,
+                confirmed_at timestamp with time zone NULL,
+                cancelled_at timestamp with time zone NULL,
+                CONSTRAINT ""FK_blood_handover_sessions_blood_requests_request_id"" FOREIGN KEY (request_id) REFERENCES blood_requests(request_id) ON DELETE RESTRICT,
+                CONSTRAINT ""FK_blood_handover_sessions_users_initiated_by"" FOREIGN KEY (initiated_by) REFERENCES users(user_id) ON DELETE RESTRICT,
+                CONSTRAINT ""FK_blood_handover_sessions_users_confirmed_by"" FOREIGN KEY (confirmed_by) REFERENCES users(user_id) ON DELETE RESTRICT,
+                CONSTRAINT ""FK_blood_handover_sessions_users_cancelled_by"" FOREIGN KEY (cancelled_by) REFERENCES users(user_id) ON DELETE RESTRICT
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS ""IX_blood_handover_sessions_session_code"" ON blood_handover_sessions(session_code);
+            CREATE INDEX IF NOT EXISTS idx_blood_handover_sessions_status_expires_at ON blood_handover_sessions(status, expires_at);
+            CREATE INDEX IF NOT EXISTS ""IX_blood_handover_sessions_request_id"" ON blood_handover_sessions(request_id);
+
+            CREATE TABLE IF NOT EXISTS blood_handover_session_items (
+                item_id SERIAL PRIMARY KEY,
+                handover_session_id integer NOT NULL,
+                allocation_id integer NOT NULL,
+                bag_id integer NOT NULL,
+                CONSTRAINT ""FK_blood_handover_session_items_blood_handover_sessions_handover_session_id"" FOREIGN KEY (handover_session_id) REFERENCES blood_handover_sessions(handover_session_id) ON DELETE CASCADE,
+                CONSTRAINT ""FK_blood_handover_session_items_blood_allocations_allocation_id"" FOREIGN KEY (allocation_id) REFERENCES blood_allocations(allocation_id) ON DELETE RESTRICT,
+                CONSTRAINT ""FK_blood_handover_session_items_blood_bags_bag_id"" FOREIGN KEY (bag_id) REFERENCES blood_bags(bag_id) ON DELETE RESTRICT
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS ""IX_blood_handover_session_items_handover_session_id_allocation_id"" ON blood_handover_session_items(handover_session_id, allocation_id);
+            CREATE INDEX IF NOT EXISTS ""IX_blood_handover_session_items_allocation_id"" ON blood_handover_session_items(allocation_id);
+            CREATE INDEX IF NOT EXISTS ""IX_blood_handover_session_items_bag_id"" ON blood_handover_session_items(bag_id);
         ";
 
         await context.Database.ExecuteSqlRawAsync(sql);

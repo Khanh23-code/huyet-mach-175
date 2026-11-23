@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using HuyetMach175.Api.Data.Enums;
 
 namespace HuyetMach175.Api.Data.Entities;
 
@@ -22,6 +23,9 @@ public class StorageLocation
 
     [Column("target_temperature")]
     public decimal TargetTemperature { get; set; }
+
+    [Column("zone")]
+    public StorageZone Zone { get; set; } = StorageZone.RELEASED;
 
     [Column("is_full")]
     public bool IsFull { get; set; } = false;

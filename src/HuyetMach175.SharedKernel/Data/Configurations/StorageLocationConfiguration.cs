@@ -8,5 +8,7 @@ public class StorageLocationConfiguration : IEntityTypeConfiguration<StorageLoca
 {
     public void Configure(EntityTypeBuilder<StorageLocation> builder)
     {
+        builder.Property(sl => sl.Zone)
+            .HasConversion<string>();
     }
 }
