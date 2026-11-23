@@ -67,6 +67,18 @@ public static class BloodBagTransitionRules
                 "Túi máu đang nằm trong một biên bản tiêu hủy đang chờ xử lý. Vui lòng hoàn tất hoặc rút biên bản tiêu hủy trước khi mở khóa.");
         }
 
+        if (bag.Status == BagStatus.ISSUED && targetStatus == BagStatus.TRANSFUSED)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                "Không thể chuyển thủ công từ ISSUED sang TRANSFUSED tại Kho. Lâm sàng bắt buộc xác nhận truyền máu tại giường bệnh.");
+        }
+
+        if (bag.Status == BagStatus.ISSUED && targetStatus == BagStatus.AVAILABLE)
+        {
+            throw new HttpException(StatusCodes.Status400BadRequest,
+                "Không thể chuyển thủ công từ ISSUED về AVAILABLE tại Kho. Túi chưa sử dụng phải đi qua luồng lập phiếu hoàn trả của Lâm sàng và kiểm định tiếp nhận.");
+        }
+
         // Chốt chặn 9: State Machine logic
         bool isValid = (bag.Status, targetStatus) switch
         {
@@ -75,8 +87,6 @@ public static class BloodBagTransitionRules
             (BagStatus.AVAILABLE, BagStatus.RESERVED) => true,
             (BagStatus.RESERVED, BagStatus.ISSUED) => true,
             (BagStatus.RESERVED, BagStatus.AVAILABLE) => true,
-            (BagStatus.ISSUED, BagStatus.TRANSFUSED) => true,
-            (BagStatus.ISSUED, BagStatus.AVAILABLE) => true,
             (_, BagStatus.LOCKED) => true,
             (BagStatus.LOCKED, BagStatus.AVAILABLE) => true,
             (BagStatus.LOCKED, BagStatus.READY_TESTING) => true,

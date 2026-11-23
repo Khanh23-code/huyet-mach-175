@@ -47,7 +47,7 @@ public class BloodReturnsService : IBloodReturnsService
         var allocation = await _context.BloodAllocations
             .Include(a => a.Bag)
                 .ThenInclude(b => b!.ComponentType)
-            .Include(a => a.BloodReturn)
+            .Include(a => a.BloodReturns)
             .Include(a => a.Request)
                 .ThenInclude(r => r!.Doctor)
             .FirstOrDefaultAsync(a => a.AllocationId == request.AllocationId);
@@ -62,9 +62,12 @@ public class BloodReturnsService : IBloodReturnsService
             allocation.Request,
             "Bạn chỉ có quyền lập phiếu hoàn trả cho túi máu thuộc khoa của mình.");
 
-        if (allocation.BloodReturn != null)
+        var activeReturn = allocation.BloodReturns
+            .FirstOrDefault(r => r.FinalAction != ReturnFinalAction.CANCELLED);
+
+        if (activeReturn != null)
         {
-            throw new HttpException(StatusCodes.Status409Conflict, $"Lượt phân bổ #{allocation.AllocationId} (túi {allocation.Bag.Barcode}) đã được lập phiếu hoàn trả trước đó (#{allocation.BloodReturn.ReturnId}).");
+            throw new HttpException(StatusCodes.Status409Conflict, $"Lượt phân bổ #{allocation.AllocationId} (túi {allocation.Bag.Barcode}) đã được lập phiếu hoàn trả trước đó (#{activeReturn.ReturnId}).");
         }
 
         if (allocation.Bag.Status != BagStatus.ISSUED ||
