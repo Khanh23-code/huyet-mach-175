@@ -102,6 +102,20 @@ public static class BloodRequestProcessing
         return (patientCode, patientName);
     }
 
+    public static async Task<bool> HasHospitalWideClinicalAccessAsync(ApplicationDbContext context, int userId, string approvePermissionCode)
+    {
+        return await context.Users
+            .AsNoTracking()
+            .Where(u => u.UserId == userId && u.IsActive)
+            .SelectMany(u => u.UserRoles)
+            .Where(ur => ur.Role != null && ur.Role.IsActive)
+            .AnyAsync(ur =>
+                ur.Role!.RoleCode == "SYS" ||
+                ur.Role.RoleCode == "MGT" ||
+                ur.Role.RoleCode == "BBNK" ||
+                ur.Role.RolePermissions.Any(rp => rp.Permission != null && rp.Permission.PermissionCode == approvePermissionCode));
+    }
+
     public static async Task<string> GenerateRequestCodeAsync(ApplicationDbContext context, DateTime nowUtc)
     {
         var localDate = nowUtc.AddHours(7);
@@ -119,5 +133,24 @@ public static class BloodRequestProcessing
         }
 
         return requestCode;
+    }
+
+    public static async Task<string> GenerateHandoverSessionCodeAsync(ApplicationDbContext context, DateTime nowUtc)
+    {
+        var localDate = nowUtc.AddHours(7);
+        var prefix = $"BG-{localDate:yyMMdd}-";
+
+        var countToday = await context.BloodHandoverSessions
+            .CountAsync(s => s.SessionCode.StartsWith(prefix));
+        var seq = countToday + 1;
+        var sessionCode = $"{prefix}{seq:D3}";
+
+        while (await context.BloodHandoverSessions.AnyAsync(s => s.SessionCode == sessionCode))
+        {
+            seq++;
+            sessionCode = $"{prefix}{seq:D3}";
+        }
+
+        return sessionCode;
     }
 }
