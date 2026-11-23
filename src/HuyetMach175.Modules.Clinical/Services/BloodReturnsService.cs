@@ -23,8 +23,7 @@ public class BloodReturnsService : IBloodReturnsService
     public async Task<CreateBloodReturnResponse> CreateBloodReturnAsync(CreateBloodReturnRequest request, int userId, string? ipAddress)
     {
         var currentUser = await BloodRequestProcessing.LoadActiveUserAsync(_context, userId, "Thông tin người lập phiếu hoàn trả không hợp lệ.");
-        var (returnReason, failedChecklistFlags) = BloodReturnProcessing.ValidateCreateReturnInput(request);
-        var isEligibleForRestockEvaluation = failedChecklistFlags.Count == 0;
+        var (returnReason, _) = BloodReturnProcessing.ValidateCreateReturnInput(request);
 
         await using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -41,6 +40,10 @@ public class BloodReturnsService : IBloodReturnsService
         var now = DateTime.UtcNow;
         var bag = allocation!.Bag!;
         var oldBagStatus = bag.Status;
+        var previousRestockCount = await BloodReturnProcessing.CountPreviousRestocksAsync(_context, bag.BagId);
+        var failedChecklistFlags = BloodReturnProcessing.GetFailedCreateChecklistCriteria(request.Checklist, bag.ComponentType);
+        failedChecklistFlags.AddRange(BloodReturnProcessing.EvaluateRestockEligibility(bag, previousRestockCount, now));
+        var isEligibleForRestockEvaluation = failedChecklistFlags.Count == 0;
 
         var bloodReturn = new BloodReturn
         {
@@ -270,9 +273,17 @@ public class BloodReturnsService : IBloodReturnsService
             .Take(filter.PageSize)
             .ToListAsync();
 
+        var bagIds = returns.Select(r => r.Allocation!.BagId).Distinct().ToList();
+        var returnIds = returns.Select(r => r.ReturnId).ToList();
+        var restockCounts = await BloodReturnProcessing.CountPreviousRestocksByBagIdsAsync(_context, bagIds);
+        var clinicalWarningsMap = await BloodReturnProcessing.GetClinicalChecklistWarningsAsync(_context, returnIds);
+
         return new PagedResult<PendingBloodReturnDto>
         {
-            Items = returns.Select(br => br.ToPendingDto(now)).ToList(),
+            Items = returns.Select(br => br.ToPendingDto(
+                restockCounts.GetValueOrDefault(br.Allocation!.BagId, 0),
+                clinicalWarningsMap.GetValueOrDefault(br.ReturnId) ?? new List<string>(),
+                now)).ToList(),
             TotalCount = totalCount,
             PageNumber = filter.PageNumber,
             PageSize = filter.PageSize
@@ -337,7 +348,11 @@ public class BloodReturnsService : IBloodReturnsService
             bloodReturn.Allocation.AllocationId,
             bag.BagId);
 
-        return bloodReturn.ToInspectionDto(previousLocationId, previousLocationName, DateTime.UtcNow);
+        var previousRestockCount = await BloodReturnProcessing.CountPreviousRestocksAsync(_context, bag.BagId);
+        var clinicalWarningsMap = await BloodReturnProcessing.GetClinicalChecklistWarningsAsync(_context, new[] { bloodReturn.ReturnId });
+        var clinicalWarnings = clinicalWarningsMap.GetValueOrDefault(bloodReturn.ReturnId) ?? new List<string>();
+
+        return bloodReturn.ToInspectionDto(previousLocationId, previousLocationName, previousRestockCount, clinicalWarnings, DateTime.UtcNow);
     }
 
     public async Task<ProcessBloodReturnResponse> ProcessBloodReturnAsync(int returnId, ProcessBloodReturnRequest request, int userId, string? ipAddress)
@@ -389,9 +404,11 @@ public class BloodReturnsService : IBloodReturnsService
 
         if (request.Action == ReturnFinalAction.RESTOCK)
         {
+            var previousRestockCount = await BloodReturnProcessing.CountPreviousRestocksAsync(_context, bag.BagId);
             targetLocation = await BloodReturnProcessing.ValidateRestockTargetLocationAsync(
                 _context,
                 bag,
+                previousRestockCount,
                 request.Checklist,
                 request.NewStorageLocationId,
                 now);
@@ -406,14 +423,17 @@ public class BloodReturnsService : IBloodReturnsService
         else
         {
             appliedDiscardReason = BloodReturnProcessing.ResolveDiscardReason(request, bloodReturn.ReturnReason);
+            targetLocation = await BloodReturnProcessing.ResolveDiscardHoldLocationAsync(_context, request.NewStorageLocationId);
 
             bloodReturn.Qualified = false;
             bloodReturn.FinalAction = ReturnFinalAction.DISCARD;
-            bag.Status = BagStatus.DISCARDED;
-            bag.LocationId = null;
+            bag.Status = BagStatus.LOCKED;
+            bag.LocationId = targetLocation?.LocationId;
             bag.DiscardReason = appliedDiscardReason;
 
-            responseMessage = $"Từ chối nhập kho: Đã chuyển túi máu {bag.Barcode} sang trạng thái tiêu hủy (DISCARDED).";
+            responseMessage = targetLocation != null
+                ? $"Từ chối tái nhập kho: Túi máu {bag.Barcode} được giữ trạng thái tạm khóa (LOCKED), đưa vào khu vực chờ hủy '{targetLocation.RefrigeratorName} - {targetLocation.ShelfNumber}' để lập biên bản tiêu hủy."
+                : $"Từ chối tái nhập kho: Túi máu {bag.Barcode} được giữ trạng thái tạm khóa (LOCKED) để chờ lập biên bản tiêu hủy.";
         }
 
         var auditLog = BloodHandoverProcessing.BuildAuditLog(
