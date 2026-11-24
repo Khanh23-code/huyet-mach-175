@@ -212,9 +212,9 @@ export default function LabTestWorkspace({ item, canEdit, canDispose, onDone }: 
 
                 <div className={`lab-verdict${verdict ? ` is-${verdict.toLowerCase()}` : ''}`} role="status">
                     {verdict === null && 'Chưa đủ dữ liệu: chọn kết quả cho cả 5 chỉ số.'}
-                    {verdict === 'PASSED' && 'Kết luận: ĐẠT CHUẨN. Túi sẽ chuyển sang TESTED_PASSED.'}
+                    {verdict === 'PASSED' && 'Kết luận: ĐẠT CHUẨN. Túi sẽ chuyển sang trạng thái Đạt xét nghiệm.'}
                     {verdict === 'FAILED' &&
-                        `Kết luận: KHÔNG ĐẠT (dương tính ${positives.map((p) => p.label).join(', ')}). Túi sẽ bị khóa cách ly (LOCKED).`}
+                        `Kết luận: KHÔNG ĐẠT (dương tính ${positives.map((p) => p.label).join(', ')}). Túi sẽ bị tạm khóa cách ly.`}
                 </div>
 
                 {!canEdit && (

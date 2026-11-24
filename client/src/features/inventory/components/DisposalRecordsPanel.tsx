@@ -36,7 +36,7 @@ export default function DisposalRecordsPanel({ canEdit }: Props) {
     const doExecute = async (id: number) => {
         try {
             await execute.mutateAsync(id)
-            message.success('Đã ghi nhận tiêu hủy, các túi chuyển sang DISCARDED')
+            message.success('Đã ghi nhận tiêu hủy, các túi chuyển sang trạng thái Đã hủy')
             setOpenId(null)
         } catch (e) {
             message.error(parseApiError(e).message)
@@ -59,7 +59,7 @@ export default function DisposalRecordsPanel({ canEdit }: Props) {
             {canEdit && r.status === 'APPROVED' && (
                 <Popconfirm
                     title="Xác nhận đã tiêu hủy vật lý?"
-                    description="Các túi sẽ chuyển sang DISCARDED và không thể hoàn tác."
+                    description="Các túi sẽ chuyển sang trạng thái Đã hủy và không thể hoàn tác."
                     okText="Xác nhận"
                     cancelText="Không"
                     onConfirm={() => doExecute(r.disposalId)}

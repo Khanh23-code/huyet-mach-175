@@ -602,7 +602,7 @@ export default function ReturnDetailPage() {
                                         <span>Quyết định xử lý</span>
                                         <strong>
                                             <StatusPill tone={result.finalAction === 'RESTOCK' ? 'success' : 'danger'}>
-                                                {result.finalAction}
+                                                {result.finalAction === 'RESTOCK' ? 'Tái nhập kho' : 'Chuyển khu chờ hủy'}
                                             </StatusPill>
                                         </strong>
                                     </div>
@@ -612,7 +612,7 @@ export default function ReturnDetailPage() {
                                     </div>
                                     <div className="handover-kv">
                                         <span>Trạng thái phân bổ</span>
-                                        <strong>{result.allocationStatus}</strong>
+                                        <strong>{result.allocationStatus === 'RETURNED' ? 'Đã hoàn trả' : result.allocationStatus}</strong>
                                     </div>
                                     {result.newLocationName && (
                                         <div className="handover-kv">

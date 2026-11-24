@@ -100,7 +100,7 @@ export function ClinicalReturnCreatePanel() {
         setSubmitError(null)
 
         if (!canEditReturns) {
-            setSubmitError('Tài khoản của bạn không có quyền BLOOD_RETURN_EDIT để lập phiếu hoàn trả.')
+            setSubmitError('Tài khoản của bạn chưa có quyền lập phiếu hoàn trả.')
             return
         }
 
@@ -339,7 +339,7 @@ export function ClinicalReturnCreatePanel() {
                     icon={<InfoCircleOutlined />}
                     style={{ marginBottom: 18 }}
                     message="Phiếu hoàn trả sẽ được chuyển đến bộ phận Ngân hàng máu"
-                    description="Sau khi lập phiếu hoàn trả, túi máu sẽ được phong tỏa (LOCKED) để vận chuyển về Ngân hàng máu kiểm định điều kiện nhập lại kho hoặc chuyển hủy."
+                    description="Sau khi lập phiếu hoàn trả, túi máu sẽ được tạm khóa để vận chuyển về Ngân hàng máu kiểm định điều kiện nhập lại kho hoặc chuyển hủy."
                 />
 
                 {createdReturn && (
@@ -368,9 +368,13 @@ export function ClinicalReturnCreatePanel() {
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                                     <span>Trạng thái xử lý:</span>
-                                    <StatusPill tone="info" dot={false}>{createdReturn.finalAction}</StatusPill>
+                                    <StatusPill tone="info" dot={false}>
+                                        {createdReturn.finalAction === 'PENDING_INSPECTION' ? 'Chờ Ngân hàng máu kiểm định' : createdReturn.finalAction}
+                                    </StatusPill>
                                     <span>- Trạng thái túi:</span>
-                                    <StatusPill tone="warning" dot={false}>{createdReturn.bagStatus}</StatusPill>
+                                    <StatusPill tone="warning" dot={false}>
+                                        {createdReturn.bagStatus === 'LOCKED' ? 'Tạm khóa' : createdReturn.bagStatus}
+                                    </StatusPill>
                                     <span>- Lập lúc: {formatDateTime(createdReturn.processedAt)}</span>
                                 </div>
                                 {createdReturn.warningFlags && createdReturn.warningFlags.length > 0 && (
@@ -646,7 +650,7 @@ export function ClinicalReturnCreatePanel() {
                         <Alert
                             type="warning"
                             showIcon
-                            message="Túi máu sẽ được mở khóa và khôi phục về ISSUED"
+                            message="Túi máu sẽ được mở khóa và khôi phục về trạng thái đã xuất kho"
                             description={`Phiếu #${cancellingReturn.returnId} của NB ${cancellingReturn.patientName} (${cancellingReturn.patientCode}) sẽ bị hủy trước khi Ngân hàng máu kiểm định.`}
                         />
                         <div>

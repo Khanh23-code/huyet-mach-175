@@ -64,7 +64,7 @@ export default function ExpiryAlertsPage() {
             content:
                 r.status === 'LOCKED'
                     ? `Chuyển sang trang lập biên bản hủy cho túi ${r.barcode}?`
-                    : `Túi ${r.barcode} sẽ được tạm khóa (LOCKED) rồi chuyển sang trang lập biên bản hủy. Tiếp tục?`,
+                    : `Túi ${r.barcode} sẽ được tạm khóa rồi chuyển sang trang lập biên bản hủy. Tiếp tục?`,
             okText: 'Tiếp tục',
             cancelText: 'Hủy',
             onOk: async () => {

@@ -41,7 +41,7 @@ export default function ReturnScanPage() {
             if (!barcode) return
 
             if (!canApprove) {
-                const msg = 'Tài khoản không có quyền BLOOD_RETURN_APPROVE để kiểm định túi máu hoàn trả.'
+                const msg = 'Tài khoản của bạn chưa có quyền kiểm định túi máu hoàn trả.'
                 setErrorMsg(msg)
                 message.error(msg)
                 return
@@ -54,14 +54,14 @@ export default function ReturnScanPage() {
                 const inspection = await returnsApi.scan(barcode)
 
                 if (inspection.finalAction !== 'PENDING_INSPECTION') {
-                    const msg = `Phiếu hoàn trả #${inspection.returnId} của túi ${inspection.barcode} đã được xử lý (${inspection.finalAction}).`
+                    const msg = `Phiếu hoàn trả #${inspection.returnId} của túi ${inspection.barcode} đã được xử lý trước đó.`
                     setErrorMsg(msg)
                     message.warning(msg)
                     return
                 }
 
                 if (inspection.bagStatus !== 'LOCKED') {
-                    const msg = `Túi máu ${inspection.barcode} đang ở trạng thái ${inspection.bagStatus}, không ở trạng thái LOCKED chờ kiểm định.`
+                    const msg = `Túi máu ${inspection.barcode} hiện không ở trạng thái tạm khóa chờ kiểm định.`
                     setErrorMsg(msg)
                     message.error(msg)
                     return
@@ -115,7 +115,7 @@ export default function ReturnScanPage() {
 
                 <SectionCard
                     title="Phiếu hoàn trả chờ kiểm định"
-                    subtitle="Danh sách túi máu đang ở trạng thái phong tỏa (LOCKED) từ khoa lâm sàng."
+                    subtitle="Danh sách túi máu đang được tạm khóa chờ kiểm định từ khoa lâm sàng."
                     extra={
                         <Button
                             size="small"

@@ -23,7 +23,7 @@ export const STORAGE_ZONE_META: Record<
         label: 'Khu chờ tiêu hủy',
         shortLabel: 'Chờ hủy',
         tone: 'danger',
-        hint: 'Chỉ lưu túi LOCKED / không đạt tái nhập chờ hủy',
+        hint: 'Chỉ lưu túi tạm khóa / không đạt tái nhập chờ hủy',
     },
 }
 

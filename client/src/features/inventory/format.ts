@@ -58,5 +58,5 @@ export const explainNotSeparable = (bag: BloodBagLite | undefined, code: string)
     if (!bag) return `Không tìm thấy túi máu với mã '${code}'.`
     if (bag.componentTypeCode !== 'WB') return `Túi '${bag.barcode}' không phải máu toàn phần, không thể điều chế.`
     if (bag.status === 'PROCESSED') return `Túi '${bag.barcode}' đã được điều chế trước đó.`
-    return `Túi '${bag.barcode}' đang ở trạng thái ${bag.status}. Chỉ túi đã xét nghiệm đạt (TESTED_PASSED) mới được điều chế.`
+    return `Túi '${bag.barcode}' hiện chưa đạt điều kiện điều chế. Chỉ túi đã xét nghiệm đạt chuẩn mới được điều chế.`
 }

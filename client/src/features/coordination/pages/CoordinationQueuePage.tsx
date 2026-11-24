@@ -653,14 +653,14 @@ export default function CoordinationQueuePage() {
                                             type="warning"
                                             showIcon
                                             message="Chế độ chỉ xem"
-                                            description="Tài khoản hiện tại không có quyền điều phối hoặc giữ chỗ túi máu (BLOOD_REQUEST_APPROVE)."
+                                            description="Tài khoản hiện tại không có quyền điều phối hoặc giữ chỗ túi máu."
                                         />
                                     ) : !isPendingRequest ? (
                                         <Alert
                                             type="info"
                                             showIcon
-                                            message={`Phiếu đang ở trạng thái ${requestDetail.status}`}
-                                            description="Chỉ các phiếu đang ở trạng thái PENDING mới có thể thẩm định từ chối hoặc tiếp tục chọn giữ chỗ túi máu."
+                                            message="Phiếu không còn ở trạng thái chờ xử lý"
+                                            description="Chỉ các phiếu đang chờ điều phối mới có thể thẩm định từ chối hoặc tiếp tục chọn giữ chỗ túi máu."
                                         />
                                     ) : (
                                         <Alert

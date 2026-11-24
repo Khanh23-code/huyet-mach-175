@@ -111,8 +111,8 @@ export default function BagScanResult({ bag, onChanged, onQueued }: Props) {
                 <Alert
                     type="info"
                     showIcon
-                    title="Túi máu đang ở trạng thái Đã xuất kho (ISSUED)"
-                    description="Không thể chuyển thủ công sang Sẵn sàng (AVAILABLE) hoặc Đã truyền (TRANSFUSED) tại kho. Việc xác nhận truyền máu tại giường hoặc lập phiếu hoàn trả phải thực hiện trên phân hệ Lâm sàng."
+                    title="Túi máu đang ở trạng thái Đã xuất kho"
+                    description="Không thể chuyển thủ công sang Có sẵn hoặc Đã truyền tại kho. Việc xác nhận truyền máu tại giường hoặc lập phiếu hoàn trả phải thực hiện trên phân hệ Lâm sàng."
                 />
             )}
             {bag.isExpired && !bag.isDiscarded && (
