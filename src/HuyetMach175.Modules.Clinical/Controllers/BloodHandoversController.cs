@@ -21,6 +21,22 @@ public class BloodHandoversController : ControllerBase
         _bloodHandoversService = bloodHandoversService;
     }
 
+    [HttpGet("reserved-requests")]
+    [HasPermission("BLOOD_REQUEST_APPROVE")]
+    [EndpointSummary("Lấy danh sách đơn yêu cầu kèm các túi máu đang giữ chỗ (RESERVED) chờ bàn giao")]
+    [EndpointDescription(
+        "Nhóm toàn bộ túi máu đang ở trạng thái `RESERVED` theo từng phiếu yêu cầu (`BloodRequest`), kèm thông tin bệnh nhân, khoa lâm sàng và trạng thái phiên bàn giao đang chờ (nếu có) để BBNK mở phiên bàn giao theo lô đúng từng đơn.\n\n" +
+        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **BLOOD_REQUEST_APPROVE** (vai trò BBNK).")]
+    [ProducesResponseType(typeof(List<ReservedHandoverRequestDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetReservedRequests([FromQuery] string? search, [FromQuery] string? urgencyLevel)
+    {
+        var result = await _bloodHandoversService.GetReservedRequestsForHandoverAsync(search, urgencyLevel);
+        return Ok(result);
+    }
+
     [HttpPost("sessions")]
     [HasPermission("BLOOD_REQUEST_APPROVE")]
     [EndpointSummary("Khởi tạo phiên bàn giao máu 2 pha theo lô (Pha 1 - BBNK)")]

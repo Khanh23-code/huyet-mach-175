@@ -146,3 +146,40 @@ public class ConfirmTransfusionResponse
     public string? ConfirmedByName { get; set; }
     public DateTime TransfusedAt { get; set; }
 }
+
+public class ReservedHandoverBagDto
+{
+    public int AllocationId { get; set; }
+    public int BagId { get; set; }
+    public string Barcode { get; set; } = string.Empty;
+    public int ComponentTypeId { get; set; }
+    public ComponentCode ComponentCode { get; set; }
+    public string ComponentName { get; set; } = string.Empty;
+    public string BloodType { get; set; } = string.Empty;
+    public int VolumeMl { get; set; }
+    public DateTime ExpiredAt { get; set; }
+    public bool IsExpired { get; set; }
+    public string? LocationName { get; set; }
+    public DateTime ReservedAt { get; set; }
+    public string? ReservedByName { get; set; }
+    public int? ActiveSessionId { get; set; }
+    public string? ActiveSessionCode { get; set; }
+}
+
+public class ReservedHandoverRequestDto
+{
+    public int RequestId { get; set; }
+    public string RequestCode { get; set; } = string.Empty;
+    public RequestStatus RequestStatus { get; set; }
+    public UrgencyLevel UrgencyLevel { get; set; }
+    public string PatientCode { get; set; } = string.Empty;
+    public string PatientName { get; set; } = string.Empty;
+    public string PatientBloodType { get; set; } = string.Empty;
+    public string? DepartmentName { get; set; }
+    public string? DoctorName { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public int TotalReservedBags { get; set; }
+    public int ReadyForSessionCount { get; set; }
+    public int InPendingSessionCount { get; set; }
+    public List<ReservedHandoverBagDto> Bags { get; set; } = new List<ReservedHandoverBagDto>();
+}

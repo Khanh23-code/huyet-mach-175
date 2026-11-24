@@ -118,4 +118,32 @@ public static class BloodHandoverMappings
             TransfusedAt = transfusedAt
         };
     }
+
+    public static ReservedHandoverBagDto ToReservedHandoverBagDto(
+        this BloodAllocation allocation,
+        (int SessionId, string SessionCode)? activeSession,
+        DateTime nowUtc)
+    {
+        var bag = allocation.Bag!;
+        return new ReservedHandoverBagDto
+        {
+            AllocationId = allocation.AllocationId,
+            BagId = bag.BagId,
+            Barcode = bag.Barcode,
+            ComponentTypeId = bag.ComponentTypeId,
+            ComponentCode = bag.ComponentType?.TypeCode ?? ComponentCode.WB,
+            ComponentName = bag.ComponentType?.TypeName ?? string.Empty,
+            BloodType = BloodCompatibilityRules.FormatBloodGroup(bag.BloodType, bag.RhFactor),
+            VolumeMl = bag.VolumeMl,
+            ExpiredAt = bag.ExpiredAt,
+            IsExpired = bag.ExpiredAt <= nowUtc,
+            LocationName = bag.Location != null
+                ? $"{bag.Location.RefrigeratorName} - {bag.Location.ShelfNumber}"
+                : null,
+            ReservedAt = allocation.ReservedAt,
+            ReservedByName = allocation.ReservedByUser?.FullName,
+            ActiveSessionId = activeSession?.SessionId,
+            ActiveSessionCode = activeSession?.SessionCode
+        };
+    }
 }

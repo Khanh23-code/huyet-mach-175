@@ -10,12 +10,12 @@ import type {
     ComponentTypeOption,
     CoordinationQueueItemDto,
     CreateHandoverSessionRequest,
-    DispatchBloodBagRequest,
-    DispatchBloodBagResponse,
     HandoverSessionDto,
     PendingHandoverSessionFilter,
     RejectBloodRequestDto,
     RejectBloodRequestResponse,
+    ReservedHandoverFilter,
+    ReservedHandoverRequestDto,
     SupplyDemandResponse,
 } from './types'
 
@@ -110,6 +110,15 @@ export const coordinationApi = {
             .then((res) => res.data),
 
     /**
+     * Lấy danh sách đơn yêu cầu kèm các túi máu đang giữ chỗ (RESERVED)
+     * GET /api/blood-handovers/reserved-requests
+     */
+    getReservedRequests: (params?: ReservedHandoverFilter) =>
+        axiosClient
+            .get<ReservedHandoverRequestDto[]>('/api/blood-handovers/reserved-requests', { params })
+            .then((res) => res.data),
+
+    /**
      * Khởi tạo phiên bàn giao máu 2 pha theo lô (Pha 1 - BBNK)
      * POST /api/blood-handovers/sessions
      */
@@ -143,11 +152,5 @@ export const coordinationApi = {
     cancelHandoverSession: (sessionId: number, data?: CancelHandoverSessionRequest) =>
         axiosClient
             .post<HandoverSessionDto>(`/api/blood-handovers/sessions/${sessionId}/cancel`, data ?? {})
-            .then((res) => res.data),
-
-    /** @deprecated Sẽ gỡ ở bước FE-1.2 sau khi chuyển HandoverScanPage/HandoverDetailPage sang phiên 2 pha */
-    dispatchBag: (data: DispatchBloodBagRequest) =>
-        axiosClient
-            .post<DispatchBloodBagResponse>('/api/blood-handovers/dispatch', data)
             .then((res) => res.data),
 }

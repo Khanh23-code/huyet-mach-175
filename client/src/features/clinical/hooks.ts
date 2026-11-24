@@ -14,6 +14,7 @@ import type {
     CreateBloodRequestDto,
     CreateBloodReturnRequest,
     EligibleReturnBag,
+    HandoverSessionDto,
     IneligibleReturnBag,
     PendingBloodReturnFilter,
     PendingClinicalReceiptFilter,
@@ -154,17 +155,24 @@ export function usePendingHandoverSessions(
 /** Hook xem chi tiết một phiên bàn giao máu */
 export function useHandoverSessionDetail(
     sessionId: number | null,
-    options?: { enabled?: boolean; refetchInterval?: number | false },
+    options?: {
+        enabled?: boolean
+        refetchInterval?: number | false | ((data?: HandoverSessionDto) => number | false)
+    },
 ) {
     const { can } = usePermission()
     const canView = can(PERMISSIONS.BLOOD_REQUEST_VIEW)
     const validId = typeof sessionId === 'number' && sessionId > 0 ? sessionId : 0
+    const intervalOption = options?.refetchInterval
 
     return useQuery({
         queryKey: CLINICAL_QUERY_KEYS.handoverSessionDetail(validId),
         queryFn: () => clinicalApi.getHandoverSessionById(validId),
         enabled: canView && validId > 0 && (options?.enabled ?? true),
-        refetchInterval: options?.refetchInterval ?? false,
+        refetchInterval:
+            typeof intervalOption === 'function'
+                ? (query) => intervalOption(query.state.data)
+                : (intervalOption ?? false),
         ...SESSION_CACHE_OPTIONS,
     })
 }

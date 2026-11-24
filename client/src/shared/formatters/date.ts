@@ -122,3 +122,16 @@ export function addDaysUtcIso(isoFull: string, days: number): string {
     if (Number.isNaN(t)) return isoFull
     return new Date(t + days * 86_400_000).toISOString()
 }
+
+export function computeRemainingSeconds(expiresAt: string, nowMs: number): number {
+    const expMs = new Date(expiresAt).getTime()
+    if (Number.isNaN(expMs)) return 0
+    return Math.max(0, Math.floor((expMs - nowMs) / 1000))
+}
+
+export function formatCountdown(totalSeconds: number): string {
+    const clamped = Math.max(0, Math.floor(totalSeconds))
+    const mins = Math.floor(clamped / 60)
+    const secs = clamped % 60
+    return `${pad(mins)}:${pad(secs)}`
+}

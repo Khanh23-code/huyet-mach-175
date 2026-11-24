@@ -76,3 +76,43 @@ export type HandoverBloodGroup = {
     bloodType: AboGroup
     rhFactor: RhValue
 }
+
+export interface ReservedHandoverFilter {
+    search?: string
+    urgencyLevel?: string
+}
+
+export interface ReservedHandoverBagDto {
+    allocationId: number
+    bagId: number
+    barcode: string
+    componentTypeId: number
+    componentCode: HandoverComponentCode | string
+    componentName: string
+    bloodType: string
+    volumeMl: number
+    expiredAt: string
+    isExpired: boolean
+    locationName?: string | null
+    reservedAt: string
+    reservedByName?: string | null
+    activeSessionId?: number | null
+    activeSessionCode?: string | null
+}
+
+export interface ReservedHandoverRequestDto {
+    requestId: number
+    requestCode: string
+    requestStatus: HandoverRequestStatus
+    urgencyLevel: HandoverUrgencyLevel
+    patientCode: string
+    patientName: string
+    patientBloodType: string
+    departmentName?: string | null
+    doctorName?: string | null
+    createdAt: string
+    totalReservedBags: number
+    readyForSessionCount: number
+    inPendingSessionCount: number
+    bags: ReservedHandoverBagDto[]
+}
