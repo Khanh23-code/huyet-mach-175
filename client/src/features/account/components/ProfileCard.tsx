@@ -64,7 +64,7 @@ export default function ProfileCard({ profile, loading }: Props) {
                         {isActive ? 'Hoạt động' : 'Đã khóa'}
                     </StatusPill>
                     <h2>{displayName || name}</h2>
-                    <p>{[roleSummary, profile.departmentName].filter(Boolean).join(' · ')}</p>
+                    <p>{[roleSummary, profile.departmentName].filter(Boolean).join(' - ')}</p>
                 </div>
             </header>
 

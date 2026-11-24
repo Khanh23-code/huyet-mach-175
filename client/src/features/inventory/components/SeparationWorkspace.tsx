@@ -162,7 +162,7 @@ export default function SeparationWorkspace({ parent, canEdit, onDone }: Props) 
                                 disabled={disabled}
                                 onChange={(e) => patch(code, { enabled: e.target.checked })}
                             >
-                                <b>{code}</b> · {COMPONENT_LABEL[code]}
+                                <b>{code}</b> - {COMPONENT_LABEL[code]}
                             </Checkbox>
                             <InputNumber
                                 min={1}
@@ -186,7 +186,7 @@ export default function SeparationWorkspace({ parent, canEdit, onDone }: Props) 
                                     Mã túi: <span className="inv-mono">{childBarcode(parent.barcode, code)}</span>
                                     {expiry && (
                                         <>
-                                            {' · '}Hạn dùng: {new Date(expiry).toLocaleString('vi-VN')}
+                                            {' - '}Hạn dùng: {new Date(expiry).toLocaleString('vi-VN')}
                                             {expired && ' (đã quá hạn, không thể tạo)'}
                                         </>
                                     )}

@@ -477,4 +477,105 @@ public class BloodHandoversService : IBloodHandoversService
 
         return bag.ToConfirmTransfusionResponse(allocation, currentUser, now);
     }
+
+    public async Task<List<ReservedHandoverRequestDto>> GetReservedRequestsForHandoverAsync(string? search, string? urgencyLevel)
+    {
+        var now = DateTime.UtcNow;
+        await BloodHandoverProcessing.ExpireOverdueSessionsAndClearTrackerAsync(_context, now);
+
+        UrgencyLevel? parsedUrgency = null;
+        if (!string.IsNullOrWhiteSpace(urgencyLevel))
+        {
+            if (!Enum.TryParse<UrgencyLevel>(urgencyLevel.Trim(), true, out var urgency))
+            {
+                throw new HttpException(StatusCodes.Status400BadRequest, $"Mức độ khẩn cấp '{urgencyLevel}' không hợp lệ.");
+            }
+            parsedUrgency = urgency;
+        }
+
+        var allocationsQuery = _context.BloodAllocations
+            .AsNoTracking()
+            .Include(a => a.ReservedByUser)
+            .Include(a => a.Bag)
+                .ThenInclude(b => b!.ComponentType)
+            .Include(a => a.Bag)
+                .ThenInclude(b => b!.Location)
+            .Include(a => a.Request)
+                .ThenInclude(r => r!.Doctor)
+                    .ThenInclude(d => d!.Department)
+            .Where(a =>
+                a.Status == AllocationStatus.RESERVED &&
+                a.Bag != null &&
+                a.Bag.Status == BagStatus.RESERVED &&
+                a.Request != null &&
+                (a.Request.Status == RequestStatus.PENDING || a.Request.Status == RequestStatus.READY));
+
+        if (parsedUrgency.HasValue)
+        {
+            allocationsQuery = allocationsQuery.Where(a => a.Request!.UrgencyLevel == parsedUrgency.Value);
+        }
+
+        var allocations = await allocationsQuery.ToListAsync();
+
+        var allocationIds = allocations.Select(a => a.AllocationId).ToList();
+        var pendingSessionItems = allocationIds.Count == 0
+            ? new Dictionary<int, (int SessionId, string SessionCode)>()
+            : await _context.BloodHandoverSessionItems
+                .AsNoTracking()
+                .Include(i => i.HandoverSession)
+                .Where(i =>
+                    allocationIds.Contains(i.AllocationId) &&
+                    i.HandoverSession != null &&
+                    i.HandoverSession.Status == HandoverSessionStatus.PENDING &&
+                    i.HandoverSession.ExpiresAt > now)
+                .ToDictionaryAsync(
+                    i => i.AllocationId,
+                    i => (i.HandoverSessionId, i.HandoverSession!.SessionCode));
+
+        var keyword = search?.Trim();
+
+        return allocations
+            .GroupBy(a => a.RequestId)
+            .Select(group =>
+            {
+                var req = group.First().Request!;
+                var bags = group
+                    .OrderBy(a => a.Bag!.ExpiredAt)
+                    .ThenBy(a => a.BagId)
+                    .Select(a => a.ToReservedHandoverBagDto(
+                        pendingSessionItems.TryGetValue(a.AllocationId, out var sessionInfo) ? sessionInfo : null,
+                        now))
+                    .ToList();
+
+                var inPendingCount = bags.Count(b => b.ActiveSessionId.HasValue);
+
+                return new ReservedHandoverRequestDto
+                {
+                    RequestId = req.RequestId,
+                    RequestCode = req.RequestCode,
+                    RequestStatus = req.Status,
+                    UrgencyLevel = req.UrgencyLevel,
+                    PatientCode = req.PatientCode,
+                    PatientName = req.PatientName,
+                    PatientBloodType = BloodCompatibilityRules.FormatBloodGroup(req.PatientBloodType, req.PatientRh),
+                    DepartmentName = req.Doctor?.Department?.DepartmentName,
+                    DoctorName = req.Doctor?.FullName,
+                    CreatedAt = req.CreatedAt,
+                    TotalReservedBags = bags.Count,
+                    ReadyForSessionCount = bags.Count - inPendingCount,
+                    InPendingSessionCount = inPendingCount,
+                    Bags = bags
+                };
+            })
+            .Where(dto => string.IsNullOrWhiteSpace(keyword) ||
+                dto.RequestCode.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                dto.PatientCode.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                dto.PatientName.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                (dto.DepartmentName?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                dto.Bags.Any(b => b.Barcode.Contains(keyword, StringComparison.OrdinalIgnoreCase)))
+            .OrderBy(dto => BloodCompatibilityRules.GetUrgencyRank(dto.UrgencyLevel))
+            .ThenBy(dto => dto.CreatedAt)
+            .ThenBy(dto => dto.RequestId)
+            .ToList();
+    }
 }

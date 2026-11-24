@@ -70,7 +70,7 @@ export const ConfirmSendRequestModal: React.FC<ConfirmSendRequestModalProps> = (
                 <div className="confirm-modal__row">
                     <span className="confirm-modal__label">Người bệnh</span>
                     <span className="confirm-modal__value font-bold">
-                        {data.patientName} · {data.patientCode}
+                        {data.patientName} - {data.patientCode}
                     </span>
                 </div>
                 <div className="confirm-modal__row">
@@ -82,7 +82,7 @@ export const ConfirmSendRequestModal: React.FC<ConfirmSendRequestModalProps> = (
                 <div className="confirm-modal__row">
                     <span className="confirm-modal__label">Sản phẩm &amp; Số lượng</span>
                     <span className="confirm-modal__value font-bold">
-                        {data.units} túi · {data.componentName}
+                        {data.units} túi - {data.componentName}
                     </span>
                 </div>
                 <div className="confirm-modal__row">

@@ -47,14 +47,14 @@ export function formatDateOnly(d?: string | null, fallback = '—'): string {
 export const fmtDate = formatDateOnly
 
 /**
- * Định dạng Date & Time: "DD/MM/YYYY · HH:mm"
+ * Định dạng Date & Time: "DD/MM/YYYY - HH:mm"
  * Hiển thị theo múi giờ client
  */
 export function formatDateTime(iso?: string | null, fallback = '—'): string {
     if (!iso) return fallback
     const d = new Date(iso)
     if (Number.isNaN(d.getTime())) return fallback
-    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} · ${pad(d.getHours())}:${pad(d.getMinutes())}`
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} - ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 /**
@@ -74,13 +74,13 @@ export function formatDateTimeMedical(iso?: string | null, fallback = '—'): st
 export const fmtDateTime = formatDateTimeMedical
 
 /**
- * Định dạng Date & Time có giây: "DD/MM/YYYY · HH:mm:ss"
+ * Định dạng Date & Time có giây: "DD/MM/YYYY - HH:mm:ss"
  */
 export function formatDateTimeSec(iso?: string | null, fallback = '—'): string {
     if (!iso) return fallback
     const d = new Date(iso)
     if (Number.isNaN(d.getTime())) return fallback
-    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} · ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} - ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
 /**
@@ -121,4 +121,17 @@ export function addDaysUtcIso(isoFull: string, days: number): string {
     const t = new Date(isoFull).getTime()
     if (Number.isNaN(t)) return isoFull
     return new Date(t + days * 86_400_000).toISOString()
+}
+
+export function computeRemainingSeconds(expiresAt: string, nowMs: number): number {
+    const expMs = new Date(expiresAt).getTime()
+    if (Number.isNaN(expMs)) return 0
+    return Math.max(0, Math.floor((expMs - nowMs) / 1000))
+}
+
+export function formatCountdown(totalSeconds: number): string {
+    const clamped = Math.max(0, Math.floor(totalSeconds))
+    const mins = Math.floor(clamped / 60)
+    const secs = clamped % 60
+    return `${pad(mins)}:${pad(secs)}`
 }

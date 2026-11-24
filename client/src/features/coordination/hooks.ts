@@ -6,9 +6,12 @@ import { coordinationApi, FALLBACK_COMPONENT_TYPES } from './coordinationApi'
 import type {
     AllocateBloodBagsRequest,
     BloodCoordinationQueueFilter,
-    DispatchBloodBagRequest,
-    DispatchBloodBagResponse,
+    CancelHandoverSessionRequest,
+    CreateHandoverSessionRequest,
+    HandoverSessionDto,
+    PendingHandoverSessionFilter,
     RejectBloodRequestDto,
+    ReservedHandoverFilter,
 } from './types'
 
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000 // 5 phút
@@ -35,6 +38,12 @@ export const COORDINATION_QUERY_KEYS = {
         requestItemId: number,
         includeCompatible: boolean,
     ) => ['coordination', 'availableBags', requestId, requestItemId, includeCompatible] as const,
+    pendingSessions: (filter?: PendingHandoverSessionFilter) =>
+        ['coordination', 'handoverSessions', 'pending', filter] as const,
+    reservedRequests: (filter?: ReservedHandoverFilter) =>
+        ['coordination', 'reservedRequests', filter] as const,
+    sessionDetail: (sessionId: number) =>
+        ['coordination', 'handoverSessions', sessionId] as const,
 }
 
 function extractErrorMessage(err: unknown, fallback: string): string | null {
@@ -239,36 +248,87 @@ export function useRejectBloodRequest() {
     })
 }
 
-const DISPATCHED_HANDOVER_CACHE_KEY = ['handover-dispatched-cache'] as const
+export function useReservedHandoverRequests(
+    filter?: ReservedHandoverFilter,
+    options?: { enabled?: boolean },
+) {
+    const { can } = usePermission()
+    const canApprove = can(PERMISSIONS.BLOOD_REQUEST_APPROVE)
 
-export function useDispatchedHandoverMap() {
-    return useQuery<Record<string, DispatchBloodBagResponse>>({
-        queryKey: DISPATCHED_HANDOVER_CACHE_KEY,
-        queryFn: () => ({}),
-        staleTime: Infinity,
-        gcTime: Infinity,
-        enabled: false,
-        initialData: {},
+    return useQuery({
+        queryKey: COORDINATION_QUERY_KEYS.reservedRequests(filter),
+        queryFn: () => coordinationApi.getReservedRequests(filter),
+        enabled: canApprove && (options?.enabled ?? true),
+        ...SESSION_CACHE_OPTIONS,
     })
 }
 
-export function useDispatchBag() {
+export function usePendingHandoverSessions(
+    filter?: PendingHandoverSessionFilter,
+    options?: { enabled?: boolean; refetchInterval?: number | false },
+) {
+    const { can } = usePermission()
+    const canView = can(PERMISSIONS.BLOOD_REQUEST_VIEW)
+
+    return useQuery({
+        queryKey: COORDINATION_QUERY_KEYS.pendingSessions(filter),
+        queryFn: () => coordinationApi.getPendingHandoverSessions(filter),
+        enabled: canView && (options?.enabled ?? true),
+        refetchInterval: options?.refetchInterval ?? false,
+        ...SESSION_CACHE_OPTIONS,
+    })
+}
+
+export function useHandoverSessionDetail(
+    sessionId: number | null,
+    options?: {
+        enabled?: boolean
+        refetchInterval?: number | false | ((data?: HandoverSessionDto) => number | false)
+    },
+) {
+    const { can } = usePermission()
+    const canView = can(PERMISSIONS.BLOOD_REQUEST_VIEW)
+    const validId = typeof sessionId === 'number' && sessionId > 0 ? sessionId : 0
+    const intervalOption = options?.refetchInterval
+
+    return useQuery({
+        queryKey: COORDINATION_QUERY_KEYS.sessionDetail(validId),
+        queryFn: () => coordinationApi.getHandoverSessionById(validId),
+        enabled: canView && validId > 0 && (options?.enabled ?? true),
+        refetchInterval:
+            typeof intervalOption === 'function'
+                ? (query) => intervalOption(query.state.data)
+                : (intervalOption ?? false),
+        ...SESSION_CACHE_OPTIONS,
+    })
+}
+
+export function useCreateHandoverSession() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (data: DispatchBloodBagRequest) => coordinationApi.dispatchBag(data),
+        mutationFn: (data: CreateHandoverSessionRequest) => coordinationApi.createHandoverSession(data),
         onSuccess: (res) => {
-            queryClient.setQueryData<Record<string, DispatchBloodBagResponse>>(
-                DISPATCHED_HANDOVER_CACHE_KEY,
-                (prev) => ({
-                    ...(prev ?? {}),
-                    [res.barcode.trim().toLowerCase()]: res,
-                }),
-            )
-            queryClient.invalidateQueries({ queryKey: ['inventory'] })
             queryClient.invalidateQueries({ queryKey: ['coordination'] })
             queryClient.invalidateQueries({ queryKey: COORDINATION_QUERY_KEYS.detail(res.requestId) })
             queryClient.invalidateQueries({ queryKey: ['clinical'] })
+            queryClient.invalidateQueries({ queryKey: ['inventory'] })
+        },
+    })
+}
+
+export function useCancelHandoverSession() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({ sessionId, data }: { sessionId: number; data?: CancelHandoverSessionRequest }) =>
+            coordinationApi.cancelHandoverSession(sessionId, data),
+        onSuccess: (res) => {
+            queryClient.invalidateQueries({ queryKey: ['coordination'] })
+            queryClient.invalidateQueries({ queryKey: COORDINATION_QUERY_KEYS.detail(res.requestId) })
+            queryClient.invalidateQueries({ queryKey: COORDINATION_QUERY_KEYS.sessionDetail(res.handoverSessionId) })
+            queryClient.invalidateQueries({ queryKey: ['clinical'] })
+            queryClient.invalidateQueries({ queryKey: ['inventory'] })
         },
     })
 }

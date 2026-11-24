@@ -23,7 +23,7 @@ interface Props {
     onQueued: () => void
 }
 
-const SOON = 'Sắp ra mắt'
+const CLINICAL_MANAGED = 'Nghiệp vụ cấp phát / lâm sàng'
 
 /** Dùng `key={barcode + currentStatus}` ở chỗ gọi để reset form khi đổi túi/trạng thái. */
 export default function BagScanResult({ bag, onChanged, onQueued }: Props) {
@@ -40,15 +40,16 @@ export default function BagScanResult({ bag, onChanged, onQueued }: Props) {
     const options = [
         ...MANUAL_STATUSES.map((s) => ({ value: s, label: statusMeta(s).label, disabled: !targets.includes(s) })),
         ...(['RESERVED', 'ISSUED'] as BagStatus[]).map((s) => ({
-            value: s, label: `${statusMeta(s).label} (${SOON})`, disabled: true,
+            value: s, label: `${statusMeta(s).label} (${CLINICAL_MANAGED})`, disabled: true,
         })),
     ]
     const locOptions = (locs?.items ?? [])
         .filter((l) => l.isActive && !l.isFull)
         .map((l) => ({ value: l.locationId, label: `${l.refrigeratorName} - ${l.shelfNumber} (${l.targetTemperature}°C)` }))
     const needsLocation = target === 'READY_TESTING' || target === 'AVAILABLE'
-    // Túi hết hạn là trạng thái cuối trên màn quét: chỉ xử lý qua biên bản tiêu hủy.
-    const terminal = bag.isDiscarded || bag.currentStatus === 'TRANSFUSED' || bag.isExpired
+    const isIssued = bag.currentStatus === 'ISSUED'
+    // Túi đã tiêu hủy, đã truyền, đã xuất kho (ISSUED) hoặc hết hạn không cập nhật thủ công tại màn quét kho.
+    const terminal = bag.isDiscarded || bag.currentStatus === 'TRANSFUSED' || bag.isExpired || isIssued
 
     const submit = async () => {
         if (!target) return
@@ -78,7 +79,7 @@ export default function BagScanResult({ bag, onChanged, onQueued }: Props) {
         if (AUTO_STATUSES.includes(next))
             return `Bước kế tiếp "${bag.nextStatusLabel ?? statusMeta(next).label}" được cập nhật tự động ${next === 'PROCESSED' ? 'khi điều chế chế phẩm' : 'khi có kết quả xét nghiệm'}, không cập nhật thủ công tại đây.`
         if (COMING_SOON_STATUSES.includes(next))
-            return `Bước kế tiếp "${bag.nextStatusLabel ?? statusMeta(next).label}" thuộc luồng cấp phát, ${SOON.toLowerCase()}.`
+            return `Bước kế tiếp "${bag.nextStatusLabel ?? statusMeta(next).label}" thuộc luồng cấp phát hoặc lâm sàng, được cập nhật tự động qua phiên bàn giao / truyền máu.`
         return null
     })()
 
@@ -87,7 +88,7 @@ export default function BagScanResult({ bag, onChanged, onQueued }: Props) {
             <div className="scan-result__head">
                 <div>
                     <div className="inv-mono scan-result__code">{bag.barcode}</div>
-                    <div className="stk-muted">{bag.componentType} · {bag.volumeMl} ml</div>
+                    <div className="stk-muted">{bag.componentType} - {bag.volumeMl} ml</div>
                 </div>
                 <div className="inv-actions">
                     <BloodGroupTag value={bag.bloodGroup} />
@@ -103,6 +104,14 @@ export default function BagScanResult({ bag, onChanged, onQueued }: Props) {
 
             {bag.isDiscarded && <Alert type="error" showIcon title="Túi máu đã bị tiêu hủy, không thể cập nhật trạng thái." />}
             {bag.isLocked && !bag.isDiscarded && <Alert type="warning" showIcon title="Túi máu đang bị tạm khóa." />}
+            {isIssued && !bag.isDiscarded && !bag.isExpired && (
+                <Alert
+                    type="info"
+                    showIcon
+                    title="Túi máu đang ở trạng thái Đã xuất kho (ISSUED)"
+                    description="Không thể chuyển thủ công sang Sẵn sàng (AVAILABLE) hoặc Đã truyền (TRANSFUSED) tại kho. Việc xác nhận truyền máu tại giường hoặc lập phiếu hoàn trả phải thực hiện trên phân hệ Lâm sàng."
+                />
+            )}
             {bag.isExpired && !bag.isDiscarded && (
                 <Alert
                     type="error"
@@ -114,12 +123,11 @@ export default function BagScanResult({ bag, onChanged, onQueued }: Props) {
             <ol className="scan-steps" aria-label="Vòng đời túi máu">
                 {bag.timeline.map((s) => {
                     const state = s.completed ? 'done' : s.step === bag.currentStep ? 'current' : 'todo'
-                    const soon = s.step >= 5 && !s.completed
                     return (
-                        <li key={s.step} className={`scan-step is-${state}${soon ? ' is-soon' : ''}`}>
+                        <li key={s.step} className={`scan-step is-${state}`}>
                             <span className="scan-step__dot">{s.completed ? <CheckCircleFilled /> : s.step === bag.currentStep ? <ClockCircleOutlined /> : s.step}</span>
                             <b>{s.name}</b>
-                            <small>{s.completed ? fmtDateTimeSec(s.timestamp) : soon ? SOON : 'Chưa thực hiện'}</small>
+                            <small>{s.completed ? fmtDateTimeSec(s.timestamp) : 'Chưa thực hiện'}</small>
                         </li>
                     )
                 })}

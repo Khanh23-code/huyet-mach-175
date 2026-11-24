@@ -82,7 +82,7 @@ export default function LabTestWorkspace({ item, canEdit, canDispose, onDone }: 
                         {failed ? 'Túi máu không đạt chuẩn' : 'Túi máu đạt chuẩn'}
                     </>
                 }
-                subtitle={`Túi ${result.barcode} · Nhóm máu khẳng định ${result.confirmedBloodGroup} · KTV ${result.technicianName} · ${fmtDateTime(result.testedAt)}`}
+                subtitle={`Túi ${result.barcode} - Nhóm máu khẳng định ${result.confirmedBloodGroup} - KTV ${result.technicianName} - ${fmtDateTime(result.testedAt)}`}
                 bodyClassName="inv-result"
             >
                 <Alert

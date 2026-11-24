@@ -138,16 +138,16 @@ export default function ReturnScanPage() {
                                         </StatusPill>
                                     </div>
                                     <div className="return-pending-item__title">
-                                        <BloodGroupTag value={item.bloodType} size="sm" /> · {item.componentName} ({item.volumeMl} ml)
+                                        <BloodGroupTag value={item.bloodType} size="sm" /> - {item.componentName} ({item.volumeMl} ml)
                                     </div>
                                     <div className="return-pending-item__meta">
-                                        {item.departmentName || 'Khoa lâm sàng'} · Phiếu YC: {item.requestCode}
+                                        {item.departmentName || 'Khoa lâm sàng'} - Phiếu YC: {item.requestCode}
                                     </div>
                                     <div className="return-pending-item__sub">
                                         Lý do: {item.returnReason}
                                     </div>
                                     <div className="return-pending-item__time">
-                                        Lập lúc {formatDateTime(item.processedAt)} · {item.returnedByName || 'Lâm sàng'}
+                                        Lập lúc {formatDateTime(item.processedAt)} - {item.returnedByName || 'Lâm sàng'}
                                     </div>
                                 </div>
                             ))}

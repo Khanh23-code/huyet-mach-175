@@ -109,7 +109,7 @@ export default function StorageLocationFormModal({ open, location, onClose }: Pr
                             status={errors.targetTemperature ? 'error' : ''}
                         />
                     )} />
-                    <div className="stk-hint">Gợi ý: máu toàn phần / hồng cầu 1–10°C · huyết tương ≤ -18°C · tiểu cầu 20–24°C</div>
+                    <div className="stk-hint">Gợi ý: máu toàn phần / hồng cầu 1–10°C - huyết tương ≤ -18°C - tiểu cầu 20–24°C</div>
                     {errors.targetTemperature && <div className="stk-err">{errors.targetTemperature.message}</div>}
                 </div>
 

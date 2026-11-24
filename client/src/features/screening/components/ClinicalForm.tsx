@@ -257,7 +257,7 @@ export default function ClinicalForm({ detail, editable, sendAnswers, answers, o
                                 style={{ flex: 1 }}
                                 type={c.screeningStatus === 'QUALIFIED' ? 'success' : c.screeningStatus === 'DEFERRED' ? 'warning' : 'error'}
                                 showIcon
-                                title={`${meta.label}${c.doctorName ? ` · ${c.doctorName}` : ''} · ${fmtDateTime(c.screenedAt)}`}
+                                title={`${meta.label}${c.doctorName ? ` - ${c.doctorName}` : ''} - ${fmtDateTime(c.screenedAt)}`}
                                 description={
                                     c.screeningStatus === 'QUALIFIED'
                                         ? 'Đã chuyển sang phòng lấy máu.'

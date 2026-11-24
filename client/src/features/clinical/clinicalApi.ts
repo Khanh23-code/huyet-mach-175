@@ -2,20 +2,24 @@ import { axiosClient } from '@/services/axiosClient'
 import type { PagedResult } from '@/shared/types/api'
 import type {
     BloodRequestDetailDto,
+    CancelBloodReturnRequest,
+    CancelBloodReturnResponse,
     ClinicalBloodRequestDto,
     ClinicalBloodRequestFilter,
     ComponentTypeOption,
-    ConfirmReceiptRequest,
-    ConfirmReceiptResponse,
+    ConfirmHandoverSessionRequest,
+    ConfirmTransfusionRequest,
+    ConfirmTransfusionResponse,
     CreateBloodRequestDto,
     CreateBloodRequestResponse,
     CreateBloodReturnRequest,
     CreateBloodReturnResponse,
+    HandoverSessionDto,
     PendingBloodReturnDto,
     PendingBloodReturnFilter,
-    PendingClinicalReceiptFilter,
-    PendingReceiptBagDto,
+    PendingHandoverSessionFilter,
     SubmitBloodRequestResponse,
+    TransfusionScanDto,
     UpdateBloodRequestDto,
 } from './types'
 
@@ -57,22 +61,46 @@ export const clinicalApi = {
             .patch<SubmitBloodRequestResponse>(`/api/blood-requests/${id}/submit`)
             .then((r) => r.data),
 
-    /** Lấy danh sách túi máu đang chờ nhận tại Lâm sàng (khoa hiện tại) */
-    getPendingReceipts: (params?: PendingClinicalReceiptFilter) =>
+    /** Lấy danh sách phiên bàn giao máu đang chờ xác nhận tại quầy (khoa hiện tại) */
+    getPendingHandoverSessions: (params?: PendingHandoverSessionFilter) =>
         axiosClient
-            .get<PendingReceiptBagDto[]>('/api/blood-handovers/clinical/pending-receipt', { params })
+            .get<HandoverSessionDto[]>('/api/blood-handovers/sessions/pending', { params })
             .then((r) => r.data),
 
-    /** Quét đối soát & xác nhận thực nhận túi máu tại Lâm sàng */
-    confirmReceipt: (data: ConfirmReceiptRequest) =>
+    /** Xem chi tiết một phiên bàn giao máu */
+    getHandoverSessionById: (sessionId: number) =>
         axiosClient
-            .post<ConfirmReceiptResponse>('/api/blood-handovers/clinical/confirm-receipt', data)
+            .get<HandoverSessionDto>(`/api/blood-handovers/sessions/${sessionId}`)
+            .then((r) => r.data),
+
+    /** Quét đối soát & xác nhận nhận lô túi máu trong phiên bàn giao (Pha 2 - CLIN) */
+    confirmHandoverSession: (sessionId: number, data: ConfirmHandoverSessionRequest) =>
+        axiosClient
+            .post<HandoverSessionDto>(`/api/blood-handovers/sessions/${sessionId}/confirm`, data)
+            .then((r) => r.data),
+
+    /** Quét barcode túi máu ISSUED đối chiếu thông tin bệnh nhân trước khi truyền tại giường */
+    scanTransfusionBag: (barcode: string) =>
+        axiosClient
+            .get<TransfusionScanDto>(`/api/blood-handovers/clinical/transfusion-scan/${encodeURIComponent(barcode.trim())}`)
+            .then((r) => r.data),
+
+    /** Xác nhận bắt đầu truyền máu thực tế tại giường (ISSUED -> TRANSFUSED) */
+    confirmTransfusion: (data: ConfirmTransfusionRequest) =>
+        axiosClient
+            .post<ConfirmTransfusionResponse>('/api/blood-handovers/clinical/confirm-transfusion', data)
             .then((r) => r.data),
 
     /** Lập phiếu hoàn trả túi máu chưa sử dụng */
     createReturn: (data: CreateBloodReturnRequest) =>
         axiosClient
             .post<CreateBloodReturnResponse>('/api/blood-returns', data)
+            .then((r) => r.data),
+
+    /** Hủy phiếu hoàn trả lập nhầm khi Ngân hàng máu chưa kiểm định */
+    cancelReturn: (returnId: number, data?: CancelBloodReturnRequest) =>
+        axiosClient
+            .post<CancelBloodReturnResponse>(`/api/blood-returns/${returnId}/cancel`, data ?? {})
             .then((r) => r.data),
 
     /** Lấy danh sách phiếu hoàn trả đang chờ kiểm định */

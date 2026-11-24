@@ -173,7 +173,7 @@ export default function UserTable({ selectedRoleCodes, onRoleCodesChange }: User
                         maxTagCount="responsive"
                         value={roleCodes}
                         onChange={(v) => { setRoleCodes(v); setPage(1) }}
-                        options={rolesQuery.data?.map((r) => ({ value: r.code, label: `${r.code} · ${r.name}` }))}
+                        options={rolesQuery.data?.map((r) => ({ value: r.code, label: `${r.code} - ${r.name}` }))}
                     />
                 </div>
             }

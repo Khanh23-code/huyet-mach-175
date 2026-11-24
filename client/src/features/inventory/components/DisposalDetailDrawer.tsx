@@ -41,7 +41,7 @@ export default function DisposalDetailDrawer({ id, onClose, actions }: Props) {
                             <dt>Người duyệt</dt>
                             <dd>
                                 {data.approvedByName
-                                    ? `${data.approvedByName} · ${data.approvedAt ? fmtDateTime(data.approvedAt) : ''}`
+                                    ? `${data.approvedByName} - ${data.approvedAt ? fmtDateTime(data.approvedAt) : ''}`
                                     : '—'}
                             </dd>
                         </div>

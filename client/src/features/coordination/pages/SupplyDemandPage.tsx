@@ -167,7 +167,7 @@ export default function SupplyDemandPage() {
                                 {getTabLabel(data.componentCode, data.componentName)}
                             </span>
                             <span>
-                                Tổng tồn kho: <strong>{data.totalAvailableStock}</strong> đơn vị · Tổng nhu cầu:{' '}
+                                Tổng tồn kho: <strong>{data.totalAvailableStock}</strong> đơn vị - Tổng nhu cầu:{' '}
                                 <strong>{data.totalPendingDemand}</strong> đơn vị
                             </span>
                         </div>

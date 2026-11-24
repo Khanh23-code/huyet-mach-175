@@ -240,8 +240,8 @@ export default function ReturnDetailPage() {
                                 <div>
                                     <div className="handover-bag-banner__code">{inspection.barcode}</div>
                                     <div className="handover-bag-banner__meta">
-                                        {inspection.componentName} · {inspection.volumeMl} ml ·{' '}
-                                        {inspection.previousLocationName || 'Chưa ghi nhận tủ cũ'} · Hạn{' '}
+                                        {inspection.componentName} - {inspection.volumeMl} ml -{' '}
+                                        {inspection.previousLocationName || 'Chưa ghi nhận tủ cũ'} - Hạn{' '}
                                         {formatDateTime(inspection.expiredAt)}
                                     </div>
                                 </div>
@@ -344,7 +344,7 @@ export default function ReturnDetailPage() {
                                         }}
                                         options={activeAvailableLocations.map((loc) => ({
                                             value: loc.locationId,
-                                            label: `${loc.refrigeratorName} - ${loc.shelfNumber} (${loc.currentBagsCount} túi · ${loc.targetTemperature}°C)`,
+                                            label: `${loc.refrigeratorName} - ${loc.shelfNumber} (${loc.currentBagsCount} túi - ${loc.targetTemperature}°C)`,
                                         }))}
                                     />
                                 </div>

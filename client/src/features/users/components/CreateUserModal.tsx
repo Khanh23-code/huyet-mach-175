@@ -134,7 +134,7 @@ export default function CreateUserModal({ open, onClose }: Props) {
                             status={errors.roleIds ? 'error' : ''}
                             options={roles.data
                                 ?.filter((r) => r.isActive)
-                                .map((r) => ({ value: r.id, label: `${r.code} · ${r.name}` }))}
+                                .map((r) => ({ value: r.id, label: `${r.code} - ${r.name}` }))}
                         />
                     )} />
                 </Field>

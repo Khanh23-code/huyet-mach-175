@@ -33,7 +33,7 @@ import {
     useCreateBloodRequest,
     useUpdateDraftRequest,
     useSubmitDraftRequest,
-    usePendingReceipts,
+    usePendingHandoverSessions,
     useComponentTypes,
 } from '../hooks'
 import { RequestStatusStepper } from '../components/RequestStatusStepper'
@@ -107,12 +107,11 @@ export default function ClinicalBloodRequestsPage() {
         { enabled: canViewRequests && activeTab === 'list' },
     )
 
-    // Query túi máu chờ nhận để hiển thị badge số lượng trên tab Nhận bàn giao
     const {
-        data: pendingBags,
-        refetch: refetchPendingReceipts,
-    } = usePendingReceipts(undefined, { enabled: canViewRequests })
-    const pendingCount = pendingBags?.length || 0
+        data: pendingSessions,
+        refetch: refetchPendingSessions,
+    } = usePendingHandoverSessions(undefined, { enabled: canViewRequests, refetchInterval: 15000 })
+    const pendingCount = pendingSessions?.length || 0
 
     // Component types
     const { data: componentTypes = [] } = useComponentTypes()
@@ -175,7 +174,7 @@ export default function ClinicalBloodRequestsPage() {
             }
             setSelectedPatient(patientObj)
             form.setFieldsValue({
-                patientDisplay: `${draftToLoad.patientName} · ${draftToLoad.patientCode}`,
+                patientDisplay: `${draftToLoad.patientName} - ${draftToLoad.patientCode}`,
                 bloodGroup: bloodGroupStr,
                 componentTypeId: item?.componentTypeId || (componentTypes[0]?.componentTypeId || 2),
                 requestedUnits: item?.requestedUnits || 2,
@@ -204,7 +203,7 @@ export default function ClinicalBloodRequestsPage() {
     // Xử lý khi chọn bệnh nhân từ popup HIS
     const handleSelectHisPatient = (patient: HisPatientDto) => {
         setSelectedPatient(patient)
-        const displayVal = `${patient.patientName} · ${patient.patientCode}`
+        const displayVal = `${patient.patientName} - ${patient.patientCode}`
         form.setFieldsValue({
             patientDisplay: displayVal,
             bloodGroup: patient.bloodGroupDisplay,
@@ -537,7 +536,7 @@ export default function ClinicalBloodRequestsPage() {
                             queryClient.invalidateQueries({ queryKey: ['clinical'] })
                             if (canViewRequests) {
                                 if (activeTab === 'list') refetchRequests()
-                                refetchPendingReceipts()
+                                void refetchPendingSessions()
                             }
                             message.success('Đã làm mới dữ liệu đồng bộ với hệ thống!')
                         }}
@@ -835,7 +834,7 @@ export default function ClinicalBloodRequestsPage() {
                                         readOnly
                                         value={
                                             selectedPatient
-                                                ? `${selectedPatient.patientName} · ${selectedPatient.patientCode}`
+                                                ? `${selectedPatient.patientName} - ${selectedPatient.patientCode}`
                                                 : form.getFieldValue('patientDisplay') || ''
                                         }
                                         placeholder="Chưa chọn người bệnh — Bấm 'Chọn từ HIS' bên cạnh để chọn dữ liệu HIS/EMR"
@@ -853,7 +852,7 @@ export default function ClinicalBloodRequestsPage() {
                             </div>
                             {selectedPatient && (
                                 <div className="patient-selected-hint">
-                                    ✓ Đã chọn: <strong>{selectedPatient.patientName}</strong> ({selectedPatient.patientCode} · {selectedPatient.room} · {selectedPatient.bed})
+                                    ✓ Đã chọn: <strong>{selectedPatient.patientName}</strong> ({selectedPatient.patientCode} - {selectedPatient.room} - {selectedPatient.bed})
                                 </div>
                             )}
                         </Form.Item>

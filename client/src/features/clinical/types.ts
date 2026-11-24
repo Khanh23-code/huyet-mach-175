@@ -1,4 +1,11 @@
 import type { AboGroup, RhValue } from '@/shared/types/medical'
+export type {
+    ConfirmHandoverSessionRequest,
+    HandoverSessionDto,
+    HandoverSessionItemDto,
+    HandoverSessionStatus,
+    PendingHandoverSessionFilter,
+} from '@/shared/types/handover'
 
 export type BloodType = AboGroup // 'A' | 'B' | 'AB' | 'O'
 export type RhFactor = RhValue // 'POSITIVE' | 'NEGATIVE'
@@ -11,7 +18,7 @@ export type ComponentCode = 'WB' | 'PRBC' | 'FFP' | 'PLT'
 
 export type AllocationStatus = 'RESERVED' | 'ISSUED' | 'COMPLETED' | 'RETURNED'
 
-export type ReturnFinalAction = 'PENDING_INSPECTION' | 'RESTOCK' | 'DISCARD'
+export type ReturnFinalAction = 'PENDING_INSPECTION' | 'RESTOCK' | 'DISCARD' | 'CANCELLED'
 
 export interface ClinicalBloodRequestDto {
     requestId: number
@@ -122,58 +129,51 @@ export interface BloodRequestDetailDto {
     allocations: BloodRequestAllocationDto[]
 }
 
-export interface PendingClinicalReceiptFilter {
-    doctorId?: number
-    doctorName?: string
-    requestCode?: string
-}
-
-export interface PendingReceiptBagDto {
+export interface TransfusionScanDto {
     allocationId: number
+    bagId: number
+    barcode: string
+    componentTypeId: number
+    componentCode: ComponentCode
+    componentName: string
+    bloodType: string
+    volumeMl: number
+    expiredAt: string
+    isExpired: boolean
+    bagStatus: string
     requestId: number
     requestCode: string
-    doctorId?: number
-    doctorName?: string
-    departmentName?: string
+    patientName: string
+    patientCode: string
+    patientBloodType: string
+    departmentName?: string | null
+    doctorName?: string | null
     isOwnRequest: boolean
-    urgencyLevel: UrgencyLevel
-    patientName: string
-    patientCode: string
+    issuedAt?: string | null
+    receivedByName?: string | null
+}
+
+export interface ConfirmTransfusionRequest {
+    barcode: string
+    allocationId?: number
+    expectedPatientCode: string
+}
+
+export interface ConfirmTransfusionResponse {
     bagId: number
     barcode: string
-    componentCode: ComponentCode
-    componentName: string
-    bloodType: string
-    volumeMl: number
-    expiresAt: string
-    issuedAt?: string
-    issuedByName?: string
-}
-
-export interface ConfirmReceiptRequest {
-    allocationId: number
-    scannedBarcode: string
-    expectedPatientCode?: string
-}
-
-export interface ConfirmReceiptResponse {
+    bagStatus: string
     allocationId: number
     requestId: number
     requestCode: string
     patientCode: string
     patientName: string
-    bagId: number
-    barcode: string
-    componentCode: ComponentCode
-    componentName: string
+    patientBloodType: string
     bloodType: string
-    volumeMl: number
-    allocationStatus: AllocationStatus
-    requestStatus: RequestStatus
-    currentStep: number
-    receivedById: number
-    receivedByName?: string
-    confirmedAt: string
+    componentName: string
+    confirmedById: number
+    confirmedByName?: string | null
+    transfusedAt: string
 }
 
 export interface BloodReturnChecklistDto {
@@ -207,6 +207,25 @@ export interface CreateBloodReturnResponse {
     returnedById: number
     returnedByName?: string
     processedAt: string
+    isEligibleForRestockEvaluation: boolean
+    warningFlags: string[]
+}
+
+export interface CancelBloodReturnRequest {
+    cancelReason?: string
+}
+
+export interface CancelBloodReturnResponse {
+    returnId: number
+    allocationId: number
+    bagId: number
+    barcode: string
+    finalAction: ReturnFinalAction
+    bagStatus: string
+    cancelReason?: string | null
+    cancelledById: number
+    cancelledByName?: string | null
+    cancelledAt: string
 }
 
 export interface PendingBloodReturnFilter {
@@ -237,6 +256,16 @@ export interface PendingBloodReturnDto {
     finalAction: ReturnFinalAction
     bagStatus: string
     processedAt: string
+    allowRestock?: boolean
+    previousRestockCount?: number
+    maxRestockCount?: number
+    maxOutsideMinutesForRestock?: number | null
+    minTemp?: number
+    maxTemp?: number
+    storageTemperatureLabel?: string
+    requiresMandatoryDiscard?: boolean
+    mandatoryDiscardReasons?: string[]
+    clinicalChecklistWarnings?: string[]
 }
 
 export interface ComponentTypeOption {

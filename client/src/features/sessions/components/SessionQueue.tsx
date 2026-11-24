@@ -31,7 +31,7 @@ export default function SessionQueue({
     return (
         <SectionCard
             title="Đạt tiêu chuẩn"
-            subtitle={`${items.length} người hiến ${filter === 'WAITING_COLLECTION' ? 'chờ lấy máu' : '· ' + SESSION_META[filter].label.toLowerCase()}`}
+            subtitle={`${items.length} người hiến ${filter === 'WAITING_COLLECTION' ? 'chờ lấy máu' : '- ' + SESSION_META[filter].label.toLowerCase()}`}
             noPadding
         >
             <div className="ss-queue-tools">

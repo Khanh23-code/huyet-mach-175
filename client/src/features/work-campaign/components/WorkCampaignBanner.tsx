@@ -16,7 +16,7 @@ export default function WorkCampaignBanner({ campaign, onChange }: Props) {
         <div className="wc-banner">
             <div className="wc-banner__info">
                 <small className="wc-banner__label">Đợt hiến máu đang làm việc</small>
-                <b className="wc-banner__title">#{campaign.id} · {campaign.name}</b>
+                <b className="wc-banner__title">#{campaign.id} - {campaign.name}</b>
                 <span className="wc-banner__loc">{campaign.locationName}</span>
             </div>
             <Space wrap>

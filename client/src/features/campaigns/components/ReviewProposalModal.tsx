@@ -207,7 +207,7 @@ export default function ReviewProposalModal({ campaignId, proposalId, onClose }:
                         <ConfigCard
                             label="Khung giờ & Sức chứa ca hiến"
                             title="Các slot tiếp nhận người hiến"
-                            subtitle={`Campaign ID: ${campaign.campaignId} · Tổng ${campaign.slots?.length ?? 0} khung giờ`}
+                            subtitle={`Campaign ID: ${campaign.campaignId} - Tổng ${campaign.slots?.length ?? 0} khung giờ`}
                             slots={campaign.slots}
                             highlight
                         />

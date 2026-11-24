@@ -5,6 +5,7 @@ namespace HuyetMach175.Modules.Clinical.Services;
 public interface IBloodHandoversService
 {
     Task<HandoverSessionDto> CreateHandoverSessionAsync(CreateHandoverSessionRequest request, int userId, string? ipAddress);
+    Task<List<ReservedHandoverRequestDto>> GetReservedRequestsForHandoverAsync(string? search, string? urgencyLevel);
     Task<List<HandoverSessionDto>> GetPendingHandoverSessionsAsync(PendingHandoverSessionFilterDto filter, int userId);
     Task<HandoverSessionDto> GetHandoverSessionByIdAsync(int sessionId, int userId);
     Task<HandoverSessionDto> ConfirmHandoverSessionAsync(int sessionId, ConfirmHandoverSessionRequest request, int userId, string? ipAddress);

@@ -6,12 +6,16 @@ import type {
     AvailableBloodBagDto,
     BloodCoordinationQueueFilter,
     BloodRequestDetailDto,
+    CancelHandoverSessionRequest,
     ComponentTypeOption,
     CoordinationQueueItemDto,
-    DispatchBloodBagRequest,
-    DispatchBloodBagResponse,
+    CreateHandoverSessionRequest,
+    HandoverSessionDto,
+    PendingHandoverSessionFilter,
     RejectBloodRequestDto,
     RejectBloodRequestResponse,
+    ReservedHandoverFilter,
+    ReservedHandoverRequestDto,
     SupplyDemandResponse,
 } from './types'
 
@@ -106,11 +110,47 @@ export const coordinationApi = {
             .then((res) => res.data),
 
     /**
-     * Xuất kho bàn giao túi máu đã giữ chỗ (RESERVED -> ISSUED)
-     * POST /api/blood-handovers/dispatch
+     * Lấy danh sách đơn yêu cầu kèm các túi máu đang giữ chỗ (RESERVED)
+     * GET /api/blood-handovers/reserved-requests
      */
-    dispatchBag: (data: DispatchBloodBagRequest) =>
+    getReservedRequests: (params?: ReservedHandoverFilter) =>
         axiosClient
-            .post<DispatchBloodBagResponse>('/api/blood-handovers/dispatch', data)
+            .get<ReservedHandoverRequestDto[]>('/api/blood-handovers/reserved-requests', { params })
+            .then((res) => res.data),
+
+    /**
+     * Khởi tạo phiên bàn giao máu 2 pha theo lô (Pha 1 - BBNK)
+     * POST /api/blood-handovers/sessions
+     */
+    createHandoverSession: (data: CreateHandoverSessionRequest) =>
+        axiosClient
+            .post<HandoverSessionDto>('/api/blood-handovers/sessions', data)
+            .then((res) => res.data),
+
+    /**
+     * Lấy danh sách phiên bàn giao đang chờ xác nhận tại quầy
+     * GET /api/blood-handovers/sessions/pending
+     */
+    getPendingHandoverSessions: (params?: PendingHandoverSessionFilter) =>
+        axiosClient
+            .get<HandoverSessionDto[]>('/api/blood-handovers/sessions/pending', { params })
+            .then((res) => res.data),
+
+    /**
+     * Xem chi tiết một phiên bàn giao máu
+     * GET /api/blood-handovers/sessions/{sessionId}
+     */
+    getHandoverSessionById: (sessionId: number) =>
+        axiosClient
+            .get<HandoverSessionDto>(`/api/blood-handovers/sessions/${sessionId}`)
+            .then((res) => res.data),
+
+    /**
+     * Hủy sớm phiên bàn giao tại quầy (BBNK)
+     * POST /api/blood-handovers/sessions/{sessionId}/cancel
+     */
+    cancelHandoverSession: (sessionId: number, data?: CancelHandoverSessionRequest) =>
+        axiosClient
+            .post<HandoverSessionDto>(`/api/blood-handovers/sessions/${sessionId}/cancel`, data ?? {})
             .then((res) => res.data),
 }

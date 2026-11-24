@@ -109,7 +109,7 @@ function SidebarContent({ isCollapsed, isMobile, onCloseMobile }: SidebarContent
         <div
             className={cx('sider__status', isCollapsed && 'is-collapsed')}
             role="status"
-            aria-label="Hệ thống ổn định · Cập nhật 1 phút trước"
+            aria-label="Hệ thống ổn định - Cập nhật 1 phút trước"
         >
             <span className="sider__status-dot" aria-hidden />
             {!isCollapsed && (
@@ -159,7 +159,7 @@ function SidebarContent({ isCollapsed, isMobile, onCloseMobile }: SidebarContent
 
             {/* TODO: nối với API health-check để đổi trạng thái / thời gian cập nhật */}
             {isCollapsed ? (
-                <Tooltip title="Hệ thống ổn định · Cập nhật 1 phút trước" placement="right">
+                <Tooltip title="Hệ thống ổn định - Cập nhật 1 phút trước" placement="right">
                     {statusBadge}
                 </Tooltip>
             ) : (

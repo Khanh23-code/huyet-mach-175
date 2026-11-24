@@ -390,10 +390,10 @@ export default function CampaignSummaryPage() {
                         </div>
                         <div className="summary-kpi-foot">
                             <span>
-                                Có hẹn: <b>{summary.scheduledCheckedIn}</b> · Vãng lai: <b>{summary.walkInCheckedIn}</b>
+                                Có hẹn: <b>{summary.scheduledCheckedIn}</b> - Vãng lai: <b>{summary.walkInCheckedIn}</b>
                             </span>
                             <span>
-                                Chưa đến: <b>{summary.pendingArrival}</b> · Vắng: <b>{summary.noShowCount}</b>
+                                Chưa đến: <b>{summary.pendingArrival}</b> - Vắng: <b>{summary.noShowCount}</b>
                             </span>
                         </div>
                     </div>
@@ -418,7 +418,7 @@ export default function CampaignSummaryPage() {
                         </div>
                         <div className="summary-kpi-foot">
                             <span>
-                                Hoãn hiến: <b>{summary.deferredCount}</b> · Không đạt: <b>{summary.unqualifiedCount}</b>
+                                Hoãn hiến: <b>{summary.deferredCount}</b> - Không đạt: <b>{summary.unqualifiedCount}</b>
                             </span>
                             <span style={{ color: summary.incidentCount > 0 ? 'var(--c-danger)' : 'inherit' }}>
                                 Sự cố / Hủy ca: <b>{summary.incidentCount}</b> ca ({summary.abortedSessions} ca hủy)
@@ -450,7 +450,7 @@ export default function CampaignSummaryPage() {
                                             <div className="summary-volume-row">
                                                 <span style={{ fontWeight: 600 }}>Túi {vol.volumeMl} ml</span>
                                                 <span>
-                                                    <b>{vol.count}</b> túi ({pct}%) · {vol.totalMl.toLocaleString('vi-VN')} ml
+                                                    <b>{vol.count}</b> túi ({pct}%) - {vol.totalMl.toLocaleString('vi-VN')} ml
                                                 </span>
                                             </div>
                                             <Progress

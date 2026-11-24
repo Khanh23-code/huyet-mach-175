@@ -108,7 +108,7 @@ export default function SessionWorkspace({ detail, canEdit, onClosed }: Props) {
                         </div>
                         <h2 className="ss-donor-name">{detail.donor.fullName}</h2>
                         <div className="ss-donor-meta">
-                            <span>{detail.donor.donorCode} · Nhóm máu</span>
+                            <span>{detail.donor.donorCode} - Nhóm máu</span>
                             <BloodGroupTag value={fmtBlood(detail.donor.bloodType, detail.donor.rhFactor)} size="sm" />
                         </div>
                     </div>
@@ -227,7 +227,7 @@ export default function SessionWorkspace({ detail, canEdit, onClosed }: Props) {
                             type={detail.status === 'COMPLETED' ? 'success' : 'error'}
                             showIcon
                             title={detail.status === 'COMPLETED' ? 'Phiên lấy máu đã hoàn tất' : 'Phiên lấy máu đã bị hủy do sự cố'}
-                            description={`${detail.phlebotomistName ?? '—'} · ${fmtDateTime(detail.completedAt)}`}
+                            description={`${detail.phlebotomistName ?? '—'} - ${fmtDateTime(detail.completedAt)}`}
                         />
                     )}
 

@@ -1,13 +1,20 @@
-import { useMemo, useState } from 'react'
-import { Alert, Button, Checkbox, Empty, Input, Select, Table, message } from 'antd'
+import { useCallback, useMemo, useState } from 'react'
+import { Alert, Button, Checkbox, Empty, Input, Modal, Select, Table, Tag, message } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
-import { CheckCircleOutlined, InfoCircleOutlined, ReloadOutlined, RollbackOutlined } from '@ant-design/icons'
+import {
+    CheckCircleOutlined,
+    CloseCircleOutlined,
+    InfoCircleOutlined,
+    ReloadOutlined,
+    RollbackOutlined,
+    WarningOutlined,
+} from '@ant-design/icons'
 import { BloodGroupTag, SectionCard, StatusPill } from '@/shared/components'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { formatDateTime } from '@/shared/formatters/date'
 import { parseApiError } from '@/services/apiError'
-import { useCreateReturn, useEligibleReturnBags, usePendingBloodReturns } from '../hooks'
+import { useCancelReturn, useCreateReturn, useEligibleReturnBags, usePendingBloodReturns } from '../hooks'
 import type { CreateBloodReturnResponse, IneligibleReturnBag, PendingBloodReturnDto } from '../types'
 import './ClinicalReturnCreatePanel.css'
 
@@ -39,6 +46,7 @@ export function ClinicalReturnCreatePanel() {
     } = usePendingBloodReturns({ pageNumber: 1, pageSize: 20 }, { enabled: canViewReturns })
 
     const createReturnMutation = useCreateReturn()
+    const cancelReturnMutation = useCancelReturn()
 
     const eligibleBags = useMemo(() => returnBagPools?.eligibleBags ?? [], [returnBagPools])
     const ineligibleBags = useMemo(() => returnBagPools?.ineligibleBags ?? [], [returnBagPools])
@@ -54,6 +62,8 @@ export function ClinicalReturnCreatePanel() {
     })
     const [submitError, setSubmitError] = useState<string | null>(null)
     const [createdReturn, setCreatedReturn] = useState<CreateBloodReturnResponse | null>(null)
+    const [cancellingReturn, setCancellingReturn] = useState<PendingBloodReturnDto | null>(null)
+    const [cancelReason, setCancelReason] = useState('')
 
     const selectedBag = useMemo(
         () => eligibleBags.find((b) => b.allocationId === selectedAllocationId) ?? null,
@@ -109,11 +119,6 @@ export function ClinicalReturnCreatePanel() {
             return
         }
 
-        if (!allChecked) {
-            message.warning('Bắt buộc xác nhận đầy đủ 4 điều kiện bảo quản trước khi gửi phiếu hoàn trả.')
-            return
-        }
-
         try {
             const res = await createReturnMutation.mutateAsync({
                 allocationId: selectedBag.allocationId,
@@ -129,15 +134,46 @@ export function ClinicalReturnCreatePanel() {
         }
     }
 
+    const handleConfirmCancelReturn = useCallback(async () => {
+        if (!cancellingReturn || cancelReturnMutation.isPending) return
+
+        const targetId = cancellingReturn.returnId
+        try {
+            await cancelReturnMutation.mutateAsync({
+                returnId: targetId,
+                data: {
+                    cancelReason: cancelReason.trim() || undefined,
+                },
+            })
+            if (createdReturn?.returnId === targetId) {
+                setCreatedReturn(null)
+            }
+            setCancellingReturn(null)
+            setCancelReason('')
+            void refetchEligible()
+            if (canViewReturns) void refetchReturns()
+        } catch {
+            // Đã hiển thị toast lỗi ở hook useCancelReturn
+        }
+    }, [
+        cancellingReturn,
+        cancelReason,
+        cancelReturnMutation,
+        canViewReturns,
+        createdReturn?.returnId,
+        refetchEligible,
+        refetchReturns,
+    ])
+
     const selectOptions = useMemo(() => {
         const eligibleOpts = eligibleBags.map((b) => ({
             value: b.allocationId,
-            label: `${b.barcode} · ${b.componentName} (${b.bloodType}, ${b.volumeMl}ml) — ${b.patientName} [${b.requestCode}]`,
+            label: `${b.barcode} - ${b.componentName} (${b.bloodType}, ${b.volumeMl}ml) — ${b.patientName} [${b.requestCode}]`,
             disabled: false,
         }))
         const ineligibleOpts = ineligibleBags.map((b) => ({
             value: -b.allocationId,
-            label: `[Không đủ điều kiện] ${b.barcode} · ${b.componentName} — ${b.ineligibleReason}`,
+            label: `[Không đủ điều kiện] ${b.barcode} - ${b.componentName} — ${b.ineligibleReason}`,
             disabled: true,
         }))
         return [...eligibleOpts, ...ineligibleOpts]
@@ -194,10 +230,17 @@ export function ClinicalReturnCreatePanel() {
                 dataIndex: 'finalAction',
                 key: 'status',
                 align: 'center',
-                render: (action) => (
-                    <StatusPill tone="info">
-                        {action === 'PENDING_INSPECTION' ? 'Chờ Ngân hàng máu kiểm định' : action}
-                    </StatusPill>
+                render: (action, r) => (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                        <StatusPill tone="info">
+                            {action === 'PENDING_INSPECTION' ? 'Chờ Ngân hàng máu kiểm định' : action}
+                        </StatusPill>
+                        {(r.requiresMandatoryDiscard || (r.clinicalChecklistWarnings?.length ?? 0) > 0) && (
+                            <Tag color="warning" style={{ margin: 0 }}>
+                                Gắn cờ bắt buộc tiêu hủy
+                            </Tag>
+                        )}
+                    </div>
                 ),
             },
             {
@@ -206,8 +249,33 @@ export function ClinicalReturnCreatePanel() {
                 key: 'processedAt',
                 render: (val) => formatDateTime(val),
             },
+            ...(canEditReturns
+                ? [
+                      {
+                          title: 'THAO TÁC',
+                          key: 'actions',
+                          align: 'right' as const,
+                          render: (_: unknown, r: PendingBloodReturnDto) =>
+                              r.finalAction === 'PENDING_INSPECTION' ? (
+                                  <Button
+                                      danger
+                                      size="small"
+                                      icon={<CloseCircleOutlined />}
+                                      onClick={() => {
+                                          setCancellingReturn(r)
+                                          setCancelReason('')
+                                      }}
+                                  >
+                                      Hủy phiếu
+                                  </Button>
+                              ) : (
+                                  <span style={{ color: 'var(--c-text-muted)' }}>—</span>
+                              ),
+                      },
+                  ]
+                : []),
         ],
-        [],
+        [canEditReturns],
     )
 
     const ineligibleColumns: ColumnsType<IneligibleReturnBag> = useMemo(
@@ -223,7 +291,7 @@ export function ClinicalReturnCreatePanel() {
                 key: 'patient',
                 render: (_, r) => (
                     <span>
-                        {r.requestCode} · {r.patientName} ({r.patientCode})
+                        {r.requestCode} - {r.patientName} ({r.patientCode})
                     </span>
                 ),
             },
@@ -251,7 +319,7 @@ export function ClinicalReturnCreatePanel() {
     return (
         <div style={{ display: 'grid', gap: 'var(--page-gap)' }}>
             <SectionCard
-                title="Lập phiếu hoàn trả túi máu – W3.3"
+                title="Lập phiếu hoàn trả túi máu"
                 extra={
                     <Button
                         icon={<ReloadOutlined />}
@@ -270,37 +338,50 @@ export function ClinicalReturnCreatePanel() {
                     showIcon
                     icon={<InfoCircleOutlined />}
                     style={{ marginBottom: 18 }}
-                    message="Phiếu hoàn trả sẽ được chuyển đến bộ phận Ngân hàng máu (W2.5)"
+                    message="Phiếu hoàn trả sẽ được chuyển đến bộ phận Ngân hàng máu"
                     description="Sau khi lập phiếu hoàn trả, túi máu sẽ được phong tỏa (LOCKED) để vận chuyển về Ngân hàng máu kiểm định điều kiện nhập lại kho hoặc chuyển hủy."
                 />
 
                 {createdReturn && (
                     <Alert
-                        type="success"
+                        type={createdReturn.isEligibleForRestockEvaluation ? 'success' : 'warning'}
                         showIcon
                         closable
                         onClose={() => setCreatedReturn(null)}
                         style={{ marginBottom: 18 }}
-                        icon={<CheckCircleOutlined />}
-                        message={`Đã tạo phiếu hoàn trả #${createdReturn.returnId} thành công`}
+                        icon={createdReturn.isEligibleForRestockEvaluation ? <CheckCircleOutlined /> : <WarningOutlined />}
+                        message={
+                            createdReturn.isEligibleForRestockEvaluation
+                                ? `Đã tạo phiếu hoàn trả #${createdReturn.returnId} thành công`
+                                : `Đã tạo phiếu hoàn trả #${createdReturn.returnId} kèm cảnh báo bắt buộc tiêu hủy`
+                        }
                         description={
                             <div style={{ display: 'grid', gap: 4, marginTop: 4 }}>
                                 <div>
-                                    Mã phiếu: <strong>#{createdReturn.returnId}</strong> · Túi máu:{' '}
-                                    <code className="handover-barcode">{createdReturn.barcode}</code> ({createdReturn.componentName} ·{' '}
+                                    Mã phiếu: <strong>#{createdReturn.returnId}</strong> - Túi máu:{' '}
+                                    <code className="handover-barcode">{createdReturn.barcode}</code> ({createdReturn.componentName} -{' '}
                                     {createdReturn.bloodType})
                                 </div>
                                 <div>
-                                    Phiếu yêu cầu: <strong>{createdReturn.requestCode}</strong> · Người bệnh:{' '}
+                                    Phiếu yêu cầu: <strong>{createdReturn.requestCode}</strong> - Người bệnh:{' '}
                                     <strong>{createdReturn.patientName}</strong> ({createdReturn.patientCode})
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                                     <span>Trạng thái xử lý:</span>
                                     <StatusPill tone="info" dot={false}>{createdReturn.finalAction}</StatusPill>
-                                    <span>· Trạng thái túi:</span>
+                                    <span>- Trạng thái túi:</span>
                                     <StatusPill tone="warning" dot={false}>{createdReturn.bagStatus}</StatusPill>
-                                    <span>· Lập lúc: {formatDateTime(createdReturn.processedAt)}</span>
+                                    <span>- Lập lúc: {formatDateTime(createdReturn.processedAt)}</span>
                                 </div>
+                                {createdReturn.warningFlags && createdReturn.warningFlags.length > 0 && (
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                                        {createdReturn.warningFlags.map((flag, idx) => (
+                                            <Tag key={`${flag}-${idx}`} color="warning" style={{ margin: 0 }}>
+                                                {flag}
+                                            </Tag>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         }
                     />
@@ -352,13 +433,13 @@ export function ClinicalReturnCreatePanel() {
                                 <strong className="text-mono" style={{ fontSize: 'var(--text-md)', color: 'var(--c-primary)' }}>
                                     {selectedBag.barcode}
                                 </strong>
-                                <span>· {selectedBag.componentName} ({selectedBag.volumeMl} ml) ·</span>
+                                <span>- {selectedBag.componentName} ({selectedBag.volumeMl} ml) -</span>
                                 <BloodGroupTag value={selectedBag.bloodType} size="sm" />
                             </div>
                             <div style={{ fontSize: 'var(--text-sm)', color: 'var(--c-text-secondary)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                                 <span>
-                                    Phiếu <strong>{selectedBag.requestCode}</strong> · NB{' '}
-                                    <strong>{selectedBag.patientName}</strong> ({selectedBag.patientCode}) ·
+                                    Phiếu <strong>{selectedBag.requestCode}</strong> - NB{' '}
+                                    <strong>{selectedBag.patientName}</strong> ({selectedBag.patientCode}) -
                                 </span>
                                 <StatusPill tone={selectedBag.isReceivedAtClinical ? 'success' : 'info'} dot={false}>
                                     {selectedBag.isReceivedAtClinical ? 'Đã nhận tại khoa' : 'Đã xuất kho (Chờ nhận)'}
@@ -403,8 +484,11 @@ export function ClinicalReturnCreatePanel() {
                     </div>
 
                     <div>
-                        <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 8 }}>
-                            Xác nhận điều kiện bảo quản <span style={{ color: 'var(--c-danger)' }}>*</span>
+                        <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 4 }}>
+                            Bảng kiểm điều kiện bảo quản (4 tiêu chí đánh giá tái nhập kho)
+                        </div>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-muted)', marginBottom: 8 }}>
+                            Tích đủ 4 tiêu chí để túi máu được xét tái nhập kho. Nếu bỏ chọn bất kỳ tiêu chí nào, phiếu hoàn trả vẫn gửi được nhưng túi máu sẽ tự động gắn cờ bắt buộc tiêu hủy.
                         </div>
                         <div className="clin-ret-checklist">
                             <div className={`clin-ret-check-item ${checklist.isUnusedFullVolume ? 'is-checked' : ''}`}>
@@ -444,6 +528,16 @@ export function ClinicalReturnCreatePanel() {
                                 </Checkbox>
                             </div>
                         </div>
+
+                        {selectedBag && !allChecked && (
+                            <Alert
+                                type="warning"
+                                showIcon
+                                style={{ marginTop: 10 }}
+                                message="Túi máu chưa đạt đủ 4 tiêu chí bảo quản"
+                                description="Bạn vẫn có thể gửi phiếu hoàn trả, nhưng Ngân hàng máu sẽ nhận cảnh báo và đánh dấu bắt buộc tiêu hủy (không thể tái nhập kho)."
+                            />
+                        )}
                     </div>
 
                     {submitError && (
@@ -469,12 +563,11 @@ export function ClinicalReturnCreatePanel() {
                                 !canEditReturns ||
                                 !selectedBag ||
                                 !resolvedReason ||
-                                !allChecked ||
                                 createReturnMutation.isPending
                             }
                             onClick={() => void handleSubmit()}
                         >
-                            → Gửi phiếu hoàn trả về Ngân hàng máu
+                            Gửi phiếu hoàn trả về Ngân hàng máu
                         </Button>
                     </div>
                 </div>
@@ -528,6 +621,51 @@ export function ClinicalReturnCreatePanel() {
                     }}
                 />
             </SectionCard>
+
+            <Modal
+                title={
+                    cancellingReturn
+                        ? `Hủy phiếu hoàn trả #${cancellingReturn.returnId} (${cancellingReturn.barcode})`
+                        : 'Hủy phiếu hoàn trả'
+                }
+                open={Boolean(cancellingReturn)}
+                onCancel={() => {
+                    if (cancelReturnMutation.isPending) return
+                    setCancellingReturn(null)
+                    setCancelReason('')
+                }}
+                onOk={() => void handleConfirmCancelReturn()}
+                okText="Xác nhận hủy phiếu"
+                okButtonProps={{ danger: true, loading: cancelReturnMutation.isPending }}
+                cancelText="Đóng"
+                cancelButtonProps={{ disabled: cancelReturnMutation.isPending }}
+                destroyOnHidden
+            >
+                {cancellingReturn && (
+                    <div style={{ display: 'grid', gap: 12, paddingTop: 6 }}>
+                        <Alert
+                            type="warning"
+                            showIcon
+                            message="Túi máu sẽ được mở khóa và khôi phục về ISSUED"
+                            description={`Phiếu #${cancellingReturn.returnId} của NB ${cancellingReturn.patientName} (${cancellingReturn.patientCode}) sẽ bị hủy trước khi Ngân hàng máu kiểm định.`}
+                        />
+                        <div>
+                            <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 6 }}>
+                                Lý do hủy phiếu (không bắt buộc)
+                            </div>
+                            <Input.TextArea
+                                rows={3}
+                                maxLength={255}
+                                showCount
+                                placeholder="Ví dụ: Chọn nhầm túi máu hoàn trả / bác sĩ chỉ định giữ lại truyền tiếp..."
+                                value={cancelReason}
+                                onChange={(e) => setCancelReason(e.target.value)}
+                                disabled={cancelReturnMutation.isPending}
+                            />
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     )
 }

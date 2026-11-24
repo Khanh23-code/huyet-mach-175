@@ -171,7 +171,7 @@ export default function ExpiryAlertsPage() {
                             { title: 'LOẠI CHẾ PHẨM', dataIndex: 'componentTypeName' },
                             {
                                 title: 'HẠN SỬ DỤNG', dataIndex: 'expiredAt', width: 190,
-                                render: (v: string) => dayjs(v).format('DD/MM/YYYY · HH:mm'),
+                                render: (v: string) => dayjs(v).format('DD/MM/YYYY - HH:mm'),
                             },
                             {
                                 title: 'THỜI GIAN CÒN LẠI', dataIndex: 'hoursRemaining', width: 190,
@@ -202,7 +202,7 @@ export default function ExpiryAlertsPage() {
                 )}
 
                 <div className="exp-foot">
-                    <span>Cập nhật lần cuối lúc {dataUpdatedAt ? dayjs(dataUpdatedAt).format('HH:mm · DD/MM/YYYY') : '—'}</span>
+                    <span>Cập nhật lần cuối lúc {dataUpdatedAt ? dayjs(dataUpdatedAt).format('HH:mm - DD/MM/YYYY') : '—'}</span>
                     <span className="exp-foot__live">
                         <i /> Dữ liệu thời gian thực
                         <Button type="link" size="small" icon={<ReloadOutlined />} loading={isFetching} onClick={() => refetch()}>Làm mới</Button>
