@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
-import { App, Button, Empty } from 'antd'
-import { ReloadOutlined } from '@ant-design/icons'
+import { App, Button, Empty, Tag } from 'antd'
+import { ReloadOutlined, ScanOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
@@ -133,21 +133,71 @@ export default function ReturnScanPage() {
                                 <div key={item.returnId} className="return-pending-item">
                                     <div className="return-pending-item__top">
                                         <span className="return-pending-item__code">{item.barcode}</span>
-                                        <StatusPill tone={item.isExpired ? 'danger' : 'warning'}>
-                                            {item.isExpired ? 'Đã hết hạn' : `Phiếu trả #${item.returnId}`}
-                                        </StatusPill>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                            {item.requiresMandatoryDiscard && (
+                                                <StatusPill tone="danger">Bắt buộc tiêu hủy</StatusPill>
+                                            )}
+                                            <StatusPill tone={item.isExpired ? 'danger' : 'warning'}>
+                                                {item.isExpired ? 'Đã hết hạn' : `Phiếu trả #${item.returnId}`}
+                                            </StatusPill>
+                                        </div>
                                     </div>
                                     <div className="return-pending-item__title">
                                         <BloodGroupTag value={item.bloodType} size="sm" /> - {item.componentName} ({item.volumeMl} ml)
                                     </div>
                                     <div className="return-pending-item__meta">
-                                        {item.departmentName || 'Khoa lâm sàng'} - Phiếu YC: {item.requestCode}
+                                        {item.departmentName || 'Khoa lâm sàng'} - Phiếu YC: {item.requestCode} -{' '}
+                                        {item.allowRestock
+                                            ? `Đã tái nhập ${item.previousRestockCount}/${item.maxRestockCount} lần`
+                                            : 'Không cho phép tái nhập'}
                                     </div>
                                     <div className="return-pending-item__sub">
                                         Lý do: {item.returnReason}
                                     </div>
-                                    <div className="return-pending-item__time">
-                                        Lập lúc {formatDateTime(item.processedAt)} - {item.returnedByName || 'Lâm sàng'}
+                                    {item.clinicalChecklistWarnings?.length > 0 && (
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                                            {item.clinicalChecklistWarnings.map((w, idx) => (
+                                                <Tag key={`${w}-${idx}`} color="warning" style={{ margin: 0 }}>
+                                                    Cảnh báo LS: {w}
+                                                </Tag>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {item.mandatoryDiscardReasons?.length > 0 && (
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                                            {item.mandatoryDiscardReasons.map((r, idx) => (
+                                                <Tag key={`${r}-${idx}`} color="error" style={{ margin: 0 }}>
+                                                    {r}
+                                                </Tag>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            gap: 8,
+                                            marginTop: 6,
+                                            flexWrap: 'wrap',
+                                        }}
+                                    >
+                                        <div className="return-pending-item__time">
+                                            Lập lúc {formatDateTime(item.processedAt)} - {item.returnedByName || 'Lâm sàng'}
+                                        </div>
+                                        {canApprove && (
+                                            <Button
+                                                size="small"
+                                                type={item.requiresMandatoryDiscard ? 'default' : 'primary'}
+                                                danger={item.requiresMandatoryDiscard}
+                                                ghost={!item.requiresMandatoryDiscard}
+                                                icon={<ScanOutlined />}
+                                                loading={scanning}
+                                                onClick={() => void handleScan(item.barcode)}
+                                            >
+                                                {item.requiresMandatoryDiscard ? 'Mở & chuyển hủy' : 'Kiểm định'}
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             ))}
