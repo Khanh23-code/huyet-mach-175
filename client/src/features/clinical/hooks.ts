@@ -246,7 +246,7 @@ export function useCancelReturn() {
             queryClient.invalidateQueries({ queryKey: ['clinical'] })
             queryClient.invalidateQueries({ queryKey: ['coordination'] })
             queryClient.invalidateQueries({ queryKey: ['inventory'] })
-            message.success(`Đã hủy phiếu hoàn trả #${data.returnId}; túi ${data.barcode} được khôi phục về ISSUED.`)
+            message.success(`Đã hủy phiếu hoàn trả #${data.returnId}; túi ${data.barcode} được khôi phục về trạng thái đã xuất kho.`)
         },
         onError: (err: unknown) => {
             message.error(parseApiError(err).message)
@@ -293,7 +293,7 @@ function resolveIneligibleReason(bagStatus?: string, allocationStatus?: string, 
         return 'Túi máu đã hoàn trả trước đó'
     }
     if (bagStatus === 'RESERVED' || allocationStatus === 'RESERVED') {
-        return 'Túi máu mới giữ chỗ (RESERVED), chưa xuất kho từ BBNK'
+        return 'Túi máu mới giữ chỗ, chưa xuất kho từ BBNK'
     }
     if (bagStatus === 'TRANSFUSED') {
         return 'Túi máu đã truyền cho người bệnh'

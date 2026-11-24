@@ -8,7 +8,7 @@ import { useStorageLocations } from '../hooks'
 import { useTransitionBag } from '../stockHooks'
 import { addOffline } from '../offlineQueue'
 import {
-    AUTO_STATUSES, COMING_SOON_STATUSES, MANUAL_STATUSES, allowedManualTargets, fmtDateTimeSec, statusMeta,
+    AUTO_STATUSES, COMING_SOON_STATUSES, MANUAL_STATUSES, allowedManualTargets, fmtDateTimeSec, statusMeta, storageZoneMeta,
 } from '../stockFormat'
 import { isNetworkError } from '@/shared/utils/network'
 import { SectionCard } from '@/shared/components'
@@ -44,8 +44,11 @@ export default function BagScanResult({ bag, onChanged, onQueued }: Props) {
         })),
     ]
     const locOptions = (locs?.items ?? [])
-        .filter((l) => l.isActive && !l.isFull)
-        .map((l) => ({ value: l.locationId, label: `${l.refrigeratorName} - ${l.shelfNumber} (${l.targetTemperature}°C)` }))
+        .filter((l) => l.isActive && !l.isFull && l.zone !== 'DISPOSAL_HOLD')
+        .map((l) => ({
+            value: l.locationId,
+            label: `${l.refrigeratorName} - ${l.shelfNumber} (${l.targetTemperature}°C - ${storageZoneMeta(l.zone).shortLabel})`,
+        }))
     const needsLocation = target === 'READY_TESTING' || target === 'AVAILABLE'
     const isIssued = bag.currentStatus === 'ISSUED'
     // Túi đã tiêu hủy, đã truyền, đã xuất kho (ISSUED) hoặc hết hạn không cập nhật thủ công tại màn quét kho.
@@ -108,8 +111,8 @@ export default function BagScanResult({ bag, onChanged, onQueued }: Props) {
                 <Alert
                     type="info"
                     showIcon
-                    title="Túi máu đang ở trạng thái Đã xuất kho (ISSUED)"
-                    description="Không thể chuyển thủ công sang Sẵn sàng (AVAILABLE) hoặc Đã truyền (TRANSFUSED) tại kho. Việc xác nhận truyền máu tại giường hoặc lập phiếu hoàn trả phải thực hiện trên phân hệ Lâm sàng."
+                    title="Túi máu đang ở trạng thái Đã xuất kho"
+                    description="Không thể chuyển thủ công sang Có sẵn hoặc Đã truyền tại kho. Việc xác nhận truyền máu tại giường hoặc lập phiếu hoàn trả phải thực hiện trên phân hệ Lâm sàng."
                 />
             )}
             {bag.isExpired && !bag.isDiscarded && (

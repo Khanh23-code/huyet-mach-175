@@ -1,19 +1,35 @@
-import { useState } from 'react'
 import { Tabs } from 'antd'
+import { useSearchParams } from 'react-router-dom'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { useInventorySummary } from '../stockHooks'
 import { fmtNum } from '../stockFormat'
 import BagInventoryPanel from '../components/BagInventoryPanel'
+import ComponentTypesConfigPanel from '../components/ComponentTypesConfigPanel'
 import StorageLocationsPanel from '../components/StorageLocationsPanel'
 import StockCountPanel from '../components/StockCountPanel'
 import './InventoryPages.css'
 import './Disposal.css'
 import './Stock.css'
 
+type StockTab = 'bags' | 'locations' | 'count' | 'component-types'
+
+const VALID_TABS: StockTab[] = ['bags', 'locations', 'count', 'component-types']
+
 export default function StockPage() {
-    const [tab, setTab] = useState('bags')
+    const [searchParams, setSearchParams] = useSearchParams()
+    const rawTab = searchParams.get('tab') as StockTab | null
+    const tab: StockTab = rawTab && VALID_TABS.includes(rawTab) ? rawTab : 'bags'
     const { data } = useInventorySummary()
     const o = data?.overview
+
+    const handleTabChange = (next: string) => {
+        const key: StockTab = VALID_TABS.includes(next as StockTab) ? (next as StockTab) : 'bags'
+        if (key === 'bags') {
+            setSearchParams({}, { replace: true })
+        } else {
+            setSearchParams({ tab: key }, { replace: true })
+        }
+    }
 
     const cards = [
         { label: 'Tổng túi máu', value: o?.totalBags, sub: 'Trong kho' },
@@ -29,7 +45,7 @@ export default function StockPage() {
             <PageHeader
                 breadcrumb={[{ title: 'Túi máu & Kho' }, { title: 'Tồn kho & Kiểm kê' }]}
                 title="Tồn kho & Kiểm kê"
-                subtitle="Tra cứu trạng thái túi máu, lọc theo nhóm máu, quản lý tủ lưu trữ và thực hiện đối soát kho."
+                subtitle="Tra cứu trạng thái túi máu, quản lý tủ lưu trữ theo phân khu, đối soát kho và cấu hình quy chuẩn chế phẩm máu."
             />
 
             <div className="stk-cards">
@@ -44,12 +60,13 @@ export default function StockPage() {
 
             <Tabs
                 activeKey={tab}
-                onChange={setTab}
+                onChange={handleTabChange}
                 destroyOnHidden
                 items={[
                     { key: 'bags', label: 'Tồn kho túi máu', children: <BagInventoryPanel /> },
                     { key: 'locations', label: 'Quản lý tủ lưu trữ', children: <StorageLocationsPanel /> },
                     { key: 'count', label: 'Kiểm kê tồn kho', children: <StockCountPanel /> },
+                    { key: 'component-types', label: 'Cấu hình chế phẩm máu', children: <ComponentTypesConfigPanel /> },
                 ]}
             />
         </PageContainer>

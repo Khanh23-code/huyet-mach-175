@@ -10,18 +10,26 @@ import type { DisposalCandidate, DisposalReason } from '../disposalsTypes'
 
 interface Props {
     presetBarcode: string
+    presetReason?: string
     canEdit: boolean
     onCreated: () => void
 }
 
+const VALID_REASONS: DisposalReason[] = ['EXPIRED', 'INFECTIOUS_POSITIVE', 'HEMOLYSIS', 'DAMAGED_BAG', 'OTHER']
 const PAGE_SIZE = 20
 
-export default function DisposalCandidatesPanel({ presetBarcode, canEdit, onCreated }: Props) {
+export default function DisposalCandidatesPanel({ presetBarcode, presetReason, canEdit, onCreated }: Props) {
     const [keyword, setKeyword] = useState(presetBarcode)
     const [search, setSearch] = useState(presetBarcode)
     const [page, setPage] = useState(1)
     const [selected, setSelected] = useState<Record<string, DisposalCandidate>>({})
-    const [reason, setReason] = useState<DisposalReason | null>(presetBarcode ? 'INFECTIOUS_POSITIVE' : null)
+    const resolvedPresetReason: DisposalReason | null =
+        presetReason && VALID_REASONS.includes(presetReason as DisposalReason)
+            ? (presetReason as DisposalReason)
+            : presetBarcode
+              ? 'INFECTIOUS_POSITIVE'
+              : null
+    const [reason, setReason] = useState<DisposalReason | null>(resolvedPresetReason)
     const [notes, setNotes] = useState('')
     const presetDone = useRef(false)
 
@@ -125,6 +133,7 @@ export default function DisposalCandidatesPanel({ presetBarcode, canEdit, onCrea
                         { title: 'Nhóm máu', dataIndex: 'bloodGroup', width: 90, render: (v: string) => <BloodGroupTag value={v} size="sm" /> },
                         { title: 'Chế phẩm', dataIndex: 'componentTypeCode', width: 90 },
                         { title: 'Thể tích', dataIndex: 'volumeMl', width: 90, render: (v: number) => `${v} ml` },
+                        { title: 'Vị trí hiện tại', dataIndex: 'storageLocationName', width: 175, render: (v?: string | null) => v || '—' },
                         { title: 'Lý do khóa', dataIndex: 'discardReason', render: (v?: string | null) => v || '—' },
                         { title: 'Hạn dùng', dataIndex: 'expiredAt', width: 150, render: (v: string) => fmtDateTime(v) },
                     ]}

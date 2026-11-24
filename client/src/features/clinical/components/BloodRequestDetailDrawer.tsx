@@ -61,7 +61,7 @@ export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> =
             const scanData = await clinicalApi.scanTransfusionBag(row.barcode)
             if (scanData.bagStatus !== 'ISSUED') {
                 message.error(
-                    `Túi máu ${scanData.barcode} hiện ở trạng thái ${scanData.bagStatus} (không phải ISSUED), không thể xác nhận truyền máu.`,
+                    `Túi máu ${scanData.barcode} hiện không ở trạng thái đã xuất kho, không thể xác nhận truyền máu.`,
                 )
                 return
             }

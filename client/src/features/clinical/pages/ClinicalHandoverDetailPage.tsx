@@ -271,7 +271,7 @@ export default function ClinicalHandoverDetailPage() {
                                 showIcon
                                 icon={<ClockCircleOutlined />}
                                 message="Phiên bàn giao đã hết thời gian chờ"
-                                description="Phiên đã quá hạn 3–5 phút và đang tự động hoàn tác về RESERVED. Vui lòng nhờ Ngân hàng máu mở lại phiên mới."
+                                description="Phiên đã quá hạn 3–5 phút và đang tự động hoàn tác về trạng thái giữ chỗ. Vui lòng nhờ Ngân hàng máu mở lại phiên mới."
                             />
                         )}
 
@@ -279,8 +279,8 @@ export default function ClinicalHandoverDetailPage() {
                             <Alert
                                 type="error"
                                 showIcon
-                                message="Phiên bàn giao đã hết hạn (EXPIRED)"
-                                description="Toàn bộ túi máu trong phiên đã quay về trạng thái RESERVED tại tủ kho. Vui lòng nhờ Ngân hàng máu mở lại phiên mới."
+                                message="Phiên bàn giao đã hết hạn"
+                                description="Toàn bộ túi máu trong phiên đã quay về trạng thái giữ chỗ tại tủ kho. Vui lòng nhờ Ngân hàng máu mở lại phiên mới."
                             />
                         )}
 
@@ -291,7 +291,7 @@ export default function ClinicalHandoverDetailPage() {
                                 message="Phiên bàn giao đã bị Ngân hàng máu hủy sớm"
                                 description={
                                     activeSession.cancelReason ||
-                                    'Toàn bộ túi máu trong phiên giữ nguyên trạng thái RESERVED. Vui lòng liên hệ quầy Ngân hàng máu.'
+                                    'Toàn bộ túi máu trong phiên giữ nguyên trạng thái giữ chỗ. Vui lòng liên hệ quầy Ngân hàng máu.'
                                 }
                             />
                         )}
@@ -447,11 +447,11 @@ export default function ClinicalHandoverDetailPage() {
                                     <div style={{ display: 'grid', gap: 4, marginTop: 4 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                             <span>
-                                                Toàn bộ túi đã chuyển trạng thái <strong>ISSUED</strong> - Trạng thái phiếu{' '}
+                                                Toàn bộ túi đã chuyển trạng thái <strong>Đã xuất kho</strong> - Trạng thái phiếu{' '}
                                                 <strong>{activeSession.requestCode}</strong>:
                                             </span>
                                             <StatusPill tone={getStatusTone(activeSession.requestStatus)} dot={false}>
-                                                {getStatusMeta(activeSession.requestStatus).label} ({activeSession.requestStatus})
+                                                {getStatusMeta(activeSession.requestStatus).label}
                                             </StatusPill>
                                         </div>
                                         <div>

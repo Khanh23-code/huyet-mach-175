@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
-import { App, Button, Empty } from 'antd'
-import { ReloadOutlined } from '@ant-design/icons'
+import { App, Button, Empty, Tag } from 'antd'
+import { ReloadOutlined, ScanOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
@@ -41,7 +41,7 @@ export default function ReturnScanPage() {
             if (!barcode) return
 
             if (!canApprove) {
-                const msg = 'Tài khoản không có quyền BLOOD_RETURN_APPROVE để kiểm định túi máu hoàn trả.'
+                const msg = 'Tài khoản của bạn chưa có quyền kiểm định túi máu hoàn trả.'
                 setErrorMsg(msg)
                 message.error(msg)
                 return
@@ -54,14 +54,14 @@ export default function ReturnScanPage() {
                 const inspection = await returnsApi.scan(barcode)
 
                 if (inspection.finalAction !== 'PENDING_INSPECTION') {
-                    const msg = `Phiếu hoàn trả #${inspection.returnId} của túi ${inspection.barcode} đã được xử lý (${inspection.finalAction}).`
+                    const msg = `Phiếu hoàn trả #${inspection.returnId} của túi ${inspection.barcode} đã được xử lý trước đó.`
                     setErrorMsg(msg)
                     message.warning(msg)
                     return
                 }
 
                 if (inspection.bagStatus !== 'LOCKED') {
-                    const msg = `Túi máu ${inspection.barcode} đang ở trạng thái ${inspection.bagStatus}, không ở trạng thái LOCKED chờ kiểm định.`
+                    const msg = `Túi máu ${inspection.barcode} hiện không ở trạng thái tạm khóa chờ kiểm định.`
                     setErrorMsg(msg)
                     message.error(msg)
                     return
@@ -115,7 +115,7 @@ export default function ReturnScanPage() {
 
                 <SectionCard
                     title="Phiếu hoàn trả chờ kiểm định"
-                    subtitle="Danh sách túi máu đang ở trạng thái phong tỏa (LOCKED) từ khoa lâm sàng."
+                    subtitle="Danh sách túi máu đang được tạm khóa chờ kiểm định từ khoa lâm sàng."
                     extra={
                         <Button
                             size="small"
@@ -133,21 +133,71 @@ export default function ReturnScanPage() {
                                 <div key={item.returnId} className="return-pending-item">
                                     <div className="return-pending-item__top">
                                         <span className="return-pending-item__code">{item.barcode}</span>
-                                        <StatusPill tone={item.isExpired ? 'danger' : 'warning'}>
-                                            {item.isExpired ? 'Đã hết hạn' : `Phiếu trả #${item.returnId}`}
-                                        </StatusPill>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                            {item.requiresMandatoryDiscard && (
+                                                <StatusPill tone="danger">Bắt buộc tiêu hủy</StatusPill>
+                                            )}
+                                            <StatusPill tone={item.isExpired ? 'danger' : 'warning'}>
+                                                {item.isExpired ? 'Đã hết hạn' : `Phiếu trả #${item.returnId}`}
+                                            </StatusPill>
+                                        </div>
                                     </div>
                                     <div className="return-pending-item__title">
                                         <BloodGroupTag value={item.bloodType} size="sm" /> - {item.componentName} ({item.volumeMl} ml)
                                     </div>
                                     <div className="return-pending-item__meta">
-                                        {item.departmentName || 'Khoa lâm sàng'} - Phiếu YC: {item.requestCode}
+                                        {item.departmentName || 'Khoa lâm sàng'} - Phiếu YC: {item.requestCode} -{' '}
+                                        {item.allowRestock
+                                            ? `Đã tái nhập ${item.previousRestockCount}/${item.maxRestockCount} lần`
+                                            : 'Không cho phép tái nhập'}
                                     </div>
                                     <div className="return-pending-item__sub">
                                         Lý do: {item.returnReason}
                                     </div>
-                                    <div className="return-pending-item__time">
-                                        Lập lúc {formatDateTime(item.processedAt)} - {item.returnedByName || 'Lâm sàng'}
+                                    {item.clinicalChecklistWarnings?.length > 0 && (
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                                            {item.clinicalChecklistWarnings.map((w, idx) => (
+                                                <Tag key={`${w}-${idx}`} color="warning" style={{ margin: 0 }}>
+                                                    Cảnh báo LS: {w}
+                                                </Tag>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {item.mandatoryDiscardReasons?.length > 0 && (
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                                            {item.mandatoryDiscardReasons.map((r, idx) => (
+                                                <Tag key={`${r}-${idx}`} color="error" style={{ margin: 0 }}>
+                                                    {r}
+                                                </Tag>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            gap: 8,
+                                            marginTop: 6,
+                                            flexWrap: 'wrap',
+                                        }}
+                                    >
+                                        <div className="return-pending-item__time">
+                                            Lập lúc {formatDateTime(item.processedAt)} - {item.returnedByName || 'Lâm sàng'}
+                                        </div>
+                                        {canApprove && (
+                                            <Button
+                                                size="small"
+                                                type={item.requiresMandatoryDiscard ? 'default' : 'primary'}
+                                                danger={item.requiresMandatoryDiscard}
+                                                ghost={!item.requiresMandatoryDiscard}
+                                                icon={<ScanOutlined />}
+                                                loading={scanning}
+                                                onClick={() => void handleScan(item.barcode)}
+                                            >
+                                                {item.requiresMandatoryDiscard ? 'Mở & chuyển hủy' : 'Kiểm định'}
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             ))}

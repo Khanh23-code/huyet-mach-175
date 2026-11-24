@@ -104,6 +104,15 @@
     gap: var(--space-3);
 }
 
+.return-decision-actions .ant-btn {
+    font-size: var(--text-xs);
+    height: auto;
+    min-height: 40px;
+    padding: 8px 10px;
+    white-space: normal;
+    line-height: 1.35;
+}
+
 .return-policy-box {
     background: var(--c-surface-muted);
     border: 1px solid var(--c-border);

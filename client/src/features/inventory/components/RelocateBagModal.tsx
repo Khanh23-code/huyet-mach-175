@@ -4,6 +4,7 @@ import { parseApiError } from '@/services/apiError'
 import { useStorageLocations } from '../hooks'
 import { useRelocateBag } from '../stockHooks'
 import { isLocationSuitable } from '../format'
+import { storageZoneMeta } from '../stockFormat'
 import type { ComponentCode } from '../types'
 import type { RelocatableBag } from '../stockTypes'
 import { BloodGroupTag } from './StockBadges'
@@ -26,9 +27,10 @@ export default function RelocateBagModal({ bag, onClose }: Props) {
                 .filter((l) => l.isActive && !l.isFull && l.locationId !== bag?.storageLocationId)
                 .map((l) => {
                     const ok = isLocationSuitable(bag?.componentTypeCode as ComponentCode, l.targetTemperature)
+                    const zoneShort = storageZoneMeta(l.zone).shortLabel
                     return {
                         value: l.locationId,
-                        label: `${l.refrigeratorName} - ${l.shelfNumber} (${l.targetTemperature}°C)${ok === false ? ' - nhiệt độ không phù hợp' : ''}`,
+                        label: `${l.refrigeratorName} - ${l.shelfNumber} (${l.targetTemperature}°C - ${zoneShort})${ok === false ? ' - nhiệt độ không phù hợp' : ''}`,
                     }
                 }),
         [data, bag],

@@ -64,7 +64,7 @@ export const CreateReturnModal: React.FC<CreateReturnModalProps> = ({ open, onCl
                 <div>
                     <h3 className="return-modal__title">Lập phiếu hoàn trả túi máu chưa sử dụng</h3>
                     <p className="return-modal__subtitle">
-                        Phiếu sẽ khóa túi máu (LOCKED) và gửi yêu cầu thẩm định hoàn trả về Ngân hàng máu.
+                        Phiếu sẽ tạm khóa túi máu và gửi yêu cầu thẩm định hoàn trả về Ngân hàng máu.
                     </p>
                 </div>
             </div>
@@ -130,7 +130,7 @@ export const CreateReturnModal: React.FC<CreateReturnModalProps> = ({ open, onCl
                         showIcon
                         style={{ marginTop: 12 }}
                         message="Túi máu sẽ được gắn cờ bắt buộc tiêu hủy"
-                        description="Do có ít nhất 1 tiêu chí bảo quản chưa đạt, phiếu hoàn trả vẫn được tiếp nhận để khóa túi (LOCKED) nhưng không đủ điều kiện tái nhập kho."
+                        description="Do có ít nhất 1 tiêu chí bảo quản chưa đạt, phiếu hoàn trả vẫn được tiếp nhận để tạm khóa túi nhưng không đủ điều kiện tái nhập kho."
                     />
                 )}
 

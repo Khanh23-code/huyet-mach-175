@@ -49,13 +49,13 @@ function getSessionStatusBadge(status: HandoverSessionStatus): {
 } {
     switch (status) {
         case 'CONFIRMED':
-            return { label: 'Đã xác nhận bàn giao (CONFIRMED)', tone: 'success' }
+            return { label: 'Đã xác nhận bàn giao', tone: 'success' }
         case 'CANCELLED':
-            return { label: 'Đã hủy sớm (CANCELLED)', tone: 'warning' }
+            return { label: 'Đã hủy sớm', tone: 'warning' }
         case 'EXPIRED':
-            return { label: 'Đã hết hạn - tự hoàn tác (EXPIRED)', tone: 'danger' }
+            return { label: 'Đã hết hạn - tự hoàn tác', tone: 'danger' }
         default:
-            return { label: 'Đang chờ Lâm sàng xác nhận (PENDING)', tone: 'info' }
+            return { label: 'Đang chờ Lâm sàng xác nhận', tone: 'info' }
     }
 }
 
@@ -191,7 +191,7 @@ export default function HandoverDetailPage() {
             })
             setCancelModalOpen(false)
             setCancelReason('')
-            message.success(`Đã hủy sớm phiên ${res.sessionCode}. Toàn bộ túi giữ nguyên RESERVED.`)
+            message.success(`Đã hủy sớm phiên ${res.sessionCode}. Toàn bộ túi máu giữ nguyên trạng thái giữ chỗ.`)
         } catch (err) {
             message.error(parseApiError(err).message)
         }
@@ -278,7 +278,7 @@ export default function HandoverDetailPage() {
                                 }
                             >
                                 {activeSession?.status === 'CONFIRMED'
-                                    ? 'Đã xuất kho (ISSUED)'
+                                    ? 'Đã xuất kho'
                                     : bag.currentStatusLabel}
                             </StatusPill>
                         </div>
@@ -331,8 +331,8 @@ export default function HandoverDetailPage() {
                                     <span>Trạng thái túi</span>
                                     <strong>
                                         {activeSession?.status === 'CONFIRMED'
-                                            ? 'ISSUED - Đã xuất kho bàn giao'
-                                            : `${bag.currentStatus} - ${bag.currentStatusLabel}`}
+                                            ? 'Đã xuất kho bàn giao'
+                                            : bag.currentStatusLabel}
                                     </strong>
                                 </div>
                             </div>
@@ -346,7 +346,7 @@ export default function HandoverDetailPage() {
                                         showIcon
                                         icon={<ClockCircleOutlined />}
                                         message={`Phiên ${activeSession.sessionCode} đang chờ Lâm sàng xác nhận (${remainingSeconds > 0 ? `còn ${formatCountdown(remainingSeconds)}` : 'hết giờ - đang tự động hoàn tác'})`}
-                                        description="Quy tắc tại quầy (SOP): Túi máu vẫn đang giữ RESERVED trong tủ bảo quản. Chỉ trao túi vào thùng bảo ôn sau khi màn hình báo CONFIRMED."
+                                        description="Quy tắc tại quầy: Túi máu vẫn đang giữ chỗ trong tủ bảo quản. Chỉ trao túi vào thùng bảo ôn sau khi màn hình báo đã xác nhận."
                                     />
                                 )}
 
@@ -355,7 +355,7 @@ export default function HandoverDetailPage() {
                                         type="success"
                                         showIcon
                                         message={`Phiên ${activeSession.sessionCode} đã xác nhận thành công`}
-                                        description={`Lâm sàng (${activeSession.confirmedByName || 'Nhân sự lâm sàng'}) đã xác nhận lúc ${formatDateTime(activeSession.confirmedAt)}. Toàn bộ túi đã chuyển ISSUED — có thể trao túi máu cho người lĩnh.`}
+                                        description={`Lâm sàng (${activeSession.confirmedByName || 'Nhân sự lâm sàng'}) đã xác nhận lúc ${formatDateTime(activeSession.confirmedAt)}. Toàn bộ túi đã xuất kho — có thể trao túi máu cho người lĩnh.`}
                                     />
                                 )}
 
@@ -370,7 +370,7 @@ export default function HandoverDetailPage() {
                                         }
                                         description={
                                             activeSession.cancelReason ||
-                                            'Toàn bộ túi máu trong phiên đã quay về trạng thái RESERVED và giữ nguyên vị trí tủ để có thể mở lại phiên mới.'
+                                            'Toàn bộ túi máu trong phiên đã quay về trạng thái giữ chỗ và giữ nguyên vị trí tủ để có thể mở lại phiên mới.'
                                         }
                                     />
                                 )}

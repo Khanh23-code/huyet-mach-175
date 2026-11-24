@@ -48,7 +48,7 @@ export default function LabTestPage() {
                 setKeyword('')
             } else {
                 message.warning(
-                    `Túi '${code}' không có trong hàng chờ xét nghiệm. Túi cần ở trạng thái READY_TESTING và chưa có kết quả.`,
+                    `Túi '${code}' không có trong hàng chờ xét nghiệm. Chỉ túi đang chờ xét nghiệm và chưa có kết quả mới hiển thị tại đây.`,
                 )
             }
         } catch (e) {

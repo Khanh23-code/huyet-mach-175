@@ -13,12 +13,13 @@ export default function DisposalPage() {
     const { can } = usePermission()
     const canEdit = can(PERMISSIONS.DISPOSAL_EDIT)
     const [params, setParams] = useSearchParams()
-    // Đọc 1 lần: barcode do màn xét nghiệm chuyển sang
+    // Đọc 1 lần: barcode và lý do gợi ý do màn xét nghiệm / hoàn trả chuyển sang
     const [presetBarcode] = useState(() => params.get('barcode')?.trim() ?? '')
+    const [presetReason] = useState(() => params.get('reason')?.trim() ?? '')
     const [tab, setTab] = useState('candidates')
 
     const clearPreset = () => {
-        if (params.has('barcode')) setParams({}, { replace: true })
+        if (params.has('barcode') || params.has('reason')) setParams({}, { replace: true })
     }
 
     return (
@@ -39,6 +40,7 @@ export default function DisposalPage() {
                         children: (
                             <DisposalCandidatesPanel
                                 presetBarcode={presetBarcode}
+                                presetReason={presetReason}
                                 canEdit={canEdit}
                                 onCreated={() => {
                                     clearPreset()

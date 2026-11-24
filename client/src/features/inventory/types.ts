@@ -2,12 +2,15 @@ import type { BagLabSummary, BagSource, SourceFilterValue } from './bagSource'
 
 export type ChildCode = 'PRBC' | 'FFP' | 'PLT'
 export type ComponentCode = 'WB' | ChildCode
+export type StorageZone = 'QUARANTINE' | 'RELEASED' | 'DISPOSAL_HOLD'
+export type CompatibilityRuleType = 'RBC' | 'PLASMA' | 'PLATELET'
 
 export interface StorageLocation {
     locationId: number
     refrigeratorName: string
     shelfNumber: string
     targetTemperature: number
+    zone: StorageZone
     isFull: boolean
     isActive: boolean
     currentBagsCount: number

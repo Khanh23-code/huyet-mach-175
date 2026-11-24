@@ -84,7 +84,7 @@ export default function ClinicalHandoverScanPage() {
             if (!barcode) return
 
             if (!canView) {
-                const msg = 'Bạn không có quyền BLOOD_REQUEST_VIEW để xác minh phiên bàn giao túi máu.'
+                const msg = 'Bạn chưa có quyền xem hoặc xác minh phiên bàn giao túi máu.'
                 setErrorMsg(msg)
                 message.error(msg)
                 return
@@ -134,7 +134,7 @@ export default function ClinicalHandoverScanPage() {
             if (!barcode) return
 
             if (!canView) {
-                const msg = 'Bạn không có quyền BLOOD_REQUEST_VIEW để kiểm tra túi máu truyền tại giường.'
+                const msg = 'Bạn chưa có quyền kiểm tra túi máu truyền tại giường.'
                 setTransfusionErrorMsg(msg)
                 message.error(msg)
                 return
@@ -146,7 +146,7 @@ export default function ClinicalHandoverScanPage() {
             try {
                 const data = await clinicalApi.scanTransfusionBag(barcode)
                 if (data.bagStatus !== 'ISSUED') {
-                    const msg = `Túi máu "${data.barcode}" hiện ở trạng thái ${data.bagStatus} (chỉ cho phép truyền túi đang ở trạng thái ISSUED).`
+                    const msg = `Túi máu "${data.barcode}" hiện không ở trạng thái đã xuất kho, không thể thực hiện truyền máu tại giường.`
                     setTransfusionErrorMsg(msg)
                     message.error(msg)
                     return
@@ -173,7 +173,7 @@ export default function ClinicalHandoverScanPage() {
                     { title: 'Nhận & truyền túi máu' },
                 ]}
                 title="Nhận bàn giao & Truyền máu tại giường"
-                subtitle="Xác nhận nhận lô túi máu tại quầy Ngân hàng máu hoặc quét barcode túi máu Đã xuất kho (ISSUED) để bắt đầu truyền cho người bệnh."
+                subtitle="Xác nhận nhận lô túi máu tại quầy Ngân hàng máu hoặc quét barcode túi máu đã xuất kho để bắt đầu truyền cho người bệnh."
                 extra={
                     <StatusPill tone={pendingSessions.length > 0 ? 'warning' : 'neutral'} pulse={pendingSessions.length > 0}>
                         {pendingSessions.length > 0
@@ -331,7 +331,7 @@ export default function ClinicalHandoverScanPage() {
                                         type="info"
                                         showIcon
                                         message="Đối chiếu an toàn trước khi bắt đầu truyền máu tại giường"
-                                        description="Chỉ các túi máu đang ở trạng thái Đã xuất kho (ISSUED) thuộc khoa của bạn mới được phép truyền. Quét mã vạch túi máu để mở hộp thoại xác nhận mã người bệnh trước khi chuyển trạng thái sang Đã truyền (TRANSFUSED)."
+                                        description="Chỉ các túi máu đang ở trạng thái Đã xuất kho thuộc khoa của bạn mới được phép truyền. Quét mã vạch túi máu để mở hộp thoại xác nhận mã người bệnh trước khi chuyển sang trạng thái Đã truyền."
                                     />
 
                                     {lastTransfusion && (
@@ -341,7 +341,7 @@ export default function ClinicalHandoverScanPage() {
                                             closable
                                             onClose={() => setLastTransfusion(null)}
                                             icon={<CheckCircleOutlined />}
-                                            message={`Đã xác nhận truyền túi máu ${lastTransfusion.barcode} (${lastTransfusion.bagStatus})`}
+                                            message={`Đã xác nhận truyền túi máu ${lastTransfusion.barcode}`}
                                             description={
                                                 <div style={{ display: 'grid', gap: 4, marginTop: 4 }}>
                                                     <div>
@@ -363,8 +363,8 @@ export default function ClinicalHandoverScanPage() {
 
                                     <BarcodeScanBox
                                         title="Quét barcode túi máu để xác nhận truyền cho người bệnh"
-                                        description="Hệ thống kiểm tra trạng thái ISSUED ngay trên giao diện và hiển thị hộp thoại nhập mã vòng tay người bệnh."
-                                        placeholder="Nhập hoặc quét mã barcode túi máu ISSUED..."
+                                        description="Hệ thống kiểm tra trạng thái túi máu ngay trên giao diện và hiển thị hộp thoại nhập mã vòng tay người bệnh."
+                                        placeholder="Nhập hoặc quét mã barcode túi máu đã xuất kho..."
                                         submitLabel="Kiểm tra & mở xác nhận"
                                         loading={scanningTransfusion}
                                         errorMessage={transfusionErrorMsg}

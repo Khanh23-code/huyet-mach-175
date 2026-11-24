@@ -39,7 +39,7 @@ function ConfirmTransfusionForm({ bag, onClose, onConfirmed }: ConfirmTransfusio
 
         if (!isIssued) {
             setErrorMsg(
-                `Túi máu ${bag.barcode} đang ở trạng thái ${bag.bagStatus} (không phải ISSUED), không thể xác nhận truyền máu.`,
+                `Túi máu ${bag.barcode} hiện không ở trạng thái đã xuất kho, không thể xác nhận truyền máu.`,
             )
             return
         }
@@ -80,7 +80,7 @@ function ConfirmTransfusionForm({ bag, onClose, onConfirmed }: ConfirmTransfusio
                         Xác nhận truyền máu tại giường
                     </h3>
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-secondary)', marginTop: 2 }}>
-                        Đối chiếu túi máu và xác nhận mã người bệnh trước khi chuyển trạng thái sang Đã truyền (TRANSFUSED).
+                        Đối chiếu túi máu và xác nhận mã người bệnh trước khi chuyển trạng thái sang Đã truyền cho người bệnh.
                     </div>
                 </div>
             </div>
@@ -90,8 +90,8 @@ function ConfirmTransfusionForm({ bag, onClose, onConfirmed }: ConfirmTransfusio
                     type="error"
                     showIcon
                     icon={<WarningOutlined />}
-                    message={`Trạng thái túi máu không hợp lệ (${bag.bagStatus})`}
-                    description="Chỉ túi máu ở trạng thái Đã xuất kho (ISSUED) mới có thể xác nhận truyền tại giường."
+                    message="Trạng thái túi máu không hợp lệ"
+                    description="Chỉ túi máu đã xuất kho về khoa mới có thể xác nhận truyền tại giường."
                 />
             )}
 
@@ -137,7 +137,7 @@ function ConfirmTransfusionForm({ bag, onClose, onConfirmed }: ConfirmTransfusio
                         <div>
                             Trạng thái:{' '}
                             <StatusPill tone={isIssued ? 'info' : 'danger'} dot={false}>
-                                {bag.bagStatus}
+                                {isIssued ? 'Đã xuất kho' : 'Không hợp lệ'}
                             </StatusPill>
                         </div>
                         <div>Hạn dùng: {formatDateTime(bag.expiredAt)}</div>

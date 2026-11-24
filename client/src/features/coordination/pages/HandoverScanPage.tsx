@@ -77,14 +77,14 @@ const BLOOD_GROUP_OPTIONS = [
 
 const URGENCY_FILTER_OPTIONS = [
     { value: 'ALL', label: 'Tất cả mức khẩn' },
-    { value: 'EMERGENCY', label: 'Cấp cứu (EMERGENCY)' },
-    { value: 'URGENT', label: 'Khẩn (URGENT)' },
-    { value: 'ROUTINE', label: 'Thường quy (ROUTINE)' },
+    { value: 'EMERGENCY', label: 'Cấp cứu' },
+    { value: 'URGENT', label: 'Khẩn' },
+    { value: 'ROUTINE', label: 'Thường quy' },
 ]
 
 const HANDED_OVER_STATUS_OPTIONS = [
-    { value: 'ISSUED', label: 'Đã xuất kho bàn giao (ISSUED)' },
-    { value: 'TRANSFUSED', label: 'Đã truyền cho người bệnh (TRANSFUSED)' },
+    { value: 'ISSUED', label: 'Đã xuất kho bàn giao' },
+    { value: 'TRANSFUSED', label: 'Đã truyền cho người bệnh' },
 ]
 
 const TIMEOUT_OPTIONS = [
@@ -392,7 +392,7 @@ export default function HandoverScanPage() {
             if (!barcode) return
 
             if (!canScanBag) {
-                const msg = 'Tài khoản của bạn chưa có quyền INVENTORY_VIEW để tra cứu barcode túi máu.'
+                const msg = 'Tài khoản của bạn chưa có quyền tra cứu barcode túi máu.'
                 setErrorMsg(msg)
                 message.error(msg)
                 return
@@ -462,7 +462,7 @@ export default function HandoverScanPage() {
                 }
 
                 if (bag.currentStatus !== 'RESERVED') {
-                    const msg = `Túi máu ${bag.barcode} đang ở trạng thái "${bag.currentStatusLabel}" (${bag.currentStatus}). Chỉ túi máu đã giữ chỗ cho phiếu yêu cầu (RESERVED) mới đủ điều kiện bàn giao.`
+                    const msg = `Túi máu ${bag.barcode} đang ở trạng thái "${bag.currentStatusLabel}". Chỉ túi máu đã giữ chỗ cho phiếu yêu cầu mới đủ điều kiện bàn giao.`
                     setErrorMsg(msg)
                     message.error(msg)
                     return
@@ -517,7 +517,7 @@ export default function HandoverScanPage() {
                 sessionId: cancelTargetSession.handoverSessionId,
                 data: cancelReason.trim() ? { cancelReason: cancelReason.trim() } : undefined,
             })
-            message.success(`Đã hủy sớm phiên ${res.sessionCode}. Toàn bộ túi máu giữ nguyên RESERVED.`)
+            message.success(`Đã hủy sớm phiên ${res.sessionCode}. Toàn bộ túi máu giữ nguyên trạng thái giữ chỗ.`)
             setCancelTargetSession(null)
             setCancelReason('')
         } catch (err) {
@@ -958,7 +958,7 @@ export default function HandoverScanPage() {
                     { title: 'Bàn giao cấp phát máu' },
                 ]}
                 title="Bàn giao cấp phát máu"
-                subtitle="Quét hoặc mở từng đơn yêu cầu để chọn lô túi máu RESERVED và khởi tạo phiên bàn giao 2 pha."
+                subtitle="Quét hoặc mở từng đơn yêu cầu để chọn lô túi máu đã giữ chỗ và khởi tạo phiên bàn giao 2 pha."
                 extra={
                     <StatusPill tone={pendingSessions.length > 0 ? 'warning' : totalReservedBagsCount > 0 ? 'info' : 'neutral'}>
                         {pendingSessions.length > 0
@@ -989,7 +989,7 @@ export default function HandoverScanPage() {
                 <div className="handover-scan-grid">
                     <BarcodeScanBox
                         title="Quét mã túi máu vào khay bàn giao (Pha 1)"
-                        description="Quét nhiều túi máu RESERVED thuộc cùng một đơn yêu cầu vào khay bên dưới, hoặc mở rộng từng đơn yêu cầu để chọn túi."
+                        description="Quét nhiều túi máu đã giữ chỗ thuộc cùng một đơn yêu cầu vào khay bên dưới, hoặc mở rộng từng đơn yêu cầu để chọn túi."
                         placeholder="Nhập mã barcode túi máu..."
                         submitLabel="Thêm vào khay"
                         loading={looking}
@@ -1004,10 +1004,10 @@ export default function HandoverScanPage() {
                             <span>Quy trình bàn giao đồng thời 2 pha</span>
                         </div>
                         <p>
-                            <strong>Pha 1 (BBNK):</strong> Chỉ mở phiên cho các túi <strong>RESERVED</strong> thuộc <strong>cùng một đơn yêu cầu</strong> (hiệu lực 3–5 phút). Túi vẫn nằm trong tủ bảo quản.
+                            <strong>Pha 1 (Ngân hàng máu):</strong> Chỉ mở phiên cho các túi đang giữ chỗ thuộc <strong>cùng một đơn yêu cầu</strong> (hiệu lực 3–5 phút). Túi vẫn nằm trong tủ bảo quản.
                         </p>
                         <p>
-                            <strong>Pha 2 (Lâm sàng):</strong> Chỉ trao túi máu vào thùng bảo ôn sau khi nhân sự Lâm sàng quét xác nhận xong và phiên chuyển sang <strong>CONFIRMED</strong>.
+                            <strong>Pha 2 (Lâm sàng):</strong> Chỉ trao túi máu vào thùng bảo ôn sau khi nhân sự Lâm sàng quét xác nhận xong và phiên chuyển sang đã xác nhận.
                         </p>
                     </aside>
                 </div>
@@ -1124,7 +1124,7 @@ export default function HandoverScanPage() {
                                         <Alert
                                             type="warning"
                                             showIcon
-                                            message="Tài khoản thiếu quyền BLOOD_REQUEST_APPROVE để xem danh sách đơn yêu cầu bàn giao."
+                                            message="Tài khoản chưa có quyền xem danh sách đơn yêu cầu bàn giao."
                                         />
                                     ) : (
                                         <Table<ReservedHandoverRequestDto>
@@ -1186,7 +1186,7 @@ export default function HandoverScanPage() {
                                                 emptyText: (
                                                     <Empty
                                                         image={Empty.PRESENTED_IMAGE_SIMPLE}
-                                                        description="Hiện không có đơn yêu cầu nào có túi máu đang giữ chỗ (RESERVED)."
+                                                        description="Hiện không có đơn yêu cầu nào có túi máu đang giữ chỗ."
                                                     />
                                                 ),
                                             }}
@@ -1212,8 +1212,8 @@ export default function HandoverScanPage() {
                                     <Alert
                                         type="warning"
                                         showIcon
-                                        message="Quy tắc vận hành tại quầy (SOP)"
-                                        description="Túi máu trong các phiên PENDING vẫn đang giữ trạng thái RESERVED. Chỉ trao túi vào thùng bảo ôn sau khi Lâm sàng quét xác nhận xong (phiên chuyển CONFIRMED)."
+                                        message="Quy tắc vận hành tại quầy"
+                                        description="Túi máu trong các phiên đang chờ vẫn đang được giữ chỗ trong tủ. Chỉ trao túi vào thùng bảo ôn sau khi Lâm sàng quét xác nhận xong."
                                     />
 
                                     {pendingSessionsQuery.isLoading ? (
@@ -1369,7 +1369,7 @@ export default function HandoverScanPage() {
                                         <Alert
                                             type="warning"
                                             showIcon
-                                            message="Tài khoản thiếu quyền INVENTORY_VIEW để tra cứu danh sách túi máu đã bàn giao."
+                                            message="Tài khoản chưa có quyền tra cứu danh sách túi máu đã bàn giao."
                                         />
                                     ) : (
                                         <Table
@@ -1423,7 +1423,7 @@ export default function HandoverScanPage() {
                     <Alert
                         type="info"
                         showIcon
-                        message="Túi máu giữ nguyên RESERVED"
+                        message="Túi máu giữ nguyên trạng thái giữ chỗ"
                         description="Khi hủy sớm phiên bàn giao, toàn bộ túi máu trong lô vẫn giữ nguyên giữ chỗ cho phiếu yêu cầu để mở lại phiên sau."
                     />
                     <Input.TextArea

@@ -1,3 +1,5 @@
+import type { CompatibilityRuleType, ComponentCode, StorageZone } from './types'
+
 export type BagStatus =
     | 'NEWLY_COLLECTED' | 'READY_TESTING' | 'TESTED_PASSED' | 'AVAILABLE' | 'LOCKED'
     | 'RESERVED' | 'ISSUED' | 'TRANSFUSED' | 'DISCARDED' | 'PROCESSED'
@@ -92,6 +94,7 @@ export interface ExpiringQuery {
 
 export interface LocationQuery {
     search?: string
+    zone?: StorageZone
     isFull?: boolean
     isActive?: boolean
     availableOnly?: boolean
@@ -103,9 +106,30 @@ export interface StorageLocationInput {
     refrigeratorName: string
     shelfNumber: string
     targetTemperature: number
+    zone: StorageZone
     isFull: boolean
     isActive: boolean
 }
+
+export interface BloodComponentTypeConfig {
+    componentTypeId: number
+    typeCode: ComponentCode
+    typeName: string
+    lifeDays: number
+    storageTemperature: string
+    description?: string | null
+    minTemp: number
+    maxTemp: number
+    allowRestock: boolean
+    maxOutsideMinutesForRestock?: number | null
+    maxRestockCount: number
+    compatibilityRuleType: CompatibilityRuleType
+}
+
+export type UpdateBloodComponentTypeRequest = Omit<
+    BloodComponentTypeConfig,
+    'componentTypeId' | 'typeCode'
+>
 
 export interface RelocateRequest {
     newStorageLocationId: number

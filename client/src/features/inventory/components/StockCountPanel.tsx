@@ -3,6 +3,7 @@ import { Alert, Button, InputNumber, Table } from 'antd'
 import { EyeOutlined, ReloadOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { SectionCard, StatusPill } from '@/shared/components'
+import { storageZoneMeta } from '../stockFormat'
 import { useManagedLocations } from '../stockHooks'
 import type { StorageLocation } from '../types'
 import LocationBagsModal from './LocationBagsModal'
@@ -45,6 +46,13 @@ export default function StockCountPanel() {
                 rowClassName={(r) => (actual[r.locationId] != null && actual[r.locationId] !== r.currentBagsCount ? 'stk-row-diff' : '')}
                 columns={[
                     { title: 'Vị trí kho', render: (_: unknown, r) => `${r.refrigeratorName} - ${r.shelfNumber}` },
+                    {
+                        title: 'Phân khu', dataIndex: 'zone', width: 165,
+                        render: (z: StorageLocation['zone']) => {
+                            const m = storageZoneMeta(z)
+                            return <StatusPill tone={m.tone} dot={false}>{m.label}</StatusPill>
+                        },
+                    },
                     { title: 'Hệ thống', dataIndex: 'currentBagsCount', width: 120, align: 'right' },
                     {
                         title: 'Thực tế', width: 140, align: 'right',

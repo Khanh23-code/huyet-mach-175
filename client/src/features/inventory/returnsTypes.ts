@@ -1,4 +1,4 @@
-export type ReturnFinalAction = 'PENDING_INSPECTION' | 'RESTOCK' | 'DISCARD'
+export type ReturnFinalAction = 'PENDING_INSPECTION' | 'RESTOCK' | 'DISCARD' | 'CANCELLED'
 
 export interface PendingBloodReturnFilter {
     search?: string
@@ -28,6 +28,16 @@ export interface PendingBloodReturnDto {
     finalAction: ReturnFinalAction
     bagStatus: string
     processedAt: string
+    allowRestock: boolean
+    previousRestockCount: number
+    maxRestockCount: number
+    maxOutsideMinutesForRestock?: number | null
+    minTemp: number
+    maxTemp: number
+    storageTemperatureLabel: string
+    requiresMandatoryDiscard: boolean
+    mandatoryDiscardReasons: string[]
+    clinicalChecklistWarnings: string[]
 }
 
 export interface ReturnInspectionDto {
@@ -58,6 +68,17 @@ export interface ReturnInspectionDto {
     qualified: boolean
     finalAction: ReturnFinalAction
     returnedAt: string
+    allowRestock: boolean
+    previousRestockCount: number
+    maxRestockCount: number
+    maxOutsideMinutesForRestock?: number | null
+    minutesSinceIssued?: number | null
+    minTemp: number
+    maxTemp: number
+    storageTemperatureLabel: string
+    requiresMandatoryDiscard: boolean
+    mandatoryDiscardReasons: string[]
+    clinicalChecklistWarnings: string[]
 }
 
 export interface BloodReturnInspectionChecklistDto {
