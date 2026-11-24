@@ -15,6 +15,9 @@ export const storageLocationSchema = z.object({
         .number({ message: 'Vui lòng nhập nhiệt độ mục tiêu' })
         .min(-100, 'Nhiệt độ tối thiểu -100°C')
         .max(50, 'Nhiệt độ tối đa 50°C'),
+    zone: z.enum(['QUARANTINE', 'RELEASED', 'DISPOSAL_HOLD'], {
+        message: 'Vui lòng chọn phân khu lưu trữ',
+    }),
     isFull: z.boolean(),
     isActive: z.boolean(),
 })

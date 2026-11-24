@@ -1,12 +1,12 @@
 import { useCallback, useState } from 'react'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { parseApiError } from '@/services/apiError'
-import { locationsApi, stockApi } from './stockApi'
+import { componentTypesConfigApi, locationsApi, stockApi } from './stockApi'
 import { markOfflineError, removeOffline, toRequest, useOfflineQueue } from './offlineQueue'
 import { isNetworkError } from '@/shared/utils/network'
 import type {
     BagQuery, ExpiringQuery, LocationQuery, OfflineTransition, RelocateRequest, StorageLocationInput,
-    TransitionRequest,
+    TransitionRequest, UpdateBloodComponentTypeRequest,
 } from './stockTypes'
 
 // Mọi key nằm dưới ['inventory', ...] để mutation cũ/mới invalidate chung.
@@ -68,6 +68,27 @@ export const useUpdateLocation = () => {
 export const useDeleteLocation = () => {
     const done = useInvalidate()
     return useMutation({ mutationFn: (id: number) => locationsApi.remove(id), onSuccess: done })
+}
+
+export const useBloodComponentTypesConfig = () =>
+    useQuery({
+        queryKey: ['inventory', 'blood-component-types-config'],
+        queryFn: () => componentTypesConfigApi.list(),
+        staleTime: 5 * 60_000,
+    })
+
+export const useUpdateBloodComponentType = () => {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (p: { id: number; body: UpdateBloodComponentTypeRequest }) =>
+            componentTypesConfigApi.update(p.id, p.body),
+        onSuccess: async () => {
+            await Promise.all([
+                qc.invalidateQueries({ queryKey: ['inventory'] }),
+                qc.invalidateQueries({ queryKey: ['clinical', 'component-types'] }),
+            ])
+        },
+    })
 }
 
 export const useRelocateBag = () => {

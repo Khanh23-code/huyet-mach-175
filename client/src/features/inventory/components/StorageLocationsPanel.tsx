@@ -5,8 +5,9 @@ import Can from '@/features/auth/components/Can'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
 import { SectionCard, StatusPill } from '@/shared/components'
+import { STORAGE_ZONE_OPTIONS, storageZoneMeta } from '../stockFormat'
 import { useDeleteLocation, useManagedLocations } from '../stockHooks'
-import type { StorageLocation } from '../types'
+import type { StorageLocation, StorageZone } from '../types'
 import StorageLocationFormModal from './StorageLocationFormModal'
 import LocationBagsModal from './LocationBagsModal'
 
@@ -16,6 +17,7 @@ export default function StorageLocationsPanel() {
     const { message } = App.useApp()
     const [keyword, setKeyword] = useState('')
     const [search, setSearch] = useState('')
+    const [zone, setZone] = useState<StorageZone | undefined>()
     const [isActive, setIsActive] = useState<boolean | undefined>()
     const [page, setPage] = useState(1)
     const [editing, setEditing] = useState<StorageLocation | null>(null)
@@ -29,7 +31,7 @@ export default function StorageLocationsPanel() {
     }, [keyword])
 
     const { data, isLoading, isFetching } = useManagedLocations({
-        search: search || undefined, isActive, pageNumber: page, pageSize: PAGE_SIZE,
+        search: search || undefined, zone, isActive, pageNumber: page, pageSize: PAGE_SIZE,
     })
 
     const openForm = (l: StorageLocation | null) => { setEditing(l); setFormOpen(true) }
@@ -56,6 +58,14 @@ export default function StorageLocationsPanel() {
                         allowClear
                     />
                     <Select
+                        style={{ width: 195 }}
+                        allowClear
+                        placeholder="Mọi phân khu"
+                        value={zone}
+                        onChange={(v) => { setZone(v); setPage(1) }}
+                        options={STORAGE_ZONE_OPTIONS}
+                    />
+                    <Select
                         style={{ width: 170 }}
                         allowClear
                         placeholder="Mọi trạng thái"
@@ -74,12 +84,19 @@ export default function StorageLocationsPanel() {
                 rowKey="locationId"
                 loading={isLoading || isFetching}
                 dataSource={data?.items ?? []}
-                scroll={{ x: 820 }}
+                scroll={{ x: 960 }}
                 locale={{ emptyText: 'Chưa có tủ lưu trữ nào' }}
                 pagination={{ current: page, pageSize: PAGE_SIZE, total: data?.totalCount ?? 0, showSizeChanger: false, onChange: setPage }}
                 columns={[
                     { title: 'Tên tủ', dataIndex: 'refrigeratorName', render: (v: string) => <b>{v}</b> },
                     { title: 'Ngăn / kệ', dataIndex: 'shelfNumber', width: 110 },
+                    {
+                        title: 'Phân khu', dataIndex: 'zone', width: 175,
+                        render: (z: StorageZone) => {
+                            const meta = storageZoneMeta(z)
+                            return <StatusPill tone={meta.tone} dot={false}>{meta.label}</StatusPill>
+                        },
+                    },
                     { title: 'Nhiệt độ', dataIndex: 'targetTemperature', width: 100, render: (v: number) => `${v}°C` },
                     { title: 'Số túi', dataIndex: 'currentBagsCount', width: 80, align: 'right' },
                     {

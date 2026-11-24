@@ -1,6 +1,65 @@
 import dayjs from 'dayjs'
 import type { StatusPillTone } from '@/shared/components'
+import type { CompatibilityRuleType, StorageZone } from './types'
 import type { BagStatus } from './stockTypes'
+
+export const STORAGE_ZONE_META: Record<
+    StorageZone,
+    { label: string; shortLabel: string; tone: StatusPillTone; hint: string }
+> = {
+    QUARANTINE: {
+        label: 'Khu cách ly',
+        shortLabel: 'Cách ly',
+        tone: 'warning',
+        hint: 'Lưu túi chờ xét nghiệm, khóa tạm thời hoặc kiểm tra lại',
+    },
+    RELEASED: {
+        label: 'Kho sạch (Cấp phát)',
+        shortLabel: 'Kho sạch',
+        tone: 'success',
+        hint: 'Lưu túi đạt chuẩn, sẵn sàng cấp phát lâm sàng',
+    },
+    DISPOSAL_HOLD: {
+        label: 'Khu chờ tiêu hủy',
+        shortLabel: 'Chờ hủy',
+        tone: 'danger',
+        hint: 'Chỉ lưu túi LOCKED / không đạt tái nhập chờ hủy',
+    },
+}
+
+export const storageZoneMeta = (zone?: string | null) =>
+    STORAGE_ZONE_META[zone as StorageZone] ?? {
+        label: zone || '—',
+        shortLabel: zone || '—',
+        tone: 'neutral' as StatusPillTone,
+        hint: '',
+    }
+
+export const STORAGE_ZONE_OPTIONS = (Object.keys(STORAGE_ZONE_META) as StorageZone[]).map((z) => ({
+    value: z,
+    label: STORAGE_ZONE_META[z].label,
+}))
+
+export const COMPATIBILITY_RULE_META: Record<
+    CompatibilityRuleType,
+    { label: string; tone: StatusPillTone; desc: string }
+> = {
+    RBC: {
+        label: 'RBC - Hồng cầu',
+        tone: 'danger',
+        desc: 'O nhận O; A nhận A/O; B nhận B/O; AB nhận tất cả; Rh- chỉ nhận Rh-',
+    },
+    PLASMA: {
+        label: 'PLASMA - Huyết tương',
+        tone: 'info',
+        desc: 'Ngược chiều hồng cầu: O nhận tất cả; A nhận A/AB; B nhận B/AB; AB nhận AB (không xét Rh)',
+    },
+    PLATELET: {
+        label: 'PLATELET - Tiểu cầu',
+        tone: 'warning',
+        desc: 'ABO theo chiều huyết tương (O nhận tất cả, AB nhận AB) và bắt buộc Rh- chỉ nhận Rh-',
+    },
+}
 
 export const BAG_STATUS_META: Record<
     BagStatus,

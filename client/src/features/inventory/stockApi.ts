@@ -2,9 +2,9 @@ import { axiosClient } from '@/services/axiosClient'
 import type { PagedResult } from '@/shared/types/api'
 import type { StorageLocation } from './types'
 import type {
-    BagQuery, BagScan, BloodBag, ExpiringQuery, ExpiringSoonBag, InventorySummary, LocationQuery,
-    RelocateRequest, RelocateResponse, StatusLogsResponse, StorageLocationInput, TransitionRequest,
-    TransitionResponse,
+    BagQuery, BagScan, BloodBag, BloodComponentTypeConfig, ExpiringQuery, ExpiringSoonBag,
+    InventorySummary, LocationQuery, RelocateRequest, RelocateResponse, StatusLogsResponse,
+    StorageLocationInput, TransitionRequest, TransitionResponse, UpdateBloodComponentTypeRequest,
 } from './stockTypes'
 
 export const stockApi = {
@@ -41,4 +41,17 @@ export const locationsApi = {
         axiosClient.put<StorageLocation>(`/api/inventory/storage-locations/${id}`, body).then((r) => r.data),
 
     remove: (id: number) => axiosClient.delete(`/api/inventory/storage-locations/${id}`).then(() => undefined),
+}
+
+export const componentTypesConfigApi = {
+    list: () =>
+        axiosClient.get<BloodComponentTypeConfig[]>('/api/inventory/blood-component-types').then((r) => r.data),
+
+    getById: (id: number) =>
+        axiosClient.get<BloodComponentTypeConfig>(`/api/inventory/blood-component-types/${id}`).then((r) => r.data),
+
+    update: (id: number, body: UpdateBloodComponentTypeRequest) =>
+        axiosClient
+            .put<BloodComponentTypeConfig>(`/api/inventory/blood-component-types/${id}`, body)
+            .then((r) => r.data),
 }

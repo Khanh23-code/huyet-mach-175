@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
-import { App, Button, Input, InputNumber, Modal, Switch } from 'antd'
+import { App, Button, Input, InputNumber, Modal, Select, Switch } from 'antd'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { applyServerErrors, parseApiError } from '@/services/apiError'
+import { STORAGE_ZONE_META, STORAGE_ZONE_OPTIONS } from '../stockFormat'
 import { useCreateLocation, useUpdateLocation } from '../stockHooks'
 import { storageLocationSchema, type StorageLocationFormValues } from '../storageLocationSchema'
 import type { StorageLocation } from '../types'
@@ -15,9 +16,9 @@ interface Props {
 }
 
 const EMPTY: StorageLocationFormValues = {
-    refrigeratorName: '', shelfNumber: '', targetTemperature: 4, isFull: false, isActive: true,
+    refrigeratorName: '', shelfNumber: '', targetTemperature: 4, zone: 'RELEASED', isFull: false, isActive: true,
 }
-const FIELDS = ['refrigeratorName', 'shelfNumber', 'targetTemperature']
+const FIELDS = ['refrigeratorName', 'shelfNumber', 'targetTemperature', 'zone']
 
 export default function StorageLocationFormModal({ open, location, onClose }: Props) {
     const { message } = App.useApp()
@@ -38,6 +39,7 @@ export default function StorageLocationFormModal({ open, location, onClose }: Pr
                     refrigeratorName: location.refrigeratorName,
                     shelfNumber: location.shelfNumber,
                     targetTemperature: location.targetTemperature,
+                    zone: location.zone ?? 'RELEASED',
                     isFull: location.isFull,
                     isActive: location.isActive,
                 }
@@ -111,6 +113,23 @@ export default function StorageLocationFormModal({ open, location, onClose }: Pr
                     )} />
                     <div className="stk-hint">Gợi ý: máu toàn phần / hồng cầu 1–10°C - huyết tương ≤ -18°C - tiểu cầu 20–24°C</div>
                     {errors.targetTemperature && <div className="stk-err">{errors.targetTemperature.message}</div>}
+                </div>
+
+                <div className="stk-field">
+                    <label>Phân khu lưu trữ <span className="stk-req">*</span></label>
+                    <Controller name="zone" control={control} render={({ field }) => (
+                        <>
+                            <Select
+                                value={field.value}
+                                onChange={field.onChange}
+                                options={STORAGE_ZONE_OPTIONS}
+                                status={errors.zone ? 'error' : ''}
+                                style={{ width: '100%' }}
+                            />
+                            <div className="stk-hint">{STORAGE_ZONE_META[field.value]?.hint}</div>
+                        </>
+                    )} />
+                    {errors.zone && <div className="stk-err">{errors.zone.message}</div>}
                 </div>
 
                 <div className="stk-switches">
