@@ -96,14 +96,14 @@ export const SelectPatientHisModal: React.FC<SelectPatientHisModalProps> = ({
                                 <div className="his-patient-card__info">
                                     <div className="his-patient-card__name-line">
                                         <span className="his-patient-card__name">{p.patientName}</span>
-                                        <span className="his-patient-card__dot">·</span>
+                                        <span className="his-patient-card__dot">-</span>
                                         <span className="his-patient-card__age">{p.age} tuổi</span>
                                     </div>
                                     <div className="his-patient-card__location-line">
                                         <span>{p.patientCode}</span>
-                                        <span className="his-patient-card__dot">·</span>
+                                        <span className="his-patient-card__dot">-</span>
                                         <span>{p.room}</span>
-                                        <span className="his-patient-card__dot">·</span>
+                                        <span className="his-patient-card__dot">-</span>
                                         <span>{p.bed}</span>
                                     </div>
                                     <div className="his-patient-card__diagnosis">

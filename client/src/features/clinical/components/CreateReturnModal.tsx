@@ -81,7 +81,7 @@ export const CreateReturnModal: React.FC<CreateReturnModalProps> = ({ open, onCl
                 <div className="return-modal__info-row">
                     <span>Chế phẩm</span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                        <span>{bag.componentName} · {bag.volumeMl} ml</span>
+                        <span>{bag.componentName} - {bag.volumeMl} ml</span>
                         <BloodGroupTag value={bag.bloodType} size="sm" />
                     </span>
                 </div>

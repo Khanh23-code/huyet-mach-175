@@ -66,7 +66,7 @@ export default function BbnkDashboard() {
                 <div className="bb-card">
                     <div className="bb-card-top">
                         <span className="bb-icon bb-icon--blue"><FileTextOutlined /></span>
-                        <StatusPill tone="info" dot={false}>{MOCK_RESERVED.requests} phiếu yêu cầu · dữ liệu mẫu</StatusPill>
+                        <StatusPill tone="info" dot={false}>{MOCK_RESERVED.requests} phiếu yêu cầu - dữ liệu mẫu</StatusPill>
                     </div>
                     <small>Đang giữ chỗ</small>
                     <b>{MOCK_RESERVED.bags}</b>
@@ -112,7 +112,7 @@ export default function BbnkDashboard() {
 
                 <SectionCard
                     title="Yêu cầu cấp cứu"
-                    subtitle="Cần xử lý ngay · dữ liệu mẫu"
+                    subtitle="Cần xử lý ngay - dữ liệu mẫu"
                 >
                     <ul className="bb-urgent">
                         {MOCK_EMERGENCY.map((r) => (
@@ -124,7 +124,7 @@ export default function BbnkDashboard() {
                                     <b className={`bb-eta bb-eta--${r.tone}`}>{r.eta}</b>
                                 </div>
                                 <b className="bb-code">{r.code}</b>
-                                <small>{r.dept} · {r.group} · {r.bags} túi</small>
+                                <small>{r.dept} - {r.group} - {r.bags} túi</small>
                             </li>
                         ))}
                     </ul>

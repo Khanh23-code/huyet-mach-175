@@ -17,17 +17,17 @@ export default function DonorHeader({ detail }: { detail: SurveyDetail }) {
                     <div className="sc-eyebrow">HỒ SƠ NGƯỜI HIẾN</div>
                     <h2 className="sc-donor-name">{d.fullName}</h2>
                     <div className="sc-donor-meta">
-                        <span>{d.donorCode} · CCCD {d.citizenId} · {d.gender} · {d.age} tuổi</span>
+                        <span>{d.donorCode} - CCCD {d.citizenId} - {d.gender} - {d.age} tuổi</span>
                         <BloodGroupTag value={fmtBlood(d.bloodType, d.rhFactor)} size="sm" />
                     </div>
                     <div className="sc-donor-meta">
                         <span>
-                            SĐT {d.phoneNumber} · {detail.campaignName ?? 'Hiến tại viện'}
+                            SĐT {d.phoneNumber} - {detail.campaignName ?? 'Hiến tại viện'}
                         </span>
                         {detail.isWalkIn ? (
                             <StatusPill tone="neutral" dot={false}>Vãng lai</StatusPill>
                         ) : (
-                            <span>· {detail.timeSlot || '—'}</span>
+                            <span>- {detail.timeSlot || '—'}</span>
                         )}
                     </div>
                 </div>
@@ -44,7 +44,7 @@ export default function DonorHeader({ detail }: { detail: SurveyDetail }) {
                             <span className="sc-ok">✓ Đủ 84 ngày</span>
                         ) : (
                             <span className="sc-warn">
-                                Chưa đủ 84 ngày{nextEligible ? ` · đến ${fmtDate(nextEligible)}` : ''}
+                                Chưa đủ 84 ngày{nextEligible ? ` - đến ${fmtDate(nextEligible)}` : ''}
                             </span>
                         )}
                     </div>

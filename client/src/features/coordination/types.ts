@@ -1,3 +1,12 @@
+export type {
+    CancelHandoverSessionRequest,
+    CreateHandoverSessionRequest,
+    HandoverSessionDto,
+    HandoverSessionItemDto,
+    HandoverSessionStatus,
+    PendingHandoverSessionFilter,
+} from '@/shared/types/handover'
+
 export type ComponentCode = 'PRBC' | 'PLT' | 'FFP' | 'WB'
 export type UrgencyLevel = 'ROUTINE' | 'URGENT' | 'EMERGENCY'
 export type RequestStatus = 'DRAFT' | 'PENDING' | 'READY' | 'COMPLETED' | 'REJECTED'

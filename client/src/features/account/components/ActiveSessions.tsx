@@ -32,14 +32,14 @@ export default function ActiveSessions() {
                 {sessions?.map((s) => {
                     const meta = [s.ipAddress, s.location, `Đăng nhập lúc ${formatLoginTime(s.lastActiveAt)}`]
                         .filter((x) => x && x !== '—')
-                        .join(' · ')
+                        .join(' - ')
 
                     return (
                         <article className="pf-session" key={s.id}>
                             <div className="pf-session__icon" aria-hidden>{ICONS[s.deviceType]}</div>
                             <div className="pf-session__body">
                                 <div className="pf-session__title">
-                                    <strong>{s.browser} · {s.os}</strong>
+                                    <strong>{s.browser} - {s.os}</strong>
                                     {s.isCurrent && <StatusPill tone="primary">Phiên hiện tại</StatusPill>}
                                 </div>
                                 <small>{meta}</small>

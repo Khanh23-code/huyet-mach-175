@@ -1,4 +1,11 @@
 import type { AboGroup, RhValue } from '@/shared/types/medical'
+export type {
+    ConfirmHandoverSessionRequest,
+    HandoverSessionDto,
+    HandoverSessionItemDto,
+    HandoverSessionStatus,
+    PendingHandoverSessionFilter,
+} from '@/shared/types/handover'
 
 export type BloodType = AboGroup // 'A' | 'B' | 'AB' | 'O'
 export type RhFactor = RhValue // 'POSITIVE' | 'NEGATIVE'
@@ -11,7 +18,7 @@ export type ComponentCode = 'WB' | 'PRBC' | 'FFP' | 'PLT'
 
 export type AllocationStatus = 'RESERVED' | 'ISSUED' | 'COMPLETED' | 'RETURNED'
 
-export type ReturnFinalAction = 'PENDING_INSPECTION' | 'RESTOCK' | 'DISCARD'
+export type ReturnFinalAction = 'PENDING_INSPECTION' | 'RESTOCK' | 'DISCARD' | 'CANCELLED'
 
 export interface ClinicalBloodRequestDto {
     requestId: number
@@ -176,6 +183,53 @@ export interface ConfirmReceiptResponse {
     confirmedAt: string
 }
 
+export interface TransfusionScanDto {
+    allocationId: number
+    bagId: number
+    barcode: string
+    componentTypeId: number
+    componentCode: ComponentCode
+    componentName: string
+    bloodType: string
+    volumeMl: number
+    expiredAt: string
+    isExpired: boolean
+    bagStatus: string
+    requestId: number
+    requestCode: string
+    patientName: string
+    patientCode: string
+    patientBloodType: string
+    departmentName?: string | null
+    doctorName?: string | null
+    isOwnRequest: boolean
+    issuedAt?: string | null
+    receivedByName?: string | null
+}
+
+export interface ConfirmTransfusionRequest {
+    barcode: string
+    allocationId?: number
+    expectedPatientCode: string
+}
+
+export interface ConfirmTransfusionResponse {
+    bagId: number
+    barcode: string
+    bagStatus: string
+    allocationId: number
+    requestId: number
+    requestCode: string
+    patientCode: string
+    patientName: string
+    patientBloodType: string
+    bloodType: string
+    componentName: string
+    confirmedById: number
+    confirmedByName?: string | null
+    transfusedAt: string
+}
+
 export interface BloodReturnChecklistDto {
     isUnusedFullVolume: boolean
     isBagIntact: boolean
@@ -207,6 +261,25 @@ export interface CreateBloodReturnResponse {
     returnedById: number
     returnedByName?: string
     processedAt: string
+    isEligibleForRestockEvaluation: boolean
+    warningFlags: string[]
+}
+
+export interface CancelBloodReturnRequest {
+    cancelReason?: string
+}
+
+export interface CancelBloodReturnResponse {
+    returnId: number
+    allocationId: number
+    bagId: number
+    barcode: string
+    finalAction: ReturnFinalAction
+    bagStatus: string
+    cancelReason?: string | null
+    cancelledById: number
+    cancelledByName?: string | null
+    cancelledAt: string
 }
 
 export interface PendingBloodReturnFilter {
@@ -237,6 +310,16 @@ export interface PendingBloodReturnDto {
     finalAction: ReturnFinalAction
     bagStatus: string
     processedAt: string
+    allowRestock?: boolean
+    previousRestockCount?: number
+    maxRestockCount?: number
+    maxOutsideMinutesForRestock?: number | null
+    minTemp?: number
+    maxTemp?: number
+    storageTemperatureLabel?: string
+    requiresMandatoryDiscard?: boolean
+    mandatoryDiscardReasons?: string[]
+    clinicalChecklistWarnings?: string[]
 }
 
 export interface ComponentTypeOption {

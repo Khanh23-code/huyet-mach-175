@@ -217,8 +217,8 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                                 <CloseCircleOutlined />
                                 <span>
                                     {status === 'REJECTED'
-                                        ? 'Đề xuất chiến dịch này đã bị từ chối · Không mở tiếp nhận đăng ký'
-                                        : `Đợt hiến máu đã bị hủy${detail.cancellationReason ? ` · Lý do: ${detail.cancellationReason}` : ' · Đã dừng tiếp nhận người hiến máu'}`}
+                                        ? 'Đề xuất chiến dịch này đã bị từ chối - Không mở tiếp nhận đăng ký'
+                                        : `Đợt hiến máu đã bị hủy${detail.cancellationReason ? ` - Lý do: ${detail.cancellationReason}` : ' - Đã dừng tiếp nhận người hiến máu'}`}
                                 </span>
                             </div>
                         )}
@@ -307,7 +307,7 @@ export default function CampaignDetailModal({ campaignId, campaign, site, onClos
                     <ConfigCard
                         label="Khung giờ & Sức chứa ca hiến"
                         title="Các slot tiếp nhận người hiến"
-                        subtitle={`Campaign ID: ${detail.campaignId} · Tổng ${detail.slots?.length ?? 0} khung giờ`}
+                        subtitle={`Campaign ID: ${detail.campaignId} - Tổng ${detail.slots?.length ?? 0} khung giờ`}
                         slots={detail.slots}
                         highlight
                     />

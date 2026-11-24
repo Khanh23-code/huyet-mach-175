@@ -82,8 +82,8 @@ export default function CampaignCard({ campaign, onOpen }: Props) {
                     <CloseCircleOutlined />
                     <span>
                         {status === 'REJECTED'
-                            ? 'Đề xuất bị từ chối · Không mở đăng ký'
-                            : 'Đợt hiến đã bị hủy · Đã dừng tiếp nhận'}
+                            ? 'Đề xuất bị từ chối - Không mở đăng ký'
+                            : 'Đợt hiến đã bị hủy - Đã dừng tiếp nhận'}
                     </span>
                 </div>
             ) : (

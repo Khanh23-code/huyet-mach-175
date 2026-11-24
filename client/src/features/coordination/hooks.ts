@@ -6,8 +6,11 @@ import { coordinationApi, FALLBACK_COMPONENT_TYPES } from './coordinationApi'
 import type {
     AllocateBloodBagsRequest,
     BloodCoordinationQueueFilter,
+    CancelHandoverSessionRequest,
+    CreateHandoverSessionRequest,
     DispatchBloodBagRequest,
     DispatchBloodBagResponse,
+    PendingHandoverSessionFilter,
     RejectBloodRequestDto,
 } from './types'
 
@@ -35,6 +38,10 @@ export const COORDINATION_QUERY_KEYS = {
         requestItemId: number,
         includeCompatible: boolean,
     ) => ['coordination', 'availableBags', requestId, requestItemId, includeCompatible] as const,
+    pendingSessions: (filter?: PendingHandoverSessionFilter) =>
+        ['coordination', 'handoverSessions', 'pending', filter] as const,
+    sessionDetail: (sessionId: number) =>
+        ['coordination', 'handoverSessions', sessionId] as const,
 }
 
 function extractErrorMessage(err: unknown, fallback: string): string | null {
@@ -252,6 +259,70 @@ export function useDispatchedHandoverMap() {
     })
 }
 
+export function usePendingHandoverSessions(
+    filter?: PendingHandoverSessionFilter,
+    options?: { enabled?: boolean; refetchInterval?: number | false },
+) {
+    const { can } = usePermission()
+    const canView = can(PERMISSIONS.BLOOD_REQUEST_VIEW)
+
+    return useQuery({
+        queryKey: COORDINATION_QUERY_KEYS.pendingSessions(filter),
+        queryFn: () => coordinationApi.getPendingHandoverSessions(filter),
+        enabled: canView && (options?.enabled ?? true),
+        refetchInterval: options?.refetchInterval ?? false,
+        ...SESSION_CACHE_OPTIONS,
+    })
+}
+
+export function useHandoverSessionDetail(
+    sessionId: number | null,
+    options?: { enabled?: boolean; refetchInterval?: number | false },
+) {
+    const { can } = usePermission()
+    const canView = can(PERMISSIONS.BLOOD_REQUEST_VIEW)
+    const validId = typeof sessionId === 'number' && sessionId > 0 ? sessionId : 0
+
+    return useQuery({
+        queryKey: COORDINATION_QUERY_KEYS.sessionDetail(validId),
+        queryFn: () => coordinationApi.getHandoverSessionById(validId),
+        enabled: canView && validId > 0 && (options?.enabled ?? true),
+        refetchInterval: options?.refetchInterval ?? false,
+        ...SESSION_CACHE_OPTIONS,
+    })
+}
+
+export function useCreateHandoverSession() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: (data: CreateHandoverSessionRequest) => coordinationApi.createHandoverSession(data),
+        onSuccess: (res) => {
+            queryClient.invalidateQueries({ queryKey: ['coordination'] })
+            queryClient.invalidateQueries({ queryKey: COORDINATION_QUERY_KEYS.detail(res.requestId) })
+            queryClient.invalidateQueries({ queryKey: ['clinical'] })
+            queryClient.invalidateQueries({ queryKey: ['inventory'] })
+        },
+    })
+}
+
+export function useCancelHandoverSession() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({ sessionId, data }: { sessionId: number; data?: CancelHandoverSessionRequest }) =>
+            coordinationApi.cancelHandoverSession(sessionId, data),
+        onSuccess: (res) => {
+            queryClient.invalidateQueries({ queryKey: ['coordination'] })
+            queryClient.invalidateQueries({ queryKey: COORDINATION_QUERY_KEYS.detail(res.requestId) })
+            queryClient.invalidateQueries({ queryKey: COORDINATION_QUERY_KEYS.sessionDetail(res.handoverSessionId) })
+            queryClient.invalidateQueries({ queryKey: ['clinical'] })
+            queryClient.invalidateQueries({ queryKey: ['inventory'] })
+        },
+    })
+}
+
+/** @deprecated Sẽ gỡ ở bước FE-1.2 */
 export function useDispatchBag() {
     const queryClient = useQueryClient()
 

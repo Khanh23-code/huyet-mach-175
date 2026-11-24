@@ -95,7 +95,7 @@ export default function BagScanPage() {
                 subtitle="Quét định danh để truy xuất và cập nhật trạng thái túi máu theo thời gian thực."
                 extra={
                     <StatusPill tone={online ? 'primary' : 'warning'} pulse={online}>
-                        {online ? 'Máy quét đang hoạt động' : 'Mất kết nối · chế độ ngoại tuyến'}
+                        {online ? 'Máy quét đang hoạt động' : 'Mất kết nối - chế độ ngoại tuyến'}
                     </StatusPill>
                 }
             />

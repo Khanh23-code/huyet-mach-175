@@ -55,7 +55,7 @@ export default function SessionPage() {
                 breadcrumb={[{ title: 'Tiếp nhận & Sàng lọc' }, { title: 'Phiên lấy máu' }]}
                 title="Phiên lấy máu"
                 subtitle="Quản lý người hiến đạt tiêu chuẩn, ghi nhận thông tin thu thập và sự cố phát sinh."
-                extra={<StatusPill tone="info">Ca sáng · Phòng lấy máu A</StatusPill>}
+                extra={<StatusPill tone="info">Ca sáng - Phòng lấy máu A</StatusPill>}
             />
 
             <div className="ss-layout">

@@ -14,7 +14,7 @@ export default function BagLabel({ bag }: { bag: LabelData }) {
     return (
         <div className="ss-label">
             <div className="ss-label-head">
-                <span>BỆNH VIỆN 175 · NGÂN HÀNG MÁU</span>
+                <span>BỆNH VIỆN 175 - NGÂN HÀNG MÁU</span>
                 <b className="ss-label-group">{bag.bloodGroup}</b>
             </div>
             <BarcodeSvg value={bag.barcode} />

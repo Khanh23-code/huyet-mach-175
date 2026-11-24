@@ -83,7 +83,7 @@ export const ScanHandoverModal: React.FC<ScanHandoverModalProps> = ({
                     </div>
                     <div className="scan-modal__bag-row">
                         <span>Loại chế phẩm</span>
-                        <span>{targetBag.componentName} · {targetBag.volumeMl} ml</span>
+                        <span>{targetBag.componentName} - {targetBag.volumeMl} ml</span>
                     </div>
                     <div className="scan-modal__bag-row">
                         <span>Nhóm máu túi</span>

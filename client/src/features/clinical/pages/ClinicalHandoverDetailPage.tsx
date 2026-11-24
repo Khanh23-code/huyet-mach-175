@@ -124,7 +124,7 @@ export default function ClinicalHandoverDetailPage() {
                 breadcrumb={[
                     { title: 'Yêu cầu máu Lâm sàng', path: '/clinical/requests' },
                     { title: 'Nhận bàn giao', path: '/clinical/handovers' },
-                    { title: 'W3.2 · Thông tin túi máu tiếp nhận' },
+                    { title: 'Thông tin túi máu tiếp nhận' },
                 ]}
                 title="Thông tin túi máu tiếp nhận"
                 subtitle="Đối chiếu thông tin túi máu thực tế với dữ liệu bàn giao từ Ngân hàng máu trước khi xác nhận tiếp nhận."
@@ -144,7 +144,7 @@ export default function ClinicalHandoverDetailPage() {
                         <div>
                             <div className="handover-role-title">Nhân viên / Điều dưỡng lâm sàng</div>
                             <div className="handover-role-sub">
-                                {displayName} · {roleLabel || 'Khoa Lâm sàng'}
+                                {displayName} - {roleLabel || 'Khoa Lâm sàng'}
                             </div>
                         </div>
                     </div>
@@ -171,13 +171,13 @@ export default function ClinicalHandoverDetailPage() {
                         <div className="clin-pending-item">
                             <div>
                                 <div className="clin-pending-item__eyebrow">
-                                    Phiếu yêu cầu bàn giao · {bag.isOwnRequest ? 'Phiếu của bạn' : 'Nhận hộ trong khoa'}
+                                    Phiếu yêu cầu bàn giao - {bag.isOwnRequest ? 'Phiếu của bạn' : 'Nhận hộ trong khoa'}
                                 </div>
                                 <div className="clin-pending-item__title">
                                     {bag.requestCode} — {bag.patientName}
                                 </div>
                                 <div className="clin-pending-item__sub">
-                                    Mã NB: {bag.patientCode} · Bác sĩ lập phiếu: {bag.doctorName || '—'} · Người xuất kho:{' '}
+                                    Mã NB: {bag.patientCode} - Bác sĩ lập phiếu: {bag.doctorName || '—'} - Người xuất kho:{' '}
                                     {bag.issuedByName || '—'} ({bag.issuedAt ? formatDateTime(bag.issuedAt) : '—'})
                                 </div>
                             </div>
@@ -225,7 +225,7 @@ export default function ClinicalHandoverDetailPage() {
                                     <tr>
                                         <td>Chế phẩm &amp; thể tích</td>
                                         <td><strong>{bag.componentName} ({bag.volumeMl} ml)</strong></td>
-                                        <td><strong className="clin-reconcile-ok">{bag.componentCode} · {bag.volumeMl} ml</strong></td>
+                                        <td><strong className="clin-reconcile-ok">{bag.componentCode} - {bag.volumeMl} ml</strong></td>
                                         <td className="clin-reconcile-ok">✓</td>
                                     </tr>
                                     <tr>
@@ -306,7 +306,7 @@ export default function ClinicalHandoverDetailPage() {
                                     <div style={{ display: 'grid', gap: 4, marginTop: 4 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                             <span>
-                                                Trạng thái phân bổ: <strong>{receiptResult.allocationStatus}</strong> · Trạng thái phiếu{' '}
+                                                Trạng thái phân bổ: <strong>{receiptResult.allocationStatus}</strong> - Trạng thái phiếu{' '}
                                                 <strong>{receiptResult.requestCode}</strong>:
                                             </span>
                                             <StatusPill tone={getStatusTone(receiptResult.requestStatus)} dot={false}>
@@ -314,7 +314,7 @@ export default function ClinicalHandoverDetailPage() {
                                             </StatusPill>
                                         </div>
                                         <div>
-                                            Người tiếp nhận: <strong>{receiptResult.receivedByName || displayName}</strong> · Thời gian:{' '}
+                                            Người tiếp nhận: <strong>{receiptResult.receivedByName || displayName}</strong> - Thời gian:{' '}
                                             {formatDateTime(receiptResult.confirmedAt)}
                                         </div>
                                     </div>

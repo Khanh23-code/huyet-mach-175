@@ -121,7 +121,7 @@ export default function HandoverDetailPage() {
                 breadcrumb={[
                     { title: 'Điều phối Kho máu', path: '/coordination/queue' },
                     { title: 'Bàn giao cấp phát máu', path: '/coordination/handover' },
-                    { title: 'W4.3 · Thông tin túi máu bàn giao' },
+                    { title: 'Thông tin túi máu bàn giao' },
                 ]}
                 title="Bàn giao cấp phát máu"
                 subtitle="Kiểm tra thông tin túi máu đã quét và xác nhận xuất kho bàn giao cho khoa lâm sàng."
@@ -141,7 +141,7 @@ export default function HandoverDetailPage() {
                         <div>
                             <div className="handover-role-title">Kỹ thuật viên Khoa Truyền máu</div>
                             <div className="handover-role-sub">
-                                {displayName} · {roleLabel || 'Kho Trung tâm'}
+                                {displayName} - {roleLabel || 'Kho Trung tâm'}
                             </div>
                         </div>
                     </div>
@@ -172,7 +172,7 @@ export default function HandoverDetailPage() {
                                     <div className="handover-bag-banner__label">Túi máu đã quét</div>
                                     <div className="handover-bag-banner__code">{bag.barcode}</div>
                                     <div className="handover-bag-banner__meta">
-                                        {bag.componentType} · {bag.volumeMl} ml · Hạn {formatDateTime(bag.expiredAt)}
+                                        {bag.componentType} - {bag.volumeMl} ml - Hạn {formatDateTime(bag.expiredAt)}
                                     </div>
                                 </div>
                             </div>
@@ -227,8 +227,8 @@ export default function HandoverDetailPage() {
                                     <span>Trạng thái túi</span>
                                     <strong>
                                         {dispatched
-                                            ? 'ISSUED · Đã xuất kho bàn giao'
-                                            : `${bag.currentStatus} · ${bag.currentStatusLabel}`}
+                                            ? 'ISSUED - Đã xuất kho bàn giao'
+                                            : `${bag.currentStatus} - ${bag.currentStatusLabel}`}
                                     </strong>
                                 </div>
                             </div>
@@ -266,7 +266,7 @@ export default function HandoverDetailPage() {
                                         <div className="handover-kv">
                                             <span>Khoa / Bác sĩ</span>
                                             <strong>
-                                                {dispatched.departmentName || '—'} · {dispatched.doctorName || '—'}
+                                                {dispatched.departmentName || '—'} - {dispatched.doctorName || '—'}
                                             </strong>
                                         </div>
                                         <div className="handover-kv">

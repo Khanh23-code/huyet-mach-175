@@ -302,7 +302,7 @@ export default function HandoverScanPage() {
                     <div>
                         <div style={{ fontWeight: 600, color: 'var(--c-text)' }}>{row.componentTypeName}</div>
                         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-muted)' }}>
-                            {row.componentTypeCode} · {row.volumeMl} ml
+                            {row.componentTypeCode} - {row.volumeMl} ml
                         </div>
                     </div>
                 ),
@@ -416,7 +416,7 @@ export default function HandoverScanPage() {
                     <div>
                         <div style={{ fontWeight: 600, color: 'var(--c-text)' }}>{row.componentTypeName}</div>
                         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-muted)' }}>
-                            {row.componentTypeCode} · {row.volumeMl} ml
+                            {row.componentTypeCode} - {row.volumeMl} ml
                         </div>
                     </div>
                 ),
@@ -445,7 +445,7 @@ export default function HandoverScanPage() {
                                     {dispatchInfo.patientName} ({dispatchInfo.patientCode})
                                 </div>
                                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-muted)' }}>
-                                    {dispatchInfo.departmentName || 'Khoa điều trị'} · {dispatchInfo.doctorName || 'Bác sĩ'}
+                                    {dispatchInfo.departmentName || 'Khoa điều trị'} - {dispatchInfo.doctorName || 'Bác sĩ'}
                                 </div>
                             </div>
                         )
@@ -541,7 +541,7 @@ export default function HandoverScanPage() {
             <PageHeader
                 breadcrumb={[
                     { title: 'Điều phối Kho máu', path: '/coordination/queue' },
-                    { title: 'W4.3 · Bàn giao cấp phát máu' },
+                    { title: 'Bàn giao cấp phát máu' },
                 ]}
                 title="Bàn giao cấp phát máu"
                 subtitle="Quét túi xuất kho, chọn nhanh túi máu đang giữ chỗ hoặc tra cứu danh sách túi máu đã bàn giao."
@@ -561,7 +561,7 @@ export default function HandoverScanPage() {
                         <div>
                             <div className="handover-role-title">Kỹ thuật viên Khoa Truyền máu</div>
                             <div className="handover-role-sub">
-                                {displayName} · {roleLabel || 'Kho Trung tâm'}
+                                {displayName} - {roleLabel || 'Kho Trung tâm'}
                             </div>
                         </div>
                     </div>
@@ -796,7 +796,7 @@ export default function HandoverScanPage() {
                                     <div className="handover-bag-banner__label">Mã túi máu</div>
                                     <div className="handover-bag-banner__code">{detailBag.barcode}</div>
                                     <div className="handover-bag-banner__meta">
-                                        {detailBag.componentTypeName} ({detailBag.componentTypeCode}) · {detailBag.volumeMl} ml
+                                        {detailBag.componentTypeName} ({detailBag.componentTypeCode}) - {detailBag.volumeMl} ml
                                     </div>
                                 </div>
                             </div>
@@ -832,7 +832,7 @@ export default function HandoverScanPage() {
                                     <div className="handover-kv">
                                         <span>Khoa / Bác sĩ</span>
                                         <strong>
-                                            {detailDispatched.departmentName || '—'} · {detailDispatched.doctorName || '—'}
+                                            {detailDispatched.departmentName || '—'} - {detailDispatched.doctorName || '—'}
                                         </strong>
                                     </div>
                                     <div className="handover-kv">
@@ -863,7 +863,7 @@ export default function HandoverScanPage() {
                                 <div className="handover-kv" style={{ borderBottom: 'none' }}>
                                     <span>Giữ chỗ trước đó</span>
                                     <strong>
-                                        {detailReservedLog.performedBy} · {formatDateTime(detailReservedLog.timestamp)}
+                                        {detailReservedLog.performedBy} - {formatDateTime(detailReservedLog.timestamp)}
                                     </strong>
                                 </div>
                             )}

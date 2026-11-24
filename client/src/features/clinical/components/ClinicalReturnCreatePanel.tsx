@@ -132,12 +132,12 @@ export function ClinicalReturnCreatePanel() {
     const selectOptions = useMemo(() => {
         const eligibleOpts = eligibleBags.map((b) => ({
             value: b.allocationId,
-            label: `${b.barcode} · ${b.componentName} (${b.bloodType}, ${b.volumeMl}ml) — ${b.patientName} [${b.requestCode}]`,
+            label: `${b.barcode} - ${b.componentName} (${b.bloodType}, ${b.volumeMl}ml) — ${b.patientName} [${b.requestCode}]`,
             disabled: false,
         }))
         const ineligibleOpts = ineligibleBags.map((b) => ({
             value: -b.allocationId,
-            label: `[Không đủ điều kiện] ${b.barcode} · ${b.componentName} — ${b.ineligibleReason}`,
+            label: `[Không đủ điều kiện] ${b.barcode} - ${b.componentName} — ${b.ineligibleReason}`,
             disabled: true,
         }))
         return [...eligibleOpts, ...ineligibleOpts]
@@ -223,7 +223,7 @@ export function ClinicalReturnCreatePanel() {
                 key: 'patient',
                 render: (_, r) => (
                     <span>
-                        {r.requestCode} · {r.patientName} ({r.patientCode})
+                        {r.requestCode} - {r.patientName} ({r.patientCode})
                     </span>
                 ),
             },
@@ -251,7 +251,7 @@ export function ClinicalReturnCreatePanel() {
     return (
         <div style={{ display: 'grid', gap: 'var(--page-gap)' }}>
             <SectionCard
-                title="Lập phiếu hoàn trả túi máu – W3.3"
+                title="Lập phiếu hoàn trả túi máu"
                 extra={
                     <Button
                         icon={<ReloadOutlined />}
@@ -270,7 +270,7 @@ export function ClinicalReturnCreatePanel() {
                     showIcon
                     icon={<InfoCircleOutlined />}
                     style={{ marginBottom: 18 }}
-                    message="Phiếu hoàn trả sẽ được chuyển đến bộ phận Ngân hàng máu (W2.5)"
+                    message="Phiếu hoàn trả sẽ được chuyển đến bộ phận Ngân hàng máu"
                     description="Sau khi lập phiếu hoàn trả, túi máu sẽ được phong tỏa (LOCKED) để vận chuyển về Ngân hàng máu kiểm định điều kiện nhập lại kho hoặc chuyển hủy."
                 />
 
@@ -286,20 +286,20 @@ export function ClinicalReturnCreatePanel() {
                         description={
                             <div style={{ display: 'grid', gap: 4, marginTop: 4 }}>
                                 <div>
-                                    Mã phiếu: <strong>#{createdReturn.returnId}</strong> · Túi máu:{' '}
-                                    <code className="handover-barcode">{createdReturn.barcode}</code> ({createdReturn.componentName} ·{' '}
+                                    Mã phiếu: <strong>#{createdReturn.returnId}</strong> - Túi máu:{' '}
+                                    <code className="handover-barcode">{createdReturn.barcode}</code> ({createdReturn.componentName} -{' '}
                                     {createdReturn.bloodType})
                                 </div>
                                 <div>
-                                    Phiếu yêu cầu: <strong>{createdReturn.requestCode}</strong> · Người bệnh:{' '}
+                                    Phiếu yêu cầu: <strong>{createdReturn.requestCode}</strong> - Người bệnh:{' '}
                                     <strong>{createdReturn.patientName}</strong> ({createdReturn.patientCode})
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                                     <span>Trạng thái xử lý:</span>
                                     <StatusPill tone="info" dot={false}>{createdReturn.finalAction}</StatusPill>
-                                    <span>· Trạng thái túi:</span>
+                                    <span>- Trạng thái túi:</span>
                                     <StatusPill tone="warning" dot={false}>{createdReturn.bagStatus}</StatusPill>
-                                    <span>· Lập lúc: {formatDateTime(createdReturn.processedAt)}</span>
+                                    <span>- Lập lúc: {formatDateTime(createdReturn.processedAt)}</span>
                                 </div>
                             </div>
                         }
@@ -352,13 +352,13 @@ export function ClinicalReturnCreatePanel() {
                                 <strong className="text-mono" style={{ fontSize: 'var(--text-md)', color: 'var(--c-primary)' }}>
                                     {selectedBag.barcode}
                                 </strong>
-                                <span>· {selectedBag.componentName} ({selectedBag.volumeMl} ml) ·</span>
+                                <span>- {selectedBag.componentName} ({selectedBag.volumeMl} ml) -</span>
                                 <BloodGroupTag value={selectedBag.bloodType} size="sm" />
                             </div>
                             <div style={{ fontSize: 'var(--text-sm)', color: 'var(--c-text-secondary)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                                 <span>
-                                    Phiếu <strong>{selectedBag.requestCode}</strong> · NB{' '}
-                                    <strong>{selectedBag.patientName}</strong> ({selectedBag.patientCode}) ·
+                                    Phiếu <strong>{selectedBag.requestCode}</strong> - NB{' '}
+                                    <strong>{selectedBag.patientName}</strong> ({selectedBag.patientCode}) -
                                 </span>
                                 <StatusPill tone={selectedBag.isReceivedAtClinical ? 'success' : 'info'} dot={false}>
                                     {selectedBag.isReceivedAtClinical ? 'Đã nhận tại khoa' : 'Đã xuất kho (Chờ nhận)'}

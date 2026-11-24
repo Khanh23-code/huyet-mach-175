@@ -63,7 +63,7 @@ export const allowedManualTargets = (current: string, expired: boolean): BagStat
 
 // ---- Format ----
 export const fmtDay = (iso?: string | null) => (iso ? dayjs(iso).format('DD/MM/YYYY') : '—')
-export const fmtDateTimeSec = (iso?: string | null) => (iso ? dayjs(iso).format('DD/MM/YYYY · HH:mm:ss') : '—')
+export const fmtDateTimeSec = (iso?: string | null) => (iso ? dayjs(iso).format('DD/MM/YYYY - HH:mm:ss') : '—')
 export const fmtNum = (n?: number | null) => (n ?? 0).toLocaleString('vi-VN')
 
 export const fmtRemaining = (hours: number) => {

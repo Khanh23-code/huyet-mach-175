@@ -214,7 +214,7 @@ export default function CoordinationQueuePage() {
                     <ul style={{ paddingLeft: 20, maxHeight: 120, overflowY: 'auto' }}>
                         {selectedBagsDetail.map((b) => (
                             <li key={b.bagId}>
-                                <code>{b.barcode}</code> ({b.bloodType} · {b.volumeMl}ml)
+                                <code>{b.barcode}</code> ({b.bloodType} - {b.volumeMl}ml)
                             </li>
                         ))}
                     </ul>
@@ -396,7 +396,7 @@ export default function CoordinationQueuePage() {
 
                                         <div className="queue-item-bottom">
                                             <span>
-                                                Yêu cầu: <strong>{item.totalRequestedUnits}</strong> túi · Đã giữ:{' '}
+                                                Yêu cầu: <strong>{item.totalRequestedUnits}</strong> túi - Đã giữ:{' '}
                                                 <strong>{item.totalAllocatedUnits}</strong>
                                             </span>
                                             <span>{new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -459,8 +459,8 @@ export default function CoordinationQueuePage() {
                                     </StatusPill>
                                 </div>
                                 <div className="detail-patient-summary">
-                                    {requestDetail.patientName} · Nhóm máu{' '}
-                                    {formatBloodGroup(requestDetail.patientBloodType, requestDetail.patientRh)} · Tổng{' '}
+                                    {requestDetail.patientName} - Nhóm máu{' '}
+                                    {formatBloodGroup(requestDetail.patientBloodType, requestDetail.patientRh)} - Tổng{' '}
                                     {requestDetail.totalRequestedUnits} túi
                                 </div>
                             </div>
@@ -749,8 +749,8 @@ export default function CoordinationQueuePage() {
                                                 <strong style={{ color: 'var(--c-text)' }}>
                                                     {currentItem?.componentName}
                                                 </strong>{' '}
-                                                · Yêu cầu: <strong>{currentItem?.requestedUnits}</strong> túi · Đã
-                                                giữ: <strong>{currentItem?.allocatedUnits}</strong> túi · Còn thiếu:{' '}
+                                                - Yêu cầu: <strong>{currentItem?.requestedUnits}</strong> túi - Đã
+                                                giữ: <strong>{currentItem?.allocatedUnits}</strong> túi - Còn thiếu:{' '}
                                                 <strong
                                                     style={{
                                                         color: remainingUnits > 0 ? 'var(--c-danger)' : 'var(--c-success)',
@@ -832,13 +832,13 @@ export default function CoordinationQueuePage() {
                                                                 <div className="bag-barcode">{bag.barcode}</div>
                                                                 <div className="bag-meta-info">
                                                                     <span>{bag.volumeMl} ml</span>
-                                                                    <span>·</span>
+                                                                    <span>-</span>
                                                                     <span className={nearExpiry ? 'is-expiring' : ''}>
                                                                         HSD: {new Date(bag.expiresAt).toLocaleDateString('vi-VN')}
                                                                     </span>
                                                                     {bag.locationName && (
                                                                         <>
-                                                                            <span>·</span>
+                                                                            <span>-</span>
                                                                             <span>Vị trí: {bag.locationName}</span>
                                                                         </>
                                                                     )}

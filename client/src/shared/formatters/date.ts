@@ -47,14 +47,14 @@ export function formatDateOnly(d?: string | null, fallback = '—'): string {
 export const fmtDate = formatDateOnly
 
 /**
- * Định dạng Date & Time: "DD/MM/YYYY · HH:mm"
+ * Định dạng Date & Time: "DD/MM/YYYY - HH:mm"
  * Hiển thị theo múi giờ client
  */
 export function formatDateTime(iso?: string | null, fallback = '—'): string {
     if (!iso) return fallback
     const d = new Date(iso)
     if (Number.isNaN(d.getTime())) return fallback
-    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} · ${pad(d.getHours())}:${pad(d.getMinutes())}`
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} - ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 /**
@@ -74,13 +74,13 @@ export function formatDateTimeMedical(iso?: string | null, fallback = '—'): st
 export const fmtDateTime = formatDateTimeMedical
 
 /**
- * Định dạng Date & Time có giây: "DD/MM/YYYY · HH:mm:ss"
+ * Định dạng Date & Time có giây: "DD/MM/YYYY - HH:mm:ss"
  */
 export function formatDateTimeSec(iso?: string | null, fallback = '—'): string {
     if (!iso) return fallback
     const d = new Date(iso)
     if (Number.isNaN(d.getTime())) return fallback
-    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} · ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} - ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
 /**

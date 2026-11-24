@@ -19,9 +19,9 @@ interface Props {
 export default function BagQueueItem(p: Props) {
     const { source } = p
     const who = source.donor
-        ? `${source.donor.fullName} · ${source.donor.citizenId}`
+        ? `${source.donor.fullName} - ${source.donor.citizenId}`
         : source.sourceType === 'EXTERNAL'
-            ? `${source.externalUnitName ?? '—'}${source.externalCode ? ` · Mã gốc ${source.externalCode}` : ''}`
+            ? `${source.externalUnitName ?? '—'}${source.externalCode ? ` - Mã gốc ${source.externalCode}` : ''}`
             : source.sourceName
 
     return (
@@ -43,7 +43,7 @@ export default function BagQueueItem(p: Props) {
                 <div className="inv-queue__sub">{source.campaignName}</div>
             )}
             <div className="inv-queue__sub">
-                {p.componentTypeCode ? `${p.componentTypeCode} · ` : ''}{p.volumeMl} ml · Thu thập {fmtDateTime(p.collectedAt)}
+                {p.componentTypeCode ? `${p.componentTypeCode} - ` : ''}{p.volumeMl} ml - Thu thập {fmtDateTime(p.collectedAt)}
             </div>
         </button>
     )

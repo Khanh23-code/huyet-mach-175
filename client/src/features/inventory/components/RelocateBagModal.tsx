@@ -28,7 +28,7 @@ export default function RelocateBagModal({ bag, onClose }: Props) {
                     const ok = isLocationSuitable(bag?.componentTypeCode as ComponentCode, l.targetTemperature)
                     return {
                         value: l.locationId,
-                        label: `${l.refrigeratorName} - ${l.shelfNumber} (${l.targetTemperature}°C)${ok === false ? ' · nhiệt độ không phù hợp' : ''}`,
+                        label: `${l.refrigeratorName} - ${l.shelfNumber} (${l.targetTemperature}°C)${ok === false ? ' - nhiệt độ không phù hợp' : ''}`,
                     }
                 }),
         [data, bag],

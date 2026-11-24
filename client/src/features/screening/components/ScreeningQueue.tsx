@@ -76,7 +76,7 @@ export default function ScreeningQueue({
                                 <span className="sc-avatar">{initials(it.donorName)}</span>
                                 <span className="sc-queue-body">
                                     <b>{it.donorName}</b>
-                                    <small>{it.donorCode} · Check-in {fmtTime(it.checkedInAt)}</small>
+                                    <small>{it.donorCode} - Check-in {fmtTime(it.checkedInAt)}</small>
                                     <span className="sc-queue-tags">
                                         {it.isWalkIn && <StatusPill tone="neutral" dot={false}>Vãng lai</StatusPill>}
                                         {it.hasRisk && <StatusPill tone="warning">Có cảnh báo</StatusPill>}

@@ -103,12 +103,12 @@ export const fmtDate = (d?: string | null) => {
     return `${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear()}`
 }
 
-/** Format Date & Time: "DD/MM/YYYY · HH:mm" */
+/** Format Date & Time: "DD/MM/YYYY - HH:mm" */
 export const fmtDateTime = (iso?: string | null) => {
     if (!iso) return ''
     const d = new Date(iso)
     if (Number.isNaN(d.getTime())) return ''
-    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} · ${pad(d.getHours())}:${pad(d.getMinutes())}`
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} - ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 /** Format operating days: "2,4,6" -> "T2, T4, T6" */
@@ -132,8 +132,8 @@ export const fmtOperatingDays = (days?: string | null) => {
         .join(', ')
 }
 
-/** 07:00–09:00: 20 · 09:00–11:00: 20 */
+/** 07:00–09:00: 20 - 09:00–11:00: 20 */
 export const slotsText = (slots: CampaignSlot[]) =>
     slots
         .map((s) => `${s.startTime.slice(0, 5)}–${s.endTime.slice(0, 5)}: ${s.capacity}`)
-        .join(' · ')
+        .join(' - ')

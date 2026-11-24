@@ -85,7 +85,7 @@ export default function ClinicalHandoverScanPage() {
             <PageHeader
                 breadcrumb={[
                     { title: 'Yêu cầu máu Lâm sàng', path: '/clinical/requests' },
-                    { title: 'W3.2 · Nhận bàn giao túi máu' },
+                    { title: 'Nhận bàn giao túi máu' },
                 ]}
                 title="Nhận bàn giao túi máu"
                 subtitle="Quét barcode túi máu được Ngân hàng máu bàn giao để xác minh đợt xuất kho hợp lệ trước khi đối chiếu tiếp nhận."
@@ -105,7 +105,7 @@ export default function ClinicalHandoverScanPage() {
                         <div>
                             <div className="handover-role-title">Nhân viên / Điều dưỡng lâm sàng</div>
                             <div className="handover-role-sub">
-                                {displayName} · {roleLabel || 'Khoa Lâm sàng'}
+                                {displayName} - {roleLabel || 'Khoa Lâm sàng'}
                             </div>
                         </div>
                     </div>
@@ -128,13 +128,13 @@ export default function ClinicalHandoverScanPage() {
                             <div key={item.allocationId} className="clin-pending-item">
                                 <div>
                                     <div className="clin-pending-item__eyebrow">
-                                        Túi máu đang chờ nhận · {item.isOwnRequest ? 'Phiếu của bạn' : 'Nhận hộ trong khoa'}
+                                        Túi máu đang chờ nhận - {item.isOwnRequest ? 'Phiếu của bạn' : 'Nhận hộ trong khoa'}
                                     </div>
                                     <div className="clin-pending-item__title">
                                         {item.requestCode} — {item.patientName}
                                     </div>
                                     <div className="clin-pending-item__sub">
-                                        {item.patientCode} · {item.departmentName || 'Khoa điều trị'} · Xuất kho lúc{' '}
+                                        {item.patientCode} - {item.departmentName || 'Khoa điều trị'} - Xuất kho lúc{' '}
                                         {item.issuedAt ? formatDateTime(item.issuedAt) : '—'}
                                     </div>
                                 </div>

@@ -20,7 +20,7 @@ export function useCurrentUser() {
             fullName,
             displayName: fullName,
             // Hiển thị mã các vai trò của user, không dùng để quyết định quyền
-            roleLabel: user?.roles?.join(' · ') ?? '',
+            roleLabel: user?.roles?.join(' - ') ?? '',
             initials: fullName ? getInitials(fullName) : '',
             loading: Boolean(accessToken) && !fullName,
         }

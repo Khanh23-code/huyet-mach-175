@@ -169,7 +169,7 @@ export default function EditUserModal({ user, isSelf, canAssignSystemRole, onClo
                                 ?.filter((r) => r.isActive || originalRoleIds.includes(r.id))
                                 .map((r) => ({
                                     value: r.id,
-                                    label: `${r.code} · ${r.name}`,
+                                    label: `${r.code} - ${r.name}`,
                                     disabled: SYSTEM_ROLE_CODES.includes(r.code) && !canAssignSystemRole,
                                 }))}
                         />

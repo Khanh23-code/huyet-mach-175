@@ -87,7 +87,7 @@ export default function BagScanResult({ bag, onChanged, onQueued }: Props) {
             <div className="scan-result__head">
                 <div>
                     <div className="inv-mono scan-result__code">{bag.barcode}</div>
-                    <div className="stk-muted">{bag.componentType} · {bag.volumeMl} ml</div>
+                    <div className="stk-muted">{bag.componentType} - {bag.volumeMl} ml</div>
                 </div>
                 <div className="inv-actions">
                     <BloodGroupTag value={bag.bloodGroup} />
