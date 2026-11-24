@@ -1,12 +1,12 @@
-import { useCallback, useState } from 'react'
-import { App, Button, Empty } from 'antd'
-import { MedicineBoxOutlined, ReloadOutlined } from '@ant-design/icons'
+import { useCallback, useEffect, useState } from 'react'
+import { Alert, App, Button, Empty, Spin } from 'antd'
+import { ClockCircleOutlined, MedicineBoxOutlined, ReloadOutlined, ScanOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { useCurrentUser } from '@/features/auth/useCurrentUser'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
-import { formatDateTime } from '@/shared/formatters/date'
+import { computeRemainingSeconds, formatCountdown, formatDateTime } from '@/shared/formatters/date'
 import {
     BarcodeScanBox,
     BloodGroupTag,
@@ -16,7 +16,7 @@ import {
     UrgencyTag,
 } from '@/shared/components'
 import { clinicalApi } from '../clinicalApi'
-import { usePendingReceipts } from '../hooks'
+import { usePendingHandoverSessions } from '../hooks'
 import '@/shared/styles/HandoverLayout.css'
 import './ClinicalHandoverPages.css'
 
@@ -28,14 +28,23 @@ export default function ClinicalHandoverScanPage() {
     const canView = can(PERMISSIONS.BLOOD_REQUEST_VIEW)
 
     const {
-        data: pendingBags = [],
+        data: pendingSessions = [],
         isLoading: isPendingLoading,
         isFetching: isPendingFetching,
         refetch: refetchPending,
-    } = usePendingReceipts(undefined, { enabled: canView })
+    } = usePendingHandoverSessions(undefined, { enabled: canView, refetchInterval: 5000 })
 
     const [verifying, setVerifying] = useState(false)
     const [errorMsg, setErrorMsg] = useState<string | null>(null)
+    const [nowMs, setNowMs] = useState(() => Date.now())
+
+    useEffect(() => {
+        if (pendingSessions.length === 0) return
+        const timer = window.setInterval(() => {
+            setNowMs(Date.now())
+        }, 1000)
+        return () => window.clearInterval(timer)
+    }, [pendingSessions.length])
 
     const handleScan = useCallback(
         async (rawBarcode: string) => {
@@ -43,7 +52,7 @@ export default function ClinicalHandoverScanPage() {
             if (!barcode) return
 
             if (!canView) {
-                const msg = 'Bạn không có quyền BLOOD_REQUEST_VIEW để xác minh túi máu bàn giao.'
+                const msg = 'Bạn không có quyền BLOOD_REQUEST_VIEW để xác minh phiên bàn giao túi máu.'
                 setErrorMsg(msg)
                 message.error(msg)
                 return
@@ -53,21 +62,28 @@ export default function ClinicalHandoverScanPage() {
             setErrorMsg(null)
 
             try {
-                // Luôn kiểm tra trực tiếp với Backend danh sách túi máu thuộc đợt bàn giao hợp lệ của khoa
-                const latestPending = await clinicalApi.getPendingReceipts()
-                const matched = latestPending.find(
-                    (b) => b.barcode.trim().toLowerCase() === barcode.toLowerCase(),
+                const latestSessions = await clinicalApi.getPendingHandoverSessions()
+                const normalized = barcode.toLowerCase()
+                const matchedSession = latestSessions.find((session) =>
+                    session.items.some((item) => item.barcode.trim().toLowerCase() === normalized),
                 )
 
-                if (!matched) {
-                    const msg = `Không tìm thấy túi máu mã "${barcode}" trong đợt bàn giao hợp lệ đang chờ nhận tại khoa của bạn (túi chưa xuất kho, thuộc khoa khác hoặc đã xác nhận nhận trước đó).`
+                if (!matchedSession) {
+                    const msg = `Không tìm thấy túi máu "${barcode}" trong bất kỳ phiên bàn giao nào đang chờ xác nhận tại khoa của bạn (BBNK chưa mở phiên, phiên đã hết hạn 3-5 phút, thuộc khoa khác hoặc đã xác nhận trước đó).`
                     setErrorMsg(msg)
                     message.error(msg)
                     return
                 }
 
-                navigate(`/clinical/handovers/${matched.allocationId}`, {
-                    state: { bag: matched, scannedBarcode: matched.barcode },
+                const matchedItem = matchedSession.items.find(
+                    (item) => item.barcode.trim().toLowerCase() === normalized,
+                )
+
+                navigate(`/clinical/handovers/${matchedSession.handoverSessionId}`, {
+                    state: {
+                        session: matchedSession,
+                        initialScannedBarcode: matchedItem?.barcode ?? barcode,
+                    },
                 })
             } catch (err) {
                 const msg = parseApiError(err).message
@@ -87,11 +103,13 @@ export default function ClinicalHandoverScanPage() {
                     { title: 'Yêu cầu máu Lâm sàng', path: '/clinical/requests' },
                     { title: 'Nhận bàn giao túi máu' },
                 ]}
-                title="Nhận bàn giao túi máu"
-                subtitle="Quét barcode túi máu được Ngân hàng máu bàn giao để xác minh đợt xuất kho hợp lệ trước khi đối chiếu tiếp nhận."
+                title="Nhận bàn giao túi máu tại quầy"
+                subtitle="Quét đủ barcode các túi máu trong phiên bàn giao đang chờ (Pha 2) để đối chiếu và chính thức nhận máu về khoa."
                 extra={
-                    <StatusPill tone={pendingBags.length > 0 ? 'info' : 'neutral'}>
-                        {pendingBags.length > 0 ? `${pendingBags.length} túi chờ quét nhận` : 'Chờ quét nhận'}
+                    <StatusPill tone={pendingSessions.length > 0 ? 'warning' : 'neutral'} pulse={pendingSessions.length > 0}>
+                        {pendingSessions.length > 0
+                            ? `${pendingSessions.length} phiên chờ quét nhận`
+                            : 'Chưa có phiên chờ'}
                     </StatusPill>
                 }
             />
@@ -113,7 +131,10 @@ export default function ClinicalHandoverScanPage() {
                         <Button
                             size="small"
                             icon={<ReloadOutlined spin={isPendingFetching} />}
-                            onClick={() => void refetchPending()}
+                            onClick={() => {
+                                setNowMs(Date.now())
+                                void refetchPending()
+                            }}
                             disabled={isPendingLoading || isPendingFetching}
                         >
                             Làm mới danh sách chờ
@@ -122,51 +143,88 @@ export default function ClinicalHandoverScanPage() {
                     </div>
                 </div>
 
-                {pendingBags.length > 0 ? (
-                    <div className="clin-pending-list">
-                        {pendingBags.map((item) => (
-                            <div key={item.allocationId} className="clin-pending-item">
-                                <div>
-                                    <div className="clin-pending-item__eyebrow">
-                                        Túi máu đang chờ nhận - {item.isOwnRequest ? 'Phiếu của bạn' : 'Nhận hộ trong khoa'}
+                <Alert
+                    type="info"
+                    showIcon
+                    message="Quy trình nhận máu 2 pha tại quầy Ngân hàng máu"
+                    description="Mỗi phiên bàn giao chỉ có hiệu lực 3–5 phút kể từ lúc BBNK khởi tạo. Quét barcode một túi bất kỳ hoặc chọn phiên bên dưới để quét đủ 100% số túi trong lô và xác nhận nhận máu."
+                />
+
+                {isPendingLoading ? (
+                    <div style={{ padding: 36, textAlign: 'center' }}>
+                        <Spin tip="Đang tải danh sách phiên bàn giao chờ nhận tại khoa..." />
+                    </div>
+                ) : pendingSessions.length > 0 ? (
+                    <div className="handover-session-list">
+                        {pendingSessions.map((session) => {
+                            const remaining = computeRemainingSeconds(session.expiresAt, nowMs)
+                            const isExpiring = remaining <= 60
+                            return (
+                                <div key={session.handoverSessionId} className="clin-pending-item" style={{ display: 'grid', gap: 12 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+                                        <div>
+                                            <div className="clin-pending-item__eyebrow">
+                                                Phiên {session.sessionCode} - {session.isOwnRequest ? 'Phiếu của bạn' : 'Nhận hộ trong khoa'}
+                                            </div>
+                                            <div className="clin-pending-item__title">
+                                                {session.requestCode} - {session.patientName} ({session.patientCode})
+                                            </div>
+                                            <div className="clin-pending-item__sub">
+                                                {session.departmentName || 'Khoa điều trị'} - BS {session.doctorName || '—'} - Mở lúc{' '}
+                                                {formatDateTime(session.createdAt)} bởi {session.initiatedByName || 'KTV BBNK'}
+                                            </div>
+                                        </div>
+
+                                        <div className="clin-pending-item__right" style={{ flexWrap: 'wrap' }}>
+                                            <UrgencyTag level={session.urgencyLevel} />
+                                            <BloodGroupTag value={session.patientBloodType} size="lg" />
+                                            <StatusPill tone={isExpiring ? 'danger' : 'warning'} pulse={remaining > 0}>
+                                                <ClockCircleOutlined />{' '}
+                                                {remaining > 0 ? `Còn ${formatCountdown(remaining)}` : 'Hết giờ'}
+                                            </StatusPill>
+                                            <Button
+                                                type="primary"
+                                                icon={<ScanOutlined />}
+                                                disabled={remaining <= 0}
+                                                onClick={() =>
+                                                    navigate(`/clinical/handovers/${session.handoverSessionId}`, {
+                                                        state: { session },
+                                                    })
+                                                }
+                                            >
+                                                Đối soát &amp; Nhận ({session.items.length} túi)
+                                            </Button>
+                                        </div>
                                     </div>
-                                    <div className="clin-pending-item__title">
-                                        {item.requestCode} — {item.patientName}
-                                    </div>
-                                    <div className="clin-pending-item__sub">
-                                        {item.patientCode} - {item.departmentName || 'Khoa điều trị'} - Xuất kho lúc{' '}
-                                        {item.issuedAt ? formatDateTime(item.issuedAt) : '—'}
+
+                                    <div className="handover-session-items">
+                                        {session.items.map((item) => (
+                                            <div key={item.allocationId} className="handover-session-chip">
+                                                <span className="text-mono" style={{ fontWeight: 700, color: 'var(--c-text)' }}>
+                                                    {item.barcode}
+                                                </span>
+                                                <span>
+                                                    {item.componentCode} - {item.bloodType} - {item.volumeMl}ml
+                                                </span>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
-                                <div className="clin-pending-item__right">
-                                    <UrgencyTag level={item.urgencyLevel} />
-                                    <BloodGroupTag value={item.bloodType} size="lg" />
-                                    <div style={{ textAlign: 'right' }}>
-                                        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--c-text)' }}>
-                                            {item.componentName} ({item.volumeMl} ml)
-                                        </div>
-                                        <div className="text-mono" style={{ fontSize: 'var(--text-xs)', color: 'var(--c-text-secondary)' }}>
-                                            Mã túi dự kiến: {item.barcode}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 ) : (
-                    !isPendingLoading && (
-                        <Empty
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
-                            description="Hiện không có túi máu nào đang ở trạng thái chờ nhận tại khoa của bạn."
-                        />
-                    )
+                    <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description="Hiện không có phiên bàn giao nào đang chờ xác nhận tại khoa của bạn."
+                    />
                 )}
 
                 <BarcodeScanBox
-                    title="Quét barcode túi máu thực nhận"
-                    description="Hệ thống sẽ xác minh túi máu thuộc đợt bàn giao hợp lệ của khoa trước khi chuyển sang màn hình đối chiếu tiếp nhận."
-                    placeholder="Nhập mã barcode túi máu..."
-                    submitLabel="Quét & kiểm tra"
+                    title="Quét nhanh barcode túi máu để mở phiên đối soát"
+                    description="Quét mã vạch của một túi máu trong lô được giao; hệ thống sẽ tự động mở đúng phiên bàn giao chứa túi đó."
+                    placeholder="Nhập hoặc quét mã barcode túi máu..."
+                    submitLabel="Quét & mở phiên"
                     loading={verifying}
                     errorMessage={errorMsg}
                     onClearError={() => setErrorMsg(null)}

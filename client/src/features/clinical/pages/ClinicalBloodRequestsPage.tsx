@@ -33,7 +33,7 @@ import {
     useCreateBloodRequest,
     useUpdateDraftRequest,
     useSubmitDraftRequest,
-    usePendingReceipts,
+    usePendingHandoverSessions,
     useComponentTypes,
 } from '../hooks'
 import { RequestStatusStepper } from '../components/RequestStatusStepper'
@@ -107,12 +107,11 @@ export default function ClinicalBloodRequestsPage() {
         { enabled: canViewRequests && activeTab === 'list' },
     )
 
-    // Query túi máu chờ nhận để hiển thị badge số lượng trên tab Nhận bàn giao
     const {
-        data: pendingBags,
-        refetch: refetchPendingReceipts,
-    } = usePendingReceipts(undefined, { enabled: canViewRequests })
-    const pendingCount = pendingBags?.length || 0
+        data: pendingSessions,
+        refetch: refetchPendingSessions,
+    } = usePendingHandoverSessions(undefined, { enabled: canViewRequests, refetchInterval: 15000 })
+    const pendingCount = pendingSessions?.length || 0
 
     // Component types
     const { data: componentTypes = [] } = useComponentTypes()
@@ -537,7 +536,7 @@ export default function ClinicalBloodRequestsPage() {
                             queryClient.invalidateQueries({ queryKey: ['clinical'] })
                             if (canViewRequests) {
                                 if (activeTab === 'list') refetchRequests()
-                                refetchPendingReceipts()
+                                void refetchPendingSessions()
                             }
                             message.success('Đã làm mới dữ liệu đồng bộ với hệ thống!')
                         }}

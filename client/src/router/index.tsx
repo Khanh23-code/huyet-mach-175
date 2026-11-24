@@ -99,7 +99,7 @@ export const router = createBrowserRouter([
                         element: <ProtectedRoute requiredPermission={clinicalHandoversRoute.requiredPermission} />,
                         children: [
                             { path: clinicalHandoversRoute.path, ...lazyPage(() => import('@/features/clinical/pages/ClinicalHandoverScanPage')) },
-                            { path: '/clinical/handovers/:allocationId', ...lazyPage(() => import('@/features/clinical/pages/ClinicalHandoverDetailPage')) },
+                            { path: '/clinical/handovers/:sessionId', ...lazyPage(() => import('@/features/clinical/pages/ClinicalHandoverDetailPage')) },
                         ],
                     },
                     {

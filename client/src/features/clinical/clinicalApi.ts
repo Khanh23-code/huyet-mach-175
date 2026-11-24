@@ -8,8 +8,6 @@ import type {
     ClinicalBloodRequestFilter,
     ComponentTypeOption,
     ConfirmHandoverSessionRequest,
-    ConfirmReceiptRequest,
-    ConfirmReceiptResponse,
     ConfirmTransfusionRequest,
     ConfirmTransfusionResponse,
     CreateBloodRequestDto,
@@ -19,9 +17,7 @@ import type {
     HandoverSessionDto,
     PendingBloodReturnDto,
     PendingBloodReturnFilter,
-    PendingClinicalReceiptFilter,
     PendingHandoverSessionFilter,
-    PendingReceiptBagDto,
     SubmitBloodRequestResponse,
     TransfusionScanDto,
     UpdateBloodRequestDto,
@@ -93,18 +89,6 @@ export const clinicalApi = {
     confirmTransfusion: (data: ConfirmTransfusionRequest) =>
         axiosClient
             .post<ConfirmTransfusionResponse>('/api/blood-handovers/clinical/confirm-transfusion', data)
-            .then((r) => r.data),
-
-    /** @deprecated Sẽ gỡ ở bước FE-1.3 sau khi chuyển sang sessions/pending */
-    getPendingReceipts: (params?: PendingClinicalReceiptFilter) =>
-        axiosClient
-            .get<PendingReceiptBagDto[]>('/api/blood-handovers/clinical/pending-receipt', { params })
-            .then((r) => r.data),
-
-    /** @deprecated Sẽ gỡ ở bước FE-1.3 sau khi chuyển sang sessions/{id}/confirm */
-    confirmReceipt: (data: ConfirmReceiptRequest) =>
-        axiosClient
-            .post<ConfirmReceiptResponse>('/api/blood-handovers/clinical/confirm-receipt', data)
             .then((r) => r.data),
 
     /** Lập phiếu hoàn trả túi máu chưa sử dụng */

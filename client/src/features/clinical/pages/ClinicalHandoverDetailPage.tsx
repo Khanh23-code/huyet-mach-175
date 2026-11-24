@@ -1,114 +1,163 @@
-import { useEffect, useState } from 'react'
-import { Alert, Button, Checkbox, Input, Result, Spin } from 'antd'
-import { ArrowLeftOutlined, CheckCircleOutlined, MedicineBoxOutlined } from '@ant-design/icons'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Alert, App, Button, Checkbox, Input, Result, Spin, Tooltip } from 'antd'
+import {
+    ArrowLeftOutlined,
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    CopyOutlined,
+    MedicineBoxOutlined,
+    ScanOutlined,
+} from '@ant-design/icons'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useCurrentUser } from '@/features/auth/useCurrentUser'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
 import { parseApiError } from '@/services/apiError'
-import { formatDateTime } from '@/shared/formatters/date'
+import { computeRemainingSeconds, formatCountdown, formatDateTime } from '@/shared/formatters/date'
 import {
+    BarcodeScanBox,
     BloodGroupTag,
     PageContainer,
     PageHeader,
     StatusPill,
     UrgencyTag,
 } from '@/shared/components'
-import { clinicalApi } from '../clinicalApi'
-import { useConfirmReceipt } from '../hooks'
+import { useConfirmHandoverSession, useHandoverSessionDetail } from '../hooks'
 import { getStatusMeta, getStatusTone } from '../format'
-import type { ConfirmReceiptResponse, PendingReceiptBagDto } from '../types'
+import type { HandoverSessionDto } from '../types'
 import '@/shared/styles/HandoverLayout.css'
 import './ClinicalHandoverPages.css'
 
 interface LocationState {
-    bag?: PendingReceiptBagDto
-    scannedBarcode?: string
+    session?: HandoverSessionDto
+    initialScannedBarcode?: string
 }
 
 export default function ClinicalHandoverDetailPage() {
+    const { message } = App.useApp()
     const navigate = useNavigate()
-    const { allocationId: rawAllocId } = useParams<{ allocationId: string }>()
+    const { sessionId: rawSessionId } = useParams<{ sessionId: string }>()
     const location = useLocation()
     const state = (location.state as LocationState | null) ?? null
 
     const { displayName, roleLabel } = useCurrentUser()
     const { can } = usePermission()
     const canEdit = can(PERMISSIONS.BLOOD_REQUEST_EDIT)
-    const confirmMutation = useConfirmReceipt()
+    const confirmMutation = useConfirmHandoverSession()
 
-    const allocationId = Number(rawAllocId)
-    const [bag, setBag] = useState<PendingReceiptBagDto | null>(state?.bag ?? null)
-    const [loading, setLoading] = useState<boolean>(!state?.bag)
-    const [loadError, setLoadError] = useState<string | null>(null)
+    const sessionId = Number(rawSessionId)
+    const validSessionId = Number.isInteger(sessionId) && sessionId > 0 ? sessionId : null
 
+    const sessionQuery = useHandoverSessionDetail(validSessionId, {
+        refetchInterval: (data) => (!data || data.status === 'PENDING' ? 5000 : false),
+    })
+
+    const session = sessionQuery.data ?? (state?.session?.handoverSessionId === sessionId ? state.session : null)
+
+    const [scannedBarcodes, setScannedBarcodes] = useState<string[]>(() =>
+        state?.initialScannedBarcode ? [state.initialScannedBarcode] : [],
+    )
+    const [scanError, setScanError] = useState<string | null>(null)
     const [verifiedPhysicalMatch, setVerifiedPhysicalMatch] = useState<boolean>(false)
     const [expectedPatientCode, setExpectedPatientCode] = useState<string>('')
     const [confirmError, setConfirmError] = useState<string | null>(null)
-    const [receiptResult, setReceiptResult] = useState<ConfirmReceiptResponse | null>(null)
+    const [confirmedResult, setConfirmedResult] = useState<HandoverSessionDto | null>(null)
+    const [nowMs, setNowMs] = useState(() => Date.now())
+
+    const activeSession = confirmedResult ?? session
 
     useEffect(() => {
-        if (state?.bag && state.bag.allocationId === allocationId) {
-            setBag(state.bag)
-            setLoading(false)
-            setLoadError(null)
-            return
-        }
+        if (activeSession?.status !== 'PENDING') return
+        const timer = window.setInterval(() => {
+            setNowMs(Date.now())
+        }, 1000)
+        return () => window.clearInterval(timer)
+    }, [activeSession?.status])
 
-        if (!Number.isInteger(allocationId) || allocationId <= 0) {
-            setLoading(false)
-            setLoadError('Mã phân bổ bàn giao không hợp lệ.')
-            return
-        }
+    const scannedSet = useMemo(
+        () => new Set(scannedBarcodes.map((b) => b.trim().toLowerCase())),
+        [scannedBarcodes],
+    )
 
-        let cancelled = false
-        setLoading(true)
-        setLoadError(null)
+    const handleCopyBarcode = useCallback(
+        async (barcode: string) => {
+            try {
+                await navigator.clipboard.writeText(barcode)
+                message.success(`Đã sao chép mã ${barcode}`)
+            } catch {
+                message.info(`Mã túi máu: ${barcode}`)
+            }
+        },
+        [message],
+    )
 
-        clinicalApi
-            .getPendingReceipts()
-            .then((list) => {
-                if (cancelled) return
-                const found = list.find((item) => item.allocationId === allocationId) || null
-                if (!found) {
-                    setLoadError('Túi máu này không còn trong danh sách chờ nhận bàn giao hoặc đã được tiếp nhận trước đó.')
-                }
-                setBag(found)
+    const handleScanItemBarcode = useCallback(
+        (rawBarcode: string) => {
+            const barcode = rawBarcode.trim()
+            if (!barcode || !activeSession) return
+
+            setScanError(null)
+            const normalized = barcode.toLowerCase()
+            const targetItem = activeSession.items.find(
+                (i) => i.barcode.trim().toLowerCase() === normalized,
+            )
+
+            if (!targetItem) {
+                const msg = `Túi máu "${barcode}" không nằm trong phiên bàn giao ${activeSession.sessionCode}. Vui lòng kiểm tra lại đúng lô túi máu!`
+                setScanError(msg)
+                message.error(msg)
+                return
+            }
+
+            if (scannedSet.has(normalized)) {
+                message.info(`Túi máu ${targetItem.barcode} đã được quét đối soát trước đó.`)
+                return
+            }
+
+            setScannedBarcodes((prev) => {
+                if (prev.some((b) => b.trim().toLowerCase() === normalized)) return prev
+                return [...prev, targetItem.barcode]
             })
-            .catch((err) => {
-                if (!cancelled) setLoadError(parseApiError(err).message)
-            })
-            .finally(() => {
-                if (!cancelled) setLoading(false)
-            })
+            message.success(`Đã quét khớp túi ${targetItem.barcode}`)
+        },
+        [activeSession, message, scannedSet],
+    )
 
-        return () => {
-            cancelled = true
-        }
-    }, [allocationId, state])
-
-    const scannedBarcode = state?.scannedBarcode || bag?.barcode || ''
-    const requiresPatientVerify = Boolean(bag && !bag.isOwnRequest)
+    const remainingSeconds =
+        activeSession && activeSession.status === 'PENDING'
+            ? computeRemainingSeconds(activeSession.expiresAt, nowMs)
+            : 0
+    const isPendingAndAlive = Boolean(activeSession?.status === 'PENDING' && remainingSeconds > 0)
+    const allItemsScanned = Boolean(
+        activeSession &&
+            activeSession.items.length > 0 &&
+            activeSession.items.every((item) => scannedSet.has(item.barcode.trim().toLowerCase())),
+    )
+    const requiresPatientVerify = Boolean(activeSession && !activeSession.isOwnRequest)
     const canConfirm = Boolean(
-        bag &&
-            !receiptResult &&
+        activeSession &&
+            isPendingAndAlive &&
+            !confirmedResult &&
             canEdit &&
+            allItemsScanned &&
             verifiedPhysicalMatch &&
             (!requiresPatientVerify || expectedPatientCode.trim().length > 0) &&
             !confirmMutation.isPending,
     )
 
-    const handleConfirmReceive = async () => {
-        if (!bag || !canConfirm) return
+    const handleConfirmSession = async () => {
+        if (!activeSession || !canConfirm) return
         setConfirmError(null)
 
         try {
             const res = await confirmMutation.mutateAsync({
-                allocationId: bag.allocationId,
-                scannedBarcode: scannedBarcode.trim(),
-                expectedPatientCode: requiresPatientVerify ? expectedPatientCode.trim() : undefined,
+                sessionId: activeSession.handoverSessionId,
+                data: {
+                    scannedBarcodes,
+                    expectedPatientCode: requiresPatientVerify ? expectedPatientCode.trim() : undefined,
+                },
             })
-            setReceiptResult(res)
+            setConfirmedResult(res)
         } catch (err) {
             setConfirmError(parseApiError(err).message)
         }
@@ -118,20 +167,48 @@ export default function ClinicalHandoverDetailPage() {
         navigate('/clinical/handovers')
     }
 
+    const loadErrorMessage = !validSessionId
+        ? 'Mã phiên bàn giao không hợp lệ.'
+        : sessionQuery.isError
+          ? parseApiError(sessionQuery.error).message
+          : null
+
     return (
         <PageContainer className="handover-page">
             <PageHeader
                 breadcrumb={[
                     { title: 'Yêu cầu máu Lâm sàng', path: '/clinical/requests' },
-                    { title: 'Nhận bàn giao', path: '/clinical/handovers' },
-                    { title: 'Thông tin túi máu tiếp nhận' },
+                    { title: 'Nhận bàn giao túi máu', path: '/clinical/handovers' },
+                    { title: 'Đối soát nhận lô máu theo phiên' },
                 ]}
-                title="Thông tin túi máu tiếp nhận"
-                subtitle="Đối chiếu thông tin túi máu thực tế với dữ liệu bàn giao từ Ngân hàng máu trước khi xác nhận tiếp nhận."
+                title="Đối soát nhận lô túi máu (Pha 2)"
+                subtitle="Quét đủ toàn bộ barcode túi máu trong phiên bàn giao đang chờ tại quầy trước khi hết thời gian hiệu lực."
                 extra={
-                    <StatusPill tone={receiptResult ? 'success' : 'info'}>
-                        {receiptResult ? 'Đã xác nhận tiếp nhận' : 'Chờ đối chiếu tiếp nhận'}
-                    </StatusPill>
+                    activeSession ? (
+                        <StatusPill
+                            tone={
+                                activeSession.status === 'CONFIRMED'
+                                    ? 'success'
+                                    : activeSession.status === 'PENDING'
+                                      ? remainingSeconds <= 60
+                                          ? 'danger'
+                                          : 'warning'
+                                      : 'danger'
+                            }
+                        >
+                            {activeSession.status === 'CONFIRMED'
+                                ? 'Đã xác nhận nhận máu'
+                                : activeSession.status === 'PENDING'
+                                  ? remainingSeconds > 0
+                                      ? `Còn ${formatCountdown(remainingSeconds)}`
+                                      : 'Đã hết thời gian chờ'
+                                  : activeSession.status === 'CANCELLED'
+                                    ? 'Đã bị BBNK hủy sớm'
+                                    : 'Đã hết hạn'}
+                        </StatusPill>
+                    ) : (
+                        <StatusPill tone="info">Đang tải phiên</StatusPill>
+                    )
                 }
             />
 
@@ -151,18 +228,18 @@ export default function ClinicalHandoverDetailPage() {
                     <span className="handover-role-badge is-clin">CLIN</span>
                 </div>
 
-                {loading ? (
+                {sessionQuery.isLoading && !activeSession ? (
                     <div style={{ padding: 48, textAlign: 'center' }}>
-                        <Spin tip="Đang tải thông tin túi máu bàn giao..." />
+                        <Spin tip="Đang tải thông tin phiên bàn giao..." />
                     </div>
-                ) : loadError || !bag ? (
+                ) : loadErrorMessage || !activeSession ? (
                     <Result
                         status="warning"
-                        title="Không thể hiển thị thông tin tiếp nhận"
-                        subTitle={loadError || 'Vui lòng quay lại màn hình quét barcode để kiểm tra lại.'}
+                        title="Không thể tải thông tin phiên bàn giao"
+                        subTitle={loadErrorMessage || 'Vui lòng quay lại danh sách phiên bàn giao để kiểm tra lại.'}
                         extra={
                             <Button type="primary" icon={<ArrowLeftOutlined />} onClick={handleBackToScan}>
-                                Quay lại màn hình quét
+                                Quay lại danh sách phiên
                             </Button>
                         }
                     />
@@ -171,21 +248,53 @@ export default function ClinicalHandoverDetailPage() {
                         <div className="clin-pending-item">
                             <div>
                                 <div className="clin-pending-item__eyebrow">
-                                    Phiếu yêu cầu bàn giao - {bag.isOwnRequest ? 'Phiếu của bạn' : 'Nhận hộ trong khoa'}
+                                    Phiên {activeSession.sessionCode} -{' '}
+                                    {activeSession.isOwnRequest ? 'Phiếu của bạn' : 'Nhận hộ trong khoa'}
                                 </div>
                                 <div className="clin-pending-item__title">
-                                    {bag.requestCode} — {bag.patientName}
+                                    {activeSession.requestCode} - {activeSession.patientName} ({activeSession.patientCode})
                                 </div>
                                 <div className="clin-pending-item__sub">
-                                    Mã NB: {bag.patientCode} - Bác sĩ lập phiếu: {bag.doctorName || '—'} - Người xuất kho:{' '}
-                                    {bag.issuedByName || '—'} ({bag.issuedAt ? formatDateTime(bag.issuedAt) : '—'})
+                                    {activeSession.departmentName || 'Khoa điều trị'} - BS {activeSession.doctorName || '—'} - KTV khởi tạo:{' '}
+                                    {activeSession.initiatedByName || 'KTV BBNK'} ({formatDateTime(activeSession.createdAt)})
                                 </div>
                             </div>
                             <div className="clin-pending-item__right">
-                                <UrgencyTag level={bag.urgencyLevel} />
-                                <BloodGroupTag value={bag.bloodType} size="lg" />
+                                <UrgencyTag level={activeSession.urgencyLevel} />
+                                <BloodGroupTag value={activeSession.patientBloodType} size="lg" />
                             </div>
                         </div>
+
+                        {activeSession.status === 'PENDING' && remainingSeconds <= 0 && (
+                            <Alert
+                                type="error"
+                                showIcon
+                                icon={<ClockCircleOutlined />}
+                                message="Phiên bàn giao đã hết thời gian chờ"
+                                description="Phiên đã quá hạn 3–5 phút và đang tự động hoàn tác về RESERVED. Vui lòng nhờ Ngân hàng máu mở lại phiên mới."
+                            />
+                        )}
+
+                        {activeSession.status === 'EXPIRED' && (
+                            <Alert
+                                type="error"
+                                showIcon
+                                message="Phiên bàn giao đã hết hạn (EXPIRED)"
+                                description="Toàn bộ túi máu trong phiên đã quay về trạng thái RESERVED tại tủ kho. Vui lòng nhờ Ngân hàng máu mở lại phiên mới."
+                            />
+                        )}
+
+                        {activeSession.status === 'CANCELLED' && (
+                            <Alert
+                                type="warning"
+                                showIcon
+                                message="Phiên bàn giao đã bị Ngân hàng máu hủy sớm"
+                                description={
+                                    activeSession.cancelReason ||
+                                    'Toàn bộ túi máu trong phiên giữ nguyên trạng thái RESERVED. Vui lòng liên hệ quầy Ngân hàng máu.'
+                                }
+                            />
+                        )}
 
                         <div className="clin-reconcile-box">
                             <div className="clin-reconcile-head">
@@ -193,58 +302,90 @@ export default function ClinicalHandoverDetailPage() {
                                     <CheckCircleOutlined />
                                 </div>
                                 <div>
-                                    <div className="clin-reconcile-title">Đối chiếu thông tin túi máu thực tế &amp; dữ liệu bàn giao</div>
+                                    <div className="clin-reconcile-title">
+                                        Đối soát danh sách túi máu trong phiên ({scannedBarcodes.length}/{activeSession.items.length} túi đã quét)
+                                    </div>
                                     <div className="clin-reconcile-sub">
-                                        Kiểm tra kỹ nhãn túi máu thực tế khớp với thông tin phiếu bàn giao trước khi xác nhận tiếp nhận.
+                                        Quét đủ 100% mã vạch trên nhãn túi máu thực tế khớp với bảng bên dưới trước khi bấm xác nhận.
                                     </div>
                                 </div>
                             </div>
 
+                            {isPendingAndAlive && (
+                                <BarcodeScanBox
+                                    title="Quét từng túi máu trong lô"
+                                    description="Đưa lần lượt mã vạch từng túi máu vào máy quét hoặc nhập mã barcode bên dưới."
+                                    placeholder="Quét hoặc nhập mã barcode túi máu..."
+                                    submitLabel="Quét khớp mã"
+                                    errorMessage={scanError}
+                                    onClearError={() => setScanError(null)}
+                                    onScan={handleScanItemBarcode}
+                                />
+                            )}
+
                             <table className="clin-reconcile-table">
                                 <thead>
                                     <tr>
-                                        <th>Tiêu chí</th>
-                                        <th>Dữ liệu bàn giao</th>
-                                        <th>Barcode đã quét</th>
-                                        <th>Trạng thái</th>
+                                        <th>Mã túi máu</th>
+                                        <th>Nhóm máu</th>
+                                        <th>Chế phẩm &amp; thể tích</th>
+                                        <th>Hạn sử dụng</th>
+                                        <th>Trạng thái đối soát</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>Mã túi máu</td>
-                                        <td><strong className="text-mono">{bag.barcode}</strong></td>
-                                        <td><strong className="clin-reconcile-ok text-mono">{scannedBarcode}</strong></td>
-                                        <td className="clin-reconcile-ok">✓ Khớp mã</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Nhóm máu</td>
-                                        <td><strong>{bag.bloodType}</strong></td>
-                                        <td><strong className="clin-reconcile-ok">{bag.bloodType}</strong></td>
-                                        <td className="clin-reconcile-ok">✓</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Chế phẩm &amp; thể tích</td>
-                                        <td><strong>{bag.componentName} ({bag.volumeMl} ml)</strong></td>
-                                        <td><strong className="clin-reconcile-ok">{bag.componentCode} - {bag.volumeMl} ml</strong></td>
-                                        <td className="clin-reconcile-ok">✓</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Hạn sử dụng</td>
-                                        <td>{formatDateTime(bag.expiresAt)}</td>
-                                        <td>{formatDateTime(bag.expiresAt)}</td>
-                                        <td className="clin-reconcile-ok">✓</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Người bệnh nhận máu</td>
-                                        <td><strong>{bag.patientName}</strong> ({bag.patientCode})</td>
-                                        <td>Phiếu {bag.requestCode}</td>
-                                        <td className="clin-reconcile-ok">✓</td>
-                                    </tr>
+                                    {activeSession.items.map((item) => {
+                                        const isScanned =
+                                            activeSession.status === 'CONFIRMED' ||
+                                            scannedSet.has(item.barcode.trim().toLowerCase())
+                                        return (
+                                            <tr key={item.allocationId}>
+                                                <td>
+                                                    <div className="handover-code-cell">
+                                                        <strong className="text-mono">{item.barcode}</strong>
+                                                        <Tooltip title="Sao chép mã">
+                                                            <Button
+                                                                type="text"
+                                                                size="small"
+                                                                icon={<CopyOutlined />}
+                                                                onClick={() => void handleCopyBarcode(item.barcode)}
+                                                            />
+                                                        </Tooltip>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <BloodGroupTag value={item.bloodType} size="sm" />
+                                                </td>
+                                                <td>
+                                                    <strong>{item.componentName}</strong> ({item.componentCode} - {item.volumeMl} ml)
+                                                </td>
+                                                <td>{formatDateTime(item.expiredAt)}</td>
+                                                <td>
+                                                    {isScanned ? (
+                                                        <StatusPill tone="success">✓ Đã quét khớp</StatusPill>
+                                                    ) : (
+                                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                                                            <StatusPill tone="warning" dot={false}>Chưa quét</StatusPill>
+                                                            {isPendingAndAlive && (
+                                                                <Button
+                                                                    size="small"
+                                                                    icon={<ScanOutlined />}
+                                                                    onClick={() => handleScanItemBarcode(item.barcode)}
+                                                                >
+                                                                    Đánh dấu khớp
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        )
+                                    })}
                                 </tbody>
                             </table>
                         </div>
 
-                        {!receiptResult && (
+                        {isPendingAndAlive && !confirmedResult && (
                             <div className="handover-detail-box">
                                 {requiresPatientVerify && (
                                     <>
@@ -252,7 +393,7 @@ export default function ClinicalHandoverDetailPage() {
                                             type="warning"
                                             showIcon
                                             message="Xác nhận nhận hộ trong khoa"
-                                            description="Bạn đang nhận túi máu cho phiếu của bác sĩ khác trong khoa. Theo quy định an toàn, vui lòng nhập chính xác Mã người bệnh để đối soát."
+                                            description="Bạn đang nhận lô túi máu cho phiếu của bác sĩ khác trong khoa. Theo quy định an toàn, bắt buộc nhập chính xác Mã người bệnh để đối soát."
                                         />
                                         <div>
                                             <label
@@ -264,7 +405,7 @@ export default function ClinicalHandoverDetailPage() {
                                             <Input
                                                 id="expected-patient-code"
                                                 size="large"
-                                                placeholder={`Nhập mã người bệnh (ví dụ: ${bag.patientCode})`}
+                                                placeholder={`Nhập mã người bệnh (ví dụ: ${activeSession.patientCode})`}
                                                 value={expectedPatientCode}
                                                 onChange={(e) => {
                                                     setExpectedPatientCode(e.target.value)
@@ -281,7 +422,7 @@ export default function ClinicalHandoverDetailPage() {
                                     onChange={(e) => setVerifiedPhysicalMatch(e.target.checked)}
                                     disabled={confirmMutation.isPending}
                                 >
-                                    Tôi đã kiểm tra trực quan túi máu thực tế (mã túi, nhóm máu, chế phẩm, thể tích, hạn dùng, nguyên vẹn nhãn) trùng khớp hoàn toàn với dữ liệu bàn giao ở trên.
+                                    Tôi đã kiểm tra trực quan toàn bộ {activeSession.items.length} túi máu thực tế (mã túi, nhóm máu, chế phẩm, thể tích, hạn dùng, nguyên vẹn nhãn) trùng khớp hoàn toàn với phiên {activeSession.sessionCode}.
                                 </Checkbox>
                             </div>
                         )}
@@ -297,25 +438,25 @@ export default function ClinicalHandoverDetailPage() {
                             />
                         )}
 
-                        {receiptResult && (
+                        {activeSession.status === 'CONFIRMED' && (
                             <Alert
                                 type="success"
                                 showIcon
-                                message={`Tiếp nhận thành công túi máu ${receiptResult.barcode}`}
+                                message={`Tiếp nhận thành công lô ${activeSession.items.length} túi máu (${activeSession.sessionCode})`}
                                 description={
                                     <div style={{ display: 'grid', gap: 4, marginTop: 4 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                             <span>
-                                                Trạng thái phân bổ: <strong>{receiptResult.allocationStatus}</strong> - Trạng thái phiếu{' '}
-                                                <strong>{receiptResult.requestCode}</strong>:
+                                                Toàn bộ túi đã chuyển trạng thái <strong>ISSUED</strong> - Trạng thái phiếu{' '}
+                                                <strong>{activeSession.requestCode}</strong>:
                                             </span>
-                                            <StatusPill tone={getStatusTone(receiptResult.requestStatus)} dot={false}>
-                                                {getStatusMeta(receiptResult.requestStatus).label} ({receiptResult.requestStatus})
+                                            <StatusPill tone={getStatusTone(activeSession.requestStatus)} dot={false}>
+                                                {getStatusMeta(activeSession.requestStatus).label} ({activeSession.requestStatus})
                                             </StatusPill>
                                         </div>
                                         <div>
-                                            Người tiếp nhận: <strong>{receiptResult.receivedByName || displayName}</strong> - Thời gian:{' '}
-                                            {formatDateTime(receiptResult.confirmedAt)}
+                                            Người tiếp nhận: <strong>{activeSession.confirmedByName || displayName}</strong> - Thời gian:{' '}
+                                            {formatDateTime(activeSession.confirmedAt)}
                                         </div>
                                     </div>
                                 }
@@ -328,10 +469,10 @@ export default function ClinicalHandoverDetailPage() {
                                 onClick={handleBackToScan}
                                 disabled={confirmMutation.isPending}
                             >
-                                {receiptResult ? 'Quét nhận túi máu khác' : 'Quay lại quét barcode'}
+                                {activeSession.status === 'CONFIRMED' ? 'Quay lại nhận phiên tiếp theo' : 'Quay lại danh sách phiên'}
                             </Button>
 
-                            {!receiptResult && (
+                            {isPendingAndAlive && !confirmedResult && (
                                 <Button
                                     type="primary"
                                     size="large"
@@ -339,10 +480,10 @@ export default function ClinicalHandoverDetailPage() {
                                     loading={confirmMutation.isPending}
                                     disabled={!canConfirm}
                                     onClick={() => {
-                                        void handleConfirmReceive()
+                                        void handleConfirmSession()
                                     }}
                                 >
-                                    Xác nhận tiếp nhận
+                                    Xác nhận nhận lô máu ({scannedBarcodes.length}/{activeSession.items.length})
                                 </Button>
                             )}
                         </div>

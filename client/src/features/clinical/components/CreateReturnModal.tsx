@@ -3,13 +3,13 @@ import { Modal, Form, Input, Checkbox, Button, Alert } from 'antd'
 import { RollbackOutlined } from '@ant-design/icons'
 import { BloodGroupTag } from '@/shared/components'
 import { useCreateReturn } from '../hooks'
-import type { PendingReceiptBagDto } from '../types'
+import type { EligibleReturnBag } from '../types'
 import './CreateReturnModal.css'
 
 interface CreateReturnModalProps {
     open: boolean
     onClose: () => void
-    bag: PendingReceiptBagDto | null
+    bag: EligibleReturnBag | null
 }
 
 export const CreateReturnModal: React.FC<CreateReturnModalProps> = ({ open, onClose, bag }) => {

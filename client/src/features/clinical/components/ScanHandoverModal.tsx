@@ -1,46 +1,52 @@
-import React, { useState, useEffect } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Modal, Input, Button, Alert, Form } from 'antd'
 import { ScanOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import { BloodGroupTag, StatusPill } from '@/shared/components'
-import { useConfirmReceipt } from '../hooks'
-import type { PendingReceiptBagDto } from '../types'
+import { useConfirmHandoverSession } from '../hooks'
+import type { HandoverSessionDto } from '../types'
 import { formatDateTime } from '@/shared/formatters/date'
 import './ScanHandoverModal.css'
 
 interface ScanHandoverModalProps {
     open: boolean
     onClose: () => void
-    targetBag?: PendingReceiptBagDto | null
+    targetSession?: HandoverSessionDto | null
 }
 
 export const ScanHandoverModal: React.FC<ScanHandoverModalProps> = ({
     open,
     onClose,
-    targetBag,
+    targetSession,
 }) => {
-    const [scannedBarcode, setScannedBarcode] = useState('')
+    const [scannedInput, setScannedInput] = useState('')
     const [expectedPatientCode, setExpectedPatientCode] = useState('')
-    const confirmMutation = useConfirmReceipt()
+    const confirmMutation = useConfirmHandoverSession()
 
-    useEffect(() => {
-        if (targetBag) {
-            setScannedBarcode(targetBag.barcode)
-            setExpectedPatientCode(targetBag.patientCode)
-        } else {
-            setScannedBarcode('')
-            setExpectedPatientCode('')
-        }
-    }, [targetBag, open])
+    const expectedBarcodes = useMemo(
+        () => (targetSession?.items ?? []).map((i) => i.barcode),
+        [targetSession],
+    )
 
     const handleSubmit = async () => {
-        if (!targetBag?.allocationId) return
+        if (!targetSession) return
+
+        const barcodesToSend = scannedInput.trim()
+            ? scannedInput
+                  .split(/[\s,;]+/)
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+            : expectedBarcodes
 
         try {
             await confirmMutation.mutateAsync({
-                allocationId: targetBag.allocationId,
-                scannedBarcode: scannedBarcode.trim(),
-                expectedPatientCode: !targetBag.isOwnRequest ? expectedPatientCode.trim() : undefined,
+                sessionId: targetSession.handoverSessionId,
+                data: {
+                    scannedBarcodes: barcodesToSend,
+                    expectedPatientCode: !targetSession.isOwnRequest ? expectedPatientCode.trim() : undefined,
+                },
             })
+            setScannedInput('')
+            setExpectedPatientCode('')
             onClose()
         } catch {
             // Handled in hook onError
@@ -52,7 +58,7 @@ export const ScanHandoverModal: React.FC<ScanHandoverModalProps> = ({
             open={open}
             onCancel={onClose}
             footer={null}
-            width={540}
+            width={560}
             centered
             destroyOnClose
             className="scan-handover-modal"
@@ -62,78 +68,78 @@ export const ScanHandoverModal: React.FC<ScanHandoverModalProps> = ({
                     <ScanOutlined />
                 </div>
                 <div>
-                    <h3 className="scan-modal__title">Xác nhận nhận túi máu từ Ngân hàng máu</h3>
+                    <h3 className="scan-modal__title">Xác nhận nhận lô túi máu theo phiên</h3>
                     <p className="scan-modal__subtitle">
-                        Đối soát thông tin túi máu và quét mã vạch để hoàn tất nhận bàn giao tại lâm sàng.
+                        Đối soát thông tin các túi máu trong phiên bàn giao từ Ngân hàng máu để hoàn tất tiếp nhận.
                     </p>
                 </div>
             </div>
 
-            {targetBag ? (
+            {targetSession ? (
                 <div className="scan-modal__bag-info">
                     <div className="scan-modal__bag-row">
-                        <span>Mã túi máu</span>
+                        <span>Mã phiên bàn giao</span>
                         <strong style={{ color: 'var(--c-primary)', fontFamily: 'var(--font-mono)', fontSize: 15 }}>
-                            {targetBag.barcode}
+                            {targetSession.sessionCode}
                         </strong>
                     </div>
                     <div className="scan-modal__bag-row">
                         <span>Người bệnh</span>
-                        <strong>{targetBag.patientName} ({targetBag.patientCode})</strong>
+                        <strong>{targetSession.patientName} ({targetSession.patientCode})</strong>
                     </div>
                     <div className="scan-modal__bag-row">
-                        <span>Loại chế phẩm</span>
-                        <span>{targetBag.componentName} - {targetBag.volumeMl} ml</span>
+                        <span>Số túi trong lô</span>
+                        <span>{targetSession.items.length} túi ({expectedBarcodes.join(', ')})</span>
                     </div>
                     <div className="scan-modal__bag-row">
-                        <span>Nhóm máu túi</span>
-                        <BloodGroupTag value={targetBag.bloodType} size="sm" />
+                        <span>Nhóm máu người bệnh</span>
+                        <BloodGroupTag value={targetSession.patientBloodType} size="sm" />
                     </div>
                     <div className="scan-modal__bag-row">
                         <span>Bác sĩ lập phiếu</span>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                            <span>{targetBag.doctorName || 'Bác sĩ điều trị'}</span>
-                            <StatusPill tone={targetBag.isOwnRequest ? 'success' : 'warning'} dot={false}>
-                                {targetBag.isOwnRequest ? 'Phiếu của bạn' : 'Nhận hộ trong khoa'}
+                            <span>{targetSession.doctorName || 'Bác sĩ điều trị'}</span>
+                            <StatusPill tone={targetSession.isOwnRequest ? 'success' : 'warning'} dot={false}>
+                                {targetSession.isOwnRequest ? 'Phiếu của bạn' : 'Nhận hộ trong khoa'}
                             </StatusPill>
                         </span>
                     </div>
                     <div className="scan-modal__bag-row">
-                        <span>Thời gian xuất kho</span>
-                        <span>{targetBag.issuedAt ? formatDateTime(targetBag.issuedAt) : 'Chưa ghi nhận'}</span>
+                        <span>Hiệu lực đến</span>
+                        <span>{formatDateTime(targetSession.expiresAt)}</span>
                     </div>
                 </div>
             ) : (
                 <Alert
                     type="info"
-                    message="Vui lòng chọn túi máu cần nhận từ danh sách tab 'Nhận bàn giao' để đối soát."
+                    message="Vui lòng chọn phiên bàn giao cần nhận từ danh sách chờ xác nhận."
                     showIcon
                     style={{ marginBottom: 16 }}
                 />
             )}
 
-            {!targetBag?.isOwnRequest && targetBag && (
+            {!targetSession?.isOwnRequest && targetSession && (
                 <Alert
                     type="warning"
                     message="Lưu ý nhận hộ trong khoa"
-                    description="Bạn đang nhận túi máu của bác sĩ khác lập trong khoa. Theo quy định an toàn, bắt buộc đối soát mã người bệnh chính xác."
+                    description="Bạn đang nhận lô túi máu của bác sĩ khác lập trong khoa. Theo quy định an toàn, bắt buộc đối soát mã người bệnh chính xác."
                     showIcon
                     style={{ marginBottom: 16 }}
                 />
             )}
 
             <Form layout="vertical">
-                <Form.Item label="Mã vạch quét được (Barcode)" required>
+                <Form.Item label="Danh sách barcode đã quét (mặc định khớp đủ lô nếu để trống)">
                     <Input
                         prefix={<ScanOutlined style={{ color: 'var(--c-success)' }} />}
-                        placeholder="Quét hoặc nhập mã túi máu..."
-                        value={scannedBarcode}
-                        onChange={(e) => setScannedBarcode(e.target.value)}
+                        placeholder={expectedBarcodes.join(', ') || 'Quét hoặc nhập các mã túi máu...'}
+                        value={scannedInput}
+                        onChange={(e) => setScannedInput(e.target.value)}
                         size="large"
                     />
                 </Form.Item>
 
-                {!targetBag?.isOwnRequest && targetBag && (
+                {!targetSession?.isOwnRequest && targetSession && (
                     <Form.Item label="Mã người bệnh đối soát (Expected Patient Code)" required>
                         <Input
                             placeholder="Nhập mã hồ sơ người bệnh..."
@@ -152,11 +158,11 @@ export const ScanHandoverModal: React.FC<ScanHandoverModalProps> = ({
                         type="primary"
                         loading={confirmMutation.isPending}
                         icon={<CheckCircleOutlined />}
-                        onClick={handleSubmit}
-                        disabled={!targetBag || !scannedBarcode.trim() || (!targetBag.isOwnRequest && !expectedPatientCode.trim())}
+                        onClick={() => void handleSubmit()}
+                        disabled={!targetSession || (!targetSession.isOwnRequest && !expectedPatientCode.trim())}
                         className="scan-modal__submit-btn"
                     >
-                        Xác nhận thực nhận
+                        Xác nhận nhận lô máu
                     </Button>
                 </div>
             </Form>

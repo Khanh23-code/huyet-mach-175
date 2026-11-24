@@ -9,7 +9,6 @@ import type {
     CancelBloodReturnRequest,
     ClinicalBloodRequestFilter,
     ConfirmHandoverSessionRequest,
-    ConfirmReceiptRequest,
     ConfirmTransfusionRequest,
     CreateBloodRequestDto,
     CreateBloodReturnRequest,
@@ -17,7 +16,6 @@ import type {
     HandoverSessionDto,
     IneligibleReturnBag,
     PendingBloodReturnFilter,
-    PendingClinicalReceiptFilter,
     PendingHandoverSessionFilter,
     UpdateBloodRequestDto,
 } from './types'
@@ -38,7 +36,6 @@ export const CLINICAL_QUERY_KEYS = {
     handoverSessionDetail: (sessionId: number) =>
         ['clinical', 'handoverSessions', sessionId] as const,
     transfusionScan: (barcode: string) => ['clinical', 'transfusionScan', barcode] as const,
-    pendingReceipts: (filter?: PendingClinicalReceiptFilter) => ['clinical', 'pendingReceipts', filter] as const,
     pendingReturns: (filter?: PendingBloodReturnFilter) => ['clinical', 'pendingReturns', filter] as const,
     eligibleReturnBags: () => ['clinical', 'eligibleReturnBags'] as const,
     componentTypes: (canFetchFromProcessing: boolean) =>
@@ -210,41 +207,6 @@ export function useConfirmTransfusion() {
         },
         onError: (err: unknown) => {
             message.error(parseApiError(err).message)
-        },
-    })
-}
-
-/** @deprecated Sẽ gỡ ở bước FE-1.3 */
-export function usePendingReceipts(
-    filter?: PendingClinicalReceiptFilter,
-    options?: { enabled?: boolean },
-) {
-    const { can } = usePermission()
-    const canView = can(PERMISSIONS.BLOOD_REQUEST_VIEW)
-
-    return useQuery({
-        queryKey: CLINICAL_QUERY_KEYS.pendingReceipts(filter),
-        queryFn: () => clinicalApi.getPendingReceipts(filter),
-        enabled: canView && (options?.enabled ?? true),
-        ...SESSION_CACHE_OPTIONS,
-    })
-}
-
-/** Hook quét đối soát & xác nhận nhận túi máu */
-export function useConfirmReceipt() {
-    const queryClient = useQueryClient()
-
-    return useMutation({
-        mutationFn: (payload: ConfirmReceiptRequest) => clinicalApi.confirmReceipt(payload),
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ['clinical'] })
-            queryClient.invalidateQueries({ queryKey: ['coordination'] })
-            queryClient.invalidateQueries({ queryKey: ['inventory'] })
-            message.success(`Đã đối soát & xác nhận nhận thành công túi máu ${data.barcode}!`)
-        },
-        onError: (err: any) => {
-            const msg = err?.response?.data?.message || err?.message || 'Đối soát nhận túi máu thất bại.'
-            message.error(msg)
         },
     })
 }

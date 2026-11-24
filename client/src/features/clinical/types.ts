@@ -129,60 +129,6 @@ export interface BloodRequestDetailDto {
     allocations: BloodRequestAllocationDto[]
 }
 
-export interface PendingClinicalReceiptFilter {
-    doctorId?: number
-    doctorName?: string
-    requestCode?: string
-}
-
-export interface PendingReceiptBagDto {
-    allocationId: number
-    requestId: number
-    requestCode: string
-    doctorId?: number
-    doctorName?: string
-    departmentName?: string
-    isOwnRequest: boolean
-    urgencyLevel: UrgencyLevel
-    patientName: string
-    patientCode: string
-    bagId: number
-    barcode: string
-    componentCode: ComponentCode
-    componentName: string
-    bloodType: string
-    volumeMl: number
-    expiresAt: string
-    issuedAt?: string
-    issuedByName?: string
-}
-
-export interface ConfirmReceiptRequest {
-    allocationId: number
-    scannedBarcode: string
-    expectedPatientCode?: string
-}
-
-export interface ConfirmReceiptResponse {
-    allocationId: number
-    requestId: number
-    requestCode: string
-    patientCode: string
-    patientName: string
-    bagId: number
-    barcode: string
-    componentCode: ComponentCode
-    componentName: string
-    bloodType: string
-    volumeMl: number
-    allocationStatus: AllocationStatus
-    requestStatus: RequestStatus
-    currentStep: number
-    receivedById: number
-    receivedByName?: string
-    confirmedAt: string
-}
-
 export interface TransfusionScanDto {
     allocationId: number
     bagId: number
