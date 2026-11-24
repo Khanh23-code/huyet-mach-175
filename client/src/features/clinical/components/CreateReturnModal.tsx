@@ -88,16 +88,16 @@ export const CreateReturnModal: React.FC<CreateReturnModalProps> = ({ open, onCl
             </div>
 
             <Alert
-                type="warning"
-                message="Quy định an toàn sinh học hoàn trả túi máu"
-                description="Túi máu hoàn trả bắt buộc phải thỏa mãn đầy đủ 4 tiêu chí an toàn dưới đây trước khi vận chuyển về Ngân hàng máu."
+                type="info"
+                message="Quy định kiểm tra an toàn sinh học hoàn trả túi máu"
+                description="Tích đủ 4 tiêu chí để túi máu đủ điều kiện đánh giá tái nhập kho. Nếu có tiêu chí chưa đạt, bạn vẫn có thể gửi phiếu hoàn trả và hệ thống sẽ tự động gắn cờ bắt buộc tiêu hủy tại Ngân hàng máu."
                 showIcon
                 style={{ marginBottom: 16 }}
             />
 
             <Form layout="vertical">
                 <div className="return-modal__checklist">
-                    <div className="return-modal__checklist-title">Bảng kiểm an toàn (4 điều kiện bắt buộc)</div>
+                    <div className="return-modal__checklist-title">Bảng kiểm an toàn sinh học (đánh giá khả năng tái nhập kho)</div>
                     <Checkbox
                         checked={checklist.isUnusedFullVolume}
                         onChange={(e) => setChecklist({ ...checklist, isUnusedFullVolume: e.target.checked })}
@@ -124,6 +124,16 @@ export const CreateReturnModal: React.FC<CreateReturnModalProps> = ({ open, onCl
                     </Checkbox>
                 </div>
 
+                {!allChecked && (
+                    <Alert
+                        type="warning"
+                        showIcon
+                        style={{ marginTop: 12 }}
+                        message="Túi máu sẽ được gắn cờ bắt buộc tiêu hủy"
+                        description="Do có ít nhất 1 tiêu chí bảo quản chưa đạt, phiếu hoàn trả vẫn được tiếp nhận để khóa túi (LOCKED) nhưng không đủ điều kiện tái nhập kho."
+                    />
+                )}
+
                 <Form.Item label="Lý do hoàn trả máu" required style={{ marginTop: 16 }}>
                     <Input.TextArea
                         rows={3}
@@ -144,7 +154,7 @@ export const CreateReturnModal: React.FC<CreateReturnModalProps> = ({ open, onCl
                         danger
                         loading={returnMutation.isPending}
                         onClick={handleSubmit}
-                        disabled={!allChecked || !returnReason.trim()}
+                        disabled={!returnReason.trim()}
                         icon={<RollbackOutlined />}
                     >
                         Xác nhận lập phiếu hoàn trả

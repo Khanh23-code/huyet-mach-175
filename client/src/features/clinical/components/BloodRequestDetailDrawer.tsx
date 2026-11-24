@@ -1,15 +1,24 @@
-import { Drawer, Spin, Descriptions, Table, Alert, Button, Space } from 'antd'
-import { EditOutlined, SendOutlined } from '@ant-design/icons'
+import { useState } from 'react'
+import { App, Drawer, Spin, Descriptions, Table, Alert, Button, Space } from 'antd'
+import { EditOutlined, HeartOutlined, SendOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
 import { BloodGroupTag, StatusPill, UrgencyTag, type StatusPillTone } from '@/shared/components'
+import { parseApiError } from '@/services/apiError'
+import { clinicalApi } from '../clinicalApi'
 import { useClinicalRequestDetail } from '../hooks'
+import { ConfirmTransfusionModal } from './ConfirmTransfusionModal'
 import { RequestStatusStepper } from './RequestStatusStepper'
 import { getStatusMeta, getStatusTone } from '../format'
 import { formatBloodGroup } from '@/shared/formatters/medical'
 import { formatDateTime } from '@/shared/formatters/date'
 import { usePermission } from '@/features/auth/usePermission'
 import { PERMISSIONS } from '@/config/permissions'
-import type { BloodRequestAllocationDto, BloodRequestDetailDto, BloodRequestItemDetailDto } from '../types'
+import type {
+    BloodRequestAllocationDto,
+    BloodRequestDetailDto,
+    BloodRequestItemDetailDto,
+    TransfusionScanDto,
+} from '../types'
 import './BloodRequestDetailDrawer.css'
 
 interface BloodRequestDetailDrawerProps {
@@ -23,7 +32,7 @@ interface BloodRequestDetailDrawerProps {
 const ALLOCATION_STATUS_MAP: Record<string, { label: string; tone: StatusPillTone }> = {
     RESERVED: { label: 'Đã giữ chỗ', tone: 'warning' },
     ISSUED: { label: 'Đã xuất kho', tone: 'info' },
-    COMPLETED: { label: 'Đã tiếp nhận', tone: 'success' },
+    COMPLETED: { label: 'Đã truyền / hoàn tất', tone: 'success' },
     RETURNED: { label: 'Đã hoàn trả', tone: 'purple' },
 }
 
@@ -34,11 +43,36 @@ export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> =
     onEditDraft,
     onSubmitDraft,
 }) => {
+    const { message } = App.useApp()
     const { data: detail, isLoading } = useClinicalRequestDetail(requestId)
     const { can } = usePermission()
     const canEdit = can(PERMISSIONS.BLOOD_REQUEST_EDIT)
 
+    const [loadingTransfusionId, setLoadingTransfusionId] = useState<number | null>(null)
+    const [transfusionBag, setTransfusionBag] = useState<TransfusionScanDto | null>(null)
+    const [transfusionModalOpen, setTransfusionModalOpen] = useState(false)
+
     const statusMeta = getStatusMeta(detail?.status)
+
+    const handleQuickTransfusion = async (row: BloodRequestAllocationDto) => {
+        if (loadingTransfusionId !== null) return
+        setLoadingTransfusionId(row.allocationId)
+        try {
+            const scanData = await clinicalApi.scanTransfusionBag(row.barcode)
+            if (scanData.bagStatus !== 'ISSUED') {
+                message.error(
+                    `Túi máu ${scanData.barcode} hiện ở trạng thái ${scanData.bagStatus} (không phải ISSUED), không thể xác nhận truyền máu.`,
+                )
+                return
+            }
+            setTransfusionBag(scanData)
+            setTransfusionModalOpen(true)
+        } catch (err) {
+            message.error(parseApiError(err).message)
+        } finally {
+            setLoadingTransfusionId(null)
+        }
+    }
 
     const itemColumns: ColumnsType<BloodRequestItemDetailDto> = [
         {
@@ -113,9 +147,34 @@ export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> =
                 </div>
             ),
         },
+        ...(canEdit
+            ? [
+                  {
+                      title: 'Thao tác',
+                      key: 'action',
+                      align: 'right' as const,
+                      render: (_: unknown, row: BloodRequestAllocationDto) =>
+                          row.status === 'ISSUED' && (!row.bagStatus || row.bagStatus === 'ISSUED') ? (
+                              <Button
+                                  size="small"
+                                  type="primary"
+                                  ghost
+                                  icon={<HeartOutlined />}
+                                  loading={loadingTransfusionId === row.allocationId}
+                                  onClick={() => void handleQuickTransfusion(row)}
+                              >
+                                  Truyền máu
+                              </Button>
+                          ) : (
+                              <span style={{ color: 'var(--c-text-muted)' }}>—</span>
+                          ),
+                  },
+              ]
+            : []),
     ]
 
     return (
+        <>
         <Drawer
             title={
                 detail ? (
@@ -267,5 +326,11 @@ export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> =
                 <div className="request-drawer__empty">Không tìm thấy thông tin phiếu yêu cầu.</div>
             )}
         </Drawer>
+        <ConfirmTransfusionModal
+            open={transfusionModalOpen}
+            bag={transfusionBag}
+            onClose={() => setTransfusionModalOpen(false)}
+        />
+        </>
     )
 }

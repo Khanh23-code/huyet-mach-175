@@ -43,15 +43,23 @@ export const stockLevel = (pct: number): StockLevel => (pct >= 50 ? 'ok' : pct >
 export const MANUAL_STATUSES: BagStatus[] = ['READY_TESTING', 'LOCKED', 'AVAILABLE']
 /** Tự động cập nhật bởi nghiệp vụ khác. */
 export const AUTO_STATUSES: BagStatus[] = ['TESTED_PASSED', 'PROCESSED']
-/** Sprint sau: chỉ hiển thị, disable. */
+/** Thuộc luồng cấp phát và truyền máu lâm sàng, không chuyển thủ công tại quét kho. */
 export const COMING_SOON_STATUSES: BagStatus[] = ['RESERVED', 'ISSUED', 'TRANSFUSED']
 
 /**
  * Phản chiếu BloodBagTransitionRules.cs (BE vẫn là nơi quyết định cuối cùng).
- * Túi đã hết hạn: không còn đích thủ công nào, chỉ xử lý qua biên bản tiêu hủy.
+ * Túi đã hết hạn, đã xuất kho (ISSUED), đã truyền (TRANSFUSED), đã tiêu hủy (DISCARDED),
+ * hoặc đã điều chế (PROCESSED) không còn đích chuyển thủ công tại màn quét kho.
  */
 export const allowedManualTargets = (current: string, expired: boolean): BagStatus[] => {
-    if (current === 'DISCARDED' || current === 'TRANSFUSED') return []
+    if (
+        current === 'DISCARDED' ||
+        current === 'TRANSFUSED' ||
+        current === 'ISSUED' ||
+        current === 'PROCESSED'
+    ) {
+        return []
+    }
     if (expired) return []
     const out: BagStatus[] = []
     if (current === 'NEWLY_COLLECTED') out.push('READY_TESTING')

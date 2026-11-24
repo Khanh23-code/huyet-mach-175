@@ -78,7 +78,7 @@ export const ROUTE_GROUPS: RouteGroup[] = [
         requiredPermission: PERMISSIONS.BLOOD_REQUEST_EDIT,
         children: [
             { key: 'clinical-requests', label: 'Lập phiếu & Theo dõi', path: '/clinical/requests', requiredPermission: PERMISSIONS.BLOOD_REQUEST_EDIT },
-            { key: 'clinical-handovers', label: 'Nhận bàn giao túi máu', path: '/clinical/handovers', requiredPermission: PERMISSIONS.BLOOD_REQUEST_EDIT },
+            { key: 'clinical-handovers', label: 'Nhận & truyền túi máu', path: '/clinical/handovers', requiredPermission: PERMISSIONS.BLOOD_REQUEST_EDIT },
         ],
     },
     {
