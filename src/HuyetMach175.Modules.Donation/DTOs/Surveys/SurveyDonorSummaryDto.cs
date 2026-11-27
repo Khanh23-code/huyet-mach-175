@@ -5,7 +5,7 @@ namespace HuyetMach175.Modules.Donation.DTOs.Surveys;
 public class SurveyDonorSummaryDto
 {
     [JsonPropertyName("donorId")]
-    public int DonorId { get; set; }
+    public Guid DonorId { get; set; }
 
     [JsonPropertyName("donorCode")]
     public string DonorCode { get; set; } = string.Empty;

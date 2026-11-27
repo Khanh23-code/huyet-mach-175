@@ -3,7 +3,7 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 
 /** Đợt hiến máu mà nhân viên tiếp nhận đang làm việc (lưu theo tab, mất khi đóng tab hoặc đăng xuất). */
 export interface WorkCampaign {
-    id: number
+    id: string
     name: string
     locationName: string
 }

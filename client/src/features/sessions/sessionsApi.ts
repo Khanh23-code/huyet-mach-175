@@ -15,15 +15,15 @@ export const sessionsApi = {
             .get<PagedResult<SessionQueueItem>>('/api/donation-sessions', { params })
             .then((r) => r.data),
 
-    detail: (sessionId: number) =>
+    detail: (sessionId: string) =>
         axiosClient.get<SessionDetail>(`/api/donation-sessions/${sessionId}`).then((r) => r.data),
 
-    start: (sessionId: number) =>
+    start: (sessionId: string) =>
         axiosClient
             .post<StartCollectionResponse>(`/api/donation-sessions/${sessionId}/start`)
             .then((r) => r.data),
 
-    complete: (sessionId: number, body: UpdateCollectionRequest) =>
+    complete: (sessionId: string, body: UpdateCollectionRequest) =>
         axiosClient
             .put<CollectionResponse>(`/api/donation-sessions/${sessionId}/collection`, body)
             .then((r) => r.data),

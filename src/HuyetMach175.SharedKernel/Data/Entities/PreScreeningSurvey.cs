@@ -9,10 +9,10 @@ public class PreScreeningSurvey
 {
     [Key]
     [Column("survey_id")]
-    public int SurveyId { get; set; }
+    public Guid SurveyId { get; set; } = Guid.CreateVersion7();
 
     [Column("appointment_id")]
-    public int AppointmentId { get; set; }
+    public Guid AppointmentId { get; set; }
 
     [Required]
     [Column("survey_answers", TypeName = "jsonb")]
@@ -28,7 +28,7 @@ public class PreScreeningSurvey
     public DateTime? SurveySubmittedAt { get; set; }
 
     [Column("doctor_id")]
-    public int? DoctorId { get; set; }
+    public Guid? DoctorId { get; set; }
 
     [Column("weight_kg", TypeName = "numeric(5,2)")]
     public decimal? WeightKg { get; set; }

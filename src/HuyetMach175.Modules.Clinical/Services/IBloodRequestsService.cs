@@ -5,10 +5,10 @@ namespace HuyetMach175.Modules.Clinical.Services;
 
 public interface IBloodRequestsService
 {
-    Task<CreateBloodRequestResponse> CreateBloodRequestAsync(CreateBloodRequestDto request, int doctorId, string? ipAddress);
-    Task<BloodRequestDetailDto> UpdateDraftBloodRequestAsync(int id, UpdateBloodRequestDto request, int doctorId, string? ipAddress);
-    Task<SubmitBloodRequestResponse> SubmitDraftBloodRequestAsync(int id, int doctorId, string? ipAddress);
-    Task<PagedResult<ClinicalBloodRequestDto>> GetClinicalBloodRequestsAsync(ClinicalBloodRequestFilterDto filter, int doctorId);
-    Task<BloodRequestDetailDto> GetBloodRequestByIdAsync(int id, int currentUserId);
-    Task<RejectBloodRequestResponse> RejectBloodRequestAsync(int id, RejectBloodRequestDto request, int userId, string? ipAddress);
+    Task<CreateBloodRequestResponse> CreateBloodRequestAsync(CreateBloodRequestDto request, Guid doctorId, string? ipAddress);
+    Task<BloodRequestDetailDto> UpdateDraftBloodRequestAsync(Guid id, UpdateBloodRequestDto request, Guid doctorId, string? ipAddress);
+    Task<SubmitBloodRequestResponse> SubmitDraftBloodRequestAsync(Guid id, Guid doctorId, string? ipAddress);
+    Task<PagedResult<ClinicalBloodRequestDto>> GetClinicalBloodRequestsAsync(ClinicalBloodRequestFilterDto filter, Guid doctorId);
+    Task<BloodRequestDetailDto> GetBloodRequestByIdAsync(Guid id, Guid currentUserId);
+    Task<RejectBloodRequestResponse> RejectBloodRequestAsync(Guid id, RejectBloodRequestDto request, Guid userId, string? ipAddress);
 }

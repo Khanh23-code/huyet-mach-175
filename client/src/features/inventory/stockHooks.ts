@@ -60,14 +60,14 @@ export const useCreateLocation = () => {
 export const useUpdateLocation = () => {
     const done = useInvalidate()
     return useMutation({
-        mutationFn: (p: { id: number; body: StorageLocationInput }) => locationsApi.update(p.id, p.body),
+        mutationFn: (p: { id: string; body: StorageLocationInput }) => locationsApi.update(p.id, p.body),
         onSuccess: done,
     })
 }
 
 export const useDeleteLocation = () => {
     const done = useInvalidate()
-    return useMutation({ mutationFn: (id: number) => locationsApi.remove(id), onSuccess: done })
+    return useMutation({ mutationFn: (id: string) => locationsApi.remove(id), onSuccess: done })
 }
 
 export const useBloodComponentTypesConfig = () =>
@@ -80,12 +80,13 @@ export const useBloodComponentTypesConfig = () =>
 export const useUpdateBloodComponentType = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: (p: { id: number; body: UpdateBloodComponentTypeRequest }) =>
+        mutationFn: (p: { id: string; body: UpdateBloodComponentTypeRequest }) =>
             componentTypesConfigApi.update(p.id, p.body),
         onSuccess: async () => {
             await Promise.all([
                 qc.invalidateQueries({ queryKey: ['inventory'] }),
-                qc.invalidateQueries({ queryKey: ['clinical', 'component-types'] }),
+                qc.invalidateQueries({ queryKey: ['clinical', 'componentTypes'] }),
+                qc.invalidateQueries({ queryKey: ['coordination', 'componentTypes'] }),
             ])
         },
     })
@@ -94,7 +95,7 @@ export const useUpdateBloodComponentType = () => {
 export const useRelocateBag = () => {
     const done = useInvalidate()
     return useMutation({
-        mutationFn: (p: { bagId: number; body: RelocateRequest }) => stockApi.relocate(p.bagId, p.body),
+        mutationFn: (p: { bagId: string; body: RelocateRequest }) => stockApi.relocate(p.bagId, p.body),
         onSuccess: done,
     })
 }

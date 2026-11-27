@@ -22,11 +22,14 @@ public static class BloodBagLabel
         _ => 0
     };
 
+    public static string DonorCode(Guid donorId) =>
+        donorId == Guid.Empty ? string.Empty : $"NH-{donorId.ToString("N")[^6..].ToUpperInvariant()}";
+
     public static string BuildBarcode(
         BloodType bt,
         RhFactor rh,
         int volumeMl,
         DateTime collectedAtUtc,
-        int sessionId) =>
-        $"BAG-{collectedAtUtc:yyyyMMdd}-{sessionId}";
+        Guid sessionId) =>
+        $"BAG-{collectedAtUtc:yyyyMMdd}-{sessionId.ToString("N")[^8..].ToUpperInvariant()}";
 }

@@ -7,8 +7,8 @@ export type RhValue = 'POSITIVE' | 'NEGATIVE'
 
 /** SurveyQueueItemDto (ScreeningStatus là chuỗi) */
 export interface ScreeningQueueItem {
-    appointmentId: number
-    donorId: number
+    appointmentId: string
+    donorId: string
     donorCode: string
     donorName: string
     checkedInAt?: string | null
@@ -22,14 +22,14 @@ export interface ScreeningQueueItem {
 export interface ScreeningQueueQuery {
     date?: string // "YYYY-MM-DD"
     screeningStatus?: ScreeningStatus
-    campaignId?: number
+    campaignId?: string
     search?: string
     page?: number
     pageSize?: number
 }
 
 export interface SurveyDonorSummary {
-    donorId: number
+    donorId: string
     donorCode: string
     fullName: string
     citizenId: string
@@ -45,7 +45,7 @@ export interface SurveyDonorSummary {
 }
 
 export interface SurveyOnlineDetail {
-    surveyId?: number | null
+    surveyId?: string | null
     hasSubmittedSurvey: boolean
     surveySubmittedAt?: string | null
     riskScore: number
@@ -65,14 +65,14 @@ export interface SurveyClinicalDetail {
     screeningStatus: ScreeningStatus
     deferralReason?: string | null
     targetVolumeMl?: TargetVolume | null
-    doctorId?: number | null
+    doctorId?: string | null
     doctorName?: string | null
     screenedAt?: string | null
 }
 
 /** GET /api/surveys/appointment/{id} */
 export interface SurveyDetail {
-    appointmentId: number
+    appointmentId: string
     appointmentDate: string
     timeSlot: string
     isWalkIn: boolean
@@ -102,9 +102,9 @@ export interface UpdateClinicalRequest {
 }
 
 export interface ClinicalScreeningResponse {
-    appointmentId: number
+    appointmentId: string
     screeningStatus: ScreeningStatus
-    sessionId?: number | null
+    sessionId?: string | null
     sessionStatus?: string | null
     targetVolumeMl?: TargetVolume | null
     screenedAt: string

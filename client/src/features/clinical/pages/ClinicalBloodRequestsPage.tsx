@@ -60,8 +60,8 @@ import './ClinicalBloodRequestsPage.css'
 
 type ConfirmSubmitContext =
     | { mode: 'create' }
-    | { mode: 'edit-and-submit'; draftId: number; requestCode: string }
-    | { mode: 'submit-draft'; draftId: number; requestCode: string }
+    | { mode: 'edit-and-submit'; draftId: string; requestCode: string }
+    | { mode: 'submit-draft'; draftId: string; requestCode: string }
 
 export default function ClinicalBloodRequestsPage() {
     const navigate = useNavigate()
@@ -134,7 +134,7 @@ export default function ClinicalBloodRequestsPage() {
         form.setFieldsValue({
             urgencyLevel: 'URGENT',
             requestedUnits: 2,
-            componentTypeId: componentTypes[0]?.componentTypeId || 2,
+            componentTypeId: componentTypes[0]?.componentTypeId,
         })
         setSelectedPatient(null)
         setEditingDraft(null)
@@ -148,7 +148,7 @@ export default function ClinicalBloodRequestsPage() {
             form.setFieldsValue({
                 urgencyLevel: 'URGENT',
                 requestedUnits: 2,
-                componentTypeId: componentTypes[0]?.componentTypeId || 2,
+                componentTypeId: componentTypes[0]?.componentTypeId,
             })
             setSelectedPatient(null)
             setEditingDraft(null)
@@ -176,7 +176,7 @@ export default function ClinicalBloodRequestsPage() {
             form.setFieldsValue({
                 patientDisplay: `${draftToLoad.patientName} - ${draftToLoad.patientCode}`,
                 bloodGroup: bloodGroupStr,
-                componentTypeId: item?.componentTypeId || (componentTypes[0]?.componentTypeId || 2),
+                componentTypeId: item?.componentTypeId || componentTypes[0]?.componentTypeId,
                 requestedUnits: item?.requestedUnits || 2,
                 urgencyLevel: draftToLoad.urgencyLevel,
                 diagnosis: draftToLoad.diagnosis || '',
@@ -197,7 +197,7 @@ export default function ClinicalBloodRequestsPage() {
     const [confirmContext, setConfirmContext] = useState<ConfirmSubmitContext | null>(null)
 
     // Drawer state
-    const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null)
+    const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null)
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
     // Xử lý khi chọn bệnh nhân từ popup HIS
@@ -815,7 +815,7 @@ export default function ClinicalBloodRequestsPage() {
                         initialValues={{
                             urgencyLevel: 'URGENT',
                             requestedUnits: 2,
-                            componentTypeId: componentTypes[0]?.componentTypeId || 2,
+                            componentTypeId: componentTypes[0]?.componentTypeId,
                         }}
                     >
                         {/* Hàng 1: Bệnh nhân + nút Chọn từ HIS */}

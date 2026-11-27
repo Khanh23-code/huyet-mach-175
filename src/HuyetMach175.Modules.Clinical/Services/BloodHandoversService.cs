@@ -19,7 +19,7 @@ public class BloodHandoversService : IBloodHandoversService
         _context = context;
     }
 
-    public async Task<HandoverSessionDto> CreateHandoverSessionAsync(CreateHandoverSessionRequest request, int userId, string? ipAddress)
+    public async Task<HandoverSessionDto> CreateHandoverSessionAsync(CreateHandoverSessionRequest request, Guid userId, string? ipAddress)
     {
         await BloodRequestProcessing.EnsureActiveUserAsync(_context, userId, "Thông tin kỹ thuật viên xuất kho không hợp lệ.");
 
@@ -28,7 +28,7 @@ public class BloodHandoversService : IBloodHandoversService
             throw new HttpException(StatusCodes.Status400BadRequest, "Thời gian chờ xác nhận phiên bàn giao phải từ 3 đến 5 phút.");
         }
 
-        if (request.RequestId.HasValue && request.RequestId.Value <= 0)
+        if (request.RequestId.HasValue && request.RequestId.Value == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiếu yêu cầu (requestId) không hợp lệ.");
         }
@@ -101,11 +101,11 @@ public class BloodHandoversService : IBloodHandoversService
         return await BloodHandoverProcessing.LoadSessionDtoAsync(_context, session.HandoverSessionId, userId, now);
     }
 
-    public async Task<List<HandoverSessionDto>> GetPendingHandoverSessionsAsync(PendingHandoverSessionFilterDto filter, int userId)
+    public async Task<List<HandoverSessionDto>> GetPendingHandoverSessionsAsync(PendingHandoverSessionFilterDto filter, Guid userId)
     {
         var currentUser = await BloodRequestProcessing.LoadActiveUserAsync(_context, userId, "Thông tin người dùng không hợp lệ.");
 
-        if (filter.DoctorId.HasValue && filter.DoctorId.Value <= 0)
+        if (filter.DoctorId.HasValue && filter.DoctorId.Value == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã bác sĩ (doctorId) không hợp lệ.");
         }
@@ -160,11 +160,11 @@ public class BloodHandoversService : IBloodHandoversService
             .ToList();
     }
 
-    public async Task<HandoverSessionDto> GetHandoverSessionByIdAsync(int sessionId, int userId)
+    public async Task<HandoverSessionDto> GetHandoverSessionByIdAsync(Guid sessionId, Guid userId)
     {
         var currentUser = await BloodRequestProcessing.LoadActiveUserAsync(_context, userId, "Thông tin người dùng không hợp lệ.");
 
-        if (sessionId <= 0)
+        if (sessionId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiên bàn giao (sessionId) không hợp lệ.");
         }
@@ -193,11 +193,11 @@ public class BloodHandoversService : IBloodHandoversService
         return session.ToDto(userId, now);
     }
 
-    public async Task<HandoverSessionDto> ConfirmHandoverSessionAsync(int sessionId, ConfirmHandoverSessionRequest request, int userId, string? ipAddress)
+    public async Task<HandoverSessionDto> ConfirmHandoverSessionAsync(Guid sessionId, ConfirmHandoverSessionRequest request, Guid userId, string? ipAddress)
     {
         var currentUser = await BloodRequestProcessing.LoadActiveUserAsync(_context, userId, "Thông tin người nhận không hợp lệ.");
 
-        if (sessionId <= 0)
+        if (sessionId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiên bàn giao (sessionId) không hợp lệ.");
         }
@@ -230,7 +230,7 @@ public class BloodHandoversService : IBloodHandoversService
         BloodHandoverProcessing.ValidateExpectedPatientCode(session.Request, userId, request.ExpectedPatientCode);
 
         var oldRequestStatus = session.Request.Status;
-        var bagChanges = new List<(BloodBag Bag, int? OldLocationId)>();
+        var bagChanges = new List<(BloodBag Bag, Guid? OldLocationId)>();
 
         session.Status = HandoverSessionStatus.CONFIRMED;
         session.ConfirmedBy = userId;
@@ -313,11 +313,11 @@ public class BloodHandoversService : IBloodHandoversService
         return await BloodHandoverProcessing.LoadSessionDtoAsync(_context, session.HandoverSessionId, userId, now);
     }
 
-    public async Task<HandoverSessionDto> CancelHandoverSessionAsync(int sessionId, CancelHandoverSessionRequest? request, int userId, string? ipAddress)
+    public async Task<HandoverSessionDto> CancelHandoverSessionAsync(Guid sessionId, CancelHandoverSessionRequest? request, Guid userId, string? ipAddress)
     {
         await BloodRequestProcessing.EnsureActiveUserAsync(_context, userId, "Thông tin kỹ thuật viên hủy phiên không hợp lệ.");
 
-        if (sessionId <= 0)
+        if (sessionId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiên bàn giao (sessionId) không hợp lệ.");
         }
@@ -381,14 +381,14 @@ public class BloodHandoversService : IBloodHandoversService
         return await BloodHandoverProcessing.LoadSessionDtoAsync(_context, session.HandoverSessionId, userId, now);
     }
 
-    public async Task<TransfusionScanDto> ScanBloodBagForTransfusionAsync(string barcode, int userId)
+    public async Task<TransfusionScanDto> ScanBloodBagForTransfusionAsync(string barcode, Guid userId)
     {
         var currentUser = await BloodRequestProcessing.LoadActiveUserAsync(_context, userId, "Thông tin người thực hiện không hợp lệ.");
         var (bag, allocation) = await BloodHandoverProcessing.LoadIssuedBagForTransfusionAsync(_context, barcode, currentUser, asNoTracking: true);
         return bag.ToTransfusionScanDto(allocation, userId, DateTime.UtcNow);
     }
 
-    public async Task<ConfirmTransfusionResponse> ConfirmTransfusionAsync(ConfirmTransfusionRequest request, int userId, string? ipAddress)
+    public async Task<ConfirmTransfusionResponse> ConfirmTransfusionAsync(ConfirmTransfusionRequest request, Guid userId, string? ipAddress)
     {
         var currentUser = await BloodRequestProcessing.LoadActiveUserAsync(_context, userId, "Thông tin người xác nhận truyền máu không hợp lệ.");
 
@@ -398,7 +398,7 @@ public class BloodHandoversService : IBloodHandoversService
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã người bệnh đối soát (expectedPatientCode) không được để trống.");
         }
 
-        if (request.AllocationId.HasValue && request.AllocationId.Value <= 0)
+        if (request.AllocationId.HasValue && request.AllocationId.Value == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phân bổ (allocationId) không hợp lệ.");
         }
@@ -519,7 +519,7 @@ public class BloodHandoversService : IBloodHandoversService
 
         var allocationIds = allocations.Select(a => a.AllocationId).ToList();
         var pendingSessionItems = allocationIds.Count == 0
-            ? new Dictionary<int, (int SessionId, string SessionCode)>()
+            ? new Dictionary<Guid, (Guid SessionId, string SessionCode)>()
             : await _context.BloodHandoverSessionItems
                 .AsNoTracking()
                 .Include(i => i.HandoverSession)

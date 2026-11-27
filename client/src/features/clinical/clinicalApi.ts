@@ -23,12 +23,7 @@ import type {
     UpdateBloodRequestDto,
 } from './types'
 
-export const FALLBACK_COMPONENT_TYPES: ComponentTypeOption[] = [
-    { componentTypeId: 2, typeCode: 'PRBC', typeName: 'Khối hồng cầu (Hồng cầu lắng)', lifeDays: 42 },
-    { componentTypeId: 3, typeCode: 'FFP', typeName: 'Huyết tương tươi đông lạnh', lifeDays: 365 },
-    { componentTypeId: 4, typeCode: 'PLT', typeName: 'Khối tiểu cầu', lifeDays: 5 },
-    { componentTypeId: 1, typeCode: 'WB', typeName: 'Máu toàn phần', lifeDays: 35 },
-]
+const CLINICAL_COMPONENT_ORDER = ['PRBC', 'FFP', 'PLT', 'WB']
 
 export const clinicalApi = {
     /** Lấy danh sách phiếu yêu cầu máu phía Lâm sàng (của bác sĩ đang đăng nhập) */
@@ -38,7 +33,7 @@ export const clinicalApi = {
             .then((r) => r.data),
 
     /** Xem chi tiết phiếu yêu cầu máu */
-    getRequestById: (id: number) =>
+    getRequestById: (id: string) =>
         axiosClient
             .get<BloodRequestDetailDto>(`/api/blood-requests/${id}`)
             .then((r) => r.data),
@@ -50,13 +45,13 @@ export const clinicalApi = {
             .then((r) => r.data),
 
     /** Cập nhật nội dung phiếu nháp (DRAFT) theo ID gốc */
-    updateDraftRequest: (id: number, data: UpdateBloodRequestDto) =>
+    updateDraftRequest: (id: string, data: UpdateBloodRequestDto) =>
         axiosClient
             .put<BloodRequestDetailDto>(`/api/blood-requests/${id}`, data)
             .then((r) => r.data),
 
     /** Gửi chính thức phiếu nháp (DRAFT -> PENDING) theo ID gốc */
-    submitDraftRequest: (id: number) =>
+    submitDraftRequest: (id: string) =>
         axiosClient
             .patch<SubmitBloodRequestResponse>(`/api/blood-requests/${id}/submit`)
             .then((r) => r.data),
@@ -68,13 +63,13 @@ export const clinicalApi = {
             .then((r) => r.data),
 
     /** Xem chi tiết một phiên bàn giao máu */
-    getHandoverSessionById: (sessionId: number) =>
+    getHandoverSessionById: (sessionId: string) =>
         axiosClient
             .get<HandoverSessionDto>(`/api/blood-handovers/sessions/${sessionId}`)
             .then((r) => r.data),
 
     /** Quét đối soát & xác nhận nhận lô túi máu trong phiên bàn giao (Pha 2 - CLIN) */
-    confirmHandoverSession: (sessionId: number, data: ConfirmHandoverSessionRequest) =>
+    confirmHandoverSession: (sessionId: string, data: ConfirmHandoverSessionRequest) =>
         axiosClient
             .post<HandoverSessionDto>(`/api/blood-handovers/sessions/${sessionId}/confirm`, data)
             .then((r) => r.data),
@@ -98,7 +93,7 @@ export const clinicalApi = {
             .then((r) => r.data),
 
     /** Hủy phiếu hoàn trả lập nhầm khi Ngân hàng máu chưa kiểm định */
-    cancelReturn: (returnId: number, data?: CancelBloodReturnRequest) =>
+    cancelReturn: (returnId: string, data?: CancelBloodReturnRequest) =>
         axiosClient
             .post<CancelBloodReturnResponse>(`/api/blood-returns/${returnId}/cancel`, data ?? {})
             .then((r) => r.data),
@@ -109,16 +104,14 @@ export const clinicalApi = {
             .get<PagedResult<PendingBloodReturnDto>>('/api/blood-returns/pending', { params })
             .then((r) => r.data),
 
-    /** Lấy danh sách loại chế phẩm máu (ưu tiên API, fallback mảng chuẩn nếu 403 do khác phân quyền) */
+    /** Lấy danh sách loại chế phẩm máu từ danh mục dùng chung */
     getComponentTypes: async (): Promise<ComponentTypeOption[]> => {
-        try {
-            const res = await axiosClient.get<ComponentTypeOption[]>('/api/blood-processing/component-types')
-            if (Array.isArray(res.data) && res.data.length > 0) {
-                return res.data
-            }
-            return FALLBACK_COMPONENT_TYPES
-        } catch {
-            return FALLBACK_COMPONENT_TYPES
-        }
+        const res = await axiosClient.get<ComponentTypeOption[]>('/api/inventory/blood-component-types')
+        const items = Array.isArray(res.data) ? [...res.data] : []
+        return items.sort((a, b) => {
+            const ia = CLINICAL_COMPONENT_ORDER.indexOf(a.typeCode.toUpperCase())
+            const ib = CLINICAL_COMPONENT_ORDER.indexOf(b.typeCode.toUpperCase())
+            return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib)
+        })
     },
 }

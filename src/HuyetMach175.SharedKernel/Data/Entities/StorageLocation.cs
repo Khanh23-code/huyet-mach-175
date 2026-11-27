@@ -9,7 +9,7 @@ public class StorageLocation
 {
     [Key]
     [Column("location_id")]
-    public int LocationId { get; set; }
+    public Guid LocationId { get; set; } = Guid.CreateVersion7();
 
     [Required]
     [MaxLength(50)]

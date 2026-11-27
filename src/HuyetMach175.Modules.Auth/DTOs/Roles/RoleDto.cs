@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,7 +6,7 @@ namespace HuyetMach175.Modules.Auth.DTOs.Roles
 {
     public class RoleDto
     {
-        public int RoleId { get; set; }
+        public Guid RoleId { get; set; }
         public string RoleCode { get; set; } = string.Empty;
         public string RoleName { get; set; } = string.Empty;
         public string? Description { get; set; }

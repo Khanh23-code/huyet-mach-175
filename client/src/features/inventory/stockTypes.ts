@@ -6,11 +6,11 @@ export type BagStatus =
 
 /** BloodBagDto */
 export interface BloodBag {
-    bagId: number
+    bagId: string
     barcode: string
-    parentBagId?: number | null
+    parentBagId?: string | null
     parentBarcode?: string | null
-    componentTypeId: number
+    componentTypeId: string
     componentTypeCode: string
     componentTypeName: string
     bloodType: string
@@ -18,7 +18,7 @@ export interface BloodBag {
     bloodGroup: string
     volumeMl: number
     status: string
-    storageLocationId?: number | null
+    storageLocationId?: string | null
     storageLocationName?: string | null
     collectedAt: string
     expiredAt: string
@@ -31,7 +31,7 @@ export interface BagQuery {
     rhFactor?: string
     componentType?: string
     search?: string
-    locationId?: number
+    locationId?: string
     pageNumber?: number
     pageSize?: number
 }
@@ -63,17 +63,17 @@ export interface InventorySummary {
 }
 
 export interface ExpiringSoonBag {
-    bagId: number
+    bagId: string
     barcode: string
     bloodType: string
     rhFactor: string
     bloodGroup: string
-    componentTypeId: number
+    componentTypeId: string
     componentTypeCode: string
     componentTypeName: string
     volumeMl: number
     status: string
-    storageLocationId?: number | null
+    storageLocationId?: string | null
     storageLocationName?: string | null
     collectedAt: string
     expiredAt: string
@@ -86,7 +86,7 @@ export interface ExpiringQuery {
     bloodType?: string
     rhFactor?: string
     componentType?: string
-    storageLocationId?: number
+    storageLocationId?: string
     status?: string
     pageNumber?: number
     pageSize?: number
@@ -112,7 +112,7 @@ export interface StorageLocationInput {
 }
 
 export interface BloodComponentTypeConfig {
-    componentTypeId: number
+    componentTypeId: string
     typeCode: ComponentCode
     typeName: string
     lifeDays: number
@@ -132,12 +132,12 @@ export type UpdateBloodComponentTypeRequest = Omit<
 >
 
 export interface RelocateRequest {
-    newStorageLocationId: number
+    newStorageLocationId: string
     note?: string
 }
 
 export interface RelocateResponse {
-    bagId: number
+    bagId: string
     barcode: string
     previousStorageLocationName?: string | null
     newStorageLocationName: string
@@ -153,7 +153,7 @@ export interface TimelineStep {
 }
 
 export interface BagScan {
-    bagId: number
+    bagId: string
     barcode: string
     bloodType: string
     rhFactor: string
@@ -172,14 +172,14 @@ export interface BagScan {
     isExpired: boolean
     expiredAt: string
     collectedAt: string
-    storageLocation?: { locationId: number; locationName: string } | null
+    storageLocation?: { locationId: string; locationName: string } | null
     timeline: TimelineStep[]
 }
 
 export interface TransitionRequest {
     barcode: string
     targetStatus: BagStatus
-    storageLocationId?: number
+    storageLocationId?: string
     notes?: string
 }
 
@@ -189,13 +189,13 @@ export interface TransitionResponse {
     previousStatusLabel: string
     currentStatus: string
     currentStatusLabel: string
-    storageLocation?: { locationId: number; locationName: string } | null
+    storageLocation?: { locationId: string; locationName: string } | null
     updatedAt: string
     message: string
 }
 
 export interface StatusLog {
-    logId: number
+    logId: string
     barcode: string
     bloodGroup: string
     previousStatus: string

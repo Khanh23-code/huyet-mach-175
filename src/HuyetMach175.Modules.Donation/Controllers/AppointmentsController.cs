@@ -48,7 +48,7 @@ public class AppointmentsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:guid}")]
     [HasPermission("APPOINTMENTS_VIEW")]
     [EndpointSummary("Lấy thông tin chi tiết một lịch hẹn")]
     [EndpointDescription(
@@ -66,7 +66,7 @@ public class AppointmentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetAppointmentById(int id)
+    public async Task<IActionResult> GetAppointmentById(Guid id)
     {
         var result = await _appointmentsService.GetAppointmentByIdAsync(id);
         return Ok(result);
@@ -160,7 +160,7 @@ public class AppointmentsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPatch("{id:int}/cancel")]
+    [HttpPatch("{id:guid}/cancel")]
     [HasPermission("APPOINTMENTS_CANCEL")]
     [EndpointSummary("Hủy lịch hẹn hiến máu")]
     [EndpointDescription(
@@ -181,7 +181,7 @@ public class AppointmentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> CancelAppointment(int id, [FromBody] CancelAppointmentRequest? request)
+    public async Task<IActionResult> CancelAppointment(Guid id, [FromBody] CancelAppointmentRequest? request)
     {
         var result = await _appointmentsService.CancelAppointmentAsync(id, request);
         return Ok(result);

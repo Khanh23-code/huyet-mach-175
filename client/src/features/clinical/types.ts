@@ -21,7 +21,7 @@ export type AllocationStatus = 'RESERVED' | 'ISSUED' | 'COMPLETED' | 'RETURNED'
 export type ReturnFinalAction = 'PENDING_INSPECTION' | 'RESTOCK' | 'DISCARD' | 'CANCELLED'
 
 export interface ClinicalBloodRequestDto {
-    requestId: number
+    requestId: string
     requestCode: string
     patientCode: string
     patientName: string
@@ -45,7 +45,7 @@ export interface ClinicalBloodRequestFilter {
 }
 
 export interface CreateBloodRequestItemDto {
-    componentTypeId: number
+    componentTypeId: string
     requestedUnits: number
 }
 
@@ -63,14 +63,14 @@ export interface CreateBloodRequestDto {
 export type UpdateBloodRequestDto = Omit<CreateBloodRequestDto, 'isDraft'>
 
 export interface CreateBloodRequestResponse {
-    requestId: number
+    requestId: string
     requestCode: string
     status: RequestStatus
     message: string
 }
 
 export interface SubmitBloodRequestResponse {
-    requestId: number
+    requestId: string
     requestCode: string
     status: RequestStatus
     currentStep: number
@@ -78,8 +78,8 @@ export interface SubmitBloodRequestResponse {
 }
 
 export interface BloodRequestItemDetailDto {
-    requestItemId: number
-    componentTypeId: number
+    requestItemId: string
+    componentTypeId: string
     componentCode: ComponentCode
     componentName: string
     requestedUnits: number
@@ -87,10 +87,10 @@ export interface BloodRequestItemDetailDto {
 }
 
 export interface BloodRequestAllocationDto {
-    allocationId: number
-    bagId: number
+    allocationId: string
+    bagId: string
     barcode: string
-    componentTypeId: number
+    componentTypeId: string
     componentCode?: ComponentCode
     componentName: string
     bloodType?: BloodType
@@ -107,11 +107,11 @@ export interface BloodRequestAllocationDto {
 }
 
 export interface BloodRequestDetailDto {
-    requestId: number
+    requestId: string
     requestCode: string
-    doctorId?: number
+    doctorId?: string
     doctorName?: string
-    departmentId?: number
+    departmentId?: string
     departmentName?: string
     patientCode: string
     patientName: string
@@ -130,10 +130,10 @@ export interface BloodRequestDetailDto {
 }
 
 export interface TransfusionScanDto {
-    allocationId: number
-    bagId: number
+    allocationId: string
+    bagId: string
     barcode: string
-    componentTypeId: number
+    componentTypeId: string
     componentCode: ComponentCode
     componentName: string
     bloodType: string
@@ -141,7 +141,7 @@ export interface TransfusionScanDto {
     expiredAt: string
     isExpired: boolean
     bagStatus: string
-    requestId: number
+    requestId: string
     requestCode: string
     patientName: string
     patientCode: string
@@ -155,23 +155,23 @@ export interface TransfusionScanDto {
 
 export interface ConfirmTransfusionRequest {
     barcode: string
-    allocationId?: number
+    allocationId?: string
     expectedPatientCode: string
 }
 
 export interface ConfirmTransfusionResponse {
-    bagId: number
+    bagId: string
     barcode: string
     bagStatus: string
-    allocationId: number
-    requestId: number
+    allocationId: string
+    requestId: string
     requestCode: string
     patientCode: string
     patientName: string
     patientBloodType: string
     bloodType: string
     componentName: string
-    confirmedById: number
+    confirmedById: string
     confirmedByName?: string | null
     transfusedAt: string
 }
@@ -184,19 +184,20 @@ export interface BloodReturnChecklistDto {
 }
 
 export interface CreateBloodReturnRequest {
-    allocationId: number
+    allocationId: string
     returnReason: string
     checklist: BloodReturnChecklistDto
 }
 
 export interface CreateBloodReturnResponse {
-    returnId: number
-    allocationId: number
-    requestId: number
+    returnId: string
+    returnCode: string
+    allocationId: string
+    requestId: string
     requestCode: string
     patientCode: string
     patientName: string
-    bagId: number
+    bagId: string
     barcode: string
     componentName: string
     bloodType: string
@@ -204,7 +205,7 @@ export interface CreateBloodReturnResponse {
     qualified: boolean
     finalAction: ReturnFinalAction
     bagStatus: string
-    returnedById: number
+    returnedById: string
     returnedByName?: string
     processedAt: string
     isEligibleForRestockEvaluation: boolean
@@ -216,14 +217,15 @@ export interface CancelBloodReturnRequest {
 }
 
 export interface CancelBloodReturnResponse {
-    returnId: number
-    allocationId: number
-    bagId: number
+    returnId: string
+    returnCode: string
+    allocationId: string
+    bagId: string
     barcode: string
     finalAction: ReturnFinalAction
     bagStatus: string
     cancelReason?: string | null
-    cancelledById: number
+    cancelledById: string
     cancelledByName?: string | null
     cancelledAt: string
 }
@@ -235,9 +237,10 @@ export interface PendingBloodReturnFilter {
 }
 
 export interface PendingBloodReturnDto {
-    returnId: number
-    allocationId: number
-    bagId: number
+    returnId: string
+    returnCode: string
+    allocationId: string
+    bagId: string
     barcode: string
     componentCode: ComponentCode
     componentName: string
@@ -245,12 +248,12 @@ export interface PendingBloodReturnDto {
     volumeMl: number
     expiredAt: string
     isExpired: boolean
-    requestId: number
+    requestId: string
     requestCode: string
     patientCode: string
     patientName: string
     departmentName?: string
-    returnedById: number
+    returnedById: string
     returnedByName?: string
     returnReason: string
     finalAction: ReturnFinalAction
@@ -269,7 +272,7 @@ export interface PendingBloodReturnDto {
 }
 
 export interface ComponentTypeOption {
-    componentTypeId: number
+    componentTypeId: string
     typeCode: string
     typeName: string
     lifeDays?: number
@@ -293,8 +296,8 @@ export interface HisPatientDto {
 }
 
 export interface EligibleReturnBag {
-    allocationId: number
-    bagId: number
+    allocationId: string
+    bagId: string
     barcode: string
     componentCode?: ComponentCode | string
     componentName: string
@@ -302,7 +305,7 @@ export interface EligibleReturnBag {
     volumeMl: number
     expiredAt?: string
     isExpired: boolean
-    requestId: number
+    requestId: string
     requestCode: string
     patientCode: string
     patientName: string
@@ -314,8 +317,8 @@ export interface EligibleReturnBag {
 }
 
 export interface IneligibleReturnBag {
-    allocationId: number
-    bagId: number
+    allocationId: string
+    bagId: string
     barcode: string
     componentName: string
     bloodType: string

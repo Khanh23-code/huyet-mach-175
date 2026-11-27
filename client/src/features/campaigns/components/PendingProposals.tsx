@@ -15,7 +15,7 @@ import {
 
 export default function PendingProposals() {
     const { data, isLoading } = usePendingCampaigns()
-    const [reviewId, setReviewId] = useState<number | null>(null)
+    const [reviewId, setReviewId] = useState<string | null>(null)
 
     return (
         <SectionCard

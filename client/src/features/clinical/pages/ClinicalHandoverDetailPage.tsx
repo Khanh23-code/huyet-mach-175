@@ -45,14 +45,13 @@ export default function ClinicalHandoverDetailPage() {
     const canEdit = can(PERMISSIONS.BLOOD_REQUEST_EDIT)
     const confirmMutation = useConfirmHandoverSession()
 
-    const sessionId = Number(rawSessionId)
-    const validSessionId = Number.isInteger(sessionId) && sessionId > 0 ? sessionId : null
+    const validSessionId = rawSessionId?.trim() || null
 
     const sessionQuery = useHandoverSessionDetail(validSessionId, {
         refetchInterval: (data) => (!data || data.status === 'PENDING' ? 5000 : false),
     })
 
-    const session = sessionQuery.data ?? (state?.session?.handoverSessionId === sessionId ? state.session : null)
+    const session = sessionQuery.data ?? (state?.session?.handoverSessionId === validSessionId ? state.session : null)
 
     const [scannedBarcodes, setScannedBarcodes] = useState<string[]>(() =>
         state?.initialScannedBarcode ? [state.initialScannedBarcode] : [],

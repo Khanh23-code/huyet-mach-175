@@ -10,10 +10,10 @@ public class AppointmentFilterDto
     public DateOnly? Date { get; set; }
 
     [FromQuery(Name = "campaignId")]
-    public int? CampaignId { get; set; }
+    public Guid? CampaignId { get; set; }
 
     [FromQuery(Name = "slotId")]
-    public int? SlotId { get; set; }
+    public Guid? SlotId { get; set; }
 
     [FromQuery(Name = "status")]
     public AppointmentStatus? Status { get; set; }

@@ -12,7 +12,7 @@ export type IndicatorKey =
     | 'irregularAntibody'
 
 export interface LabQueueItem {
-    bagId: number
+    bagId: string
     barcode: string
     donorCode?: string | null
     donorName?: string | null
@@ -22,7 +22,7 @@ export interface LabQueueItem {
     expectedBloodType: string
     expectedRhFactor: string
     expectedBloodGroup: string
-    storageLocationId?: number | null
+    storageLocationId?: string | null
     storageLocationName?: string | null
     collectedAt: string
     expiredAt: string
@@ -50,8 +50,8 @@ export interface RecordLabTestRequest {
 }
 
 export interface LabTestResult {
-    testId: number
-    bagId: number
+    testId: string
+    bagId: string
     barcode: string
     hivResult: string
     hbvResult: string
@@ -64,7 +64,7 @@ export interface LabTestResult {
     overallConclusion: 'PASSED' | 'FAILED'
     newBagStatus: string
     discardReason?: string | null
-    technicianId: number
+    technicianId: string
     technicianName: string
     testedAt: string
     message: string

@@ -4,7 +4,7 @@ namespace HuyetMach175.Modules.Inventory.DTOs.Processing;
 
 public class ComponentTypeOptionDto
 {
-    [JsonPropertyName("componentTypeId")] public int ComponentTypeId { get; set; }
+    [JsonPropertyName("componentTypeId")] public Guid ComponentTypeId { get; set; }
     [JsonPropertyName("typeCode")] public string TypeCode { get; set; } = string.Empty;
     [JsonPropertyName("typeName")] public string TypeName { get; set; } = string.Empty;
     [JsonPropertyName("lifeDays")] public int LifeDays { get; set; }

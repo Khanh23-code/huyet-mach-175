@@ -101,7 +101,7 @@ public class StorageLocationsService : IStorageLocationsService
         };
     }
 
-    public async Task<StorageLocationDto> GetStorageLocationByIdAsync(int id)
+    public async Task<StorageLocationDto> GetStorageLocationByIdAsync(Guid id)
     {
         var now = DateTime.UtcNow;
         var expiringThreshold = now.AddDays(3);
@@ -143,7 +143,7 @@ public class StorageLocationsService : IStorageLocationsService
         return location;
     }
 
-    public async Task<StorageLocationDto> CreateStorageLocationAsync(CreateStorageLocationRequest request, int userId, string? ipAddress)
+    public async Task<StorageLocationDto> CreateStorageLocationAsync(CreateStorageLocationRequest request, Guid userId, string? ipAddress)
     {
         var trimmedRefName = request.RefrigeratorName.Trim();
         var trimmedShelf = request.ShelfNumber.Trim();
@@ -206,7 +206,7 @@ public class StorageLocationsService : IStorageLocationsService
         };
     }
 
-    public async Task<StorageLocationDto> UpdateStorageLocationAsync(int id, UpdateStorageLocationRequest request, int userId, string? ipAddress)
+    public async Task<StorageLocationDto> UpdateStorageLocationAsync(Guid id, UpdateStorageLocationRequest request, Guid userId, string? ipAddress)
     {
         var location = await _context.StorageLocations.FirstOrDefaultAsync(l => l.LocationId == id);
         if (location == null)
@@ -303,7 +303,7 @@ public class StorageLocationsService : IStorageLocationsService
         };
     }
 
-    public async Task DeleteStorageLocationAsync(int id, int userId, string? ipAddress)
+    public async Task DeleteStorageLocationAsync(Guid id, Guid userId, string? ipAddress)
     {
         var location = await _context.StorageLocations.FirstOrDefaultAsync(l => l.LocationId == id);
         if (location == null)

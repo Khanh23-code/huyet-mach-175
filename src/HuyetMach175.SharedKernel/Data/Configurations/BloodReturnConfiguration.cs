@@ -8,6 +8,8 @@ public class BloodReturnConfiguration : IEntityTypeConfiguration<BloodReturn>
 {
     public void Configure(EntityTypeBuilder<BloodReturn> builder)
     {
+        builder.HasIndex(br => br.ReturnCode).IsUnique();
+
         builder.Property(br => br.FinalAction).HasConversion<string>();
 
         builder.HasIndex(br => br.AllocationId)

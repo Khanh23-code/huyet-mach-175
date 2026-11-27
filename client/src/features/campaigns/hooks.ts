@@ -22,18 +22,18 @@ export const useMyCampaigns = (filter?: CampaignFilterQuery) =>
         placeholderData: keepPreviousData,
     })
 
-export const useCampaignDetail = (id: number | null) =>
+export const useCampaignDetail = (id: string | null) =>
     useQuery({
         queryKey: ['campaigns', 'detail', id],
-        queryFn: () => campaignsApi.get(id as number),
-        enabled: id !== null && id > 0,
+        queryFn: () => campaignsApi.get(id as string),
+        enabled: Boolean(id),
     })
 
-export const useCampaignSummary = (id: number | null) =>
+export const useCampaignSummary = (id: string | null) =>
     useQuery({
         queryKey: ['campaigns', 'summary', id],
-        queryFn: () => campaignsApi.summary(id as number),
-        enabled: id !== null && id > 0,
+        queryFn: () => campaignsApi.summary(id as string),
+        enabled: Boolean(id),
     })
 
 export const usePendingCampaigns = (enabled = true) =>
@@ -56,7 +56,7 @@ export const useCreateCampaign = () => {
 export const useUpdateCampaign = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: ({ id, body }: { id: number; body: UpdateCampaignRequest }) =>
+        mutationFn: ({ id, body }: { id: string; body: UpdateCampaignRequest }) =>
             campaignsApi.update(id, body),
         onSuccess: async (_, variables) => {
             await Promise.all([
@@ -71,7 +71,7 @@ export const useUpdateCampaign = () => {
 export const useSubmitApproval = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: (id: number) => campaignsApi.submitApproval(id),
+        mutationFn: (id: string) => campaignsApi.submitApproval(id),
         onSuccess: async (_, id) => {
             await Promise.all([
                 qc.invalidateQueries({ queryKey: ['campaigns'] }),
@@ -85,7 +85,7 @@ export const useSubmitApproval = () => {
 export const useApproveCampaign = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: ({ id, body }: { id: number; body: ApproveCampaignRequest }) =>
+        mutationFn: ({ id, body }: { id: string; body: ApproveCampaignRequest }) =>
             campaignsApi.approve(id, body),
         onSuccess: async (_, variables) => {
             await Promise.all([
@@ -100,7 +100,7 @@ export const useApproveCampaign = () => {
 export const useUpdateCampaignStatus = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: ({ id, status }: { id: number; status: CampaignStatus }) =>
+        mutationFn: ({ id, status }: { id: string; status: CampaignStatus }) =>
             campaignsApi.updateStatus(id, status),
         onSuccess: async (_, variables) => {
             await Promise.all([
@@ -115,7 +115,7 @@ export const useUpdateCampaignStatus = () => {
 export const useCancelCampaign = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: ({ id, reason }: { id: number; reason: string }) =>
+        mutationFn: ({ id, reason }: { id: string; reason: string }) =>
             campaignsApi.cancel(id, reason),
         onSuccess: async (_, variables) => {
             await Promise.all([
@@ -130,7 +130,7 @@ export const useCancelCampaign = () => {
 export const useDeleteCampaign = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: (id: number) => campaignsApi.delete(id),
+        mutationFn: (id: string) => campaignsApi.delete(id),
         onSuccess: async () => {
             await qc.invalidateQueries({ queryKey: ['campaigns'] })
         },
@@ -140,7 +140,7 @@ export const useDeleteCampaign = () => {
 export const useImportDonors = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: ({ campaignId, file }: { campaignId: number; file: File }) =>
+        mutationFn: ({ campaignId, file }: { campaignId: string; file: File }) =>
             campaignsApi.importDonors(campaignId, file),
         onSuccess: async (_, variables) => {
             await Promise.all([

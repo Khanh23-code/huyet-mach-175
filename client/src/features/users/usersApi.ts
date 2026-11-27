@@ -48,15 +48,15 @@ export const usersApi = {
         axiosClient.post('/api/users', body).then((r) => r.data),
 
     // PUT /api/users/{id}: họ tên, email, SĐT, khoa/phòng (không đổi vai trò/trạng thái/mật khẩu)
-    update: (id: number, body: UpdateUserRequest) =>
+    update: (id: string, body: UpdateUserRequest) =>
         axiosClient.put(`/api/users/${id}`, body).then((r) => r.data),
 
     // PUT /api/users/{id}/roles: DTO của BE đặt tên thuộc tính là `UserRoles` (không phải roleIds)
-    updateRoles: (id: number, roleIds: number[]) =>
+    updateRoles: (id: string, roleIds: string[]) =>
         axiosClient.put(`/api/users/${id}/roles`, { userRoles: roleIds }).then((r) => r.data),
 
     // BE là PATCH /api/users/{id}/status (bản cũ dùng PUT -> 405).
-    updateStatus: (id: number, isActive: boolean) =>
+    updateStatus: (id: string, isActive: boolean) =>
         axiosClient.patch(`/api/users/${id}/status`, { isActive }).then((r) => r.data),
 }
 
@@ -65,7 +65,7 @@ export const referenceApi = {
         const { data } = await axiosClient.get('/api/roles')
 
         return data.map((r: {
-            roleId: number
+            roleId: string
             roleCode: RoleOption['code']
             roleName: string
             isActive: boolean
@@ -84,7 +84,7 @@ export const referenceApi = {
     departments: async (): Promise<Department[]> => {
         const { data } = await axiosClient.get('/api/departments')
 
-        return data.map((d: { departmentId: number; departmentName: string }): Department => ({
+        return data.map((d: { departmentId: string; departmentName: string }): Department => ({
             id: d.departmentId,
             name: d.departmentName,
         }))

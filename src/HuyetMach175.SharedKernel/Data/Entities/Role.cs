@@ -9,7 +9,7 @@ public class Role
 {
     [Key]
     [Column("role_id")]
-    public int RoleId { get; set; }
+    public Guid RoleId { get; set; } = Guid.CreateVersion7();
 
     [Required]
     [MaxLength(50)]

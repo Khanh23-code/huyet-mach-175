@@ -5,10 +5,10 @@ namespace HuyetMach175.Modules.Inventory.DTOs.BloodDisposals;
 public class DisposalItemDto
 {
     [JsonPropertyName("itemId")]
-    public int ItemId { get; set; }
+    public Guid ItemId { get; set; }
 
     [JsonPropertyName("bagId")]
-    public int BagId { get; set; }
+    public Guid BagId { get; set; }
 
     [JsonPropertyName("barcode")]
     public string Barcode { get; set; } = string.Empty;
@@ -32,7 +32,7 @@ public class DisposalItemDto
     public int VolumeMl { get; set; }
 
     [JsonPropertyName("storageLocationId")]
-    public int? StorageLocationId { get; set; }
+    public Guid? StorageLocationId { get; set; }
 
     [JsonPropertyName("storageLocationName")]
     public string? StorageLocationName { get; set; }

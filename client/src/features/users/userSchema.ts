@@ -22,8 +22,8 @@ export const createUserSchema = z.object({
 
     email: z.string().trim().max(100, 'Tối đa 100 ký tự').email('Email không hợp lệ').or(z.literal('')),
     phoneNumber: z.string().trim().regex(/^(0\d{9})?$/, 'Số điện thoại gồm 10 số, bắt đầu bằng 0'),
-    departmentId: z.number({ message: 'Vui lòng chọn khoa/phòng' }),
-    roleIds: z.array(z.number()).min(1, 'Chọn ít nhất 1 vai trò'),
+    departmentId: z.string({ message: 'Vui lòng chọn khoa/phòng' }).min(1, 'Vui lòng chọn khoa/phòng'),
+    roleIds: z.array(z.string()).min(1, 'Chọn ít nhất 1 vai trò'),
 })
 export type CreateUserForm = z.infer<typeof createUserSchema>
 

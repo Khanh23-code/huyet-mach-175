@@ -75,7 +75,7 @@ export default function HandoverDetailPage() {
     const cancelSessionMutation = useCancelHandoverSession()
 
     const decodedBarcode = rawParam ? decodeURIComponent(rawParam) : ''
-    const querySessionId = Number(searchParams.get('sessionId') || 0)
+    const querySessionId = searchParams.get('sessionId')?.trim() || null
 
     const [bag, setBag] = useState<BagScan | null>(() =>
         state?.scannedBag && state.scannedBag.barcode === decodedBarcode ? state.scannedBag : null,
@@ -85,9 +85,7 @@ export default function HandoverDetailPage() {
     )
     const [loadError, setLoadError] = useState<string | null>(null)
     const [timeoutMinutes, setTimeoutMinutes] = useState<number>(5)
-    const [createdSessionId, setCreatedSessionId] = useState<number | null>(
-        Number.isInteger(querySessionId) && querySessionId > 0 ? querySessionId : null,
-    )
+    const [createdSessionId, setCreatedSessionId] = useState<string | null>(querySessionId)
     const [confirmError, setConfirmError] = useState<string | null>(null)
     const [cancelModalOpen, setCancelModalOpen] = useState(false)
     const [cancelReason, setCancelReason] = useState('')

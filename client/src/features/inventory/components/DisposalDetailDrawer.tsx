@@ -7,7 +7,7 @@ import { DISPOSAL_STATUS_TONE } from '../disposalsFormat'
 import type { DisposalDetail, DisposalItem } from '../disposalsTypes'
 
 interface Props {
-    id: number | null
+    id: string | null
     onClose: () => void
     actions?: (detail: DisposalDetail) => ReactNode
 }

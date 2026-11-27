@@ -39,13 +39,13 @@ export const campaignsApi = {
     mine: (params?: CampaignFilterQuery) =>
         axiosClient.get<PagedResult<CampaignListItem>>('/api/campaigns/mine', { params }).then((r) => r.data),
 
-    get: (id: number) =>
+    get: (id: string) =>
         axiosClient.get<CampaignDetail>(`/api/campaigns/${id}`).then((r) => r.data),
 
-    summary: (id: number) =>
+    summary: (id: string) =>
         axiosClient.get<CampaignSummary>(`/api/campaigns/${id}/summary`).then((r) => r.data),
 
-    downloadTemplate: async (id: number) => {
+    downloadTemplate: async (id: string) => {
         const response = await axiosClient.get(`/api/campaigns/${id}/donors/import-template`, {
             responseType: 'blob',
         })
@@ -59,7 +59,7 @@ export const campaignsApi = {
         window.URL.revokeObjectURL(url)
     },
 
-    importDonors: (id: number, file: File) => {
+    importDonors: (id: string, file: File) => {
         const formData = new FormData()
         formData.append('file', file)
         return axiosClient
@@ -77,7 +77,7 @@ export const campaignsApi = {
         return axiosClient.post<CampaignDetail>('/api/campaigns', payload).then((r) => r.data)
     },
 
-    update: (id: number, body: UpdateCampaignRequest) => {
+    update: (id: string, body: UpdateCampaignRequest) => {
         const payload = {
             ...body,
             campaignType: toCampaignTypeNumber(body.campaignType),
@@ -85,22 +85,22 @@ export const campaignsApi = {
         return axiosClient.put<CampaignDetail>(`/api/campaigns/${id}`, payload).then((r) => r.data)
     },
 
-    submitApproval: (id: number) =>
+    submitApproval: (id: string) =>
         axiosClient.patch<CampaignDetail>(`/api/campaigns/${id}/submit-approval`).then((r) => r.data),
 
-    approve: (id: number, body: ApproveCampaignRequest) =>
+    approve: (id: string, body: ApproveCampaignRequest) =>
         axiosClient.patch<CampaignDetail>(`/api/campaigns/${id}/approval`, body).then((r) => r.data),
 
-    updateStatus: (id: number, status: CampaignStatus) =>
+    updateStatus: (id: string, status: CampaignStatus) =>
         axiosClient
             .patch<CampaignDetail>(`/api/campaigns/${id}/status`, { status: toCampaignStatusNumber(status) })
             .then((r) => r.data),
 
-    cancel: (id: number, reason: string) =>
+    cancel: (id: string, reason: string) =>
         axiosClient
             .patch<CampaignDetail>(`/api/campaigns/${id}/cancel`, { reason })
             .then((r) => r.data),
 
-    delete: (id: number) =>
+    delete: (id: string) =>
         axiosClient.delete<void>(`/api/campaigns/${id}`).then((r) => r.data),
 }

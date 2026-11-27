@@ -20,7 +20,7 @@ public class BloodBagFilterDto
     public string? Search { get; set; }
 
     [FromQuery(Name = "locationId")]
-    public int? LocationId { get; set; }
+    public Guid? LocationId { get; set; }
 
     [FromQuery(Name = "pageNumber")]
     public int PageNumber { get; set; } = 1;

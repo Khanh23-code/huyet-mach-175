@@ -9,13 +9,13 @@ public class DonationSession
 {
     [Key]
     [Column("session_id")]
-    public int SessionId { get; set; }
+    public Guid SessionId { get; set; } = Guid.CreateVersion7();
 
     [Column("appointment_id")]
-    public int AppointmentId { get; set; }
+    public Guid AppointmentId { get; set; }
 
     [Column("phlebotomist_id")]
-    public int? PhlebotomistId { get; set; }
+    public Guid? PhlebotomistId { get; set; }
 
     [Column("target_volume_ml")]
     public TargetVolume TargetVolumeMl { get; set; }

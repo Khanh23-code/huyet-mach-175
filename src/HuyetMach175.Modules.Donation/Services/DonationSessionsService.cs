@@ -83,9 +83,9 @@ public class DonationSessionsService : IDonationSessionsService
         };
     }
 
-    public async Task<SessionDetailDto> GetSessionByIdAsync(int id)
+    public async Task<SessionDetailDto> GetSessionByIdAsync(Guid id)
     {
-        if (id <= 0)
+        if (id == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "ID phiên lấy máu không hợp lệ.");
         }
@@ -109,14 +109,14 @@ public class DonationSessionsService : IDonationSessionsService
         return session.ToDetailDto();
     }
 
-    public async Task<StartCollectionResponse> StartCollectionAsync(int sessionId, int phlebotomistId)
+    public async Task<StartCollectionResponse> StartCollectionAsync(Guid sessionId, Guid phlebotomistId)
     {
-        if (sessionId <= 0)
+        if (sessionId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "ID phiên lấy máu không hợp lệ.");
         }
 
-        if (phlebotomistId <= 0)
+        if (phlebotomistId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status401Unauthorized, "Không tìm thấy thông tin Kỹ thuật viên thực hiện lấy máu.");
         }
@@ -171,14 +171,14 @@ public class DonationSessionsService : IDonationSessionsService
         return ToStartResponse(bag, true);
     }
 
-    public async Task<CollectionResponse> CompleteCollectionAsync(int sessionId, UpdateCollectionRequest request, int phlebotomistId)
+    public async Task<CollectionResponse> CompleteCollectionAsync(Guid sessionId, UpdateCollectionRequest request, Guid phlebotomistId)
     {
-        if (sessionId <= 0)
+        if (sessionId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "ID phiên lấy máu không hợp lệ.");
         }
 
-        if (phlebotomistId <= 0)
+        if (phlebotomistId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status401Unauthorized, "Không tìm thấy thông tin Kỹ thuật viên thực hiện lấy máu.");
         }
@@ -352,7 +352,7 @@ public class DonationSessionsService : IDonationSessionsService
 
     private static StartCollectionResponse ToStartResponse(BloodBag bag, bool isNew) => new()
     {
-        SessionId = bag.SessionId ?? 0,
+        SessionId = bag.SessionId ?? Guid.Empty,
         BagId = bag.BagId,
         Barcode = bag.Barcode,
         BloodGroup = BloodBagLabel.GroupLabel(bag.BloodType, bag.RhFactor),

@@ -4,8 +4,8 @@ namespace HuyetMach175.Modules.Donation.DTOs.Appointments;
 
 public class AppointmentDetailDto
 {
-    public int AppointmentId { get; set; }
-    public int DonorId { get; set; }
+    public Guid AppointmentId { get; set; }
+    public Guid DonorId { get; set; }
     public string DonorName { get; set; } = string.Empty;
     public string DonorCitizenId { get; set; } = string.Empty;
     public string DonorPhoneNumber { get; set; } = string.Empty;
@@ -17,10 +17,10 @@ public class AppointmentDetailDto
     public int TotalDonations { get; set; }
     public DateOnly? LastDonationDate { get; set; }
 
-    public int? CampaignId { get; set; }
+    public Guid? CampaignId { get; set; }
     public string? CampaignName { get; set; }
     public string? CampaignLocation { get; set; }
-    public int? SlotId { get; set; }
+    public Guid? SlotId { get; set; }
 
     public DateOnly AppointmentDate { get; set; }
     public string TimeSlot { get; set; } = string.Empty;
@@ -32,7 +32,7 @@ public class AppointmentDetailDto
 
     // Thông tin khảo sát sàng lọc trước (Pre-screening Survey)
     public bool HasPreScreeningSurvey { get; set; }
-    public int? SurveyId { get; set; }
+    public Guid? SurveyId { get; set; }
     public int? SurveyRiskScore { get; set; }
     public bool? SurveyHasRisk { get; set; }
     public string? SurveyAnswers { get; set; }

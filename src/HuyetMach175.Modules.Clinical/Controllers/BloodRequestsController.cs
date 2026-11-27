@@ -52,7 +52,7 @@ public class BloodRequestsController : ControllerBase
         return CreatedAtAction(nameof(GetBloodRequestById), new { id = result.RequestId }, result);
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     [HasPermission("BLOOD_REQUEST_EDIT")]
     [EndpointSummary("Cập nhật nội dung phiếu yêu cầu máu đang ở trạng thái DRAFT")]
     [EndpointDescription(
@@ -75,7 +75,7 @@ public class BloodRequestsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> UpdateDraftBloodRequest(int id, [FromBody] UpdateBloodRequestDto request)
+    public async Task<IActionResult> UpdateDraftBloodRequest(Guid id, [FromBody] UpdateBloodRequestDto request)
     {
         var doctorId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -83,7 +83,7 @@ public class BloodRequestsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPatch("{id:int}/submit")]
+    [HttpPatch("{id:guid}/submit")]
     [HasPermission("BLOOD_REQUEST_EDIT")]
     [EndpointSummary("Gửi chính thức phiếu yêu cầu máu đang ở trạng thái DRAFT")]
     [EndpointDescription(
@@ -105,7 +105,7 @@ public class BloodRequestsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> SubmitDraftBloodRequest(int id)
+    public async Task<IActionResult> SubmitDraftBloodRequest(Guid id)
     {
         var doctorId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -141,7 +141,7 @@ public class BloodRequestsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:guid}")]
     [HasPermission("BLOOD_REQUEST_VIEW")]
     [EndpointSummary("Xem chi tiết phiếu yêu cầu máu")]
     [EndpointDescription(
@@ -158,14 +158,14 @@ public class BloodRequestsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetBloodRequestById(int id)
+    public async Task<IActionResult> GetBloodRequestById(Guid id)
     {
         var currentUserId = User.GetUserId();
         var result = await _bloodRequestsService.GetBloodRequestByIdAsync(id, currentUserId);
         return Ok(result);
     }
 
-    [HttpPut("{id:int}/reject")]
+    [HttpPut("{id:guid}/reject")]
     [HasPermission("BLOOD_REQUEST_APPROVE")]
     [EndpointSummary("Từ chối phiếu yêu cầu máu")]
     [EndpointDescription(
@@ -185,7 +185,7 @@ public class BloodRequestsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> RejectBloodRequest(int id, [FromBody] RejectBloodRequestDto request)
+    public async Task<IActionResult> RejectBloodRequest(Guid id, [FromBody] RejectBloodRequestDto request)
     {
         var userId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();

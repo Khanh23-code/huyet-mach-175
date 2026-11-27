@@ -21,9 +21,9 @@ public class BloodCoordinationService : IBloodCoordinationService
         _context = context;
     }
 
-    public async Task<SupplyDemandResponse> GetSupplyDemandAsync(int componentTypeId)
+    public async Task<SupplyDemandResponse> GetSupplyDemandAsync(Guid componentTypeId)
     {
-        if (componentTypeId <= 0)
+        if (componentTypeId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã loại chế phẩm máu (componentTypeId) không hợp lệ.");
         }
@@ -159,9 +159,9 @@ public class BloodCoordinationService : IBloodCoordinationService
         };
     }
 
-    public async Task<List<AvailableBloodBagDto>> GetAvailableBagsForItemAsync(int requestId, int requestItemId, bool includeCompatible)
+    public async Task<List<AvailableBloodBagDto>> GetAvailableBagsForItemAsync(Guid requestId, Guid requestItemId, bool includeCompatible)
     {
-        if (requestId <= 0 || requestItemId <= 0)
+        if (requestId == Guid.Empty || requestItemId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiếu yêu cầu hoặc mã dòng chế phẩm không hợp lệ.");
         }
@@ -213,7 +213,7 @@ public class BloodCoordinationService : IBloodCoordinationService
             .ToList();
     }
 
-    public async Task<AllocateBloodBagsResponse> AllocateBagsAsync(int requestId, int requestItemId, AllocateBloodBagsRequest request, int userId, string? ipAddress)
+    public async Task<AllocateBloodBagsResponse> AllocateBagsAsync(Guid requestId, Guid requestItemId, AllocateBloodBagsRequest request, Guid userId, string? ipAddress)
     {
         await BloodRequestProcessing.EnsureActiveUserAsync(_context, userId, "Thông tin người thực hiện giữ chỗ không hợp lệ.");
 
@@ -341,9 +341,9 @@ public class BloodCoordinationService : IBloodCoordinationService
         };
     }
 
-    private static List<int> ValidateAllocationInput(int requestId, int requestItemId, List<int>? bagIds)
+    private static List<Guid> ValidateAllocationInput(Guid requestId, Guid requestItemId, List<Guid>? bagIds)
     {
-        if (requestId <= 0 || requestItemId <= 0)
+        if (requestId == Guid.Empty || requestItemId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiếu yêu cầu hoặc mã dòng chế phẩm không hợp lệ.");
         }
@@ -353,7 +353,7 @@ public class BloodCoordinationService : IBloodCoordinationService
             throw new HttpException(StatusCodes.Status400BadRequest, "Vui lòng chọn ít nhất 1 túi máu để giữ chỗ.");
         }
 
-        if (bagIds.Any(id => id <= 0))
+        if (bagIds.Any(id => id == Guid.Empty))
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Danh sách ID túi máu chứa giá trị không hợp lệ.");
         }
@@ -368,7 +368,7 @@ public class BloodCoordinationService : IBloodCoordinationService
     }
 
     private async Task<List<BloodBag>> LoadAndValidateSelectedBagsAsync(
-        List<int> distinctBagIds,
+        List<Guid> distinctBagIds,
         BloodRequest bloodRequest,
         BloodRequestItem requestItem,
         DateTime now)

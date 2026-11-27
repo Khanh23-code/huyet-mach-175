@@ -7,7 +7,7 @@ namespace HuyetMach175.Modules.Clinical.Mappings;
 
 public static class BloodHandoverMappings
 {
-    public static HandoverSessionDto ToDto(this BloodHandoverSession session, int currentUserId, DateTime nowUtc)
+    public static HandoverSessionDto ToDto(this BloodHandoverSession session, Guid currentUserId, DateTime nowUtc)
     {
         var remainingSeconds = session.Status == HandoverSessionStatus.PENDING
             ? Math.Max(0, (int)Math.Ceiling((session.ExpiresAt - nowUtc).TotalSeconds))
@@ -51,7 +51,7 @@ public static class BloodHandoverMappings
                     AllocationId = i.AllocationId,
                     BagId = i.BagId,
                     Barcode = i.Bag?.Barcode ?? string.Empty,
-                    ComponentTypeId = i.Bag?.ComponentTypeId ?? 0,
+                    ComponentTypeId = i.Bag?.ComponentTypeId ?? Guid.Empty,
                     ComponentCode = i.Bag?.ComponentType?.TypeCode ?? ComponentCode.WB,
                     ComponentName = i.Bag?.ComponentType?.TypeName ?? string.Empty,
                     BloodType = i.Bag != null
@@ -68,7 +68,7 @@ public static class BloodHandoverMappings
         };
     }
 
-    public static TransfusionScanDto ToTransfusionScanDto(this BloodBag bag, BloodAllocation allocation, int currentUserId, DateTime nowUtc)
+    public static TransfusionScanDto ToTransfusionScanDto(this BloodBag bag, BloodAllocation allocation, Guid currentUserId, DateTime nowUtc)
     {
         var request = allocation.Request!;
         return new TransfusionScanDto
@@ -121,7 +121,7 @@ public static class BloodHandoverMappings
 
     public static ReservedHandoverBagDto ToReservedHandoverBagDto(
         this BloodAllocation allocation,
-        (int SessionId, string SessionCode)? activeSession,
+        (Guid SessionId, string SessionCode)? activeSession,
         DateTime nowUtc)
     {
         var bag = allocation.Bag!;

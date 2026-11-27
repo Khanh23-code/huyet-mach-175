@@ -6,7 +6,7 @@ namespace HuyetMach175.Modules.Donation.DTOs.Surveys;
 public class SurveyDetailDto
 {
     [JsonPropertyName("appointmentId")]
-    public int AppointmentId { get; set; }
+    public Guid AppointmentId { get; set; }
 
     [JsonPropertyName("appointmentDate")]
     public DateOnly AppointmentDate { get; set; }
@@ -36,7 +36,7 @@ public class SurveyDetailDto
 public class SurveyOnlineDetailDto
 {
     [JsonPropertyName("surveyId")]
-    public int? SurveyId { get; set; }
+    public Guid? SurveyId { get; set; }
 
     [JsonPropertyName("hasSubmittedSurvey")]
     public bool HasSubmittedSurvey { get; set; }
@@ -90,7 +90,7 @@ public class SurveyClinicalDetailDto
     public string? TargetVolumeMl { get; set; }
 
     [JsonPropertyName("doctorId")]
-    public int? DoctorId { get; set; }
+    public Guid? DoctorId { get; set; }
 
     [JsonPropertyName("doctorName")]
     public string? DoctorName { get; set; }

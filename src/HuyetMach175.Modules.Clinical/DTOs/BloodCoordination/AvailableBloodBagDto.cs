@@ -4,7 +4,7 @@ namespace HuyetMach175.Modules.Clinical.DTOs.BloodCoordination;
 
 public class AvailableBloodBagDto
 {
-    public int BagId { get; set; }
+    public Guid BagId { get; set; }
     public string Barcode { get; set; } = string.Empty;
     public int VolumeMl { get; set; }
     public DateTime ExpiresAt { get; set; }

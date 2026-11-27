@@ -29,7 +29,6 @@ public class ComponentSeparationItemDto
     public int VolumeMl { get; set; }
 
     [Required(ErrorMessage = "Vị trí lưu trữ cho chế phẩm là bắt buộc.")]
-    [Range(1, int.MaxValue, ErrorMessage = "ID vị trí lưu trữ không hợp lệ.")]
     [JsonPropertyName("storageLocationId")]
-    public int StorageLocationId { get; set; }
+    public Guid StorageLocationId { get; set; }
 }

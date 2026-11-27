@@ -1,4 +1,4 @@
-﻿import { axiosClient } from '@/services/axiosClient'
+import { axiosClient } from '@/services/axiosClient'
 
 export interface CreateRoleRequest {
     roleCode: string
@@ -8,7 +8,7 @@ export interface CreateRoleRequest {
 
 /** Khớp RoleDto của BE (POST /api/roles trả về dạng này). */
 export interface RoleDto {
-    roleId: number
+    roleId: string
     roleCode: string
     roleName: string
     description: string | null

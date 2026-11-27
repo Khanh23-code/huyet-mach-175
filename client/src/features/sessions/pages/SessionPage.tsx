@@ -19,7 +19,7 @@ export default function SessionPage() {
     const [filter, setFilter] = useState<SessionStatus>('WAITING_COLLECTION')
     const [keyword, setKeyword] = useState('')
     const [search, setSearch] = useState('')
-    const [selectedId, setSelectedId] = useState<number | null>(null)
+    const [selectedId, setSelectedId] = useState<string | null>(null)
 
     useEffect(() => {
         const t = setTimeout(() => setSearch(keyword.trim()), 400)

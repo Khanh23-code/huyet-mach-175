@@ -5,6 +5,6 @@ namespace HuyetMach175.Modules.Inventory.Services;
 public interface IBloodComponentTypesService
 {
     Task<List<BloodComponentTypeDto>> GetAllAsync();
-    Task<BloodComponentTypeDto> GetByIdAsync(int id);
-    Task<BloodComponentTypeDto> UpdateAsync(int id, UpdateBloodComponentTypeRequest request, int userId, string? ipAddress);
+    Task<BloodComponentTypeDto> GetByIdAsync(Guid id);
+    Task<BloodComponentTypeDto> UpdateAsync(Guid id, UpdateBloodComponentTypeRequest request, Guid userId, string? ipAddress);
 }

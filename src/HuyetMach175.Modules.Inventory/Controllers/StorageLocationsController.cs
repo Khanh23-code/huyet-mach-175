@@ -49,7 +49,7 @@ public class StorageLocationsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:guid}")]
     [HasPermission("INVENTORY_VIEW")]
     [EndpointSummary("Xem chi tiết một vị trí tủ/ngăn bảo quản máu")]
     [EndpointDescription(
@@ -58,7 +58,7 @@ public class StorageLocationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetStorageLocationById(int id)
+    public async Task<IActionResult> GetStorageLocationById(Guid id)
     {
         var result = await _storageLocationsService.GetStorageLocationByIdAsync(id);
         return Ok(result);
@@ -87,7 +87,7 @@ public class StorageLocationsController : ControllerBase
         return CreatedAtAction(nameof(GetStorageLocationById), new { id = result.LocationId }, result);
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     [HasPermission("INVENTORY_EDIT")]
     [EndpointSummary("Cập nhật thông tin vị trí tủ/ngăn bảo quản")]
     [EndpointDescription(
@@ -97,7 +97,7 @@ public class StorageLocationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateStorageLocation(int id, [FromBody] UpdateStorageLocationRequest request)
+    public async Task<IActionResult> UpdateStorageLocation(Guid id, [FromBody] UpdateStorageLocationRequest request)
     {
         var userId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -105,7 +105,7 @@ public class StorageLocationsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id:guid}")]
     [HasPermission("INVENTORY_EDIT")]
     [EndpointSummary("Xóa hoặc vô hiệu hóa vị trí tủ/ngăn bảo quản")]
     [EndpointDescription(
@@ -116,7 +116,7 @@ public class StorageLocationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteStorageLocation(int id)
+    public async Task<IActionResult> DeleteStorageLocation(Guid id)
     {
         var userId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();

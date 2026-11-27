@@ -17,13 +17,13 @@ const PAGE_SIZE = 20
 export default function DisposalRecordsPanel({ canEdit }: Props) {
     const [status, setStatus] = useState<string | undefined>()
     const [page, setPage] = useState(1)
-    const [openId, setOpenId] = useState<number | null>(null)
+    const [openId, setOpenId] = useState<string | null>(null)
 
     const { data, isLoading, isFetching } = useDisposals({ status, pageNumber: page, pageSize: PAGE_SIZE })
     const cancel = useCancelDisposal()
     const execute = useExecuteDisposal()
 
-    const doCancel = async (id: number) => {
+    const doCancel = async (id: string) => {
         try {
             await cancel.mutateAsync({ id })
             message.success('Đã rút biên bản, các túi được khôi phục trạng thái trước đó')
@@ -33,7 +33,7 @@ export default function DisposalRecordsPanel({ canEdit }: Props) {
         }
     }
 
-    const doExecute = async (id: number) => {
+    const doExecute = async (id: string) => {
         try {
             await execute.mutateAsync(id)
             message.success('Đã ghi nhận tiêu hủy, các túi chuyển sang trạng thái Đã hủy')

@@ -8,10 +8,10 @@ public class DonationCampaignSlot
 {
     [Key]
     [Column("slot_id")]
-    public int SlotId { get; set; }
+    public Guid SlotId { get; set; } = Guid.CreateVersion7();
 
     [Column("campaign_id")]
-    public int CampaignId { get; set; }
+    public Guid CampaignId { get; set; }
 
     [Column("start_time")]
     public TimeOnly StartTime { get; set; }

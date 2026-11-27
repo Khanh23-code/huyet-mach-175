@@ -6,7 +6,7 @@ namespace HuyetMach175.Modules.Auth.DTOs.Permissions
 {
     public class PermissionDto
     {
-        public int PermissionId { get; set; }
+        public Guid PermissionId { get; set; }
         public string PermissionCode { get; set; } = string.Empty;
         public string PermissionName { get; set; } = string.Empty;
         public string ModuleCode { get; set; } = string.Empty;

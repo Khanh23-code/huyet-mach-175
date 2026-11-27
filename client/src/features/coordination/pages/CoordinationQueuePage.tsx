@@ -63,7 +63,7 @@ export default function CoordinationQueuePage() {
     } = useCoordinationQueue()
 
     // ID phiếu đang được chọn
-    const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null)
+    const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null)
 
     // 2. Chi tiết phiếu đang chọn
     const {
@@ -78,16 +78,16 @@ export default function CoordinationQueuePage() {
     const [activeTab, setActiveTab] = useState<'review' | 'allocation'>('review')
 
     // Ghi nhận những phiếu đã được thẩm định & bấm "Tiến hành điều phối" trong phiên UI
-    const [reviewedRequestIds, setReviewedRequestIds] = useState<Record<number, boolean>>({})
+    const [reviewedRequestIds, setReviewedRequestIds] = useState<Record<string, boolean>>({})
 
     // Dòng chế phẩm đang chọn để điều phối
-    const [activeItemId, setActiveItemId] = useState<number | null>(null)
+    const [activeItemId, setActiveItemId] = useState<string | null>(null)
 
     // Chế độ tương thích nhóm máu
     const [includeCompatible, setIncludeCompatible] = useState<boolean>(false)
 
     // Danh sách túi máu đang được chọn bằng checkbox
-    const [selectedBagIds, setSelectedBagIds] = useState<number[]>([])
+    const [selectedBagIds, setSelectedBagIds] = useState<string[]>([])
 
     // State các Modal & Mutation
     const [showRejectModal, setShowRejectModal] = useState<boolean>(false)
@@ -169,7 +169,7 @@ export default function CoordinationQueuePage() {
     }, [queueData])
 
     // Xử lý toggle chọn túi máu
-    const handleToggleBag = (bagId: number) => {
+    const handleToggleBag = (bagId: string) => {
         if (!canApprove || !isPendingRequest) return
         if (selectedBagIds.includes(bagId)) {
             setSelectedBagIds((prev) => prev.filter((id) => id !== bagId))

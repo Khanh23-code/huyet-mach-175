@@ -9,7 +9,7 @@ public class BloodComponentType
 {
     [Key]
     [Column("component_type_id")]
-    public int ComponentTypeId { get; set; }
+    public Guid ComponentTypeId { get; set; } = Guid.CreateVersion7();
 
     [Column("type_code")]
     public ComponentCode TypeCode { get; set; }

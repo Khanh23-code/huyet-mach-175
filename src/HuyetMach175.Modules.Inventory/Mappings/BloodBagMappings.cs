@@ -77,7 +77,7 @@ public static class BloodBagMappings
         StorageLocation location,
         decimal receivedTemperature,
         DateTime receivedAt,
-        int receivedBy) => new()
+        Guid receivedBy) => new()
     {
         BagId = bloodBag.BagId,
         Barcode = bloodBag.Barcode,

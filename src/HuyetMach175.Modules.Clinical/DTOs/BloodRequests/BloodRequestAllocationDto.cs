@@ -4,10 +4,10 @@ namespace HuyetMach175.Modules.Clinical.DTOs.BloodRequests;
 
 public class BloodRequestAllocationDto
 {
-    public int AllocationId { get; set; }
-    public int BagId { get; set; }
+    public Guid AllocationId { get; set; }
+    public Guid BagId { get; set; }
     public string Barcode { get; set; } = string.Empty;
-    public int ComponentTypeId { get; set; }
+    public Guid ComponentTypeId { get; set; }
     public ComponentCode? ComponentCode { get; set; }
     public string ComponentName { get; set; } = string.Empty;
     public BloodType? BloodType { get; set; }

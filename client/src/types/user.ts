@@ -2,11 +2,11 @@
 export type RoleCode = string
 
 export interface UserItem {
-    id: number
+    id: string
     staffCode: string
     username: string
     fullName: string
-    departmentId: number | null
+    departmentId: string | null
     departmentName: string
     email: string | null
     phoneNumber: string | null
@@ -21,7 +21,7 @@ export interface PagedResult<T> {
 
 export interface UserQuery {
     keyword?: string
-    departmentId?: number
+    departmentId?: string
     roleCode?: RoleCode
     roleCodes?: RoleCode[]
     isActive?: boolean
@@ -36,8 +36,8 @@ export interface CreateUserRequest {
     password: string
     email: string | null
     phoneNumber: string | null
-    departmentId: number
-    roleIds: number[]
+    departmentId: string
+    roleIds: string[]
 }
 
 /** Khớp UpdateUserRequest của BE (PUT /api/users/{id}). */
@@ -45,16 +45,16 @@ export interface UpdateUserRequest {
     fullName: string
     email: string | null
     phoneNumber: string | null
-    departmentId: number
+    departmentId: string
 }
 
 export interface Department {
-    id: number
+    id: string
     name: string
 }
 
 export interface RoleOption {
-    id: number
+    id: string
     code: RoleCode
     name: string
     isActive: boolean

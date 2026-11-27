@@ -23,7 +23,7 @@ public class RolesService : IRolesService
     }
 
     /// <summary>Xoá cache quyền của mọi user thuộc role (gọi SAU khi SaveChanges).</summary>
-    private async Task EvictPermissionCacheForRoleAsync(int roleId)
+    private async Task EvictPermissionCacheForRoleAsync(Guid roleId)
     {
         var userIds = await _context.UserRoles
             .AsNoTracking()
@@ -49,7 +49,7 @@ public class RolesService : IRolesService
         return roles;
     }
 
-    public async Task<RoleDto> GetRoleByIdAsync(int roleId)
+    public async Task<RoleDto> GetRoleByIdAsync(Guid roleId)
     {
         var role = await _context.Roles
             .AsNoTracking()
@@ -103,7 +103,7 @@ public class RolesService : IRolesService
         };
     }
 
-    public async Task<RoleDto> UpdateRoleAsync(int roleId, UpdateRoleRequest request)
+    public async Task<RoleDto> UpdateRoleAsync(Guid roleId, UpdateRoleRequest request)
     {
         var role = await _context.Roles.FindAsync(roleId);
 
@@ -140,7 +140,7 @@ public class RolesService : IRolesService
         return await GetRoleByIdAsync(roleId);
     }
 
-    public async Task<RoleDto> UpdateRoleStatusAsync(int roleId, UpdateRoleStatusRequest? request = null, bool force = false)
+    public async Task<RoleDto> UpdateRoleStatusAsync(Guid roleId, UpdateRoleStatusRequest? request = null, bool force = false)
     {
         var role = await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == roleId);
 
@@ -194,7 +194,7 @@ public class RolesService : IRolesService
         return await GetRoleByIdAsync(roleId);
     }
 
-    public async Task<RolePermissionsDto> GetRolePermissionsAsync(int roleId)
+    public async Task<RolePermissionsDto> GetRolePermissionsAsync(Guid roleId)
     {
         var role = await _context.Roles
             .AsNoTracking()
@@ -234,7 +234,7 @@ public class RolesService : IRolesService
         };
     }
 
-    public async Task<RolePermissionsDto> UpdateRolePermissionsAsync(int roleId, UpdateRolePermissionsRequest request)
+    public async Task<RolePermissionsDto> UpdateRolePermissionsAsync(Guid roleId, UpdateRolePermissionsRequest request)
     {
         var role = await _context.Roles
             .Include(r => r.RolePermissions)
@@ -245,7 +245,7 @@ public class RolesService : IRolesService
             throw new HttpException(StatusCodes.Status404NotFound, "Không tìm thấy vai trò trong hệ thống.");
         }
 
-        var distinctPermissionIds = (request.PermissionIds ?? new List<int>())
+        var distinctPermissionIds = (request.PermissionIds ?? new List<Guid>())
             .Distinct()
             .ToList();
 

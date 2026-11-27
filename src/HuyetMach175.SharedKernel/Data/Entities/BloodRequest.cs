@@ -9,7 +9,7 @@ public class BloodRequest
 {
     [Key]
     [Column("request_id")]
-    public int RequestId { get; set; }
+    public Guid RequestId { get; set; } = Guid.CreateVersion7();
 
     [Required]
     [MaxLength(30)]
@@ -17,7 +17,7 @@ public class BloodRequest
     public string RequestCode { get; set; } = string.Empty;
 
     [Column("doctor_id")]
-    public int? DoctorId { get; set; }
+    public Guid? DoctorId { get; set; }
 
     [Required]
     [MaxLength(50)]

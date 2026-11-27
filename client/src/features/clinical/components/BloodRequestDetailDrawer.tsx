@@ -22,7 +22,7 @@ import type {
 import './BloodRequestDetailDrawer.css'
 
 interface BloodRequestDetailDrawerProps {
-    requestId: number | null
+    requestId: string | null
     open: boolean
     onClose: () => void
     onEditDraft?: (detail: BloodRequestDetailDto) => void
@@ -48,7 +48,7 @@ export const BloodRequestDetailDrawer: React.FC<BloodRequestDetailDrawerProps> =
     const { can } = usePermission()
     const canEdit = can(PERMISSIONS.BLOOD_REQUEST_EDIT)
 
-    const [loadingTransfusionId, setLoadingTransfusionId] = useState<number | null>(null)
+    const [loadingTransfusionId, setLoadingTransfusionId] = useState<string | null>(null)
     const [transfusionBag, setTransfusionBag] = useState<TransfusionScanDto | null>(null)
     const [transfusionModalOpen, setTransfusionModalOpen] = useState(false)
 

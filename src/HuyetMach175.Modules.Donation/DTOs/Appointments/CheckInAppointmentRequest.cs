@@ -8,5 +8,5 @@ public class CheckInAppointmentRequest
     [MaxLength(100, ErrorMessage = "Mã token QR không được vượt quá 100 ký tự.")]
     public string QrCodeToken { get; set; } = string.Empty;
 
-    public int? CampaignId { get; set; }
+    public Guid? CampaignId { get; set; }
 }

@@ -9,16 +9,16 @@ public class Notification
 {
     [Key]
     [Column("notification_id")]
-    public long NotificationId { get; set; }
+    public Guid NotificationId { get; set; } = Guid.CreateVersion7();
 
     [Column("recipient_user_id")]
-    public int? RecipientUserId { get; set; }
+    public Guid? RecipientUserId { get; set; }
 
     [Column("target_role_id")]
-    public int? TargetRoleId { get; set; }
+    public Guid? TargetRoleId { get; set; }
 
     [Column("target_department_id")]
-    public int? TargetDepartmentId { get; set; }
+    public Guid? TargetDepartmentId { get; set; }
 
     [Required]
     [MaxLength(150)]
@@ -36,7 +36,7 @@ public class Notification
     public NotificationReferenceType? ReferenceType { get; set; }
 
     [Column("reference_id")]
-    public int? ReferenceId { get; set; }
+    public Guid? ReferenceId { get; set; }
 
     [Column("is_read")]
     public bool IsRead { get; set; } = false;

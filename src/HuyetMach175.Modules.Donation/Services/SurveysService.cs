@@ -99,9 +99,9 @@ public class SurveysService : ISurveysService
         };
     }
 
-    public async Task<SurveyDetailDto> GetSurveyByAppointmentIdAsync(int appointmentId)
+    public async Task<SurveyDetailDto> GetSurveyByAppointmentIdAsync(Guid appointmentId)
     {
-        if (appointmentId <= 0)
+        if (appointmentId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "ID lịch hẹn không hợp lệ.");
         }
@@ -126,7 +126,7 @@ public class SurveysService : ISurveysService
 
     public async Task<SubmitOnlineSurveyResponse> SubmitOnlineSurveyAsync(SubmitOnlineSurveyRequest request)
     {
-        if (request.AppointmentId <= 0)
+        if (request.AppointmentId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "ID lịch hẹn không hợp lệ.");
         }
@@ -203,16 +203,16 @@ public class SurveysService : ISurveysService
     }
 
     public async Task<ClinicalScreeningResponse> UpdateClinicalScreeningAsync(
-        int appointmentId,
+        Guid appointmentId,
         UpdateClinicalScreeningRequest request,
-        int doctorId)
+        Guid doctorId)
     {
-        if (appointmentId <= 0)
+        if (appointmentId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "ID lịch hẹn không hợp lệ.");
         }
 
-        if (doctorId <= 0)
+        if (doctorId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status401Unauthorized, "Không tìm thấy thông tin Bác sĩ thực hiện khám.");
         }

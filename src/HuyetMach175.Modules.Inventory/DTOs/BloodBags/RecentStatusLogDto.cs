@@ -5,7 +5,7 @@ namespace HuyetMach175.Modules.Inventory.DTOs.BloodBags;
 public class RecentStatusLogDto
 {
     [JsonPropertyName("logId")]
-    public int LogId { get; set; }
+    public Guid LogId { get; set; }
 
     [JsonPropertyName("barcode")]
     public string Barcode { get; set; } = string.Empty;

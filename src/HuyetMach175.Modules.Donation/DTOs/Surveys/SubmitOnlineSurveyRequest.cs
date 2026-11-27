@@ -8,7 +8,7 @@ public class SubmitOnlineSurveyRequest
 {
     [Required(ErrorMessage = "Mã lịch hẹn (appointmentId) không được để trống.")]
     [JsonPropertyName("appointmentId")]
-    public int AppointmentId { get; set; }
+    public Guid AppointmentId { get; set; }
 
     [Required(ErrorMessage = "Bảng câu trả lời khảo sát (surveyAnswers) không được để trống.")]
     [JsonPropertyName("surveyAnswers")]

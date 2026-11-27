@@ -179,7 +179,7 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<UserInfoDto> GetCurrentUserAsync(int userId)
+    public async Task<UserInfoDto> GetCurrentUserAsync(Guid userId)
     {
         var user = await _context.Users
             .Include(u => u.Department)
@@ -227,7 +227,7 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<UserInfoDto> UpdateCurrentUserProfileAsync(int userId, UpdateProfileRequest request)
+    public async Task<UserInfoDto> UpdateCurrentUserProfileAsync(Guid userId, UpdateProfileRequest request)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
 

@@ -19,7 +19,7 @@ export const returnsApi = {
             .get<ReturnInspectionDto>(`/api/blood-returns/scan/${encodeURIComponent(barcode.trim())}`)
             .then((r) => r.data),
 
-    process: (returnId: number, body: ProcessBloodReturnRequest) =>
+    process: (returnId: string, body: ProcessBloodReturnRequest) =>
         axiosClient
             .put<ProcessBloodReturnResponse>(`/api/blood-returns/${returnId}/process`, body)
             .then((r) => r.data),

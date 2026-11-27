@@ -48,7 +48,7 @@ public class SurveysController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("appointment/{appointmentId:int}")]
+    [HttpGet("appointment/{appointmentId:guid}")]
     [HasPermission("SURVEY_VIEW")]
     [EndpointSummary("Xem chi tiết hồ sơ sàng lọc và bảng hỏi theo mã lịch hẹn")]
     [EndpointDescription(
@@ -70,7 +70,7 @@ public class SurveysController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetSurveyByAppointmentId([FromRoute] int appointmentId)
+    public async Task<IActionResult> GetSurveyByAppointmentId([FromRoute] Guid appointmentId)
     {
         var result = await _surveysService.GetSurveyByAppointmentIdAsync(appointmentId);
         return Ok(result);
@@ -122,7 +122,7 @@ public class SurveysController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPut("appointment/{appointmentId:int}/clinical")]
+    [HttpPut("appointment/{appointmentId:guid}/clinical")]
     [HasPermission("SCREENING_EDIT")]
     [EndpointSummary("Cập nhật kết quả khám lâm sàng và kết luận sàng lọc")]
     [EndpointDescription(
@@ -145,7 +145,7 @@ public class SurveysController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateClinicalScreening(
-        [FromRoute] int appointmentId,
+        [FromRoute] Guid appointmentId,
         [FromBody] UpdateClinicalScreeningRequest request)
     {
         var doctorId = User.GetUserId();

@@ -17,7 +17,7 @@ public class ExpiringSoonFilterDto
     public string? ComponentType { get; set; }
 
     [FromQuery(Name = "storageLocationId")]
-    public int? StorageLocationId { get; set; }
+    public Guid? StorageLocationId { get; set; }
 
     [FromQuery(Name = "status")]
     public string? Status { get; set; }

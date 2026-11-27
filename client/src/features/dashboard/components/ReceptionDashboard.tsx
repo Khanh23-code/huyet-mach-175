@@ -19,7 +19,7 @@ const REFRESH_MS = 15_000
 const pct = (n: number) => n.toLocaleString('vi-VN', { maximumFractionDigits: 1 })
 
 interface WaitRow {
-    id: number
+    id: string
     name: string
     sub: string
     label: string

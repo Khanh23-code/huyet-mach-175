@@ -5,10 +5,10 @@ namespace HuyetMach175.Modules.Donation.DTOs.Surveys;
 public class SubmitOnlineSurveyResponse
 {
     [JsonPropertyName("surveyId")]
-    public int SurveyId { get; set; }
+    public Guid SurveyId { get; set; }
 
     [JsonPropertyName("appointmentId")]
-    public int AppointmentId { get; set; }
+    public Guid AppointmentId { get; set; }
 
     [JsonPropertyName("hasRisk")]
     public bool HasRisk { get; set; }

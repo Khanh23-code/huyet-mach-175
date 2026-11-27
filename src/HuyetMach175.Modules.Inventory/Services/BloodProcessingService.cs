@@ -121,7 +121,7 @@ public class BloodProcessingService : IBloodProcessingService
             .ToList();
     }
 
-    public async Task<SeparateBloodBagResponse> SeparateBloodBagAsync(SeparateBloodBagRequest request, int userId, string? ipAddress)
+    public async Task<SeparateBloodBagResponse> SeparateBloodBagAsync(SeparateBloodBagRequest request, Guid userId, string? ipAddress)
     {
         var identifier = !string.IsNullOrWhiteSpace(request.ParentBarcode)
             ? request.ParentBarcode.Trim()
@@ -154,12 +154,12 @@ public class BloodProcessingService : IBloodProcessingService
             requested.Add((item, code.Value));
         }
 
-        int? numericId = int.TryParse(identifier, out var parsedId) ? parsedId : null;
+        Guid? parsedBagId = Guid.TryParse(identifier, out var parsedId) ? parsedId : null;
 
         var parentBag = await _context.BloodBags
             .Include(b => b.ComponentType)
             .Include(b => b.Location)
-            .FirstOrDefaultAsync(b => b.Barcode == identifier || (numericId.HasValue && b.BagId == numericId.Value));
+            .FirstOrDefaultAsync(b => b.Barcode == identifier || (parsedBagId.HasValue && b.BagId == parsedBagId.Value));
 
         if (parentBag == null)
         {

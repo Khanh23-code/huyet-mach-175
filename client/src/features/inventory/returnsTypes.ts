@@ -7,9 +7,10 @@ export interface PendingBloodReturnFilter {
 }
 
 export interface PendingBloodReturnDto {
-    returnId: number
-    allocationId: number
-    bagId: number
+    returnId: string
+    returnCode: string
+    allocationId: string
+    bagId: string
     barcode: string
     componentCode: string
     componentName: string
@@ -17,12 +18,12 @@ export interface PendingBloodReturnDto {
     volumeMl: number
     expiredAt: string
     isExpired: boolean
-    requestId: number
+    requestId: string
     requestCode: string
     patientCode: string
     patientName: string
     departmentName?: string | null
-    returnedById: number
+    returnedById: string
     returnedByName?: string | null
     returnReason: string
     finalAction: ReturnFinalAction
@@ -41,11 +42,12 @@ export interface PendingBloodReturnDto {
 }
 
 export interface ReturnInspectionDto {
-    returnId: number
-    allocationId: number
-    bagId: number
+    returnId: string
+    returnCode: string
+    allocationId: string
+    bagId: string
     barcode: string
-    componentTypeId: number
+    componentTypeId: string
     componentCode: string
     componentName: string
     bloodType: string
@@ -54,15 +56,15 @@ export interface ReturnInspectionDto {
     expiredAt: string
     isExpired: boolean
     bagStatus: string
-    previousLocationId?: number | null
+    previousLocationId?: string | null
     previousLocationName?: string | null
-    requestId: number
+    requestId: string
     requestCode: string
     patientCode: string
     patientName: string
     departmentName?: string | null
     doctorName?: string | null
-    returnedById: number
+    returnedById: string
     returnedByName?: string | null
     returnReason: string
     qualified: boolean
@@ -92,14 +94,15 @@ export interface BloodReturnInspectionChecklistDto {
 export interface ProcessBloodReturnRequest {
     action: 'RESTOCK' | 'DISCARD'
     checklist?: BloodReturnInspectionChecklistDto
-    newStorageLocationId?: number
+    newStorageLocationId?: string
     discardReason?: string
 }
 
 export interface ProcessBloodReturnResponse {
-    returnId: number
-    allocationId: number
-    bagId: number
+    returnId: string
+    returnCode: string
+    allocationId: string
+    bagId: string
     barcode: string
     componentName: string
     bloodType: string
@@ -107,10 +110,10 @@ export interface ProcessBloodReturnResponse {
     finalAction: ReturnFinalAction
     bagStatus: string
     allocationStatus: string
-    newLocationId?: number | null
+    newLocationId?: string | null
     newLocationName?: string | null
     discardReason?: string | null
-    inspectedById: number
+    inspectedById: string
     inspectedByName?: string | null
     processedAt: string
     message: string

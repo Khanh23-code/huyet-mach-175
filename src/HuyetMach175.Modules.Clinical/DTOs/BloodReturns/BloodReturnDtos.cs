@@ -15,7 +15,7 @@ public class BloodReturnChecklistDto
 public class CreateBloodReturnRequest
 {
     [Required(ErrorMessage = "Mã phân bổ (allocationId) là bắt buộc.")]
-    public int AllocationId { get; set; }
+    public Guid AllocationId { get; set; }
 
     [Required(ErrorMessage = "Lý do hoàn trả (returnReason) là bắt buộc.")]
     [MaxLength(255, ErrorMessage = "Lý do hoàn trả tối đa 255 ký tự.")]
@@ -27,13 +27,14 @@ public class CreateBloodReturnRequest
 
 public class CreateBloodReturnResponse
 {
-    public int ReturnId { get; set; }
-    public int AllocationId { get; set; }
-    public int RequestId { get; set; }
+    public Guid ReturnId { get; set; }
+    public string ReturnCode { get; set; } = string.Empty;
+    public Guid AllocationId { get; set; }
+    public Guid RequestId { get; set; }
     public string RequestCode { get; set; } = string.Empty;
     public string PatientCode { get; set; } = string.Empty;
     public string PatientName { get; set; } = string.Empty;
-    public int BagId { get; set; }
+    public Guid BagId { get; set; }
     public string Barcode { get; set; } = string.Empty;
     public string ComponentName { get; set; } = string.Empty;
     public string BloodType { get; set; } = string.Empty;
@@ -41,7 +42,7 @@ public class CreateBloodReturnResponse
     public bool Qualified { get; set; }
     public ReturnFinalAction FinalAction { get; set; }
     public BagStatus BagStatus { get; set; }
-    public int ReturnedById { get; set; }
+    public Guid ReturnedById { get; set; }
     public string? ReturnedByName { get; set; }
     public DateTime ProcessedAt { get; set; }
     public bool IsEligibleForRestockEvaluation { get; set; }
@@ -56,14 +57,15 @@ public class CancelBloodReturnRequest
 
 public class CancelBloodReturnResponse
 {
-    public int ReturnId { get; set; }
-    public int AllocationId { get; set; }
-    public int BagId { get; set; }
+    public Guid ReturnId { get; set; }
+    public string ReturnCode { get; set; } = string.Empty;
+    public Guid AllocationId { get; set; }
+    public Guid BagId { get; set; }
     public string Barcode { get; set; } = string.Empty;
     public ReturnFinalAction FinalAction { get; set; }
     public BagStatus BagStatus { get; set; }
     public string? CancelReason { get; set; }
-    public int CancelledById { get; set; }
+    public Guid CancelledById { get; set; }
     public string? CancelledByName { get; set; }
     public DateTime CancelledAt { get; set; }
 }
@@ -82,9 +84,10 @@ public class PendingBloodReturnFilterDto
 
 public class PendingBloodReturnDto
 {
-    public int ReturnId { get; set; }
-    public int AllocationId { get; set; }
-    public int BagId { get; set; }
+    public Guid ReturnId { get; set; }
+    public string ReturnCode { get; set; } = string.Empty;
+    public Guid AllocationId { get; set; }
+    public Guid BagId { get; set; }
     public string Barcode { get; set; } = string.Empty;
     public ComponentCode ComponentCode { get; set; }
     public string ComponentName { get; set; } = string.Empty;
@@ -92,12 +95,12 @@ public class PendingBloodReturnDto
     public int VolumeMl { get; set; }
     public DateTime ExpiredAt { get; set; }
     public bool IsExpired { get; set; }
-    public int RequestId { get; set; }
+    public Guid RequestId { get; set; }
     public string RequestCode { get; set; } = string.Empty;
     public string PatientCode { get; set; } = string.Empty;
     public string PatientName { get; set; } = string.Empty;
     public string? DepartmentName { get; set; }
-    public int ReturnedById { get; set; }
+    public Guid ReturnedById { get; set; }
     public string? ReturnedByName { get; set; }
     public string ReturnReason { get; set; } = string.Empty;
     public ReturnFinalAction FinalAction { get; set; }
@@ -117,11 +120,12 @@ public class PendingBloodReturnDto
 
 public class ReturnInspectionDto
 {
-    public int ReturnId { get; set; }
-    public int AllocationId { get; set; }
-    public int BagId { get; set; }
+    public Guid ReturnId { get; set; }
+    public string ReturnCode { get; set; } = string.Empty;
+    public Guid AllocationId { get; set; }
+    public Guid BagId { get; set; }
     public string Barcode { get; set; } = string.Empty;
-    public int ComponentTypeId { get; set; }
+    public Guid ComponentTypeId { get; set; }
     public ComponentCode ComponentCode { get; set; }
     public string ComponentName { get; set; } = string.Empty;
     public string BloodType { get; set; } = string.Empty;
@@ -130,15 +134,15 @@ public class ReturnInspectionDto
     public DateTime ExpiredAt { get; set; }
     public bool IsExpired { get; set; }
     public BagStatus BagStatus { get; set; }
-    public int? PreviousLocationId { get; set; }
+    public Guid? PreviousLocationId { get; set; }
     public string? PreviousLocationName { get; set; }
-    public int RequestId { get; set; }
+    public Guid RequestId { get; set; }
     public string RequestCode { get; set; } = string.Empty;
     public string PatientCode { get; set; } = string.Empty;
     public string PatientName { get; set; } = string.Empty;
     public string? DepartmentName { get; set; }
     public string? DoctorName { get; set; }
-    public int ReturnedById { get; set; }
+    public Guid ReturnedById { get; set; }
     public string? ReturnedByName { get; set; }
     public string ReturnReason { get; set; } = string.Empty;
     public bool Qualified { get; set; }
@@ -173,7 +177,7 @@ public class ProcessBloodReturnRequest
 
     public BloodReturnInspectionChecklistDto? Checklist { get; set; }
 
-    public int? NewStorageLocationId { get; set; }
+    public Guid? NewStorageLocationId { get; set; }
 
     [MaxLength(255, ErrorMessage = "Lý do tiêu hủy tối đa 255 ký tự.")]
     public string? DiscardReason { get; set; }
@@ -181,9 +185,10 @@ public class ProcessBloodReturnRequest
 
 public class ProcessBloodReturnResponse
 {
-    public int ReturnId { get; set; }
-    public int AllocationId { get; set; }
-    public int BagId { get; set; }
+    public Guid ReturnId { get; set; }
+    public string ReturnCode { get; set; } = string.Empty;
+    public Guid AllocationId { get; set; }
+    public Guid BagId { get; set; }
     public string Barcode { get; set; } = string.Empty;
     public string ComponentName { get; set; } = string.Empty;
     public string BloodType { get; set; } = string.Empty;
@@ -191,10 +196,10 @@ public class ProcessBloodReturnResponse
     public ReturnFinalAction FinalAction { get; set; }
     public BagStatus BagStatus { get; set; }
     public AllocationStatus AllocationStatus { get; set; }
-    public int? NewLocationId { get; set; }
+    public Guid? NewLocationId { get; set; }
     public string? NewLocationName { get; set; }
     public string? DiscardReason { get; set; }
-    public int InspectedById { get; set; }
+    public Guid InspectedById { get; set; }
     public string? InspectedByName { get; set; }
     public DateTime ProcessedAt { get; set; }
     public string Message { get; set; } = string.Empty;

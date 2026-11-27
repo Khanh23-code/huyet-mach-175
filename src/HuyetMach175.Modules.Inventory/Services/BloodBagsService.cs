@@ -21,7 +21,7 @@ public class BloodBagsService : IBloodBagsService
         _context = context;
     }
 
-    public async Task<ReceiveBloodBagResponse> ReceiveBloodBagAsync(ReceiveBloodBagRequest request, int userId, string? ipAddress)
+    public async Task<ReceiveBloodBagResponse> ReceiveBloodBagAsync(ReceiveBloodBagRequest request, Guid userId, string? ipAddress)
     {
         if (string.IsNullOrWhiteSpace(request.Barcode))
         {
@@ -112,7 +112,7 @@ public class BloodBagsService : IBloodBagsService
         return bloodBag.ToReceiveResponse(location, request.ReceivedTemperature, now, userId);
     }
 
-    public async Task<RegisterExternalBloodBagResponse> RegisterExternalBloodBagAsync(RegisterExternalBloodBagRequest request, int userId, string? ipAddress)
+    public async Task<RegisterExternalBloodBagResponse> RegisterExternalBloodBagAsync(RegisterExternalBloodBagRequest request, Guid userId, string? ipAddress)
     {
         var unitName = request.ExternalUnitName.Trim();
         var externalCode = request.ExternalCode.Trim();
@@ -326,7 +326,7 @@ public class BloodBagsService : IBloodBagsService
         return bag.ToScanResponse(logs);
     }
 
-    public async Task<TransitionBagStatusResponse> TransitionStatusAsync(TransitionBagStatusRequest request, int userId, string? ipAddress)
+    public async Task<TransitionBagStatusResponse> TransitionStatusAsync(TransitionBagStatusRequest request, Guid userId, string? ipAddress)
     {
         if (string.IsNullOrWhiteSpace(request.Barcode))
         {
@@ -467,7 +467,7 @@ public class BloodBagsService : IBloodBagsService
         };
     }
 
-    private static void ValidateIntakeLocation(StorageLocation? location, int locationId, BloodComponentType? componentType, string intakeLabel)
+    private static void ValidateIntakeLocation(StorageLocation? location, Guid locationId, BloodComponentType? componentType, string intakeLabel)
     {
         if (location == null)
         {

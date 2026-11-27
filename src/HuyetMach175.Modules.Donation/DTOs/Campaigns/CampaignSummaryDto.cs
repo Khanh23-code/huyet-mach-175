@@ -4,7 +4,7 @@ namespace HuyetMach175.Modules.Donation.DTOs.Campaigns;
 
 public class CampaignSummaryDto
 {
-    public int CampaignId { get; set; }
+    public Guid CampaignId { get; set; }
     public string CampaignName { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string LocationName { get; set; } = string.Empty;
@@ -59,8 +59,8 @@ public class CampaignDeferralReasonStatDto
 
 public class CampaignIncidentDto
 {
-    public int SessionId { get; set; }
-    public int AppointmentId { get; set; }
+    public Guid SessionId { get; set; }
+    public Guid AppointmentId { get; set; }
     public string DonorName { get; set; } = string.Empty;
     public string DonorCitizenId { get; set; } = string.Empty;
     public string TargetVolumeMl { get; set; } = string.Empty;
@@ -93,7 +93,7 @@ public class CampaignRhStatDto
 
 public class CampaignSlotSummaryDto
 {
-    public int SlotId { get; set; }
+    public Guid SlotId { get; set; }
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public int Capacity { get; set; }

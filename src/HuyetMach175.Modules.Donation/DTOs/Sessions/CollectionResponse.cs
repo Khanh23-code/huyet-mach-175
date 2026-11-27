@@ -5,7 +5,7 @@ namespace HuyetMach175.Modules.Donation.DTOs.Sessions;
 public class CollectionResponse
 {
     [JsonPropertyName("sessionId")]
-    public int SessionId { get; set; }
+    public Guid SessionId { get; set; }
 
     [JsonPropertyName("status")]
     public string Status { get; set; } = string.Empty;

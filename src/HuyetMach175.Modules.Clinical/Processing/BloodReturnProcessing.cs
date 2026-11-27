@@ -12,9 +12,28 @@ namespace HuyetMach175.Modules.Clinical.Processing;
 
 public static class BloodReturnProcessing
 {
+    public static async Task<string> GenerateReturnCodeAsync(ApplicationDbContext context, DateTime nowUtc)
+    {
+        var localDate = nowUtc.AddHours(7);
+        var prefix = $"HT-{localDate:yyMMdd}-";
+
+        var countToday = await context.BloodReturns
+            .CountAsync(r => r.ReturnCode.StartsWith(prefix));
+        var seq = countToday + 1;
+        var returnCode = $"{prefix}{seq:D3}";
+
+        while (await context.BloodReturns.AnyAsync(r => r.ReturnCode == returnCode))
+        {
+            seq++;
+            returnCode = $"{prefix}{seq:D3}";
+        }
+
+        return returnCode;
+    }
+
     public static (string ReturnReason, List<string> FailedChecklistFlags) ValidateCreateReturnInput(CreateBloodReturnRequest request)
     {
-        if (request.AllocationId <= 0)
+        if (request.AllocationId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phân bổ (allocationId) không hợp lệ.");
         }
@@ -62,7 +81,7 @@ public static class BloodReturnProcessing
         return reasons;
     }
 
-    public static async Task<int> CountPreviousRestocksAsync(ApplicationDbContext context, int bagId)
+    public static async Task<int> CountPreviousRestocksAsync(ApplicationDbContext context, Guid bagId)
     {
         return await context.BloodReturns
             .AsNoTracking()
@@ -72,12 +91,12 @@ public static class BloodReturnProcessing
                 br.FinalAction == ReturnFinalAction.RESTOCK);
     }
 
-    public static async Task<Dictionary<int, int>> CountPreviousRestocksByBagIdsAsync(ApplicationDbContext context, IEnumerable<int> bagIds)
+    public static async Task<Dictionary<Guid, int>> CountPreviousRestocksByBagIdsAsync(ApplicationDbContext context, IEnumerable<Guid> bagIds)
     {
         var idList = bagIds.Distinct().ToList();
         if (idList.Count == 0)
         {
-            return new Dictionary<int, int>();
+            return new Dictionary<Guid, int>();
         }
 
         return await context.BloodReturns
@@ -91,14 +110,14 @@ public static class BloodReturnProcessing
             .ToDictionaryAsync(x => x.BagId, x => x.Count);
     }
 
-    public static async Task<Dictionary<int, List<string>>> GetClinicalChecklistWarningsAsync(
+    public static async Task<Dictionary<Guid, List<string>>> GetClinicalChecklistWarningsAsync(
         ApplicationDbContext context,
-        IEnumerable<int> returnIds)
+        IEnumerable<Guid> returnIds)
     {
         var idList = returnIds.Distinct().ToList();
         if (idList.Count == 0)
         {
-            return new Dictionary<int, List<string>>();
+            return new Dictionary<Guid, List<string>>();
         }
 
         var logs = await context.AuditLogs
@@ -112,7 +131,7 @@ public static class BloodReturnProcessing
             .Select(a => new { a.RecordId, a.NewState })
             .ToListAsync();
 
-        var result = new Dictionary<int, List<string>>();
+        var result = new Dictionary<Guid, List<string>>();
         foreach (var log in logs)
         {
             if (result.ContainsKey(log.RecordId))
@@ -126,7 +145,7 @@ public static class BloodReturnProcessing
         return result;
     }
 
-    public static void ValidateAllocationForReturn(BloodAllocation? allocation, int allocationId, User currentUser)
+    public static void ValidateAllocationForReturn(BloodAllocation? allocation, Guid allocationId, User currentUser)
     {
         if (allocation == null || allocation.Bag == null || allocation.Request == null)
         {
@@ -143,7 +162,10 @@ public static class BloodReturnProcessing
 
         if (activeReturn != null)
         {
-            throw new HttpException(StatusCodes.Status409Conflict, $"Lượt phân bổ #{allocation.AllocationId} (túi {allocation.Bag.Barcode}) đã được lập phiếu hoàn trả trước đó (#{activeReturn.ReturnId}).");
+            var returnLabel = !string.IsNullOrWhiteSpace(activeReturn.ReturnCode)
+                ? activeReturn.ReturnCode
+                : activeReturn.ReturnId.ToString();
+            throw new HttpException(StatusCodes.Status409Conflict, $"Lượt phân bổ của túi {allocation.Bag.Barcode} đã được lập phiếu hoàn trả trước đó ({returnLabel}).");
         }
 
         if (allocation.Bag.Status == BagStatus.TRANSFUSED)
@@ -158,21 +180,25 @@ public static class BloodReturnProcessing
         }
     }
 
-    public static void ValidatePendingReturnForInspection(BloodReturn? bloodReturn, int returnId, string notLockedMessage)
+    public static void ValidatePendingReturnForInspection(BloodReturn? bloodReturn, Guid returnId, string notLockedMessage)
     {
         if (bloodReturn == null || bloodReturn.Allocation == null || bloodReturn.Allocation.Bag == null)
         {
             throw new HttpException(StatusCodes.Status404NotFound, $"Không tìm thấy phiếu hoàn trả #{returnId}.");
         }
 
+        var returnLabel = !string.IsNullOrWhiteSpace(bloodReturn.ReturnCode)
+            ? bloodReturn.ReturnCode
+            : $"#{returnId}";
+
         if (bloodReturn.FinalAction == ReturnFinalAction.CANCELLED)
         {
-            throw new HttpException(StatusCodes.Status409Conflict, $"Phiếu hoàn trả #{returnId} đã được hủy trước đó.");
+            throw new HttpException(StatusCodes.Status409Conflict, $"Phiếu hoàn trả {returnLabel} đã được hủy trước đó.");
         }
 
         if (bloodReturn.FinalAction != ReturnFinalAction.PENDING_INSPECTION)
         {
-            throw new HttpException(StatusCodes.Status409Conflict, $"Phiếu hoàn trả #{returnId} đã được xử lý trước đó với kết quả '{bloodReturn.FinalAction}'.");
+            throw new HttpException(StatusCodes.Status409Conflict, $"Phiếu hoàn trả {returnLabel} đã được xử lý trước đó với kết quả '{bloodReturn.FinalAction}'.");
         }
 
         var bag = bloodReturn.Allocation.Bag;
@@ -187,7 +213,7 @@ public static class BloodReturnProcessing
         BloodBag bag,
         int previousRestockCount,
         BloodReturnInspectionChecklistDto? checklist,
-        int? storageLocationId,
+        Guid? storageLocationId,
         DateTime nowUtc)
     {
         var componentType = bag.ComponentType;
@@ -221,7 +247,7 @@ public static class BloodReturnProcessing
             throw new HttpException(StatusCodes.Status400BadRequest, $"Túi máu không đạt đủ 5 điều kiện tái nhập kho: {string.Join("; ", failedCriteria)}.");
         }
 
-        if (!storageLocationId.HasValue || storageLocationId.Value <= 0)
+        if (!storageLocationId.HasValue || storageLocationId.Value == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Vị trí ngăn tủ lưu trữ mới (newStorageLocationId) là bắt buộc khi nhập lại kho.");
         }
@@ -262,11 +288,11 @@ public static class BloodReturnProcessing
         return targetLocation;
     }
 
-    public static async Task<StorageLocation?> ResolveDiscardHoldLocationAsync(ApplicationDbContext context, int? requestedLocationId)
+    public static async Task<StorageLocation?> ResolveDiscardHoldLocationAsync(ApplicationDbContext context, Guid? requestedLocationId)
     {
         if (requestedLocationId.HasValue)
         {
-            if (requestedLocationId.Value <= 0)
+            if (requestedLocationId.Value == Guid.Empty)
             {
                 throw new HttpException(StatusCodes.Status400BadRequest, "Mã vị trí lưu trữ chờ hủy (newStorageLocationId) không hợp lệ.");
             }
@@ -306,10 +332,10 @@ public static class BloodReturnProcessing
             .FirstOrDefaultAsync();
     }
 
-    public static async Task<(int? LocationId, string? LocationName)> ResolvePreviousLocationAsync(
+    public static async Task<(Guid? LocationId, string? LocationName)> ResolvePreviousLocationAsync(
         ApplicationDbContext context,
-        int allocationId,
-        int bagId)
+        Guid allocationId,
+        Guid bagId)
     {
         var previousLocationId = await FindLocationIdInAllocationLogsAsync(context, allocationId)
             ?? await FindLocationIdInHandoverSessionLogsAsync(context, allocationId, bagId);
@@ -355,7 +381,7 @@ public static class BloodReturnProcessing
         return value.Length <= 255 ? value : value[..255];
     }
 
-    private static async Task<int?> FindLocationIdInAllocationLogsAsync(ApplicationDbContext context, int allocationId)
+    private static async Task<Guid?> FindLocationIdInAllocationLogsAsync(ApplicationDbContext context, Guid allocationId)
     {
         var oldStates = await context.AuditLogs
             .AsNoTracking()
@@ -379,7 +405,7 @@ public static class BloodReturnProcessing
         return null;
     }
 
-    private static async Task<int?> FindLocationIdInHandoverSessionLogsAsync(ApplicationDbContext context, int allocationId, int bagId)
+    private static async Task<Guid?> FindLocationIdInHandoverSessionLogsAsync(ApplicationDbContext context, Guid allocationId, Guid bagId)
     {
         var sessionIds = await context.BloodHandoverSessionItems
             .AsNoTracking()
@@ -414,9 +440,9 @@ public static class BloodReturnProcessing
         return null;
     }
 
-    private static bool TryExtractLocationId(string? json, string propertyName, out int locationId)
+    private static bool TryExtractLocationId(string? json, string propertyName, out Guid locationId)
     {
-        locationId = 0;
+        locationId = Guid.Empty;
         if (string.IsNullOrWhiteSpace(json))
         {
             return false;
@@ -426,8 +452,9 @@ public static class BloodReturnProcessing
         {
             using var doc = JsonDocument.Parse(json);
             if (doc.RootElement.TryGetProperty(propertyName, out var locProp) &&
-                locProp.ValueKind == JsonValueKind.Number &&
-                locProp.TryGetInt32(out locationId))
+                locProp.ValueKind == JsonValueKind.String &&
+                locProp.TryGetGuid(out locationId) &&
+                locationId != Guid.Empty)
             {
                 return true;
             }
@@ -439,9 +466,9 @@ public static class BloodReturnProcessing
         return false;
     }
 
-    private static bool TryExtractBagLocationFromSessionState(string? json, int bagId, out int locationId)
+    private static bool TryExtractBagLocationFromSessionState(string? json, Guid bagId, out Guid locationId)
     {
-        locationId = 0;
+        locationId = Guid.Empty;
         if (string.IsNullOrWhiteSpace(json))
         {
             return false;
@@ -458,12 +485,13 @@ public static class BloodReturnProcessing
             foreach (var bagElement in bagsProp.EnumerateArray())
             {
                 if (bagElement.TryGetProperty("bagId", out var idProp) &&
-                    idProp.ValueKind == JsonValueKind.Number &&
-                    idProp.TryGetInt32(out var currentBagId) &&
+                    idProp.ValueKind == JsonValueKind.String &&
+                    idProp.TryGetGuid(out var currentBagId) &&
                     currentBagId == bagId &&
                     bagElement.TryGetProperty("locationId", out var locProp) &&
-                    locProp.ValueKind == JsonValueKind.Number &&
-                    locProp.TryGetInt32(out locationId))
+                    locProp.ValueKind == JsonValueKind.String &&
+                    locProp.TryGetGuid(out locationId) &&
+                    locationId != Guid.Empty)
                 {
                     return true;
                 }

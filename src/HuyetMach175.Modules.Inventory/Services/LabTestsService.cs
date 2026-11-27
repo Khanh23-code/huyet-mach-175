@@ -94,7 +94,7 @@ public class LabTestsService : ILabTestsService
         };
     }
 
-    public async Task<LabTestResultDto> RecordLabTestAsync(RecordLabTestRequest request, int userId, string? ipAddress)
+    public async Task<LabTestResultDto> RecordLabTestAsync(RecordLabTestRequest request, Guid userId, string? ipAddress)
     {
         var identifier = !string.IsNullOrWhiteSpace(request.Barcode)
             ? request.Barcode.Trim()
@@ -106,7 +106,7 @@ public class LabTestsService : ILabTestsService
         }
 
         var antibodyResult = request.IrregularAntibody ?? request.MalariaResult ?? TestResult.NEGATIVE;
-        int? numericId = int.TryParse(identifier, out var parsedId) ? parsedId : null;
+        Guid? parsedBagId = Guid.TryParse(identifier, out var parsedId) ? parsedId : null;
 
         var bloodBag = await _context.BloodBags
             .Include(b => b.ComponentType)
@@ -114,7 +114,7 @@ public class LabTestsService : ILabTestsService
             .Include(b => b.Session)
                 .ThenInclude(s => s!.Appointment)
                     .ThenInclude(a => a!.Donor)
-            .FirstOrDefaultAsync(b => b.Barcode == identifier || (numericId.HasValue && b.BagId == numericId.Value));
+            .FirstOrDefaultAsync(b => b.Barcode == identifier || (parsedBagId.HasValue && b.BagId == parsedBagId.Value));
 
         if (bloodBag == null)
         {
@@ -273,13 +273,13 @@ public class LabTestsService : ILabTestsService
         }
 
         var trimmed = identifier.Trim();
-        int? numericId = int.TryParse(trimmed, out var parsedId) ? parsedId : null;
+        Guid? parsedBagId = Guid.TryParse(trimmed, out var parsedId) ? parsedId : null;
 
         var bloodBag = await _context.BloodBags
             .AsNoTracking()
             .Include(b => b.TestResults)
                 .ThenInclude(tr => tr.Technician)
-            .FirstOrDefaultAsync(b => b.Barcode == trimmed || (numericId.HasValue && b.BagId == numericId.Value));
+            .FirstOrDefaultAsync(b => b.Barcode == trimmed || (parsedBagId.HasValue && b.BagId == parsedBagId.Value));
 
         if (bloodBag == null)
         {

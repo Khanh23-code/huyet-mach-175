@@ -12,8 +12,8 @@ interface Props {
     items: ScreeningQueueItem[]
     loading: boolean
     pendingCount: number
-    selectedId: number | null
-    onSelect: (appointmentId: number) => void
+    selectedId: string | null
+    onSelect: (appointmentId: string) => void
     filter: QueueFilter
     onFilterChange: (f: QueueFilter) => void
     keyword: string

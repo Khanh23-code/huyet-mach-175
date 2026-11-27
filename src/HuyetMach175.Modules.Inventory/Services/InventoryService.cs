@@ -317,7 +317,7 @@ public class InventoryService : IInventoryService
         };
     }
 
-    public async Task<RelocateBloodBagResponse> RelocateBloodBagAsync(int bagId, RelocateBloodBagRequest request, int userId, string? ipAddress)
+    public async Task<RelocateBloodBagResponse> RelocateBloodBagAsync(Guid bagId, RelocateBloodBagRequest request, Guid userId, string? ipAddress)
     {
         var bloodBag = await _context.BloodBags
             .Include(b => b.ComponentType)

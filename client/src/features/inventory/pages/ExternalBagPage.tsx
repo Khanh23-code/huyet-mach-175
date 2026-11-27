@@ -24,7 +24,7 @@ interface FormValues {
     volumeMl: number
     collectedAt: Dayjs
     receivedTemperature: number
-    storageLocationId: number
+    storageLocationId: string
 }
 
 const toLabel = (r: RegisterExternalResponse): LabelData => ({

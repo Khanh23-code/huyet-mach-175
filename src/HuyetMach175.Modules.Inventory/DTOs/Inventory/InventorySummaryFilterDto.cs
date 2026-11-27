@@ -20,5 +20,5 @@ public class InventorySummaryFilterDto
     public bool? IsExpiringSoon { get; set; }
 
     [FromQuery(Name = "storageLocationId")]
-    public int? StorageLocationId { get; set; }
+    public Guid? StorageLocationId { get; set; }
 }

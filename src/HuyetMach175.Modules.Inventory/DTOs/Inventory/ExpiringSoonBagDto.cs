@@ -5,7 +5,7 @@ namespace HuyetMach175.Modules.Inventory.DTOs.Inventory;
 public class ExpiringSoonBagDto
 {
     [JsonPropertyName("bagId")]
-    public int BagId { get; set; }
+    public Guid BagId { get; set; }
 
     [JsonPropertyName("barcode")]
     public string Barcode { get; set; } = string.Empty;
@@ -20,7 +20,7 @@ public class ExpiringSoonBagDto
     public string BloodGroup { get; set; } = string.Empty;
 
     [JsonPropertyName("componentTypeId")]
-    public int ComponentTypeId { get; set; }
+    public Guid ComponentTypeId { get; set; }
 
     [JsonPropertyName("componentTypeCode")]
     public string ComponentTypeCode { get; set; } = string.Empty;
@@ -35,7 +35,7 @@ public class ExpiringSoonBagDto
     public string Status { get; set; } = string.Empty;
 
     [JsonPropertyName("storageLocationId")]
-    public int? StorageLocationId { get; set; }
+    public Guid? StorageLocationId { get; set; }
 
     [JsonPropertyName("storageLocationName")]
     public string? StorageLocationName { get; set; }

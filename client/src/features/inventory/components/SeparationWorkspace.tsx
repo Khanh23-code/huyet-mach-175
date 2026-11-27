@@ -21,7 +21,7 @@ import type { ChildCode, ProcessingQueueItem, SeparateResponse } from '../types'
 interface Row {
     enabled: boolean
     volume: number | null
-    locationId: number | null
+    locationId: string | null
 }
 
 const INITIAL: Record<ChildCode, Row> = {
@@ -76,7 +76,7 @@ export default function SeparationWorkspace({ parent, canEdit, onDone }: Props) 
                 components: enabled.map((c) => ({
                     componentType: c,
                     volumeMl: rows[c].volume as number,
-                    storageLocationId: rows[c].locationId as number,
+                    storageLocationId: rows[c].locationId as string,
                 })),
             })
             setResult(r)

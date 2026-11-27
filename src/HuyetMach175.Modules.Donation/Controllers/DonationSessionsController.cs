@@ -49,7 +49,7 @@ public class DonationSessionsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:guid}")]
     [HasPermission("SESSION_VIEW")]
     [EndpointSummary("Xem chi tiết thông tin phiên lấy máu")]
     [EndpointDescription(
@@ -71,13 +71,13 @@ public class DonationSessionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetSessionById([FromRoute] int id)
+    public async Task<IActionResult> GetSessionById([FromRoute] Guid id)
     {
         var result = await _sessionsService.GetSessionByIdAsync(id);
         return Ok(result);
     }
 
-    [HttpPut("{id:int}/collection")]
+    [HttpPut("{id:guid}/collection")]
     [HasPermission("SESSION_EDIT")]
     [EndpointSummary("Cập nhật kết quả thu gom máu và đóng phiên")]
     [EndpointDescription(
@@ -100,7 +100,7 @@ public class DonationSessionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CompleteCollection(
-        [FromRoute] int id,
+        [FromRoute] Guid id,
         [FromBody] UpdateCollectionRequest request)
     {
         var phlebotomistId = User.GetUserId();
@@ -110,7 +110,7 @@ public class DonationSessionsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("{id:int}/start")]
+    [HttpPost("{id:guid}/start")]
     [HasPermission("SESSION_EDIT")]
     [EndpointSummary("Bắt đầu lấy máu và sinh túi máu (barcode)")]
     [EndpointDescription(
@@ -130,7 +130,7 @@ public class DonationSessionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> StartCollection([FromRoute] int id)
+    public async Task<IActionResult> StartCollection([FromRoute] Guid id)
     {
         var result = await _sessionsService.StartCollectionAsync(id, User.GetUserId());
         return Ok(result);

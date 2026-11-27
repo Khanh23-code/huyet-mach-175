@@ -30,7 +30,7 @@ import type { DonorImportResult, DonorImportRowError } from '../types'
 import { parseApiError } from '@/services/apiError'
 
 interface Props {
-    campaignId?: number | null
+    campaignId?: string | null
     campaignName?: string
     open: boolean
     onClose: () => void
@@ -145,7 +145,7 @@ export default function ImportDonorsModal({
                     <span>Nhập danh sách người hiến máu từ Excel</span>
                     {campaignId && (
                         <StatusPill tone="primary" dot={false}>
-                            Đợt #{campaignId}
+                            Đợt #{campaignId.slice(0, 8)}
                         </StatusPill>
                     )}
                 </div>
@@ -189,7 +189,7 @@ export default function ImportDonorsModal({
                                     Bước 1: Tải file Excel mẫu chuẩn
                                 </div>
                                 <div className="ds-muted ds-small">
-                                    File mẫu được cấu hình riêng cho đợt hiến #{campaignId}, bao gồm các khung giờ và 9 câu hỏi khảo sát.
+                                    File mẫu được cấu hình riêng cho đợt hiến này, bao gồm các khung giờ và 9 câu hỏi khảo sát.
                                 </div>
                             </div>
                             <Button

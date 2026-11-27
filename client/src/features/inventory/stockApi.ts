@@ -8,7 +8,7 @@ import type {
 } from './stockTypes'
 
 export const stockApi = {
-    summary: (params?: { storageLocationId?: number }) =>
+    summary: (params?: { storageLocationId?: string }) =>
         axiosClient.get<InventorySummary>('/api/inventory/summary', { params }).then((r) => r.data),
 
     expiringSoon: (params: ExpiringQuery) =>
@@ -17,7 +17,7 @@ export const stockApi = {
     bags: (params: BagQuery) =>
         axiosClient.get<PagedResult<BloodBag>>('/api/blood-bags', { params }).then((r) => r.data),
 
-    relocate: (bagId: number, body: RelocateRequest) =>
+    relocate: (bagId: string, body: RelocateRequest) =>
         axiosClient.put<RelocateResponse>(`/api/inventory/bags/${bagId}/storage-location`, body).then((r) => r.data),
 
     scan: (barcode: string) =>
@@ -37,20 +37,20 @@ export const locationsApi = {
     create: (body: StorageLocationInput) =>
         axiosClient.post<StorageLocation>('/api/inventory/storage-locations', body).then((r) => r.data),
 
-    update: (id: number, body: StorageLocationInput) =>
+    update: (id: string, body: StorageLocationInput) =>
         axiosClient.put<StorageLocation>(`/api/inventory/storage-locations/${id}`, body).then((r) => r.data),
 
-    remove: (id: number) => axiosClient.delete(`/api/inventory/storage-locations/${id}`).then(() => undefined),
+    remove: (id: string) => axiosClient.delete(`/api/inventory/storage-locations/${id}`).then(() => undefined),
 }
 
 export const componentTypesConfigApi = {
     list: () =>
         axiosClient.get<BloodComponentTypeConfig[]>('/api/inventory/blood-component-types').then((r) => r.data),
 
-    getById: (id: number) =>
+    getById: (id: string) =>
         axiosClient.get<BloodComponentTypeConfig>(`/api/inventory/blood-component-types/${id}`).then((r) => r.data),
 
-    update: (id: number, body: UpdateBloodComponentTypeRequest) =>
+    update: (id: string, body: UpdateBloodComponentTypeRequest) =>
         axiosClient
             .put<BloodComponentTypeConfig>(`/api/inventory/blood-component-types/${id}`, body)
             .then((r) => r.data),

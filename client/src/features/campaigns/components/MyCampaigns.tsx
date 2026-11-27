@@ -46,7 +46,7 @@ import { parseApiError } from '@/services/apiError'
 const PAGE_SIZE = 10
 
 interface Props {
-    onOpenDetail?: (campaignId: number) => void
+    onOpenDetail?: (campaignId: string) => void
     onEdit?: (campaign: CampaignListItem) => void
 }
 
@@ -140,7 +140,12 @@ export default function MyCampaigns({ onOpenDetail, onEdit }: Props) {
         {
             title: 'ID',
             dataIndex: 'campaignId',
-            width: 70,
+            width: 105,
+            render: (id: string) => (
+                <Tooltip title={id}>
+                    <span className="text-mono">{id.slice(0, 8)}…</span>
+                </Tooltip>
+            ),
         },
         {
             title: 'THỜI GIAN',

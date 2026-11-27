@@ -93,7 +93,7 @@ public class BloodHandoversController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("sessions/{sessionId:int}")]
+    [HttpGet("sessions/{sessionId:guid}")]
     [HasPermission("BLOOD_REQUEST_VIEW")]
     [EndpointSummary("Xem chi tiết phiên bàn giao máu")]
     [EndpointDescription(
@@ -110,14 +110,14 @@ public class BloodHandoversController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetHandoverSessionById(int sessionId)
+    public async Task<IActionResult> GetHandoverSessionById(Guid sessionId)
     {
         var userId = User.GetUserId();
         var result = await _bloodHandoversService.GetHandoverSessionByIdAsync(sessionId, userId);
         return Ok(result);
     }
 
-    [HttpPost("sessions/{sessionId:int}/confirm")]
+    [HttpPost("sessions/{sessionId:guid}/confirm")]
     [HasPermission("BLOOD_REQUEST_EDIT")]
     [EndpointSummary("Quét đối soát & xác nhận nhận lô túi máu tại quầy (Pha 2 - CLIN)")]
     [EndpointDescription(
@@ -141,7 +141,7 @@ public class BloodHandoversController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> ConfirmHandoverSession(int sessionId, [FromBody] ConfirmHandoverSessionRequest request)
+    public async Task<IActionResult> ConfirmHandoverSession(Guid sessionId, [FromBody] ConfirmHandoverSessionRequest request)
     {
         var userId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -149,7 +149,7 @@ public class BloodHandoversController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("sessions/{sessionId:int}/cancel")]
+    [HttpPost("sessions/{sessionId:guid}/cancel")]
     [HasPermission("BLOOD_REQUEST_APPROVE")]
     [EndpointSummary("Hủy sớm phiên bàn giao tại quầy (BBNK)")]
     [EndpointDescription(
@@ -171,7 +171,7 @@ public class BloodHandoversController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> CancelHandoverSession(int sessionId, [FromBody] CancelHandoverSessionRequest? request)
+    public async Task<IActionResult> CancelHandoverSession(Guid sessionId, [FromBody] CancelHandoverSessionRequest? request)
     {
         var userId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();

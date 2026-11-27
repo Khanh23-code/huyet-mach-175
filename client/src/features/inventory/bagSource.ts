@@ -5,7 +5,7 @@ export type BagSourceType = 'CAMPAIGN' | 'WALK_IN' | 'EXTERNAL' | 'UNKNOWN'
 export type SourceFilterValue = '' | 'CAMPAIGN' | 'WALK_IN' | 'EXTERNAL'
 
 export interface BagDonor {
-    donorId: number
+    donorId: string
     fullName: string
     citizenId: string
     gender: string
@@ -18,7 +18,7 @@ export interface BagDonor {
 }
 
 export interface BagCollection {
-    sessionId: number
+    sessionId: string
     actualVolumeMl?: number | null
     completedAt?: string | null
     collectionIncident?: string | null
@@ -27,7 +27,7 @@ export interface BagCollection {
 export interface BagSource {
     sourceType: BagSourceType
     sourceName: string
-    campaignId?: number | null
+    campaignId?: string | null
     campaignName?: string | null
     campaignLocation?: string | null
     externalUnitName?: string | null
@@ -37,7 +37,7 @@ export interface BagSource {
 }
 
 export interface BagLabSummary {
-    testId: number
+    testId: string
     testedAt: string
     technicianName: string
     hivResult: string

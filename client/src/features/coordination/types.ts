@@ -15,7 +15,7 @@ export type UrgencyLevel = 'ROUTINE' | 'URGENT' | 'EMERGENCY'
 export type RequestStatus = 'DRAFT' | 'PENDING' | 'READY' | 'COMPLETED' | 'REJECTED'
 
 export interface ComponentTypeOption {
-    componentTypeId: number
+    componentTypeId: string
     typeCode: string
     typeName: string
     lifeDays?: number
@@ -31,7 +31,7 @@ export interface SupplyDemandDetailDto {
 }
 
 export interface SupplyDemandResponse {
-    componentTypeId: number
+    componentTypeId: string
     componentCode: ComponentCode | string
     componentName: string
     totalAvailableStock: number
@@ -48,8 +48,8 @@ export interface BloodCoordinationQueueFilter {
 }
 
 export interface BloodRequestItemDetailDto {
-    requestItemId: number
-    componentTypeId: number
+    requestItemId: string
+    componentTypeId: string
     componentCode: ComponentCode | string
     componentName: string
     requestedUnits: number
@@ -57,7 +57,7 @@ export interface BloodRequestItemDetailDto {
 }
 
 export interface CoordinationQueueItemDto {
-    requestId: number
+    requestId: string
     requestCode: string
     departmentName?: string | null
     doctorName?: string | null
@@ -74,10 +74,10 @@ export interface CoordinationQueueItemDto {
 }
 
 export interface BloodRequestAllocationDto {
-    allocationId: number
-    bagId: number
+    allocationId: string
+    bagId: string
     barcode: string
-    componentTypeId: number
+    componentTypeId: string
     componentCode?: ComponentCode | string
     componentName: string
     bloodType?: string
@@ -94,11 +94,11 @@ export interface BloodRequestAllocationDto {
 }
 
 export interface BloodRequestDetailDto {
-    requestId: number
+    requestId: string
     requestCode: string
-    doctorId?: number | null
+    doctorId?: string | null
     doctorName?: string | null
-    departmentId?: number | null
+    departmentId?: string | null
     departmentName?: string | null
     patientCode: string
     patientName: string
@@ -121,7 +121,7 @@ export interface RejectBloodRequestDto {
 }
 
 export interface RejectBloodRequestResponse {
-    requestId: number
+    requestId: string
     requestCode: string
     status: RequestStatus
     currentStep: number
@@ -131,7 +131,7 @@ export interface RejectBloodRequestResponse {
 }
 
 export interface AvailableBloodBagDto {
-    bagId: number
+    bagId: string
     barcode: string
     volumeMl: number
     expiresAt: string
@@ -144,11 +144,11 @@ export interface AvailableBloodBagDto {
 }
 
 export interface AllocateBloodBagsRequest {
-    bagIds: number[]
+    bagIds: string[]
 }
 
 export interface AllocatedBagSummaryDto {
-    bagId: number
+    bagId: string
     barcode: string
     bloodType: string
     volumeMl: number
@@ -157,9 +157,9 @@ export interface AllocatedBagSummaryDto {
 }
 
 export interface AllocateBloodBagsResponse {
-    requestId: number
+    requestId: string
     requestCode: string
-    requestItemId: number
+    requestItemId: string
     allocatedCount: number
     itemAllocatedUnits: number
     itemRequestedUnits: number

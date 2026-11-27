@@ -18,8 +18,15 @@ export function useWorkCampaign() {
     const requireCampaign = can(PERMISSIONS.APPOINTMENTS_EDIT)
     const campaign = useWorkCampaignStore((s) => s.campaign)
     const clear = useWorkCampaignStore((s) => s.clear)
+    const validCampaignId = typeof campaign?.id === 'string' && campaign.id.length > 0 ? campaign.id : null
 
-    const { data, error } = useCampaignDetail(requireCampaign ? (campaign?.id ?? null) : null)
+    useEffect(() => {
+        if (campaign && typeof campaign.id !== 'string') {
+            clear()
+        }
+    }, [campaign, clear])
+
+    const { data, error } = useCampaignDetail(requireCampaign ? validCampaignId : null)
 
     useEffect(() => {
         if (!data) return
@@ -39,10 +46,10 @@ export function useWorkCampaign() {
 
     return {
         requireCampaign,
-        campaign,
-        campaignId: requireCampaign ? campaign?.id : undefined,
+        campaign: validCampaignId ? campaign : null,
+        campaignId: requireCampaign ? (validCampaignId ?? undefined) : undefined,
         /** true = phải nhập mã đợt trước khi xem dữ liệu */
-        blocked: requireCampaign && !campaign,
+        blocked: requireCampaign && !validCampaignId,
         clear,
     }
 }

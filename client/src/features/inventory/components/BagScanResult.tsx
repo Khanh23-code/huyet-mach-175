@@ -34,7 +34,7 @@ export default function BagScanResult({ bag, onChanged, onQueued }: Props) {
     const targets = useMemo(() => allowedManualTargets(bag.currentStatus, bag.isExpired), [bag])
     const next = bag.nextStatus as BagStatus | null | undefined
     const [target, setTarget] = useState<BagStatus | undefined>(next && targets.includes(next) ? next : targets[0])
-    const [locationId, setLocationId] = useState<number>()
+    const [locationId, setLocationId] = useState<string>()
     const [notes, setNotes] = useState('')
 
     const options = [

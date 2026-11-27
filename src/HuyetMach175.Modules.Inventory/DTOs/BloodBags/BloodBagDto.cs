@@ -5,19 +5,19 @@ namespace HuyetMach175.Modules.Inventory.DTOs.BloodBags;
 public class BloodBagDto
 {
     [JsonPropertyName("bagId")]
-    public int BagId { get; set; }
+    public Guid BagId { get; set; }
 
     [JsonPropertyName("barcode")]
     public string Barcode { get; set; } = string.Empty;
 
     [JsonPropertyName("parentBagId")]
-    public int? ParentBagId { get; set; }
+    public Guid? ParentBagId { get; set; }
 
     [JsonPropertyName("parentBarcode")]
     public string? ParentBarcode { get; set; }
 
     [JsonPropertyName("componentTypeId")]
-    public int ComponentTypeId { get; set; }
+    public Guid ComponentTypeId { get; set; }
 
     [JsonPropertyName("componentTypeCode")]
     public string ComponentTypeCode { get; set; } = string.Empty;
@@ -41,7 +41,7 @@ public class BloodBagDto
     public string Status { get; set; } = string.Empty;
 
     [JsonPropertyName("storageLocationId")]
-    public int? StorageLocationId { get; set; }
+    public Guid? StorageLocationId { get; set; }
 
     [JsonPropertyName("storageLocationName")]
     public string? StorageLocationName { get; set; }

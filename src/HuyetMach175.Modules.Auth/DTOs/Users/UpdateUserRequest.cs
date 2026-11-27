@@ -15,7 +15,7 @@ namespace HuyetMach175.Modules.Auth.DTOs.Users
         [RegularExpression(@"^0\d{9}$", ErrorMessage = "Số điện thoại gồm 10 số, bắt đầu bằng 0")]
         public string? PhoneNumber { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn khoa/phòng")]
-        public int DepartmentId { get; set; }
+        [Required(ErrorMessage = "Vui lòng chọn khoa/phòng")]
+        public Guid DepartmentId { get; set; }
     }
 }

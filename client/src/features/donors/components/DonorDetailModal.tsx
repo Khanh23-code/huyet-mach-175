@@ -8,7 +8,7 @@ import { fmtBloodType } from '@/shared/formatters/medical'
 import type { DonorHistoryItem } from '../types'
 
 interface Props {
-    donorId: number | null
+    donorId: string | null
     onClose: () => void
 }
 

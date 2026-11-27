@@ -9,7 +9,7 @@ import type { CampaignListItem } from '../types'
 import './CampaignPage.css'
 
 export default function ProposalPage() {
-    const [detailId, setDetailId] = useState<number | null>(null)
+    const [detailId, setDetailId] = useState<string | null>(null)
     const [editingCampaign, setEditingCampaign] = useState<CampaignListItem | null>(null)
 
     const pendingQuery = useMyCampaigns({ status: 'PENDING_APPROVAL', pageNumber: 1, pageSize: 1 })

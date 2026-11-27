@@ -82,9 +82,9 @@ public class DonorsService : IDonorsService
         };
     }
 
-    public async Task<DonorDetailDto> GetDonorByIdAsync(int id)
+    public async Task<DonorDetailDto> GetDonorByIdAsync(Guid id)
     {
-        if (id <= 0)
+        if (id == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "ID người hiến máu không hợp lệ.");
         }
@@ -315,9 +315,9 @@ public class DonorsService : IDonorsService
         return await GetDonorByIdAsync(donor.DonorId);
     }
 
-    public async Task<DonorDetailDto> UpdateDonorAsync(int id, UpdateDonorRequest request)
+    public async Task<DonorDetailDto> UpdateDonorAsync(Guid id, UpdateDonorRequest request)
     {
-        if (id <= 0)
+        if (id == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "ID người hiến máu không hợp lệ.");
         }

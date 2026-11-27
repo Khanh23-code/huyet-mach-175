@@ -21,7 +21,7 @@ public class BloodRequestsService : IBloodRequestsService
         _context = context;
     }
 
-    public async Task<CreateBloodRequestResponse> CreateBloodRequestAsync(CreateBloodRequestDto request, int doctorId, string? ipAddress)
+    public async Task<CreateBloodRequestResponse> CreateBloodRequestAsync(CreateBloodRequestDto request, Guid doctorId, string? ipAddress)
     {
         await BloodRequestProcessing.EnsureActiveUserAsync(_context, doctorId, "Thông tin bác sĩ đăng nhập không hợp lệ.");
 
@@ -116,9 +116,9 @@ public class BloodRequestsService : IBloodRequestsService
         };
     }
 
-    public async Task<BloodRequestDetailDto> UpdateDraftBloodRequestAsync(int id, UpdateBloodRequestDto request, int doctorId, string? ipAddress)
+    public async Task<BloodRequestDetailDto> UpdateDraftBloodRequestAsync(Guid id, UpdateBloodRequestDto request, Guid doctorId, string? ipAddress)
     {
-        if (id <= 0)
+        if (id == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiếu yêu cầu máu không hợp lệ.");
         }
@@ -234,9 +234,9 @@ public class BloodRequestsService : IBloodRequestsService
         return await GetBloodRequestByIdAsync(id, doctorId);
     }
 
-    public async Task<SubmitBloodRequestResponse> SubmitDraftBloodRequestAsync(int id, int doctorId, string? ipAddress)
+    public async Task<SubmitBloodRequestResponse> SubmitDraftBloodRequestAsync(Guid id, Guid doctorId, string? ipAddress)
     {
-        if (id <= 0)
+        if (id == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiếu yêu cầu máu không hợp lệ.");
         }
@@ -317,9 +317,9 @@ public class BloodRequestsService : IBloodRequestsService
         };
     }
 
-    public async Task<PagedResult<ClinicalBloodRequestDto>> GetClinicalBloodRequestsAsync(ClinicalBloodRequestFilterDto filter, int doctorId)
+    public async Task<PagedResult<ClinicalBloodRequestDto>> GetClinicalBloodRequestsAsync(ClinicalBloodRequestFilterDto filter, Guid doctorId)
     {
-        if (doctorId <= 0)
+        if (doctorId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status401Unauthorized, "Thông tin bác sĩ đăng nhập không hợp lệ.");
         }
@@ -376,9 +376,9 @@ public class BloodRequestsService : IBloodRequestsService
         };
     }
 
-    public async Task<BloodRequestDetailDto> GetBloodRequestByIdAsync(int id, int currentUserId)
+    public async Task<BloodRequestDetailDto> GetBloodRequestByIdAsync(Guid id, Guid currentUserId)
     {
-        if (id <= 0)
+        if (id == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiếu yêu cầu máu không hợp lệ.");
         }
@@ -427,11 +427,11 @@ public class BloodRequestsService : IBloodRequestsService
         return bloodRequest.ToDetailDto();
     }
 
-    public async Task<RejectBloodRequestResponse> RejectBloodRequestAsync(int id, RejectBloodRequestDto request, int userId, string? ipAddress)
+    public async Task<RejectBloodRequestResponse> RejectBloodRequestAsync(Guid id, RejectBloodRequestDto request, Guid userId, string? ipAddress)
     {
         await BloodRequestProcessing.EnsureActiveUserAsync(_context, userId, "Thông tin người từ chối không hợp lệ.");
 
-        if (id <= 0)
+        if (id == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiếu yêu cầu máu không hợp lệ.");
         }

@@ -99,9 +99,9 @@ public class AppointmentsService : IAppointmentsService
         };
     }
 
-    public async Task<AppointmentDetailDto> GetAppointmentByIdAsync(int id)
+    public async Task<AppointmentDetailDto> GetAppointmentByIdAsync(Guid id)
     {
-        if (id <= 0)
+        if (id == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "ID lịch hẹn không hợp lệ.");
         }
@@ -155,9 +155,9 @@ public class AppointmentsService : IAppointmentsService
         return await GetAppointmentByIdAsync(appointment.AppointmentId);
     }
 
-    public async Task<AppointmentDetailDto> CancelAppointmentAsync(int id, CancelAppointmentRequest? request)
+    public async Task<AppointmentDetailDto> CancelAppointmentAsync(Guid id, CancelAppointmentRequest? request)
     {
-        if (id <= 0)
+        if (id == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "ID lịch hẹn không hợp lệ.");
         }

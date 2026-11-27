@@ -54,7 +54,7 @@ export default function ReturnScanPage() {
                 const inspection = await returnsApi.scan(barcode)
 
                 if (inspection.finalAction !== 'PENDING_INSPECTION') {
-                    const msg = `Phiếu hoàn trả #${inspection.returnId} của túi ${inspection.barcode} đã được xử lý trước đó.`
+                    const msg = `Phiếu hoàn trả ${inspection.returnCode} của túi ${inspection.barcode} đã được xử lý trước đó.`
                     setErrorMsg(msg)
                     message.warning(msg)
                     return
@@ -138,7 +138,7 @@ export default function ReturnScanPage() {
                                                 <StatusPill tone="danger">Bắt buộc tiêu hủy</StatusPill>
                                             )}
                                             <StatusPill tone={item.isExpired ? 'danger' : 'warning'}>
-                                                {item.isExpired ? 'Đã hết hạn' : `Phiếu trả #${item.returnId}`}
+                                                {item.isExpired ? 'Đã hết hạn' : item.returnCode}
                                             </StatusPill>
                                         </div>
                                     </div>

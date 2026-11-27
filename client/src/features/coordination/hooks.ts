@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { PERMISSIONS } from '@/config/permissions'
 import { usePermission } from '@/features/auth/usePermission'
-import { coordinationApi, FALLBACK_COMPONENT_TYPES } from './coordinationApi'
+import { coordinationApi } from './coordinationApi'
 import type {
     AllocateBloodBagsRequest,
     BloodCoordinationQueueFilter,
@@ -25,24 +25,23 @@ const SESSION_CACHE_OPTIONS = {
 } as const
 
 export const COORDINATION_QUERY_KEYS = {
-    componentTypes: (canFetchFromProcessing: boolean) =>
-        ['coordination', 'componentTypes', canFetchFromProcessing] as const,
-    supplyDemand: (componentTypeId: number) =>
+    componentTypes: () => ['coordination', 'componentTypes'] as const,
+    supplyDemand: (componentTypeId: string) =>
         ['coordination', 'supplyDemand', componentTypeId] as const,
     queue: (filter: BloodCoordinationQueueFilter) =>
         ['coordination', 'queue', filter] as const,
-    detail: (requestId: number) =>
+    detail: (requestId: string) =>
         ['coordination', 'detail', requestId] as const,
     availableBags: (
-        requestId: number,
-        requestItemId: number,
+        requestId: string,
+        requestItemId: string,
         includeCompatible: boolean,
     ) => ['coordination', 'availableBags', requestId, requestItemId, includeCompatible] as const,
     pendingSessions: (filter?: PendingHandoverSessionFilter) =>
         ['coordination', 'handoverSessions', 'pending', filter] as const,
     reservedRequests: (filter?: ReservedHandoverFilter) =>
         ['coordination', 'reservedRequests', filter] as const,
-    sessionDetail: (sessionId: number) =>
+    sessionDetail: (sessionId: string) =>
         ['coordination', 'handoverSessions', sessionId] as const,
 }
 
@@ -55,23 +54,18 @@ function extractErrorMessage(err: unknown, fallback: string): string | null {
 }
 
 export function useComponentTypes() {
-    const { can } = usePermission()
-    const canFetchFromProcessing = can(PERMISSIONS.PROCESSING_VIEW)
-    const [selectedTypeId, setSelectedTypeId] = useState<number>(2) // Mặc định PRBC (ID 2)
+    const [selectedTypeId, setSelectedTypeId] = useState<string>('')
 
     const query = useQuery({
-        queryKey: COORDINATION_QUERY_KEYS.componentTypes(canFetchFromProcessing),
-        queryFn: () =>
-            canFetchFromProcessing
-                ? coordinationApi.getComponentTypes()
-                : Promise.resolve(FALLBACK_COMPONENT_TYPES),
+        queryKey: COORDINATION_QUERY_KEYS.componentTypes(),
+        queryFn: () => coordinationApi.getComponentTypes(),
         ...SESSION_CACHE_OPTIONS,
     })
 
-    const types = query.data && query.data.length > 0 ? query.data : FALLBACK_COMPONENT_TYPES
+    const types = useMemo(() => query.data ?? [], [query.data])
 
     useEffect(() => {
-        if (!types.some((t) => t.componentTypeId === selectedTypeId)) {
+        if (types.length > 0 && !types.some((t) => t.componentTypeId === selectedTypeId)) {
             const prbc = types.find((t) => t.typeCode === 'PRBC')
             setSelectedTypeId(prbc ? prbc.componentTypeId : types[0].componentTypeId)
         }
@@ -86,15 +80,15 @@ export function useComponentTypes() {
     }
 }
 
-export function useSupplyDemand(componentTypeId: number | null) {
+export function useSupplyDemand(componentTypeId: string | null) {
     const { can } = usePermission()
     const canView = can(PERMISSIONS.BLOOD_REQUEST_VIEW)
-    const validId = typeof componentTypeId === 'number' && componentTypeId > 0 ? componentTypeId : 0
+    const validId = componentTypeId?.trim() || ''
 
     const query = useQuery({
         queryKey: COORDINATION_QUERY_KEYS.supplyDemand(validId),
         queryFn: () => coordinationApi.getSupplyDemand(validId),
-        enabled: canView && validId > 0,
+        enabled: canView && validId.length > 0,
         refetchInterval: REFRESH_INTERVAL_MS,
         ...SESSION_CACHE_OPTIONS,
     })
@@ -154,15 +148,15 @@ export function useCoordinationQueue(initialFilter?: BloodCoordinationQueueFilte
     }
 }
 
-export function useRequestDetail(requestId: number | null) {
+export function useRequestDetail(requestId: string | null) {
     const { can } = usePermission()
     const canView = can(PERMISSIONS.BLOOD_REQUEST_VIEW)
-    const validId = typeof requestId === 'number' && requestId > 0 ? requestId : 0
+    const validId = requestId?.trim() || ''
 
     const query = useQuery({
         queryKey: COORDINATION_QUERY_KEYS.detail(validId),
         queryFn: () => coordinationApi.getRequestDetail(validId),
-        enabled: canView && validId > 0,
+        enabled: canView && validId.length > 0,
         ...SESSION_CACHE_OPTIONS,
     })
 
@@ -176,20 +170,20 @@ export function useRequestDetail(requestId: number | null) {
 }
 
 export function useAvailableBags(
-    requestId: number | null,
-    requestItemId: number | null,
+    requestId: string | null,
+    requestItemId: string | null,
     includeCompatible: boolean,
     enabled = true,
 ) {
     const { can } = usePermission()
     const canApprove = can(PERMISSIONS.BLOOD_REQUEST_APPROVE)
-    const validRequestId = typeof requestId === 'number' && requestId > 0 ? requestId : 0
-    const validItemId = typeof requestItemId === 'number' && requestItemId > 0 ? requestItemId : 0
+    const validRequestId = requestId?.trim() || ''
+    const validItemId = requestItemId?.trim() || ''
 
     const query = useQuery({
         queryKey: COORDINATION_QUERY_KEYS.availableBags(validRequestId, validItemId, includeCompatible),
         queryFn: () => coordinationApi.getAvailableBags(validRequestId, validItemId, includeCompatible),
-        enabled: enabled && canApprove && validRequestId > 0 && validItemId > 0,
+        enabled: enabled && canApprove && validRequestId.length > 0 && validItemId.length > 0,
         ...SESSION_CACHE_OPTIONS,
     })
 
@@ -211,8 +205,8 @@ export function useAllocateBags() {
             requestItemId,
             data,
         }: {
-            requestId: number
-            requestItemId: number
+            requestId: string
+            requestItemId: string
             data: AllocateBloodBagsRequest
         }) => coordinationApi.allocateBags(requestId, requestItemId, data),
         onSuccess: (_res, variables) => {
@@ -234,7 +228,7 @@ export function useRejectBloodRequest() {
             requestId,
             data,
         }: {
-            requestId: number
+            requestId: string
             data: RejectBloodRequestDto
         }) => coordinationApi.rejectRequest(requestId, data),
         onSuccess: (_res, variables) => {
@@ -280,7 +274,7 @@ export function usePendingHandoverSessions(
 }
 
 export function useHandoverSessionDetail(
-    sessionId: number | null,
+    sessionId: string | null,
     options?: {
         enabled?: boolean
         refetchInterval?: number | false | ((data?: HandoverSessionDto) => number | false)
@@ -288,13 +282,13 @@ export function useHandoverSessionDetail(
 ) {
     const { can } = usePermission()
     const canView = can(PERMISSIONS.BLOOD_REQUEST_VIEW)
-    const validId = typeof sessionId === 'number' && sessionId > 0 ? sessionId : 0
+    const validId = sessionId?.trim() || ''
     const intervalOption = options?.refetchInterval
 
     return useQuery({
         queryKey: COORDINATION_QUERY_KEYS.sessionDetail(validId),
         queryFn: () => coordinationApi.getHandoverSessionById(validId),
-        enabled: canView && validId > 0 && (options?.enabled ?? true),
+        enabled: canView && validId.length > 0 && (options?.enabled ?? true),
         refetchInterval:
             typeof intervalOption === 'function'
                 ? (query) => intervalOption(query.state.data)
@@ -321,7 +315,7 @@ export function useCancelHandoverSession() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: ({ sessionId, data }: { sessionId: number; data?: CancelHandoverSessionRequest }) =>
+        mutationFn: ({ sessionId, data }: { sessionId: string; data?: CancelHandoverSessionRequest }) =>
             coordinationApi.cancelHandoverSession(sessionId, data),
         onSuccess: (res) => {
             queryClient.invalidateQueries({ queryKey: ['coordination'] })

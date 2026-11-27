@@ -38,8 +38,8 @@ const toRegExp = (pattern: string): RegExp =>
  */
 export function resolvePreset(
     roleCode: string,
-    permissions: { permissionId: number; permissionCode: string }[],
-): Set<number> | null {
+    permissions: { permissionId: string; permissionCode: string }[],
+): Set<string> | null {
     const patterns = ROLE_PRESETS[roleCode]
     if (!patterns) return null
 
@@ -48,7 +48,7 @@ export function resolvePreset(
         .filter((p) => p.startsWith('!'))
         .map((p) => toRegExp(p.slice(1)))
 
-    const ids = new Set<number>()
+    const ids = new Set<string>()
     for (const p of permissions) {
         const matched = include.some((r) => r.test(p.permissionCode))
         const excluded = exclude.some((r) => r.test(p.permissionCode))

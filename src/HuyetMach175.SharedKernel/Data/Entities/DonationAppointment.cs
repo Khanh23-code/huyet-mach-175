@@ -9,13 +9,13 @@ public class DonationAppointment
 {
     [Key]
     [Column("appointment_id")]
-    public int AppointmentId { get; set; }
+    public Guid AppointmentId { get; set; } = Guid.CreateVersion7();
 
     [Column("donor_id")]
-    public int DonorId { get; set; }
+    public Guid DonorId { get; set; }
 
     [Column("slot_id")]
-    public int? SlotId { get; set; }
+    public Guid? SlotId { get; set; }
 
     [Column("appointment_date")]
     public DateOnly AppointmentDate { get; set; }

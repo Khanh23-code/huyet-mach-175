@@ -5,10 +5,10 @@ namespace HuyetMach175.Modules.Donation.DTOs.Sessions;
 public class SessionQueueItemDto
 {
     [JsonPropertyName("sessionId")]
-    public int SessionId { get; set; }
+    public Guid SessionId { get; set; }
 
     [JsonPropertyName("appointmentId")]
-    public int AppointmentId { get; set; }
+    public Guid AppointmentId { get; set; }
 
     [JsonPropertyName("donorCode")]
     public string DonorCode { get; set; } = string.Empty;

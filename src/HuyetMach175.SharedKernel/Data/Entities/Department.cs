@@ -8,7 +8,7 @@ public class Department
 {
     [Key]
     [Column("department_id")]
-    public int DepartmentId { get; set; }
+    public Guid DepartmentId { get; set; } = Guid.CreateVersion7();
 
     [Required]
     [MaxLength(20)]

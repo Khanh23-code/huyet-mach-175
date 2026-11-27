@@ -2,7 +2,7 @@ export type DisposalReason = 'EXPIRED' | 'INFECTIOUS_POSITIVE' | 'HEMOLYSIS' | '
 export type DisposalStatus = 'PENDING_APPROVAL' | 'APPROVED' | 'DISPOSED' | 'REJECTED' | 'CANCELLED'
 
 export interface DisposalRecord {
-    disposalId: number
+    disposalId: string
     disposalCode: string
     totalBags: number
     barcodesSummary: string
@@ -11,18 +11,18 @@ export interface DisposalRecord {
     notes?: string | null
     status: DisposalStatus
     statusText: string
-    requestedBy: number
+    requestedBy: string
     requestedByName: string
     requestedAt: string
-    approvedBy?: number | null
+    approvedBy?: string | null
     approvedByName?: string | null
     approvedAt?: string | null
     rejectionReason?: string | null
 }
 
 export interface DisposalItem {
-    itemId: number
-    bagId: number
+    itemId: string
+    bagId: string
     barcode: string
     bloodGroup: string
     componentTypeCode: string
@@ -43,7 +43,7 @@ export interface DisposalDetail extends DisposalRecord {
 }
 
 export interface DisposalCandidate {
-    bagId: number
+    bagId: string
     barcode: string
     bloodGroup: string
     componentTypeCode: string
@@ -76,7 +76,7 @@ export interface CreateDisposalRequest {
 }
 
 export interface CreateDisposalResponse {
-    disposalId: number
+    disposalId: string
     disposalCode: string
     totalBags: number
     message: string

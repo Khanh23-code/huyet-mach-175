@@ -9,16 +9,21 @@ public class BloodReturn
 {
     [Key]
     [Column("return_id")]
-    public int ReturnId { get; set; }
+    public Guid ReturnId { get; set; } = Guid.CreateVersion7();
+
+    [Required]
+    [MaxLength(30)]
+    [Column("return_code")]
+    public string ReturnCode { get; set; } = string.Empty;
 
     [Column("allocation_id")]
-    public int AllocationId { get; set; }
+    public Guid AllocationId { get; set; }
 
     [Column("returned_by")]
-    public int ReturnedBy { get; set; }
+    public Guid ReturnedBy { get; set; }
 
     [Column("received_by")]
-    public int ReceivedBy { get; set; }
+    public Guid ReceivedBy { get; set; }
 
     [Required]
     [MaxLength(255)]

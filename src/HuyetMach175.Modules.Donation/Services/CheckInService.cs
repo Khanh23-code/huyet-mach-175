@@ -180,7 +180,7 @@ public class CheckInService : ICheckInService
     /// <summary>
     /// Chọn khung giờ của đợt để gắn walk-in: khung đang diễn ra, nếu không có thì khung sắp tới, sau cùng là khung muộn nhất.
     /// </summary>
-    private async Task<int?> ResolveSlotForCampaignAsync(int? campaignId)
+    private async Task<Guid?> ResolveSlotForCampaignAsync(Guid? campaignId)
     {
         if (!campaignId.HasValue) return null;
 

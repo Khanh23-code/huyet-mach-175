@@ -6,7 +6,7 @@ import { useCheckIn } from '../hooks'
 
 interface Props {
     open: boolean
-    campaignId: number
+    campaignId: string
     onClose: () => void
 }
 

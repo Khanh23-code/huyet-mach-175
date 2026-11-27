@@ -18,7 +18,7 @@ export default function RelocateBagModal({ bag, onClose }: Props) {
     const { message } = App.useApp()
     const { data, isLoading } = useStorageLocations()
     const relocate = useRelocateBag()
-    const [target, setTarget] = useState<number>()
+    const [target, setTarget] = useState<string>()
     const [note, setNote] = useState('')
 
     const options = useMemo(

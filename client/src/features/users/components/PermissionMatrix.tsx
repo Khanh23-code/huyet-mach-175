@@ -71,7 +71,7 @@ const buildColumns = (permissions: PermissionDto[]): ActionColumn[] => {
     return [...known, ...extra]
 }
 
-const sameSet = (a: Set<number>, b: Set<number>) =>
+const sameSet = (a: Set<string>, b: Set<string>) =>
     a.size === b.size && [...a].every((id) => b.has(id))
 
 interface PermissionMatrixProps {
@@ -82,9 +82,9 @@ export default function PermissionMatrix({ onNavigateToUsers }: PermissionMatrix
     const { message, modal } = App.useApp()
     const { can } = usePermission()
 
-    const [roleId, setRoleId] = useState<number>()
+    const [roleId, setRoleId] = useState<string>()
     // Bản nháp gắn với 1 role cụ thể; đổi role thì bản nháp cũ tự bị bỏ qua.
-    const [draft, setDraft] = useState<{ roleId: number; ids: Set<number> } | null>(null)
+    const [draft, setDraft] = useState<{ roleId: string; ids: Set<string> } | null>(null)
     const [filter, setFilter] = useState('')
     const [creatingRole, setCreatingRole] = useState(false)
     const [creatingPermission, setCreatingPermission] = useState(false)
@@ -127,14 +127,14 @@ export default function PermissionMatrix({ onNavigateToUsers }: PermissionMatrix
         `${m.code} ${m.name} ${m.description}`.toLowerCase().includes(keyword),
     )
 
-    const mutateDraft = (apply: (next: Set<number>) => void) => {
+    const mutateDraft = (apply: (next: Set<string>) => void) => {
         if (!selectedRole) return
         const next = new Set(currentIds)
         apply(next)
         setDraft({ roleId: selectedRole.id, ids: next })
     }
 
-    const togglePermission = (permissionId: number, checked: boolean) =>
+    const togglePermission = (permissionId: string, checked: boolean) =>
         mutateDraft((next) => {
             if (checked) next.add(permissionId)
             else next.delete(permissionId)
@@ -148,7 +148,7 @@ export default function PermissionMatrix({ onNavigateToUsers }: PermissionMatrix
             }
         })
 
-    const selectRole = (id: number) => {
+    const selectRole = (id: string) => {
         if (id === selectedRole?.id) return
 
         if (!dirty) {
@@ -184,7 +184,7 @@ export default function PermissionMatrix({ onNavigateToUsers }: PermissionMatrix
         try {
             await updatePermissions.mutateAsync({
                 roleId: selectedRole.id,
-                permissionIds: [...currentIds].sort((a, b) => a - b),
+                permissionIds: [...currentIds].sort(),
             })
             setDraft(null)
             message.success(`Đã lưu phân quyền cho vai trò ${selectedRole.code}`)

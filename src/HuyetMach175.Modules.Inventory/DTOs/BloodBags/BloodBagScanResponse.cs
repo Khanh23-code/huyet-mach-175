@@ -5,7 +5,7 @@ namespace HuyetMach175.Modules.Inventory.DTOs.BloodBags;
 public class BloodBagScanResponse
 {
     [JsonPropertyName("bagId")]
-    public int BagId { get; set; }
+    public Guid BagId { get; set; }
 
     [JsonPropertyName("barcode")]
     public string Barcode { get; set; } = string.Empty;
@@ -71,7 +71,7 @@ public class BloodBagScanResponse
 public class StorageLocationSummaryDto
 {
     [JsonPropertyName("locationId")]
-    public int LocationId { get; set; }
+    public Guid LocationId { get; set; }
 
     [JsonPropertyName("locationName")]
     public string LocationName { get; set; } = string.Empty;
