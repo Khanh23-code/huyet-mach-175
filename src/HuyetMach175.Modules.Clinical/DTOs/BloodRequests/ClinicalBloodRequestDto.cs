@@ -4,7 +4,7 @@ namespace HuyetMach175.Modules.Clinical.DTOs.BloodRequests;
 
 public class ClinicalBloodRequestDto
 {
-    public int RequestId { get; set; }
+    public Guid RequestId { get; set; }
     public string RequestCode { get; set; } = string.Empty;
     public string PatientCode { get; set; } = string.Empty;
     public string PatientName { get; set; } = string.Empty;

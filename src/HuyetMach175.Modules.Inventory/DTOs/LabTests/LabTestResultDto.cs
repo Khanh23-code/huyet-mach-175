@@ -5,10 +5,10 @@ namespace HuyetMach175.Modules.Inventory.DTOs.LabTests;
 public class LabTestResultDto
 {
     [JsonPropertyName("testId")]
-    public int TestId { get; set; }
+    public Guid TestId { get; set; }
 
     [JsonPropertyName("bagId")]
-    public int BagId { get; set; }
+    public Guid BagId { get; set; }
 
     [JsonPropertyName("barcode")]
     public string Barcode { get; set; } = string.Empty;
@@ -47,7 +47,7 @@ public class LabTestResultDto
     public string? DiscardReason { get; set; }
 
     [JsonPropertyName("technicianId")]
-    public int TechnicianId { get; set; }
+    public Guid TechnicianId { get; set; }
 
     [JsonPropertyName("technicianName")]
     public string TechnicianName { get; set; } = string.Empty;

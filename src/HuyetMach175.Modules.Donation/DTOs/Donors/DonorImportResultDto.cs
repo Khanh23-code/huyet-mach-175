@@ -2,7 +2,7 @@ namespace HuyetMach175.Modules.Donation.DTOs.Donors;
 
 public class DonorImportResultDto
 {
-    public int CampaignId { get; set; }
+    public Guid CampaignId { get; set; }
     public string CampaignName { get; set; } = string.Empty;
     public int TotalRows { get; set; }
     public int SuccessCount { get; set; }

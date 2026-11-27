@@ -21,9 +21,9 @@ public class DonorImportService : IDonorImportService
         _context = context;
     }
 
-    public async Task<(byte[] Content, string FileName)> GenerateTemplateAsync(int campaignId)
+    public async Task<(byte[] Content, string FileName)> GenerateTemplateAsync(Guid campaignId)
     {
-        if (campaignId <= 0)
+        if (campaignId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
         }
@@ -192,7 +192,7 @@ public class DonorImportService : IDonorImportService
         foreach (var slot in orderedSlots)
         {
             ws2.Cell(slotRow, 1).Value = slotIndex++;
-            ws2.Cell(slotRow, 2).Value = slot.SlotId;
+            ws2.Cell(slotRow, 2).Value = slot.SlotId.ToString();
             ws2.Cell(slotRow, 3).Value = slot.StartTime.ToString("HH:mm");
             ws2.Cell(slotRow, 4).Value = slot.EndTime.ToString("HH:mm");
             ws2.Cell(slotRow, 5).Value = $"{slot.StartTime:HH\\:mm} - {slot.EndTime:HH\\:mm}";
@@ -222,9 +222,9 @@ public class DonorImportService : IDonorImportService
         return (bytes, fileName);
     }
 
-    public async Task<DonorImportResultDto> ImportDonorsAsync(int campaignId, IFormFile file)
+    public async Task<DonorImportResultDto> ImportDonorsAsync(Guid campaignId, IFormFile file)
     {
-        if (campaignId <= 0)
+        if (campaignId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
         }
@@ -257,7 +257,7 @@ public class DonorImportService : IDonorImportService
                 $"Đợt hiến máu đang ở trạng thái '{campaign.Status}', không thể nhập thêm danh sách người hiến.");
         }
 
-        var slotLookup = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var slotLookup = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
         foreach (var s in campaign.Slots)
         {
             var strStandard = $"{s.StartTime:HH\\:mm} - {s.EndTime:HH\\:mm}".Replace(" ", "");
@@ -433,7 +433,7 @@ public class DonorImportService : IDonorImportService
 
             var slotRaw = row.Cell(10).GetString()?.Trim() ?? string.Empty;
             var normalizedSlot = slotRaw.Replace(" ", "");
-            int? slotId = null;
+            Guid? slotId = null;
 
             if (!string.IsNullOrWhiteSpace(normalizedSlot) && slotLookup.TryGetValue(normalizedSlot, out var matchedSlotId))
             {

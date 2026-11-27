@@ -5,10 +5,10 @@ namespace HuyetMach175.Modules.Donation.DTOs.Sessions;
 public class SessionDetailDto
 {
     [JsonPropertyName("sessionId")]
-    public int SessionId { get; set; }
+    public Guid SessionId { get; set; }
 
     [JsonPropertyName("appointmentId")]
-    public int AppointmentId { get; set; }
+    public Guid AppointmentId { get; set; }
 
     [JsonPropertyName("status")]
     public string Status { get; set; } = string.Empty;
@@ -23,7 +23,7 @@ public class SessionDetailDto
     public string? CollectionIncident { get; set; }
 
     [JsonPropertyName("phlebotomistId")]
-    public int? PhlebotomistId { get; set; }
+    public Guid? PhlebotomistId { get; set; }
 
     [JsonPropertyName("phlebotomistName")]
     public string? PhlebotomistName { get; set; }
@@ -47,7 +47,7 @@ public class SessionDetailDto
 public class SessionDonorDto
 {
     [JsonPropertyName("donorId")]
-    public int DonorId { get; set; }
+    public Guid DonorId { get; set; }
 
     [JsonPropertyName("donorCode")]
     public string DonorCode { get; set; } = string.Empty;
@@ -94,7 +94,7 @@ public class SessionScreeningSummaryDto
 
 public class SessionBloodBagDto
 {
-    [JsonPropertyName("bagId")] public int BagId { get; set; }
+    [JsonPropertyName("bagId")] public Guid BagId { get; set; }
     [JsonPropertyName("barcode")] public string Barcode { get; set; } = string.Empty;
     [JsonPropertyName("bloodGroup")] public string BloodGroup { get; set; } = string.Empty;
     [JsonPropertyName("volumeMl")] public int VolumeMl { get; set; }

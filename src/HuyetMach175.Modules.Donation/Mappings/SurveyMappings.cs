@@ -13,7 +13,7 @@ public static class SurveyMappings
         {
             AppointmentId = a.AppointmentId,
             DonorId = a.DonorId,
-            DonorCode = $"NH-{a.DonorId:D6}",
+            DonorCode = BloodBagLabel.DonorCode(a.DonorId),
             DonorName = a.Donor?.FullName ?? string.Empty,
             CheckedInAt = a.CheckedInAt,
             IsWalkIn = a.IsWalkIn,
@@ -97,7 +97,7 @@ public static class SurveyMappings
             Donor = new SurveyDonorSummaryDto
             {
                 DonorId = appointment.DonorId,
-                DonorCode = $"NH-{appointment.DonorId:D6}",
+                DonorCode = BloodBagLabel.DonorCode(appointment.DonorId),
                 FullName = donor?.FullName ?? string.Empty,
                 CitizenId = donor?.CitizenId ?? string.Empty,
                 DateOfBirth = donor?.DateOfBirth ?? default,

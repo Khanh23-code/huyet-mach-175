@@ -42,8 +42,8 @@ public static class BloodHandoverProcessing
 
     public static async Task<HandoverSessionDto> LoadSessionDtoAsync(
         ApplicationDbContext context,
-        int sessionId,
-        int currentUserId,
+        Guid sessionId,
+        Guid currentUserId,
         DateTime nowUtc)
     {
         var session = await BuildSessionDetailQuery(context)
@@ -86,7 +86,7 @@ public static class BloodHandoverProcessing
     public static async Task<(List<BloodBag> Bags, List<BloodAllocation> Allocations, BloodRequest Request)> LoadAndValidateReservedBatchAsync(
         ApplicationDbContext context,
         List<string> normalizedBarcodes,
-        int? expectedRequestId,
+        Guid? expectedRequestId,
         DateTime nowUtc)
     {
         var loweredBarcodes = normalizedBarcodes.Select(b => b.ToLowerInvariant()).ToList();
@@ -173,7 +173,7 @@ public static class BloodHandoverProcessing
         return (bags, allocations, bloodRequest);
     }
 
-    public static void ValidateExpectedPatientCode(BloodRequest bloodRequest, int userId, string? rawExpectedPatientCode)
+    public static void ValidateExpectedPatientCode(BloodRequest bloodRequest, Guid userId, string? rawExpectedPatientCode)
     {
         var expectedPatientCode = rawExpectedPatientCode?.Trim() ?? string.Empty;
         var isOwnRequest = bloodRequest.DoctorId == userId;
@@ -336,11 +336,11 @@ public static class BloodHandoverProcessing
 
     public static AuditLog BuildAuditLog(
         string tableName,
-        int recordId,
+        Guid recordId,
         ActionType actionType,
         object? oldState,
         object newState,
-        int userId,
+        Guid userId,
         string? ipAddress,
         string changeReason,
         DateTime nowUtc)

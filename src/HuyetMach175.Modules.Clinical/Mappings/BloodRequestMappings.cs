@@ -141,7 +141,7 @@ public static class BloodRequestMappings
                     AllocationId = a.AllocationId,
                     BagId = a.BagId,
                     Barcode = a.Bag?.Barcode ?? string.Empty,
-                    ComponentTypeId = a.Bag?.ComponentTypeId ?? 0,
+                    ComponentTypeId = a.Bag?.ComponentTypeId ?? Guid.Empty,
                     ComponentCode = a.Bag?.ComponentType?.TypeCode,
                     ComponentName = a.Bag?.ComponentType?.TypeName ?? string.Empty,
                     BloodType = a.Bag?.BloodType,

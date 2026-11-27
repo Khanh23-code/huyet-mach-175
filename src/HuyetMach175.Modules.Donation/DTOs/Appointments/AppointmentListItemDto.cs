@@ -4,8 +4,8 @@ namespace HuyetMach175.Modules.Donation.DTOs.Appointments;
 
 public class AppointmentListItemDto
 {
-    public int AppointmentId { get; set; }
-    public int DonorId { get; set; }
+    public Guid AppointmentId { get; set; }
+    public Guid DonorId { get; set; }
     public string DonorName { get; set; } = string.Empty;
     public string DonorCitizenId { get; set; } = string.Empty;
     public string DonorPhoneNumber { get; set; } = string.Empty;
@@ -13,9 +13,9 @@ public class AppointmentListItemDto
     public string DonorGender { get; set; } = string.Empty;
     public BloodType? DonorBloodType { get; set; }
     public RhFactor? DonorRhFactor { get; set; }
-    public int? CampaignId { get; set; }
+    public Guid? CampaignId { get; set; }
     public string? CampaignName { get; set; }
-    public int? SlotId { get; set; }
+    public Guid? SlotId { get; set; }
     public DateOnly AppointmentDate { get; set; }
     public string TimeSlot { get; set; } = string.Empty;
     public string QrCodeToken { get; set; } = string.Empty;

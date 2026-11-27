@@ -5,7 +5,7 @@ namespace HuyetMach175.Modules.Inventory.DTOs.BloodDisposals;
 public class CreateDisposalResponse
 {
     [JsonPropertyName("disposalId")]
-    public int DisposalId { get; set; }
+    public Guid DisposalId { get; set; }
 
     [JsonPropertyName("disposalCode")]
     public string DisposalCode { get; set; } = string.Empty;

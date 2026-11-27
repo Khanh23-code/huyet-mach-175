@@ -41,7 +41,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:guid}")]
         [HasPermission("USERS_VIEW")]
         [EndpointSummary("Lấy thông tin chi tiết một người dùng theo ID")]
         [EndpointDescription(
@@ -56,7 +56,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetUserByIdAsync([FromRoute] int id)
+        public async Task<IActionResult> GetUserByIdAsync([FromRoute] Guid id)
         {
             var user = await _usersService.GetUserByIdAsync(id);
             return Ok(user);
@@ -89,7 +89,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
             return Ok(user);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:guid}")]
         [HasPermission("USERS_EDIT")]
         [EndpointSummary("Cập nhật thông tin người dùng theo ID")]
         [EndpointDescription(
@@ -109,13 +109,13 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> UpdateUserAsync([FromRoute] int id, [FromBody] UpdateUserRequest request)
+        public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid id, [FromBody] UpdateUserRequest request)
         {
             var user = await _usersService.UpdateUserAsync(id, request);
             return Ok(user);
         }
 
-        [HttpPatch("{id}/status")]
+        [HttpPatch("{id:guid}/status")]
         [HasPermission("USERS_EDIT")]
         [EndpointSummary("Cập nhật trạng thái hoạt động của người dùng (Kích hoạt / Vô hiệu hóa)")]
         [EndpointDescription(
@@ -133,13 +133,13 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateUserStatusAsync([FromRoute] int id, [FromBody] UpdateUserStatusRequest request)
+        public async Task<IActionResult> UpdateUserStatusAsync([FromRoute] Guid id, [FromBody] UpdateUserStatusRequest request)
         {
             var user = await _usersService.UpdateUserStatusAsync(id, request);
             return Ok(user);
         }
 
-        [HttpPut("{id}/roles")]
+        [HttpPut("{id:guid}/roles")]
         [HasPermission("USERS_EDIT")]
         [EndpointSummary("Cập nhật danh sách vai trò của người dùng")]
         [EndpointDescription(
@@ -160,14 +160,14 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateUserRolesAsync([FromRoute] int id, [FromBody] UpdateUserRolesRequest request)
+        public async Task<IActionResult> UpdateUserRolesAsync([FromRoute] Guid id, [FromBody] UpdateUserRolesRequest request)
         {
             bool isSysAdmin = User.IsInRole("SYS");
             var updatedUser = await _usersService.UpdateUserRolesAsync(id, request, isSysAdmin);
             return Ok(updatedUser);
         }
 
-        [HttpPost("{id}/reset-password")]
+        [HttpPost("{id:guid}/reset-password")]
         [Authorize(Roles = "SYS")]
         [EndpointSummary("Đặt lại mật khẩu mặc định cho người dùng")]
         [EndpointDescription(
@@ -182,7 +182,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> ResetPasswordAsync([FromRoute] int id)
+        public async Task<IActionResult> ResetPasswordAsync([FromRoute] Guid id)
         {
             await _usersService.ResetPasswordAsync(id);
             return Ok(new { message = "Reset this user's password successfully." });

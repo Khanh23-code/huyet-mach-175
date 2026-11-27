@@ -65,7 +65,7 @@ public class InventoryController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPut("bags/{bagId:int}/storage-location")]
+    [HttpPut("bags/{bagId:guid}/storage-location")]
     [HasPermission("INVENTORY_EDIT")]
     [EndpointSummary("Điều chuyển vị trí ngăn tủ/hộc lưu trữ túi máu")]
     [EndpointDescription(
@@ -82,7 +82,7 @@ public class InventoryController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RelocateBloodBag(
-        [FromRoute] int bagId,
+        [FromRoute] Guid bagId,
         [FromBody] RelocateBloodBagRequest request)
     {
         var userId = User.GetUserId();

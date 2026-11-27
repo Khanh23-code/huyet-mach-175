@@ -36,20 +36,20 @@ public class BloodComponentTypesController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:guid}")]
     [HasPermission("INVENTORY_VIEW")]
     [EndpointSummary("Xem chi tiết cấu hình một loại chế phẩm máu")]
     [ProducesResponseType(typeof(BloodComponentTypeDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var result = await _bloodComponentTypesService.GetByIdAsync(id);
         return Ok(result);
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     [HasPermission("INVENTORY_EDIT")]
     [EndpointSummary("Cập nhật cấu hình nghiệp vụ của loại chế phẩm máu")]
     [EndpointDescription(
@@ -60,7 +60,7 @@ public class BloodComponentTypesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateBloodComponentTypeRequest request)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateBloodComponentTypeRequest request)
     {
         var userId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();

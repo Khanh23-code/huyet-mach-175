@@ -5,15 +5,15 @@ namespace HuyetMach175.Modules.Donation.Services;
 
 public interface ICampaignsService
 {
-    Task<PagedResult<CampaignListItemDto>> GetCampaignsAsync(CampaignFilterDto filter, int? createdBy = null);
-    Task<PagedResult<CampaignListItemDto>> GetMyCampaignsAsync(CampaignFilterDto filter, int userId);
-    Task<CampaignDetailDto> GetCampaignByIdAsync(int id);
-    Task<CampaignSummaryDto> GetCampaignSummaryAsync(int id);
-    Task<CampaignDetailDto> CreateCampaignAsync(CreateCampaignRequest request, int userId);
-    Task<CampaignDetailDto> UpdateCampaignAsync(int id, UpdateCampaignRequest request);
-    Task<CampaignDetailDto> SubmitForApprovalAsync(int id);
-    Task<CampaignDetailDto> ApproveCampaignAsync(int id, ApproveCampaignRequest request, int userId);
-    Task<CampaignDetailDto> CancelCampaignAsync(int id, CancelCampaignRequest request, int userId);
-    Task<CampaignDetailDto> UpdateCampaignStatusAsync(int id, UpdateCampaignStatusRequest request, int userId);
-    Task DeleteCampaignAsync(int id);
+    Task<PagedResult<CampaignListItemDto>> GetCampaignsAsync(CampaignFilterDto filter, Guid? createdBy = null);
+    Task<PagedResult<CampaignListItemDto>> GetMyCampaignsAsync(CampaignFilterDto filter, Guid userId);
+    Task<CampaignDetailDto> GetCampaignByIdAsync(Guid id);
+    Task<CampaignSummaryDto> GetCampaignSummaryAsync(Guid id);
+    Task<CampaignDetailDto> CreateCampaignAsync(CreateCampaignRequest request, Guid userId);
+    Task<CampaignDetailDto> UpdateCampaignAsync(Guid id, UpdateCampaignRequest request);
+    Task<CampaignDetailDto> SubmitForApprovalAsync(Guid id);
+    Task<CampaignDetailDto> ApproveCampaignAsync(Guid id, ApproveCampaignRequest request, Guid userId);
+    Task<CampaignDetailDto> CancelCampaignAsync(Guid id, CancelCampaignRequest request, Guid userId);
+    Task<CampaignDetailDto> UpdateCampaignStatusAsync(Guid id, UpdateCampaignStatusRequest request, Guid userId);
+    Task DeleteCampaignAsync(Guid id);
 }

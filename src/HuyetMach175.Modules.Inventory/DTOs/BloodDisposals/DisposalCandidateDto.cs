@@ -5,7 +5,7 @@ namespace HuyetMach175.Modules.Inventory.DTOs.BloodDisposals;
 public class DisposalCandidateDto
 {
     [JsonPropertyName("bagId")]
-    public int BagId { get; set; }
+    public Guid BagId { get; set; }
 
     [JsonPropertyName("barcode")]
     public string Barcode { get; set; } = string.Empty;

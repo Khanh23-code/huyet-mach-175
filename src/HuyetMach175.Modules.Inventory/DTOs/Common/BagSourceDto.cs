@@ -19,7 +19,7 @@ public class BagSourceDto
 {
     [JsonPropertyName("sourceType")] public string SourceType { get; set; } = BagSourceTypes.Unknown;
     [JsonPropertyName("sourceName")] public string SourceName { get; set; } = string.Empty;
-    [JsonPropertyName("campaignId")] public int? CampaignId { get; set; }
+    [JsonPropertyName("campaignId")] public Guid? CampaignId { get; set; }
     [JsonPropertyName("campaignName")] public string? CampaignName { get; set; }
     [JsonPropertyName("campaignLocation")] public string? CampaignLocation { get; set; }
     [JsonPropertyName("externalUnitName")] public string? ExternalUnitName { get; set; }
@@ -30,7 +30,7 @@ public class BagSourceDto
 
 public class BagDonorDto
 {
-    [JsonPropertyName("donorId")] public int DonorId { get; set; }
+    [JsonPropertyName("donorId")] public Guid DonorId { get; set; }
     [JsonPropertyName("fullName")] public string FullName { get; set; } = string.Empty;
     [JsonPropertyName("citizenId")] public string CitizenId { get; set; } = string.Empty;
     [JsonPropertyName("gender")] public string Gender { get; set; } = string.Empty;
@@ -44,7 +44,7 @@ public class BagDonorDto
 
 public class BagCollectionDto
 {
-    [JsonPropertyName("sessionId")] public int SessionId { get; set; }
+    [JsonPropertyName("sessionId")] public Guid SessionId { get; set; }
     [JsonPropertyName("actualVolumeMl")] public int? ActualVolumeMl { get; set; }
     [JsonPropertyName("completedAt")] public DateTime? CompletedAt { get; set; }
     [JsonPropertyName("collectionIncident")] public string? CollectionIncident { get; set; }
@@ -52,7 +52,7 @@ public class BagCollectionDto
 
 public class BagLabSummaryDto
 {
-    [JsonPropertyName("testId")] public int TestId { get; set; }
+    [JsonPropertyName("testId")] public Guid TestId { get; set; }
     [JsonPropertyName("testedAt")] public DateTime TestedAt { get; set; }
     [JsonPropertyName("technicianName")] public string TechnicianName { get; set; } = string.Empty;
     [JsonPropertyName("hivResult")] public string HivResult { get; set; } = string.Empty;

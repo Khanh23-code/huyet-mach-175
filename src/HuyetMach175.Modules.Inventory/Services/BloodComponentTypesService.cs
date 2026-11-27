@@ -41,7 +41,7 @@ public class BloodComponentTypesService : IBloodComponentTypesService
             .ToListAsync();
     }
 
-    public async Task<BloodComponentTypeDto> GetByIdAsync(int id)
+    public async Task<BloodComponentTypeDto> GetByIdAsync(Guid id)
     {
         var item = await _context.BloodComponentTypes
             .AsNoTracking()
@@ -55,7 +55,7 @@ public class BloodComponentTypesService : IBloodComponentTypesService
         return ToDto(item);
     }
 
-    public async Task<BloodComponentTypeDto> UpdateAsync(int id, UpdateBloodComponentTypeRequest request, int userId, string? ipAddress)
+    public async Task<BloodComponentTypeDto> UpdateAsync(Guid id, UpdateBloodComponentTypeRequest request, Guid userId, string? ipAddress)
     {
         if (request.MinTemp > request.MaxTemp)
         {

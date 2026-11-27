@@ -5,7 +5,7 @@ namespace HuyetMach175.Modules.Clinical.DTOs.BloodCoordination;
 
 public class CoordinationQueueItemDto
 {
-    public int RequestId { get; set; }
+    public Guid RequestId { get; set; }
     public string RequestCode { get; set; } = string.Empty;
     public string? DepartmentName { get; set; }
     public string? DoctorName { get; set; }

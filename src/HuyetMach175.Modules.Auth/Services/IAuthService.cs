@@ -9,6 +9,6 @@ public interface IAuthService
     Task<LoginResponse> LoginAsync(LoginRequest request);
     Task<bool> LogoutAsync(LogoutRequest request);
     Task<RefreshTokenResponse> RefreshTokenAsync(LogoutRequest request);
-    Task<UserInfoDto> GetCurrentUserAsync(int userId);
-    Task<UserInfoDto> UpdateCurrentUserProfileAsync(int userId, UpdateProfileRequest request);
+    Task<UserInfoDto> GetCurrentUserAsync(Guid userId);
+    Task<UserInfoDto> UpdateCurrentUserProfileAsync(Guid userId, UpdateProfileRequest request);
 }

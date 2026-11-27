@@ -6,8 +6,8 @@ namespace HuyetMach175.Modules.Donation.Services;
 public interface IDonorsService
 {
     Task<PagedResult<DonorListItemDto>> GetDonorsAsync(DonorFilterDto filter);
-    Task<DonorDetailDto> GetDonorByIdAsync(int id);
+    Task<DonorDetailDto> GetDonorByIdAsync(Guid id);
     Task<DonorEligibilityDto> CheckEligibilityAsync(string citizenId);
     Task<DonorDetailDto> CreateDonorAsync(CreateDonorRequest request);
-    Task<DonorDetailDto> UpdateDonorAsync(int id, UpdateDonorRequest request);
+    Task<DonorDetailDto> UpdateDonorAsync(Guid id, UpdateDonorRequest request);
 }

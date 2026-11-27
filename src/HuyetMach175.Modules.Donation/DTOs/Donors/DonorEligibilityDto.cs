@@ -5,7 +5,7 @@ namespace HuyetMach175.Modules.Donation.DTOs.Donors;
 public class DonorEligibilityDto
 {
     public string CitizenId { get; set; } = string.Empty;
-    public int? DonorId { get; set; }
+    public Guid? DonorId { get; set; }
     public string? FullName { get; set; }
     public DateOnly? DateOfBirth { get; set; }
     public int? Age { get; set; }

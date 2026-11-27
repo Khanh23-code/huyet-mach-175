@@ -6,6 +6,6 @@ namespace HuyetMach175.Modules.Inventory.Services;
 public interface ILabTestsService
 {
     Task<PagedResult<LabTestQueueItemDto>> GetLabTestQueueAsync(LabTestQueueFilterDto filter);
-    Task<LabTestResultDto> RecordLabTestAsync(RecordLabTestRequest request, int userId, string? ipAddress);
+    Task<LabTestResultDto> RecordLabTestAsync(RecordLabTestRequest request, Guid userId, string? ipAddress);
     Task<LabTestResultDto> GetLabTestByBagIdentifierAsync(string identifier);
 }

@@ -6,7 +6,7 @@ namespace HuyetMach175.Modules.Donation.Services;
 public interface ISurveysService
 {
     Task<PagedResult<SurveyQueueItemDto>> GetScreeningQueueAsync(SurveyQueueFilterDto filter);
-    Task<SurveyDetailDto> GetSurveyByAppointmentIdAsync(int appointmentId);
+    Task<SurveyDetailDto> GetSurveyByAppointmentIdAsync(Guid appointmentId);
     Task<SubmitOnlineSurveyResponse> SubmitOnlineSurveyAsync(SubmitOnlineSurveyRequest request);
-    Task<ClinicalScreeningResponse> UpdateClinicalScreeningAsync(int appointmentId, UpdateClinicalScreeningRequest request, int doctorId);
+    Task<ClinicalScreeningResponse> UpdateClinicalScreeningAsync(Guid appointmentId, UpdateClinicalScreeningRequest request, Guid doctorId);
 }

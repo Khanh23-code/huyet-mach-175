@@ -4,11 +4,11 @@ namespace HuyetMach175.Modules.Clinical.DTOs.BloodRequests;
 
 public class BloodRequestDetailDto
 {
-    public int RequestId { get; set; }
+    public Guid RequestId { get; set; }
     public string RequestCode { get; set; } = string.Empty;
-    public int? DoctorId { get; set; }
+    public Guid? DoctorId { get; set; }
     public string? DoctorName { get; set; }
-    public int? DepartmentId { get; set; }
+    public Guid? DepartmentId { get; set; }
     public string? DepartmentName { get; set; }
     public string PatientCode { get; set; } = string.Empty;
     public string PatientName { get; set; } = string.Empty;

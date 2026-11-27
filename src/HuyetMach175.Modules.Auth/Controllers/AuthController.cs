@@ -1,10 +1,10 @@
 using HuyetMach175.Modules.Auth.DTOs.Auth;
 using HuyetMach175.Modules.Auth.DTOs.Users;
 using HuyetMach175.Modules.Auth.Services;
+using HuyetMach175.SharedKernel.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace HuyetMach175.Modules.Auth.Controllers
 {
@@ -93,7 +93,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetCurrentUser()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var userId = User.GetUserId();
             var userInfo = await _authService.GetCurrentUserAsync(userId);
             return Ok(userInfo);
         }
@@ -116,7 +116,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateCurrentUserProfileAsync([FromBody] UpdateProfileRequest request)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var userId = User.GetUserId();
             var updatedProfile = await _authService.UpdateCurrentUserProfileAsync(userId, request);
 
             return Ok(updatedProfile);

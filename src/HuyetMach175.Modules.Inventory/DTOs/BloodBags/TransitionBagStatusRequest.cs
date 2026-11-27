@@ -15,7 +15,7 @@ public class TransitionBagStatusRequest
     public BagStatus TargetStatus { get; set; }
 
     [JsonPropertyName("storageLocationId")]
-    public int? StorageLocationId { get; set; }
+    public Guid? StorageLocationId { get; set; }
 
     [MaxLength(255, ErrorMessage = "Ghi chú không được vượt quá 255 ký tự.")]
     [JsonPropertyName("notes")]

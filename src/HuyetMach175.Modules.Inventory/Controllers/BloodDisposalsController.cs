@@ -68,7 +68,7 @@ public class BloodDisposalsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:guid}")]
     [HasPermission("DISPOSAL_VIEW")]
     [EndpointSummary("Lấy thông tin chi tiết một biên bản tiêu hủy kèm danh sách túi máu")]
     [EndpointDescription(
@@ -78,7 +78,7 @@ public class BloodDisposalsController : ControllerBase
         "**Yêu cầu quyền truy cập:** Bearer Token với quyền **DISPOSAL_VIEW** (vai trò BBNK hoặc MGT).\n\n" +
         "**HTTP Response:**\n" +
         "- 200 OK: Trả về chi tiết biên bản đề xuất tiêu hủy kèm danh sách các túi máu.\n" +
-        "- 400 BadRequest: ID biên bản không hợp lệ (nhỏ hơn hoặc bằng 0).\n" +
+        "- 400 BadRequest: ID biên bản không hợp lệ.\n" +
         "- 401 Unauthorized: Chưa đăng nhập hoặc token không hợp lệ.\n" +
         "- 403 Forbidden: Không có quyền truy cập DISPOSAL_VIEW.\n" +
         "- 404 NotFound: Không tìm thấy biên bản đề xuất tiêu hủy tương ứng.")]
@@ -87,7 +87,7 @@ public class BloodDisposalsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetDisposalById([FromRoute] int id)
+    public async Task<IActionResult> GetDisposalById([FromRoute] Guid id)
     {
         var result = await _bloodDisposalsService.GetDisposalByIdAsync(id);
         return Ok(result);
@@ -123,7 +123,7 @@ public class BloodDisposalsController : ControllerBase
         return CreatedAtAction(nameof(GetDisposalById), new { id = result.DisposalId }, result);
     }
 
-    [HttpPatch("{id:int}/cancel")]
+    [HttpPatch("{id:guid}/cancel")]
     [HasPermission("DISPOSAL_EDIT")]
     [EndpointSummary("Rút đơn / Hủy biên bản đề xuất tiêu hủy")]
     [EndpointDescription(
@@ -145,7 +145,7 @@ public class BloodDisposalsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> CancelDisposal([FromRoute] int id, [FromBody] CancelDisposalRequest? request)
+    public async Task<IActionResult> CancelDisposal([FromRoute] Guid id, [FromBody] CancelDisposalRequest? request)
     {
         var userId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -153,7 +153,7 @@ public class BloodDisposalsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPatch("{id:int}/approval")]
+    [HttpPatch("{id:guid}/approval")]
     [HasPermission("DISPOSAL_APPROVE")]
     [EndpointSummary("Phê duyệt hoặc từ chối biên bản tiêu hủy túi máu (Dành cho Lãnh đạo)")]
     [EndpointDescription(
@@ -174,7 +174,7 @@ public class BloodDisposalsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ApproveDisposal([FromRoute] int id, [FromBody] ApproveDisposalRequest request)
+    public async Task<IActionResult> ApproveDisposal([FromRoute] Guid id, [FromBody] ApproveDisposalRequest request)
     {
         var userId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -182,7 +182,7 @@ public class BloodDisposalsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPatch("{id:int}/execute")]
+    [HttpPatch("{id:guid}/execute")]
     [HasPermission("DISPOSAL_EDIT")]
     [EndpointSummary("Xác nhận đã tiêu hủy vật lý lô túi máu")]
     [EndpointDescription(
@@ -198,7 +198,7 @@ public class BloodDisposalsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ExecuteDisposal([FromRoute] int id)
+    public async Task<IActionResult> ExecuteDisposal([FromRoute] Guid id)
     {
         var userId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();

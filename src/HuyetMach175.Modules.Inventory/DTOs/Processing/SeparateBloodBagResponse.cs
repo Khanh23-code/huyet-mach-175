@@ -5,7 +5,7 @@ namespace HuyetMach175.Modules.Inventory.DTOs.Processing;
 public class SeparateBloodBagResponse
 {
     [JsonPropertyName("parentBagId")]
-    public int ParentBagId { get; set; }
+    public Guid ParentBagId { get; set; }
 
     [JsonPropertyName("parentBarcode")]
     public string ParentBarcode { get; set; } = string.Empty;
@@ -17,7 +17,7 @@ public class SeparateBloodBagResponse
     public DateTime ProcessedAt { get; set; }
 
     [JsonPropertyName("technicianId")]
-    public int TechnicianId { get; set; }
+    public Guid TechnicianId { get; set; }
 
     [JsonPropertyName("technicianName")]
     public string TechnicianName { get; set; } = string.Empty;
@@ -32,7 +32,7 @@ public class SeparateBloodBagResponse
 public class DerivedComponentDto
 {
     [JsonPropertyName("bagId")]
-    public int BagId { get; set; }
+    public Guid BagId { get; set; }
 
     [JsonPropertyName("barcode")]
     public string Barcode { get; set; } = string.Empty;
@@ -59,7 +59,7 @@ public class DerivedComponentDto
     public string Status { get; set; } = string.Empty;
 
     [JsonPropertyName("storageLocationId")]
-    public int StorageLocationId { get; set; }
+    public Guid StorageLocationId { get; set; }
 
     [JsonPropertyName("storageLocationName")]
     public string StorageLocationName { get; set; } = string.Empty;

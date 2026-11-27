@@ -7,7 +7,7 @@ namespace HuyetMach175.Modules.Inventory.DTOs.BloodComponentTypes;
 public class BloodComponentTypeDto
 {
     [JsonPropertyName("componentTypeId")]
-    public int ComponentTypeId { get; set; }
+    public Guid ComponentTypeId { get; set; }
 
     [JsonPropertyName("typeCode")]
     public ComponentCode TypeCode { get; set; }

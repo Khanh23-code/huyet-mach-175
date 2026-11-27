@@ -21,7 +21,7 @@ public class CampaignsService : ICampaignsService
         _validator = validator;
     }
 
-    public async Task<PagedResult<CampaignListItemDto>> GetCampaignsAsync(CampaignFilterDto filter, int? createdBy = null)
+    public async Task<PagedResult<CampaignListItemDto>> GetCampaignsAsync(CampaignFilterDto filter, Guid? createdBy = null)
     {
         filter.Validate();
 
@@ -47,9 +47,9 @@ public class CampaignsService : ICampaignsService
         };
     }
 
-    public Task<PagedResult<CampaignListItemDto>> GetMyCampaignsAsync(CampaignFilterDto filter, int userId)
+    public Task<PagedResult<CampaignListItemDto>> GetMyCampaignsAsync(CampaignFilterDto filter, Guid userId)
     {
-        if (userId <= 0)
+        if (userId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status401Unauthorized, "Người dùng không hợp lệ.");
         }
@@ -57,7 +57,7 @@ public class CampaignsService : ICampaignsService
         return GetCampaignsAsync(filter, createdBy: userId);
     }
 
-    public async Task<CampaignDetailDto> GetCampaignByIdAsync(int id)
+    public async Task<CampaignDetailDto> GetCampaignByIdAsync(Guid id)
     {
         ValidateId(id);
 
@@ -79,7 +79,7 @@ public class CampaignsService : ICampaignsService
         return campaign.ToDetailDto();
     }
 
-    public async Task<CampaignSummaryDto> GetCampaignSummaryAsync(int id)
+    public async Task<CampaignSummaryDto> GetCampaignSummaryAsync(Guid id)
     {
         ValidateId(id);
 
@@ -108,7 +108,7 @@ public class CampaignsService : ICampaignsService
         return CampaignSummaryCalculator.CalculateSummary(campaign, appointments);
     }
 
-    public async Task<CampaignDetailDto> CreateCampaignAsync(CreateCampaignRequest request, int userId)
+    public async Task<CampaignDetailDto> CreateCampaignAsync(CreateCampaignRequest request, Guid userId)
     {
         _validator.ValidateDates(request.StartDate, request.EndDate, isNew: true);
         _validator.ValidateTargetDonations(request.TargetDonations);
@@ -150,7 +150,7 @@ public class CampaignsService : ICampaignsService
         return await GetCampaignByIdAsync(campaign.CampaignId);
     }
 
-    public async Task<CampaignDetailDto> UpdateCampaignAsync(int id, UpdateCampaignRequest request)
+    public async Task<CampaignDetailDto> UpdateCampaignAsync(Guid id, UpdateCampaignRequest request)
     {
         ValidateId(id);
 
@@ -197,7 +197,7 @@ public class CampaignsService : ICampaignsService
         return await GetCampaignByIdAsync(campaign.CampaignId);
     }
 
-    public async Task<CampaignDetailDto> SubmitForApprovalAsync(int id)
+    public async Task<CampaignDetailDto> SubmitForApprovalAsync(Guid id)
     {
         var campaign = await FindCampaignAsync(id);
 
@@ -211,7 +211,7 @@ public class CampaignsService : ICampaignsService
         return await GetCampaignByIdAsync(campaign.CampaignId);
     }
 
-    public async Task<CampaignDetailDto> ApproveCampaignAsync(int id, ApproveCampaignRequest request, int userId)
+    public async Task<CampaignDetailDto> ApproveCampaignAsync(Guid id, ApproveCampaignRequest request, Guid userId)
     {
         var campaign = await FindCampaignAsync(id);
 
@@ -238,7 +238,7 @@ public class CampaignsService : ICampaignsService
         return await GetCampaignByIdAsync(campaign.CampaignId);
     }
 
-    public async Task<CampaignDetailDto> CancelCampaignAsync(int id, CancelCampaignRequest request, int userId)
+    public async Task<CampaignDetailDto> CancelCampaignAsync(Guid id, CancelCampaignRequest request, Guid userId)
     {
         var campaign = await FindCampaignAsync(id);
 
@@ -255,7 +255,7 @@ public class CampaignsService : ICampaignsService
         return await GetCampaignByIdAsync(campaign.CampaignId);
     }
 
-    public async Task<CampaignDetailDto> UpdateCampaignStatusAsync(int id, UpdateCampaignStatusRequest request, int userId)
+    public async Task<CampaignDetailDto> UpdateCampaignStatusAsync(Guid id, UpdateCampaignStatusRequest request, Guid userId)
     {
         var campaign = await FindCampaignAsync(id);
 
@@ -268,7 +268,7 @@ public class CampaignsService : ICampaignsService
         return await GetCampaignByIdAsync(campaign.CampaignId);
     }
 
-    public async Task DeleteCampaignAsync(int id)
+    public async Task DeleteCampaignAsync(Guid id)
     {
         ValidateId(id);
 
@@ -289,15 +289,15 @@ public class CampaignsService : ICampaignsService
         await _context.SaveChangesAsync();
     }
 
-    private static void ValidateId(int id)
+    private static void ValidateId(Guid id)
     {
-        if (id <= 0)
+        if (id == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "ID đợt hiến máu không hợp lệ.");
         }
     }
 
-    private async Task<DonationCampaign> FindCampaignAsync(int id)
+    private async Task<DonationCampaign> FindCampaignAsync(Guid id)
     {
         ValidateId(id);
 
@@ -310,7 +310,7 @@ public class CampaignsService : ICampaignsService
         return campaign;
     }
 
-    private async Task EnsureActiveUserAsync(int userId, string errorMessage)
+    private async Task EnsureActiveUserAsync(Guid userId, string errorMessage)
     {
         var user = await _context.Users.FindAsync(userId);
         if (user == null || !user.IsActive)

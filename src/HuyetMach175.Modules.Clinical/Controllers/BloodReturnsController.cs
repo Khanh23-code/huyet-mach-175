@@ -55,7 +55,7 @@ public class BloodReturnsController : ControllerBase
         return StatusCode(StatusCodes.Status201Created, result);
     }
 
-    [HttpPost("{returnId:int}/cancel")]
+    [HttpPost("{returnId:guid}/cancel")]
     [HasPermission("BLOOD_RETURN_EDIT")]
     [EndpointSummary("Hủy phiếu hoàn trả lập nhầm khi Ngân hàng máu chưa kiểm định")]
     [EndpointDescription(
@@ -78,7 +78,7 @@ public class BloodReturnsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> CancelBloodReturn(int returnId, [FromBody] CancelBloodReturnRequest? request)
+    public async Task<IActionResult> CancelBloodReturn(Guid returnId, [FromBody] CancelBloodReturnRequest? request)
     {
         var userId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -137,7 +137,7 @@ public class BloodReturnsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPut("{returnId:int}/process")]
+    [HttpPut("{returnId:guid}/process")]
     [HasPermission("BLOOD_RETURN_APPROVE")]
     [EndpointSummary("Thẩm định tiếp nhận hoàn trả (Tái nhập kho hoặc Tiêu hủy)")]
     [EndpointDescription(
@@ -161,7 +161,7 @@ public class BloodReturnsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> ProcessBloodReturn(int returnId, [FromBody] ProcessBloodReturnRequest request)
+    public async Task<IActionResult> ProcessBloodReturn(Guid returnId, [FromBody] ProcessBloodReturnRequest request)
     {
         var userId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();

@@ -6,8 +6,8 @@ namespace HuyetMach175.Modules.Inventory.Processing;
 
 public static class BagRules
 {
-    public static string ExternalBarcode(DateTime collectedAtUtc, int bagId) =>
-        $"EXT-{collectedAtUtc:yyyyMMdd}-{bagId:D6}";
+    public static string ExternalBarcode(DateTime collectedAtUtc, Guid bagId) =>
+        $"EXT-{collectedAtUtc:yyyyMMdd}-{bagId.ToString("N")[^6..].ToUpperInvariant()}";
 
     public static string ChildBarcode(string parentBarcode, ComponentCode code) =>
         $"{parentBarcode}-{code}";

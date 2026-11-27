@@ -16,7 +16,7 @@ public static class SessionMappings
         {
             SessionId = session.SessionId,
             AppointmentId = session.AppointmentId,
-            DonorCode = donor != null ? $"NH-{donor.DonorId:D6}" : string.Empty,
+            DonorCode = donor != null ? BloodBagLabel.DonorCode(donor.DonorId) : string.Empty,
             DonorName = donor?.FullName ?? string.Empty,
             BloodType = donor?.BloodType?.ToString(),
             RhFactor = BloodBagLabel.RhLabel(donor?.RhFactor),
@@ -66,8 +66,8 @@ public static class SessionMappings
 
             Donor = new SessionDonorDto
             {
-                DonorId = donor?.DonorId ?? 0,
-                DonorCode = donor != null ? $"NH-{donor.DonorId:D6}" : string.Empty,
+                DonorId = donor?.DonorId ?? Guid.Empty,
+                DonorCode = donor != null ? BloodBagLabel.DonorCode(donor.DonorId) : string.Empty,
                 FullName = donor?.FullName ?? string.Empty,
                 CitizenId = donor?.CitizenId ?? string.Empty,
                 Gender = donor?.Gender ?? string.Empty,

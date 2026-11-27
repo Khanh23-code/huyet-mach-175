@@ -6,7 +6,7 @@ namespace HuyetMach175.Modules.Donation.Services;
 public interface IAppointmentsService
 {
     Task<PagedResult<AppointmentListItemDto>> GetAppointmentsAsync(AppointmentFilterDto filter);
-    Task<AppointmentDetailDto> GetAppointmentByIdAsync(int id);
+    Task<AppointmentDetailDto> GetAppointmentByIdAsync(Guid id);
     Task<AppointmentDetailDto> CreateAppointmentAsync(CreateAppointmentRequest request);
-    Task<AppointmentDetailDto> CancelAppointmentAsync(int id, CancelAppointmentRequest? request);
+    Task<AppointmentDetailDto> CancelAppointmentAsync(Guid id, CancelAppointmentRequest? request);
 }

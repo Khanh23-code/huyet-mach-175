@@ -4,7 +4,7 @@ namespace HuyetMach175.Modules.Clinical.DTOs.BloodCoordination;
 
 public class SupplyDemandResponse
 {
-    public int ComponentTypeId { get; set; }
+    public Guid ComponentTypeId { get; set; }
     public ComponentCode ComponentCode { get; set; }
     public string ComponentName { get; set; } = string.Empty;
     public int TotalAvailableStock { get; set; }

@@ -39,7 +39,7 @@ public class BloodCoordinationController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetSupplyDemand([FromQuery] int componentTypeId)
+    public async Task<IActionResult> GetSupplyDemand([FromQuery] Guid componentTypeId)
     {
         var result = await _bloodCoordinationService.GetSupplyDemandAsync(componentTypeId);
         return Ok(result);
@@ -66,7 +66,7 @@ public class BloodCoordinationController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("requests/{requestId:int}/items/{requestItemId:int}/available-bags")]
+    [HttpGet("requests/{requestId:guid}/items/{requestItemId:guid}/available-bags")]
     [HasPermission("BLOOD_REQUEST_APPROVE")]
     [EndpointSummary("Lấy danh sách túi máu khả dụng để giữ chỗ cho dòng y lệnh")]
     [EndpointDescription(
@@ -86,13 +86,13 @@ public class BloodCoordinationController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetAvailableBagsForItem(int requestId, int requestItemId, [FromQuery] bool includeCompatible = false)
+    public async Task<IActionResult> GetAvailableBagsForItem(Guid requestId, Guid requestItemId, [FromQuery] bool includeCompatible = false)
     {
         var result = await _bloodCoordinationService.GetAvailableBagsForItemAsync(requestId, requestItemId, includeCompatible);
         return Ok(result);
     }
 
-    [HttpPost("requests/{requestId:int}/items/{requestItemId:int}/allocate")]
+    [HttpPost("requests/{requestId:guid}/items/{requestItemId:guid}/allocate")]
     [HasPermission("BLOOD_REQUEST_APPROVE")]
     [EndpointSummary("Xác nhận giữ chỗ túi máu cho dòng y lệnh")]
     [EndpointDescription(
@@ -117,7 +117,7 @@ public class BloodCoordinationController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> AllocateBags(int requestId, int requestItemId, [FromBody] AllocateBloodBagsRequest request)
+    public async Task<IActionResult> AllocateBags(Guid requestId, Guid requestItemId, [FromBody] AllocateBloodBagsRequest request)
     {
         var userId = User.GetUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();

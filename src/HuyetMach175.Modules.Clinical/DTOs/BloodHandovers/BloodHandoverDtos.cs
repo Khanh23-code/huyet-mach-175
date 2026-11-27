@@ -13,7 +13,7 @@ public class PendingHandoverSessionFilterDto
     public string? RequestCode { get; set; }
 
     [FromQuery(Name = "doctorId")]
-    public int? DoctorId { get; set; }
+    public Guid? DoctorId { get; set; }
 
     [FromQuery(Name = "doctorName")]
     public string? DoctorName { get; set; }
@@ -25,7 +25,7 @@ public class CreateHandoverSessionRequest
     [MinLength(1, ErrorMessage = "Phiên bàn giao phải có ít nhất 1 túi máu.")]
     public List<string> Barcodes { get; set; } = new List<string>();
 
-    public int? RequestId { get; set; }
+    public Guid? RequestId { get; set; }
 
     [Range(3, 5, ErrorMessage = "Thời gian chờ xác nhận (timeoutMinutes) phải nằm trong khoảng 3 đến 5 phút.")]
     public int TimeoutMinutes { get; set; } = 5;
@@ -48,10 +48,10 @@ public class CancelHandoverSessionRequest
 
 public class HandoverSessionItemDto
 {
-    public int AllocationId { get; set; }
-    public int BagId { get; set; }
+    public Guid AllocationId { get; set; }
+    public Guid BagId { get; set; }
     public string Barcode { get; set; } = string.Empty;
-    public int ComponentTypeId { get; set; }
+    public Guid ComponentTypeId { get; set; }
     public ComponentCode ComponentCode { get; set; }
     public string ComponentName { get; set; } = string.Empty;
     public string BloodType { get; set; } = string.Empty;
@@ -63,7 +63,7 @@ public class HandoverSessionItemDto
 
 public class HandoverSessionDto
 {
-    public int HandoverSessionId { get; set; }
+    public Guid HandoverSessionId { get; set; }
     public string SessionCode { get; set; } = string.Empty;
     public HandoverSessionStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -72,15 +72,15 @@ public class HandoverSessionDto
     public DateTime? ConfirmedAt { get; set; }
     public DateTime? CancelledAt { get; set; }
     public string? CancelReason { get; set; }
-    public int InitiatedById { get; set; }
+    public Guid InitiatedById { get; set; }
     public string? InitiatedByName { get; set; }
-    public int? ConfirmedById { get; set; }
+    public Guid? ConfirmedById { get; set; }
     public string? ConfirmedByName { get; set; }
-    public int? CancelledById { get; set; }
+    public Guid? CancelledById { get; set; }
     public string? CancelledByName { get; set; }
-    public int RequestId { get; set; }
+    public Guid RequestId { get; set; }
     public string RequestCode { get; set; } = string.Empty;
-    public int? DoctorId { get; set; }
+    public Guid? DoctorId { get; set; }
     public string? DoctorName { get; set; }
     public string? DepartmentName { get; set; }
     public bool IsOwnRequest { get; set; }
@@ -95,10 +95,10 @@ public class HandoverSessionDto
 
 public class TransfusionScanDto
 {
-    public int AllocationId { get; set; }
-    public int BagId { get; set; }
+    public Guid AllocationId { get; set; }
+    public Guid BagId { get; set; }
     public string Barcode { get; set; } = string.Empty;
-    public int ComponentTypeId { get; set; }
+    public Guid ComponentTypeId { get; set; }
     public ComponentCode ComponentCode { get; set; }
     public string ComponentName { get; set; } = string.Empty;
     public string BloodType { get; set; } = string.Empty;
@@ -106,7 +106,7 @@ public class TransfusionScanDto
     public DateTime ExpiredAt { get; set; }
     public bool IsExpired { get; set; }
     public BagStatus BagStatus { get; set; }
-    public int RequestId { get; set; }
+    public Guid RequestId { get; set; }
     public string RequestCode { get; set; } = string.Empty;
     public string PatientName { get; set; } = string.Empty;
     public string PatientCode { get; set; } = string.Empty;
@@ -123,7 +123,7 @@ public class ConfirmTransfusionRequest
     [Required(ErrorMessage = "Mã vạch túi máu (barcode) là bắt buộc.")]
     public string Barcode { get; set; } = string.Empty;
 
-    public int? AllocationId { get; set; }
+    public Guid? AllocationId { get; set; }
 
     [Required(ErrorMessage = "Mã người bệnh đối soát (expectedPatientCode) là bắt buộc.")]
     public string ExpectedPatientCode { get; set; } = string.Empty;
@@ -131,28 +131,28 @@ public class ConfirmTransfusionRequest
 
 public class ConfirmTransfusionResponse
 {
-    public int BagId { get; set; }
+    public Guid BagId { get; set; }
     public string Barcode { get; set; } = string.Empty;
     public BagStatus BagStatus { get; set; }
-    public int AllocationId { get; set; }
-    public int RequestId { get; set; }
+    public Guid AllocationId { get; set; }
+    public Guid RequestId { get; set; }
     public string RequestCode { get; set; } = string.Empty;
     public string PatientCode { get; set; } = string.Empty;
     public string PatientName { get; set; } = string.Empty;
     public string PatientBloodType { get; set; } = string.Empty;
     public string BloodType { get; set; } = string.Empty;
     public string ComponentName { get; set; } = string.Empty;
-    public int ConfirmedById { get; set; }
+    public Guid ConfirmedById { get; set; }
     public string? ConfirmedByName { get; set; }
     public DateTime TransfusedAt { get; set; }
 }
 
 public class ReservedHandoverBagDto
 {
-    public int AllocationId { get; set; }
-    public int BagId { get; set; }
+    public Guid AllocationId { get; set; }
+    public Guid BagId { get; set; }
     public string Barcode { get; set; } = string.Empty;
-    public int ComponentTypeId { get; set; }
+    public Guid ComponentTypeId { get; set; }
     public ComponentCode ComponentCode { get; set; }
     public string ComponentName { get; set; } = string.Empty;
     public string BloodType { get; set; } = string.Empty;
@@ -162,13 +162,13 @@ public class ReservedHandoverBagDto
     public string? LocationName { get; set; }
     public DateTime ReservedAt { get; set; }
     public string? ReservedByName { get; set; }
-    public int? ActiveSessionId { get; set; }
+    public Guid? ActiveSessionId { get; set; }
     public string? ActiveSessionCode { get; set; }
 }
 
 public class ReservedHandoverRequestDto
 {
-    public int RequestId { get; set; }
+    public Guid RequestId { get; set; }
     public string RequestCode { get; set; } = string.Empty;
     public RequestStatus RequestStatus { get; set; }
     public UrgencyLevel UrgencyLevel { get; set; }

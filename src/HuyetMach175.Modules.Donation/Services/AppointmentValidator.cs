@@ -16,9 +16,9 @@ public class AppointmentValidator : IAppointmentValidator
         _context = context;
     }
 
-    public async Task<Donor> ValidateDonorAsync(int donorId)
+    public async Task<Donor> ValidateDonorAsync(Guid donorId)
     {
-        if (donorId <= 0)
+        if (donorId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã người hiến máu (donorId) không hợp lệ.");
         }
@@ -46,11 +46,11 @@ public class AppointmentValidator : IAppointmentValidator
         }
     }
 
-    public async Task<DonationCampaignSlot?> ValidateSlotAsync(int? slotId, DateOnly appointmentDate)
+    public async Task<DonationCampaignSlot?> ValidateSlotAsync(Guid? slotId, DateOnly appointmentDate)
     {
         if (!slotId.HasValue) return null;
 
-        if (slotId.Value <= 0)
+        if (slotId.Value == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã khung giờ (slotId) không hợp lệ.");
         }
@@ -125,7 +125,7 @@ public class AppointmentValidator : IAppointmentValidator
         return slot;
     }
 
-    public async Task ValidateNoDuplicateBookingAsync(int donorId, DateOnly appointmentDate)
+    public async Task ValidateNoDuplicateBookingAsync(Guid donorId, DateOnly appointmentDate)
     {
         var hasActive = await _context.DonationAppointments
             .AnyAsync(a => a.DonorId == donorId &&

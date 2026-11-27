@@ -12,7 +12,7 @@ public class SurveyQueueFilterDto
     public string? ScreeningStatus { get; set; }
 
     [FromQuery(Name = "campaignId")]
-    public int? CampaignId { get; set; }
+    public Guid? CampaignId { get; set; }
 
     [FromQuery(Name = "search")]
     [MaxLength(100, ErrorMessage = "Từ khóa tìm kiếm không được vượt quá 100 ký tự.")]

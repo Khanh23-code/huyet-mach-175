@@ -36,7 +36,7 @@ public class RegisterExternalBloodBagRequest
     [JsonPropertyName("receivedTemperature")]
     public decimal ReceivedTemperature { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "ID vị trí lưu trữ không hợp lệ.")]
+    [Required(ErrorMessage = "Vị trí lưu trữ là bắt buộc.")]
     [JsonPropertyName("storageLocationId")]
-    public int StorageLocationId { get; set; }
+    public Guid StorageLocationId { get; set; }
 }

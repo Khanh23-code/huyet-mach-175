@@ -9,14 +9,14 @@ namespace HuyetMach175.Modules.Clinical.Processing;
 
 public static class BloodRequestProcessing
 {
-    public static async Task EnsureActiveUserAsync(ApplicationDbContext context, int userId, string errorMessage)
+    public static async Task EnsureActiveUserAsync(ApplicationDbContext context, Guid userId, string errorMessage)
     {
         await LoadActiveUserAsync(context, userId, errorMessage);
     }
 
-    public static async Task<User> LoadActiveUserAsync(ApplicationDbContext context, int userId, string errorMessage)
+    public static async Task<User> LoadActiveUserAsync(ApplicationDbContext context, Guid userId, string errorMessage)
     {
-        if (userId <= 0)
+        if (userId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status401Unauthorized, errorMessage);
         }
@@ -102,7 +102,7 @@ public static class BloodRequestProcessing
         return (patientCode, patientName);
     }
 
-    public static async Task<bool> HasHospitalWideClinicalAccessAsync(ApplicationDbContext context, int userId, string approvePermissionCode)
+    public static async Task<bool> HasHospitalWideClinicalAccessAsync(ApplicationDbContext context, Guid userId, string approvePermissionCode)
     {
         return await context.Users
             .AsNoTracking()

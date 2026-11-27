@@ -42,7 +42,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
             return Ok(roles);
         }
 
-        [HttpGet("{roleId}")]
+        [HttpGet("{roleId:guid}")]
         [HasPermission("ROLES_VIEW")]
         [EndpointSummary("Lấy thông tin chi tiết một vai trò theo ID")]
         [EndpointDescription(
@@ -57,7 +57,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetRoleByIdAsync([FromRoute] int roleId)
+        public async Task<IActionResult> GetRoleByIdAsync([FromRoute] Guid roleId)
         {
             var role = await _rolesService.GetRoleByIdAsync(roleId);
             return Ok(role);
@@ -89,7 +89,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
             return Ok(newRole);
         }
 
-        [HttpPut("{roleId}")]
+        [HttpPut("{roleId:guid}")]
         [HasPermission("ROLES_EDIT")]
         [EndpointSummary("Cập nhật tên và mô tả vai trò")]
         [EndpointDescription(
@@ -108,13 +108,13 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> UpdateRoleAsync([FromRoute] int roleId, [FromBody] UpdateRoleRequest request)
+        public async Task<IActionResult> UpdateRoleAsync([FromRoute] Guid roleId, [FromBody] UpdateRoleRequest request)
         {
             var updatedRole = await _rolesService.UpdateRoleAsync(roleId, request);
             return Ok(updatedRole);
         }
 
-        [HttpPatch("{roleId}/status")]
+        [HttpPatch("{roleId:guid}/status")]
         [HasPermission("ROLES_EDIT")]
         [EndpointSummary("Cập nhật trạng thái hoạt động của vai trò (Kích hoạt / Vô hiệu hóa)")]
         [EndpointDescription(
@@ -135,7 +135,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateRoleStatusAsync(
-            [FromRoute] int roleId,
+            [FromRoute] Guid roleId,
             [FromBody(EmptyBodyBehavior = Microsoft.AspNetCore.Mvc.ModelBinding.EmptyBodyBehavior.Allow)] UpdateRoleStatusRequest? request = null,
             [FromQuery] bool force = false)
         {
@@ -143,7 +143,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
             return Ok(updatedRole);
         }
 
-        [HttpGet("{roleId}/permissions")]
+        [HttpGet("{roleId:guid}/permissions")]
         [HasPermission("ROLES_VIEW")]
         [EndpointSummary("Lấy ma trận quyền hạn (permissions) của một vai trò")]
         [EndpointDescription(
@@ -159,13 +159,13 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetRolePermissionsAsync([FromRoute] int roleId)
+        public async Task<IActionResult> GetRolePermissionsAsync([FromRoute] Guid roleId)
         {
             var result = await _rolesService.GetRolePermissionsAsync(roleId);
             return Ok(result);
         }
 
-        [HttpPut("{roleId}/permissions")]
+        [HttpPut("{roleId:guid}/permissions")]
         [HasPermission("ROLES_EDIT")]
         [EndpointSummary("Cập nhật danh sách quyền hạn được gán cho vai trò")]
         [EndpointDescription(
@@ -182,7 +182,7 @@ namespace HuyetMach175.Modules.Auth.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateRolePermissionsAsync([FromRoute] int roleId, [FromBody] UpdateRolePermissionsRequest request)
+        public async Task<IActionResult> UpdateRolePermissionsAsync([FromRoute] Guid roleId, [FromBody] UpdateRolePermissionsRequest request)
         {
             var result = await _rolesService.UpdateRolePermissionsAsync(roleId, request);
             return Ok(result);

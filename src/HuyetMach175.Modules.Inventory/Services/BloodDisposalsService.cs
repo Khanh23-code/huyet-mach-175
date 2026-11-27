@@ -97,9 +97,9 @@ public class BloodDisposalsService : IBloodDisposalsService
         };
     }
 
-    public async Task<DisposalDetailDto> GetDisposalByIdAsync(int id)
+    public async Task<DisposalDetailDto> GetDisposalByIdAsync(Guid id)
     {
-        if (id <= 0)
+        if (id == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiếu đề xuất tiêu hủy không hợp lệ.");
         }
@@ -124,7 +124,7 @@ public class BloodDisposalsService : IBloodDisposalsService
         return r.ToDetailDto();
     }
 
-    public async Task<CreateDisposalResponse> CreateDisposalAsync(CreateDisposalRequest request, int userId, string? ipAddress)
+    public async Task<CreateDisposalResponse> CreateDisposalAsync(CreateDisposalRequest request, Guid userId, string? ipAddress)
     {
         if (request.Barcodes == null || request.Barcodes.Count == 0)
         {
@@ -314,9 +314,9 @@ public class BloodDisposalsService : IBloodDisposalsService
         };
     }
 
-    public async Task<DisposalDetailDto> CancelDisposalAsync(int id, CancelDisposalRequest? request, int userId, string? ipAddress)
+    public async Task<DisposalDetailDto> CancelDisposalAsync(Guid id, CancelDisposalRequest? request, Guid userId, string? ipAddress)
     {
-        if (id <= 0)
+        if (id == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiếu đề xuất tiêu hủy không hợp lệ.");
         }
@@ -397,9 +397,9 @@ public class BloodDisposalsService : IBloodDisposalsService
         return await GetDisposalByIdAsync(record.DisposalId);
     }
 
-    public async Task<DisposalDetailDto> ApproveDisposalAsync(int id, ApproveDisposalRequest request, int userId, string? ipAddress)
+    public async Task<DisposalDetailDto> ApproveDisposalAsync(Guid id, ApproveDisposalRequest request, Guid userId, string? ipAddress)
     {
-        if (id <= 0)
+        if (id == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã biên bản đề xuất tiêu hủy không hợp lệ.");
         }
@@ -572,9 +572,9 @@ public class BloodDisposalsService : IBloodDisposalsService
         };
     }
 
-    public async Task<DisposalDetailDto> ExecuteDisposalAsync(int id, int userId, string? ipAddress)
+    public async Task<DisposalDetailDto> ExecuteDisposalAsync(Guid id, Guid userId, string? ipAddress)
     {
-        if (id <= 0)
+        if (id == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã biên bản đề xuất tiêu hủy không hợp lệ.");
         }
@@ -651,8 +651,8 @@ public class BloodDisposalsService : IBloodDisposalsService
 
     private void AddBagStatusLogs(
         IEnumerable<(BloodBag Bag, BagStatus FromStatus, BagStatus ToStatus)> transitions,
-        int userId,
-        long auditLogId,
+        Guid userId,
+        Guid auditLogId,
         string note,
         DateTime nowUtc)
     {

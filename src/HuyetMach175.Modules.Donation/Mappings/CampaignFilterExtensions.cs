@@ -28,7 +28,7 @@ public static class CampaignFilterExtensions
         }
     }
 
-    public static IQueryable<DonationCampaign> ApplyFilter(this IQueryable<DonationCampaign> query, CampaignFilterDto filter, int? createdBy = null)
+    public static IQueryable<DonationCampaign> ApplyFilter(this IQueryable<DonationCampaign> query, CampaignFilterDto filter, Guid? createdBy = null)
     {
         if (createdBy.HasValue)
         {

@@ -20,7 +20,7 @@ public class BloodReturnsService : IBloodReturnsService
         _context = context;
     }
 
-    public async Task<CreateBloodReturnResponse> CreateBloodReturnAsync(CreateBloodReturnRequest request, int userId, string? ipAddress)
+    public async Task<CreateBloodReturnResponse> CreateBloodReturnAsync(CreateBloodReturnRequest request, Guid userId, string? ipAddress)
     {
         var currentUser = await BloodRequestProcessing.LoadActiveUserAsync(_context, userId, "Thông tin người lập phiếu hoàn trả không hợp lệ.");
         var (returnReason, _) = BloodReturnProcessing.ValidateCreateReturnInput(request);
@@ -44,9 +44,11 @@ public class BloodReturnsService : IBloodReturnsService
         var failedChecklistFlags = BloodReturnProcessing.GetFailedCreateChecklistCriteria(request.Checklist, bag.ComponentType);
         failedChecklistFlags.AddRange(BloodReturnProcessing.EvaluateRestockEligibility(bag, previousRestockCount, now));
         var isEligibleForRestockEvaluation = failedChecklistFlags.Count == 0;
+        var returnCode = await BloodReturnProcessing.GenerateReturnCodeAsync(_context, now);
 
         var bloodReturn = new BloodReturn
         {
+            ReturnCode = returnCode,
             AllocationId = allocation.AllocationId,
             ReturnedBy = userId,
             ReceivedBy = userId,
@@ -62,8 +64,8 @@ public class BloodReturnsService : IBloodReturnsService
         await _context.SaveChangesAsync();
 
         var changeReason = isEligibleForRestockEvaluation
-            ? $"Lâm sàng lập phiếu hoàn trả #{bloodReturn.ReturnId} cho túi máu {bag.Barcode}."
-            : $"Lâm sàng lập phiếu hoàn trả #{bloodReturn.ReturnId} cho túi máu {bag.Barcode} (Cảnh báo không đạt điều kiện tái nhập: {string.Join("; ", failedChecklistFlags)}).";
+            ? $"Lâm sàng lập phiếu hoàn trả {bloodReturn.ReturnCode} cho túi máu {bag.Barcode}."
+            : $"Lâm sàng lập phiếu hoàn trả {bloodReturn.ReturnCode} cho túi máu {bag.Barcode} (Cảnh báo không đạt điều kiện tái nhập: {string.Join("; ", failedChecklistFlags)}).";
 
         var auditLog = BloodHandoverProcessing.BuildAuditLog(
             "blood_returns",
@@ -73,6 +75,7 @@ public class BloodReturnsService : IBloodReturnsService
             new
             {
                 returnId = bloodReturn.ReturnId,
+                returnCode = bloodReturn.ReturnCode,
                 allocationId = allocation.AllocationId,
                 bagId = bag.BagId,
                 barcode = bag.Barcode,
@@ -93,8 +96,8 @@ public class BloodReturnsService : IBloodReturnsService
         await _context.SaveChangesAsync();
 
         var statusNote = isEligibleForRestockEvaluation
-            ? $"Phong tỏa túi máu do lập phiếu hoàn trả #{bloodReturn.ReturnId}: {returnReason}"
-            : $"Phong tỏa túi máu do lập phiếu hoàn trả #{bloodReturn.ReturnId} [Cảnh báo tiêu hủy bắt buộc: {string.Join("; ", failedChecklistFlags)}]: {returnReason}";
+            ? $"Phong tỏa túi máu do lập phiếu hoàn trả {bloodReturn.ReturnCode}: {returnReason}"
+            : $"Phong tỏa túi máu do lập phiếu hoàn trả {bloodReturn.ReturnCode} [Cảnh báo tiêu hủy bắt buộc: {string.Join("; ", failedChecklistFlags)}]: {returnReason}";
 
         _context.BloodBagStatusLogs.Add(new BloodBagStatusLog
         {
@@ -113,11 +116,11 @@ public class BloodReturnsService : IBloodReturnsService
         return bloodReturn.ToCreateResponse(allocation, currentUser, isEligibleForRestockEvaluation, failedChecklistFlags);
     }
 
-    public async Task<CancelBloodReturnResponse> CancelBloodReturnAsync(int returnId, CancelBloodReturnRequest? request, int userId, string? ipAddress)
+    public async Task<CancelBloodReturnResponse> CancelBloodReturnAsync(Guid returnId, CancelBloodReturnRequest? request, Guid userId, string? ipAddress)
     {
         var currentUser = await BloodRequestProcessing.LoadActiveUserAsync(_context, userId, "Thông tin người hủy phiếu hoàn trả không hợp lệ.");
 
-        if (returnId <= 0)
+        if (returnId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiếu hoàn trả (returnId) không hợp lệ.");
         }
@@ -176,16 +179,17 @@ public class BloodReturnsService : IBloodReturnsService
         bag.Status = BagStatus.ISSUED;
 
         var changeReason = string.IsNullOrWhiteSpace(appliedCancelReason)
-            ? $"Lâm sàng hủy phiếu hoàn trả #{bloodReturn.ReturnId} lập nhầm; khôi phục túi {bag.Barcode} về ISSUED."
-            : $"Lâm sàng hủy phiếu hoàn trả #{bloodReturn.ReturnId} ({appliedCancelReason}); khôi phục túi {bag.Barcode} về ISSUED.";
+            ? $"Lâm sàng hủy phiếu hoàn trả {bloodReturn.ReturnCode} lập nhầm; khôi phục túi {bag.Barcode} về ISSUED."
+            : $"Lâm sàng hủy phiếu hoàn trả {bloodReturn.ReturnCode} ({appliedCancelReason}); khôi phục túi {bag.Barcode} về ISSUED.";
 
         var auditLog = BloodHandoverProcessing.BuildAuditLog(
             "blood_returns",
             bloodReturn.ReturnId,
             ActionType.STATUS_CHANGE,
-            new { finalAction = ReturnFinalAction.PENDING_INSPECTION.ToString(), bagStatus = BagStatus.LOCKED.ToString() },
+            new { returnCode = bloodReturn.ReturnCode, finalAction = ReturnFinalAction.PENDING_INSPECTION.ToString(), bagStatus = BagStatus.LOCKED.ToString() },
             new
             {
+                returnCode = bloodReturn.ReturnCode,
                 finalAction = bloodReturn.FinalAction.ToString(),
                 bagStatus = bag.Status.ToString(),
                 cancelledBy = userId,
@@ -201,8 +205,8 @@ public class BloodReturnsService : IBloodReturnsService
         await _context.SaveChangesAsync();
 
         var noteText = string.IsNullOrWhiteSpace(appliedCancelReason)
-            ? $"Khôi phục trạng thái túi máu do hủy phiếu hoàn trả #{bloodReturn.ReturnId}"
-            : $"Khôi phục trạng thái túi máu do hủy phiếu hoàn trả #{bloodReturn.ReturnId}: {appliedCancelReason}";
+            ? $"Khôi phục trạng thái túi máu do hủy phiếu hoàn trả {bloodReturn.ReturnCode}"
+            : $"Khôi phục trạng thái túi máu do hủy phiếu hoàn trả {bloodReturn.ReturnCode}: {appliedCancelReason}";
 
         _context.BloodBagStatusLogs.Add(new BloodBagStatusLog
         {
@@ -221,7 +225,7 @@ public class BloodReturnsService : IBloodReturnsService
         return bloodReturn.ToCancelResponse(bag, currentUser, appliedCancelReason);
     }
 
-    public async Task<PagedResult<PendingBloodReturnDto>> GetPendingBloodReturnsAsync(PendingBloodReturnFilterDto filter, int userId)
+    public async Task<PagedResult<PendingBloodReturnDto>> GetPendingBloodReturnsAsync(PendingBloodReturnFilterDto filter, Guid userId)
     {
         var currentUser = await BloodRequestProcessing.LoadActiveUserAsync(_context, userId, "Thông tin người dùng không hợp lệ.");
         BloodRequestProcessing.ValidatePagination(filter.PageNumber, filter.PageSize);
@@ -256,6 +260,7 @@ public class BloodReturnsService : IBloodReturnsService
         {
             var kw = filter.Search.Trim();
             query = query.Where(br =>
+                EF.Functions.ILike(br.ReturnCode, $"%{kw}%") ||
                 EF.Functions.ILike(br.Allocation!.Bag!.Barcode, $"%{kw}%") ||
                 EF.Functions.ILike(br.Allocation.Request!.RequestCode, $"%{kw}%") ||
                 EF.Functions.ILike(br.Allocation.Request.PatientCode, $"%{kw}%") ||
@@ -290,7 +295,7 @@ public class BloodReturnsService : IBloodReturnsService
         };
     }
 
-    public async Task<ReturnInspectionDto> ScanBloodReturnByBarcodeAsync(string barcode, int userId)
+    public async Task<ReturnInspectionDto> ScanBloodReturnByBarcodeAsync(string barcode, Guid userId)
     {
         await BloodRequestProcessing.EnsureActiveUserAsync(_context, userId, "Thông tin người kiểm định không hợp lệ.");
 
@@ -325,7 +330,8 @@ public class BloodReturnsService : IBloodReturnsService
                 br.Allocation != null &&
                 br.Allocation.BagId == bag.BagId &&
                 br.FinalAction != ReturnFinalAction.CANCELLED)
-            .OrderByDescending(br => br.ReturnId)
+            .OrderByDescending(br => br.ProcessedAt)
+            .ThenByDescending(br => br.ReturnId)
             .FirstOrDefaultAsync();
 
         if (bloodReturn?.Allocation?.Request == null)
@@ -335,7 +341,7 @@ public class BloodReturnsService : IBloodReturnsService
 
         if (bloodReturn.FinalAction != ReturnFinalAction.PENDING_INSPECTION)
         {
-            throw new HttpException(StatusCodes.Status409Conflict, $"Túi máu {bag.Barcode} (phiếu hoàn trả #{bloodReturn.ReturnId}) đã được xử lý trước đó với kết quả '{bloodReturn.FinalAction}'.");
+            throw new HttpException(StatusCodes.Status409Conflict, $"Túi máu {bag.Barcode} (phiếu hoàn trả {bloodReturn.ReturnCode}) đã được xử lý trước đó với kết quả '{bloodReturn.FinalAction}'.");
         }
 
         if (bag.Status != BagStatus.LOCKED)
@@ -355,11 +361,11 @@ public class BloodReturnsService : IBloodReturnsService
         return bloodReturn.ToInspectionDto(previousLocationId, previousLocationName, previousRestockCount, clinicalWarnings, DateTime.UtcNow);
     }
 
-    public async Task<ProcessBloodReturnResponse> ProcessBloodReturnAsync(int returnId, ProcessBloodReturnRequest request, int userId, string? ipAddress)
+    public async Task<ProcessBloodReturnResponse> ProcessBloodReturnAsync(Guid returnId, ProcessBloodReturnRequest request, Guid userId, string? ipAddress)
     {
         var currentUser = await BloodRequestProcessing.LoadActiveUserAsync(_context, userId, "Thông tin người kiểm định không hợp lệ.");
 
-        if (returnId <= 0)
+        if (returnId == Guid.Empty)
         {
             throw new HttpException(StatusCodes.Status400BadRequest, "Mã phiếu hoàn trả (returnId) không hợp lệ.");
         }

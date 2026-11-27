@@ -5,13 +5,13 @@ namespace HuyetMach175.Modules.Donation.DTOs.Surveys;
 public class ClinicalScreeningResponse
 {
     [JsonPropertyName("appointmentId")]
-    public int AppointmentId { get; set; }
+    public Guid AppointmentId { get; set; }
 
     [JsonPropertyName("screeningStatus")]
     public string ScreeningStatus { get; set; } = string.Empty;
 
     [JsonPropertyName("sessionId")]
-    public int? SessionId { get; set; }
+    public Guid? SessionId { get; set; }
 
     [JsonPropertyName("sessionStatus")]
     public string? SessionStatus { get; set; }

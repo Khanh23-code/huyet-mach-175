@@ -103,7 +103,7 @@ public class UsersService : IUsersService
         };
     }
 
-    public async Task<UserListItemDto> GetUserByIdAsync(int userId)
+    public async Task<UserListItemDto> GetUserByIdAsync(Guid userId)
     {
         var user = await _context.Users
             .AsNoTracking()
@@ -123,7 +123,7 @@ public class UsersService : IUsersService
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private async Task EnsureUniqueAsync(
-        string username, string staffCode, string? email, string? phone, int? excludeUserId = null)
+        string username, string staffCode, string? email, string? phone, Guid? excludeUserId = null)
     {
         var errors = new Dictionary<string, string>();
 
@@ -216,7 +216,7 @@ public class UsersService : IUsersService
         return await GetUserByIdAsync(user.UserId);
     }
 
-    public async Task<UserListItemDto> UpdateUserAsync(int userId, UpdateUserRequest request)
+    public async Task<UserListItemDto> UpdateUserAsync(Guid userId, UpdateUserRequest request)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
 
@@ -245,7 +245,7 @@ public class UsersService : IUsersService
         return await GetUserByIdAsync(userId);
     }
 
-    public async Task<UserListItemDto> UpdateUserStatusAsync(int userId, UpdateUserStatusRequest request)
+    public async Task<UserListItemDto> UpdateUserStatusAsync(Guid userId, UpdateUserStatusRequest request)
     {
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.UserId == userId);
@@ -275,7 +275,7 @@ public class UsersService : IUsersService
         return await GetUserByIdAsync(userId);
     }
 
-    public async Task<UserListItemDto> UpdateUserRolesAsync(int userId, UpdateUserRolesRequest request, bool isSysAdmin = true)
+    public async Task<UserListItemDto> UpdateUserRolesAsync(Guid userId, UpdateUserRolesRequest request, bool isSysAdmin = true)
     {
         var user = await _context.Users
             .Include(u => u.UserRoles)
@@ -331,7 +331,7 @@ public class UsersService : IUsersService
         return await GetUserByIdAsync(userId);
     }
 
-    public async Task<bool> ResetPasswordAsync(int userId)
+    public async Task<bool> ResetPasswordAsync(Guid userId)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
 

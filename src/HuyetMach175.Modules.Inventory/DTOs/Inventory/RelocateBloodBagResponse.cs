@@ -5,7 +5,7 @@ namespace HuyetMach175.Modules.Inventory.DTOs.Inventory;
 public class RelocateBloodBagResponse
 {
     [JsonPropertyName("bagId")]
-    public int BagId { get; set; }
+    public Guid BagId { get; set; }
 
     [JsonPropertyName("barcode")]
     public string Barcode { get; set; } = string.Empty;
@@ -17,13 +17,13 @@ public class RelocateBloodBagResponse
     public string ComponentTypeName { get; set; } = string.Empty;
 
     [JsonPropertyName("previousStorageLocationId")]
-    public int? PreviousStorageLocationId { get; set; }
+    public Guid? PreviousStorageLocationId { get; set; }
 
     [JsonPropertyName("previousStorageLocationName")]
     public string? PreviousStorageLocationName { get; set; }
 
     [JsonPropertyName("newStorageLocationId")]
-    public int NewStorageLocationId { get; set; }
+    public Guid NewStorageLocationId { get; set; }
 
     [JsonPropertyName("newStorageLocationName")]
     public string NewStorageLocationName { get; set; } = string.Empty;
@@ -35,7 +35,7 @@ public class RelocateBloodBagResponse
     public DateTime RelocatedAt { get; set; }
 
     [JsonPropertyName("relocatedBy")]
-    public int? RelocatedBy { get; set; }
+    public Guid? RelocatedBy { get; set; }
 
     [JsonPropertyName("message")]
     public string Message { get; set; } = string.Empty;

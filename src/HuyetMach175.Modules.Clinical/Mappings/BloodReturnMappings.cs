@@ -21,6 +21,7 @@ public static class BloodReturnMappings
         return new CreateBloodReturnResponse
         {
             ReturnId = bloodReturn.ReturnId,
+            ReturnCode = bloodReturn.ReturnCode,
             AllocationId = allocation.AllocationId,
             RequestId = request.RequestId,
             RequestCode = request.RequestCode,
@@ -51,6 +52,7 @@ public static class BloodReturnMappings
         return new CancelBloodReturnResponse
         {
             ReturnId = bloodReturn.ReturnId,
+            ReturnCode = bloodReturn.ReturnCode,
             AllocationId = bloodReturn.AllocationId,
             BagId = bag.BagId,
             Barcode = bag.Barcode,
@@ -78,6 +80,7 @@ public static class BloodReturnMappings
         return new PendingBloodReturnDto
         {
             ReturnId = bloodReturn.ReturnId,
+            ReturnCode = bloodReturn.ReturnCode,
             AllocationId = bloodReturn.AllocationId,
             BagId = bag.BagId,
             Barcode = bag.Barcode,
@@ -113,7 +116,7 @@ public static class BloodReturnMappings
 
     public static ReturnInspectionDto ToInspectionDto(
         this BloodReturn bloodReturn,
-        int? previousLocationId,
+        Guid? previousLocationId,
         string? previousLocationName,
         int previousRestockCount,
         List<string> clinicalChecklistWarnings,
@@ -131,6 +134,7 @@ public static class BloodReturnMappings
         return new ReturnInspectionDto
         {
             ReturnId = bloodReturn.ReturnId,
+            ReturnCode = bloodReturn.ReturnCode,
             AllocationId = bloodReturn.AllocationId,
             BagId = bag.BagId,
             Barcode = bag.Barcode,
@@ -182,6 +186,7 @@ public static class BloodReturnMappings
         return new ProcessBloodReturnResponse
         {
             ReturnId = bloodReturn.ReturnId,
+            ReturnCode = bloodReturn.ReturnCode,
             AllocationId = bloodReturn.AllocationId,
             BagId = bag.BagId,
             Barcode = bag.Barcode,

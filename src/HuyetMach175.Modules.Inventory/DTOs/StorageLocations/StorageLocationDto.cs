@@ -6,7 +6,7 @@ namespace HuyetMach175.Modules.Inventory.DTOs.StorageLocations;
 public class StorageLocationDto
 {
     [JsonPropertyName("locationId")]
-    public int LocationId { get; set; }
+    public Guid LocationId { get; set; }
 
     [JsonPropertyName("refrigeratorName")]
     public string RefrigeratorName { get; set; } = string.Empty;

@@ -68,7 +68,7 @@ public class DonorsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:guid}")]
     [HasPermission("DONORS_VIEW")]
     [EndpointSummary("Xem chi tiết hồ sơ người hiến máu và lịch sử hiến")]
     [EndpointDescription(
@@ -88,7 +88,7 @@ public class DonorsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetDonorById(int id)
+    public async Task<IActionResult> GetDonorById(Guid id)
     {
         var result = await _donorsService.GetDonorByIdAsync(id);
         return Ok(result);
@@ -122,7 +122,7 @@ public class DonorsController : ControllerBase
         return CreatedAtAction(nameof(GetDonorById), new { id = result.DonorId }, result);
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     [HasPermission("DONORS_EDIT")]
     [EndpointSummary("Cập nhật thông tin người hiến máu")]
     [EndpointDescription(
@@ -145,7 +145,7 @@ public class DonorsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> UpdateDonor(int id, [FromBody] UpdateDonorRequest request)
+    public async Task<IActionResult> UpdateDonor(Guid id, [FromBody] UpdateDonorRequest request)
     {
         var result = await _donorsService.UpdateDonorAsync(id, request);
         return Ok(result);

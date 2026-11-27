@@ -5,7 +5,7 @@ namespace HuyetMach175.Modules.Inventory.DTOs.BloodDisposals;
 public class DisposalRecordDto
 {
     [JsonPropertyName("disposalId")]
-    public int DisposalId { get; set; }
+    public Guid DisposalId { get; set; }
 
     [JsonPropertyName("disposalCode")]
     public string DisposalCode { get; set; } = string.Empty;
@@ -32,7 +32,7 @@ public class DisposalRecordDto
     public string StatusText { get; set; } = string.Empty;
 
     [JsonPropertyName("requestedBy")]
-    public int RequestedBy { get; set; }
+    public Guid RequestedBy { get; set; }
 
     [JsonPropertyName("requestedByName")]
     public string RequestedByName { get; set; } = string.Empty;
@@ -41,7 +41,7 @@ public class DisposalRecordDto
     public DateTime RequestedAt { get; set; }
 
     [JsonPropertyName("approvedBy")]
-    public int? ApprovedBy { get; set; }
+    public Guid? ApprovedBy { get; set; }
 
     [JsonPropertyName("approvedByName")]
     public string? ApprovedByName { get; set; }

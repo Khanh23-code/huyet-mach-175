@@ -6,10 +6,10 @@ namespace HuyetMach175.Modules.Auth.Services;
 public interface IRolesService 
 {
     Task<List<RoleDto>> GetRolesAsync();
-    Task<RoleDto> GetRoleByIdAsync(int roleId);
+    Task<RoleDto> GetRoleByIdAsync(Guid roleId);
     Task<RoleDto> CreateRoleAsync(CreateRoleRequest request);
-    Task<RoleDto> UpdateRoleAsync(int roleId, UpdateRoleRequest request);
-    Task<RoleDto> UpdateRoleStatusAsync(int roleId, UpdateRoleStatusRequest? request = null, bool force = false);
-    Task<RolePermissionsDto> GetRolePermissionsAsync(int roleId);
-    Task<RolePermissionsDto> UpdateRolePermissionsAsync(int roleId, UpdateRolePermissionsRequest request);
+    Task<RoleDto> UpdateRoleAsync(Guid roleId, UpdateRoleRequest request);
+    Task<RoleDto> UpdateRoleStatusAsync(Guid roleId, UpdateRoleStatusRequest? request = null, bool force = false);
+    Task<RolePermissionsDto> GetRolePermissionsAsync(Guid roleId);
+    Task<RolePermissionsDto> UpdateRolePermissionsAsync(Guid roleId, UpdateRolePermissionsRequest request);
 }

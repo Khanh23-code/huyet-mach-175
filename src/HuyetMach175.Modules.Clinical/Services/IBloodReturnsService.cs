@@ -5,9 +5,9 @@ namespace HuyetMach175.Modules.Clinical.Services;
 
 public interface IBloodReturnsService
 {
-    Task<CreateBloodReturnResponse> CreateBloodReturnAsync(CreateBloodReturnRequest request, int userId, string? ipAddress);
-    Task<CancelBloodReturnResponse> CancelBloodReturnAsync(int returnId, CancelBloodReturnRequest? request, int userId, string? ipAddress);
-    Task<PagedResult<PendingBloodReturnDto>> GetPendingBloodReturnsAsync(PendingBloodReturnFilterDto filter, int userId);
-    Task<ReturnInspectionDto> ScanBloodReturnByBarcodeAsync(string barcode, int userId);
-    Task<ProcessBloodReturnResponse> ProcessBloodReturnAsync(int returnId, ProcessBloodReturnRequest request, int userId, string? ipAddress);
+    Task<CreateBloodReturnResponse> CreateBloodReturnAsync(CreateBloodReturnRequest request, Guid userId, string? ipAddress);
+    Task<CancelBloodReturnResponse> CancelBloodReturnAsync(Guid returnId, CancelBloodReturnRequest? request, Guid userId, string? ipAddress);
+    Task<PagedResult<PendingBloodReturnDto>> GetPendingBloodReturnsAsync(PendingBloodReturnFilterDto filter, Guid userId);
+    Task<ReturnInspectionDto> ScanBloodReturnByBarcodeAsync(string barcode, Guid userId);
+    Task<ProcessBloodReturnResponse> ProcessBloodReturnAsync(Guid returnId, ProcessBloodReturnRequest request, Guid userId, string? ipAddress);
 }

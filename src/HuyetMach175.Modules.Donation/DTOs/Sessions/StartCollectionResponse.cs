@@ -4,8 +4,8 @@ namespace HuyetMach175.Modules.Donation.DTOs.Sessions;
 
 public class StartCollectionResponse
 {
-    [JsonPropertyName("sessionId")] public int SessionId { get; set; }
-    [JsonPropertyName("bagId")] public int BagId { get; set; }
+    [JsonPropertyName("sessionId")] public Guid SessionId { get; set; }
+    [JsonPropertyName("bagId")] public Guid BagId { get; set; }
     [JsonPropertyName("barcode")] public string Barcode { get; set; } = string.Empty;
     [JsonPropertyName("bloodGroup")] public string BloodGroup { get; set; } = string.Empty;
     [JsonPropertyName("volumeMl")] public int VolumeMl { get; set; }

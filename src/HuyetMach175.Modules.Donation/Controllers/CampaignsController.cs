@@ -70,7 +70,7 @@ public class CampaignsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:guid}")]
     [HasPermission("CAMPAIGN_VIEW")]
     [EndpointSummary("Xem chi tiết đợt hiến máu và thống kê tiến độ")]
     [EndpointDescription(
@@ -93,13 +93,13 @@ public class CampaignsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetCampaignById(int id)
+    public async Task<IActionResult> GetCampaignById(Guid id)
     {
         var result = await _campaignsService.GetCampaignByIdAsync(id);
         return Ok(result);
     }
 
-    [HttpGet("{id:int}/summary")]
+    [HttpGet("{id:guid}/summary")]
     [HasPermission("CAMPAIGN_VIEW")]
     [EndpointSummary("Báo cáo tổng kết đợt hiến máu")]
     [EndpointDescription(
@@ -122,13 +122,13 @@ public class CampaignsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetCampaignSummary(int id)
+    public async Task<IActionResult> GetCampaignSummary(Guid id)
     {
         var result = await _campaignsService.GetCampaignSummaryAsync(id);
         return Ok(result);
     }
 
-    [HttpGet("{id:int}/donors/import-template")]
+    [HttpGet("{id:guid}/donors/import-template")]
     [HasPermission("CAMPAIGN_VIEW")]
     [EndpointSummary("Tải file Excel mẫu danh sách đăng ký hiến máu")]
     [EndpointDescription(
@@ -144,13 +144,13 @@ public class CampaignsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DownloadImportTemplate(int id)
+    public async Task<IActionResult> DownloadImportTemplate(Guid id)
     {
         var (content, fileName) = await _donorImportService.GenerateTemplateAsync(id);
         return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
     }
 
-    [HttpPost("{id:int}/donors/import")]
+    [HttpPost("{id:guid}/donors/import")]
     [HasPermission("CAMPAIGN_EDIT")]
     [Consumes("multipart/form-data")]
     [EndpointSummary("Nhập danh sách người hiến máu từ file Excel")]
@@ -172,7 +172,7 @@ public class CampaignsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ImportDonors(int id, IFormFile file)
+    public async Task<IActionResult> ImportDonors(Guid id, IFormFile file)
     {
         var result = await _donorImportService.ImportDonorsAsync(id, file);
         return Ok(result);
@@ -202,7 +202,7 @@ public class CampaignsController : ControllerBase
         return CreatedAtAction(nameof(GetCampaignById), new { id = result.CampaignId }, result);
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     [HasPermission("CAMPAIGN_EDIT")]
     [EndpointSummary("Cập nhật thông tin đợt hiến máu")]
     [EndpointDescription(
@@ -222,13 +222,13 @@ public class CampaignsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateCampaign(int id, [FromBody] UpdateCampaignRequest request)
+    public async Task<IActionResult> UpdateCampaign(Guid id, [FromBody] UpdateCampaignRequest request)
     {
         var result = await _campaignsService.UpdateCampaignAsync(id, request);
         return Ok(result);
     }
 
-    [HttpPatch("{id:int}/submit-approval")]
+    [HttpPatch("{id:guid}/submit-approval")]
     [HasPermission("CAMPAIGN_EDIT")]
     [EndpointSummary("Gửi đề xuất đợt hiến máu lên Lãnh đạo phê duyệt")]
     [EndpointDescription(
@@ -247,13 +247,13 @@ public class CampaignsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> SubmitForApproval(int id)
+    public async Task<IActionResult> SubmitForApproval(Guid id)
     {
         var result = await _campaignsService.SubmitForApprovalAsync(id);
         return Ok(result);
     }
 
-    [HttpPatch("{id:int}/approval")]
+    [HttpPatch("{id:guid}/approval")]
     [HasPermission("CAMPAIGN_APPROVE")]
     [EndpointSummary("Phê duyệt hoặc từ chối đề xuất đợt hiến máu")]
     [EndpointDescription(
@@ -273,14 +273,14 @@ public class CampaignsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ApproveCampaign(int id, [FromBody] ApproveCampaignRequest request)
+    public async Task<IActionResult> ApproveCampaign(Guid id, [FromBody] ApproveCampaignRequest request)
     {
         var userId = User.GetUserId();
         var result = await _campaignsService.ApproveCampaignAsync(id, request, userId);
         return Ok(result);
     }
 
-    [HttpPatch("{id:int}/cancel")]
+    [HttpPatch("{id:guid}/cancel")]
     [HasPermission("CAMPAIGN_CANCEL")]
     [EndpointSummary("Hủy bỏ đợt hiến máu (Dành riêng cho Lãnh đạo)")]
     [EndpointDescription(
@@ -300,14 +300,14 @@ public class CampaignsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> CancelCampaign(int id, [FromBody] CancelCampaignRequest request)
+    public async Task<IActionResult> CancelCampaign(Guid id, [FromBody] CancelCampaignRequest request)
     {
         var userId = User.GetUserId();
         var result = await _campaignsService.CancelCampaignAsync(id, request, userId);
         return Ok(result);
     }
 
-    [HttpPatch("{id:int}/status")]
+    [HttpPatch("{id:guid}/status")]
     [HasPermission("CAMPAIGN_EDIT")]
     [EndpointSummary("Chuyển đổi trạng thái vận hành đợt hiến máu")]
     [EndpointDescription(
@@ -327,14 +327,14 @@ public class CampaignsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateCampaignStatus(int id, [FromBody] UpdateCampaignStatusRequest request)
+    public async Task<IActionResult> UpdateCampaignStatus(Guid id, [FromBody] UpdateCampaignStatusRequest request)
     {
         var userId = User.GetUserId();
         var result = await _campaignsService.UpdateCampaignStatusAsync(id, request, userId);
         return Ok(result);
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id:guid}")]
     [HasPermission("CAMPAIGN_EDIT")]
     [EndpointSummary("Xóa đợt hiến máu (Chỉ áp dụng cho Bản nháp)")]
     [EndpointDescription(
@@ -354,7 +354,7 @@ public class CampaignsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteCampaign(int id)
+    public async Task<IActionResult> DeleteCampaign(Guid id)
     {
         await _campaignsService.DeleteCampaignAsync(id);
         return NoContent();
