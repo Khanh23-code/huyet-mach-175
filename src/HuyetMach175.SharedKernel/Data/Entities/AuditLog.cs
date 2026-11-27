@@ -9,7 +9,7 @@ public class AuditLog
 {
     [Key]
     [Column("log_id")]
-    public long LogId { get; set; }
+    public Guid LogId { get; set; } = Guid.CreateVersion7();
 
     [Required]
     [MaxLength(50)]
@@ -17,7 +17,7 @@ public class AuditLog
     public string TableName { get; set; } = string.Empty;
 
     [Column("record_id")]
-    public int RecordId { get; set; }
+    public Guid RecordId { get; set; }
 
     [Column("action_type")]
     public ActionType ActionType { get; set; }
@@ -30,7 +30,7 @@ public class AuditLog
     public string NewState { get; set; } = "{}";
 
     [Column("performed_by")]
-    public int? PerformedBy { get; set; }
+    public Guid? PerformedBy { get; set; }
 
     [MaxLength(45)]
     [Column("ip_address")]

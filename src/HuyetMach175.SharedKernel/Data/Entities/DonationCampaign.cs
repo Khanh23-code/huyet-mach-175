@@ -9,7 +9,7 @@ public class DonationCampaign
 {
     [Key]
     [Column("campaign_id")]
-    public int CampaignId { get; set; }
+    public Guid CampaignId { get; set; } = Guid.CreateVersion7();
 
     [Required]
     [MaxLength(150)]
@@ -47,10 +47,10 @@ public class DonationCampaign
     public CampaignStatus Status { get; set; } = CampaignStatus.DRAFT;
 
     [Column("created_by")]
-    public int CreatedBy { get; set; }
+    public Guid CreatedBy { get; set; }
 
     [Column("approved_by")]
-    public int? ApprovedBy { get; set; }
+    public Guid? ApprovedBy { get; set; }
 
     [MaxLength(255)]
     [Column("rejection_reason")]
@@ -60,7 +60,7 @@ public class DonationCampaign
     public DateTime? ApprovedAt { get; set; }
 
     [Column("cancelled_by")]
-    public int? CancelledBy { get; set; }
+    public Guid? CancelledBy { get; set; }
 
     [MaxLength(255)]
     [Column("cancellation_reason")]

@@ -9,7 +9,7 @@ public class BloodBag
 {
     [Key]
     [Column("bag_id")]
-    public int BagId { get; set; }
+    public Guid BagId { get; set; } = Guid.CreateVersion7();
 
     [Required]
     [MaxLength(50)]
@@ -17,16 +17,16 @@ public class BloodBag
     public string Barcode { get; set; } = string.Empty;
 
     [Column("parent_bag_id")]
-    public int? ParentBagId { get; set; }
+    public Guid? ParentBagId { get; set; }
 
     [Column("session_id")]
-    public int? SessionId { get; set; }
+    public Guid? SessionId { get; set; }
 
     [Column("component_type_id")]
-    public int ComponentTypeId { get; set; }
+    public Guid ComponentTypeId { get; set; }
 
     [Column("location_id")]
-    public int? LocationId { get; set; }
+    public Guid? LocationId { get; set; }
 
     [Column("blood_type")]
     public BloodType BloodType { get; set; }

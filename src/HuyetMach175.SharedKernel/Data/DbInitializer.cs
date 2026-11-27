@@ -7,9 +7,9 @@ public static class DbInitializer
 {
     public static async Task SeedAsync(ApplicationDbContext context, IPasswordHasher passwordHasher)
     {
-        await SchemaSeeder.EnsureSchemaUpdatedAsync(context);
         await AuthSeeder.SeedAuthDataAsync(context, passwordHasher);
-        await DonationSeeder.SeedAppointmentsAndSurveysAsync(context);
+        await DonationSeeder.SeedDonationDataAsync(context);
         await InventorySeeder.SeedInventoryDataAsync(context);
+        await ClinicalSeeder.SeedClinicalDataAsync(context);
     }
 }

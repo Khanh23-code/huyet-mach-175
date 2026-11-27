@@ -9,7 +9,7 @@ public class BloodDisposalRecord
 {
     [Key]
     [Column("disposal_id")]
-    public int DisposalId { get; set; }
+    public Guid DisposalId { get; set; } = Guid.CreateVersion7();
 
     [Required]
     [MaxLength(30)]
@@ -30,13 +30,13 @@ public class BloodDisposalRecord
     public int TotalBags { get; set; }
 
     [Column("requested_by")]
-    public int RequestedBy { get; set; }
+    public Guid RequestedBy { get; set; }
 
     [Column("requested_at")]
     public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
 
     [Column("approved_by")]
-    public int? ApprovedBy { get; set; }
+    public Guid? ApprovedBy { get; set; }
 
     [Column("approved_at")]
     public DateTime? ApprovedAt { get; set; }

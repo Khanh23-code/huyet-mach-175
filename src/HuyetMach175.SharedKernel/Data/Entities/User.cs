@@ -8,10 +8,10 @@ public class User
 {
     [Key]
     [Column("user_id")]
-    public int UserId { get; set; }
+    public Guid UserId { get; set; } = Guid.CreateVersion7();
 
     [Column("department_id")]
-    public int DepartmentId { get; set; }
+    public Guid DepartmentId { get; set; }
 
     [Required]
     [MaxLength(50)]

@@ -9,25 +9,25 @@ public class BloodAllocation
 {
     [Key]
     [Column("allocation_id")]
-    public int AllocationId { get; set; }
+    public Guid AllocationId { get; set; } = Guid.CreateVersion7();
 
     [Column("request_id")]
-    public int RequestId { get; set; }
+    public Guid RequestId { get; set; }
 
     [Column("bag_id")]
-    public int BagId { get; set; }
+    public Guid BagId { get; set; }
 
     [Column("reserved_by")]
-    public int ReservedBy { get; set; }
+    public Guid ReservedBy { get; set; }
 
     [Column("reserved_at")]
     public DateTime ReservedAt { get; set; } = DateTime.UtcNow;
 
     [Column("issued_by")]
-    public int? IssuedBy { get; set; }
+    public Guid? IssuedBy { get; set; }
 
     [Column("received_by")]
-    public int? ReceivedBy { get; set; }
+    public Guid? ReceivedBy { get; set; }
 
     [Column("issued_at")]
     public DateTime? IssuedAt { get; set; }

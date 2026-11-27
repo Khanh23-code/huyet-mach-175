@@ -8,10 +8,10 @@ public class RefreshToken
 {
     [Key]
     [Column("token_id")]
-    public int TokenId { get; set; }
+    public Guid TokenId { get; set; } = Guid.CreateVersion7();
 
     [Column("user_id")]
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
 
     [Required]
     [MaxLength(255)]

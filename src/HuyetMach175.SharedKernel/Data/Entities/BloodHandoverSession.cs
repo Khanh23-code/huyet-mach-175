@@ -9,7 +9,7 @@ public class BloodHandoverSession
 {
     [Key]
     [Column("handover_session_id")]
-    public int HandoverSessionId { get; set; }
+    public Guid HandoverSessionId { get; set; } = Guid.CreateVersion7();
 
     [Required]
     [MaxLength(30)]
@@ -17,16 +17,16 @@ public class BloodHandoverSession
     public string SessionCode { get; set; } = string.Empty;
 
     [Column("request_id")]
-    public int RequestId { get; set; }
+    public Guid RequestId { get; set; }
 
     [Column("initiated_by")]
-    public int InitiatedBy { get; set; }
+    public Guid InitiatedBy { get; set; }
 
     [Column("confirmed_by")]
-    public int? ConfirmedBy { get; set; }
+    public Guid? ConfirmedBy { get; set; }
 
     [Column("cancelled_by")]
-    public int? CancelledBy { get; set; }
+    public Guid? CancelledBy { get; set; }
 
     [Column("status")]
     public HandoverSessionStatus Status { get; set; } = HandoverSessionStatus.PENDING;

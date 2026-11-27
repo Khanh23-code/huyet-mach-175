@@ -18,7 +18,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
     }
 
     /// <summary>Key cache quyền của user. Gọi _cache.Remove(CacheKey(userId)) khi đổi role/status user.</summary>
-    public static string CacheKey(int userId) => $"perm:{userId}";
+    public static string CacheKey(Guid userId) => $"perm:{userId}";
 
     protected override async Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
@@ -30,7 +30,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         }
 
         var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!int.TryParse(userIdClaim, out var userId))
+        if (!Guid.TryParse(userIdClaim, out var userId) || userId == Guid.Empty)
         {
             return;
         }

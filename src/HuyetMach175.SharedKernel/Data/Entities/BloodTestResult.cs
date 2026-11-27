@@ -9,13 +9,13 @@ public class BloodTestResult
 {
     [Key]
     [Column("test_id")]
-    public int TestId { get; set; }
+    public Guid TestId { get; set; } = Guid.CreateVersion7();
 
     [Column("bag_id")]
-    public int BagId { get; set; }
+    public Guid BagId { get; set; }
 
     [Column("technician_id")]
-    public int TechnicianId { get; set; }
+    public Guid TechnicianId { get; set; }
 
     [Column("hiv_result")]
     public TestResult HivResult { get; set; }

@@ -8,13 +8,13 @@ public class BloodRequestItem
 {
     [Key]
     [Column("request_item_id")]
-    public int RequestItemId { get; set; }
+    public Guid RequestItemId { get; set; } = Guid.CreateVersion7();
 
     [Column("request_id")]
-    public int RequestId { get; set; }
+    public Guid RequestId { get; set; }
 
     [Column("component_type_id")]
-    public int ComponentTypeId { get; set; }
+    public Guid ComponentTypeId { get; set; }
 
     [Column("requested_units")]
     public int RequestedUnits { get; set; }

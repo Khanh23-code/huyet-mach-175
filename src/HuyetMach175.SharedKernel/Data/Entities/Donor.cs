@@ -9,7 +9,7 @@ public class Donor
 {
     [Key]
     [Column("donor_id")]
-    public int DonorId { get; set; }
+    public Guid DonorId { get; set; } = Guid.CreateVersion7();
 
     [Required]
     [MaxLength(12)]

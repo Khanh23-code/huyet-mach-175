@@ -6,10 +6,10 @@ namespace HuyetMach175.Api.Data.Entities;
 public class RolePermission
 {
     [Column("role_id")]
-    public int RoleId { get; set; }
+    public Guid RoleId { get; set; }
 
     [Column("permission_id")]
-    public int PermissionId { get; set; }
+    public Guid PermissionId { get; set; }
 
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -9,13 +9,13 @@ public class BloodDisposalItem
 {
     [Key]
     [Column("item_id")]
-    public int ItemId { get; set; }
+    public Guid ItemId { get; set; } = Guid.CreateVersion7();
 
     [Column("disposal_id")]
-    public int DisposalId { get; set; }
+    public Guid DisposalId { get; set; }
 
     [Column("bag_id")]
-    public int BagId { get; set; }
+    public Guid BagId { get; set; }
 
     [Column("previous_status")]
     public BagStatus PreviousStatus { get; set; }

@@ -9,10 +9,10 @@ public class BloodBagStatusLog
 {
     [Key]
     [Column("log_id")]
-    public int LogId { get; set; }
+    public Guid LogId { get; set; } = Guid.CreateVersion7();
 
     [Column("bag_id")]
-    public int BagId { get; set; }
+    public Guid BagId { get; set; }
 
     [Required]
     [MaxLength(50)]
@@ -25,10 +25,10 @@ public class BloodBagStatusLog
     public BagStatus ToStatus { get; set; }
 
     [Column("performed_by_id")]
-    public int? PerformedById { get; set; }
+    public Guid? PerformedById { get; set; }
 
     [Column("audit_log_id")]
-    public long? AuditLogId { get; set; }
+    public Guid? AuditLogId { get; set; }
 
     [MaxLength(255)]
     [Column("notes")]

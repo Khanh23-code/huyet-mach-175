@@ -9,7 +9,7 @@ public class Permission
 {
     [Key]
     [Column("permission_id")]
-    public int PermissionId { get; set; }
+    public Guid PermissionId { get; set; } = Guid.CreateVersion7();
 
     [Required]
     [MaxLength(50)]

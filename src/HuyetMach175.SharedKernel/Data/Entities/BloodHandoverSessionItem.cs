@@ -8,16 +8,16 @@ public class BloodHandoverSessionItem
 {
     [Key]
     [Column("item_id")]
-    public int ItemId { get; set; }
+    public Guid ItemId { get; set; } = Guid.CreateVersion7();
 
     [Column("handover_session_id")]
-    public int HandoverSessionId { get; set; }
+    public Guid HandoverSessionId { get; set; }
 
     [Column("allocation_id")]
-    public int AllocationId { get; set; }
+    public Guid AllocationId { get; set; }
 
     [Column("bag_id")]
-    public int BagId { get; set; }
+    public Guid BagId { get; set; }
 
     [ForeignKey(nameof(HandoverSessionId))]
     public BloodHandoverSession? HandoverSession { get; set; }
