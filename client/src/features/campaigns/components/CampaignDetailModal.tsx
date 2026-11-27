@@ -42,7 +42,7 @@ import { parseApiError } from '@/services/apiError'
 import type { CampaignListItem, CampaignStatus } from '../types'
 
 interface Props {
-    campaignId?: number | null
+    campaignId?: string | null
     campaign?: CampaignListItem | null
     site?: any
     onClose: () => void

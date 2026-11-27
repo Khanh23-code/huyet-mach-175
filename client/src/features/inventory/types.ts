@@ -6,7 +6,7 @@ export type StorageZone = 'QUARANTINE' | 'RELEASED' | 'DISPOSAL_HOLD'
 export type CompatibilityRuleType = 'RBC' | 'PLASMA' | 'PLATELET'
 
 export interface StorageLocation {
-    locationId: number
+    locationId: string
     refrigeratorName: string
     shelfNumber: string
     targetTemperature: number
@@ -19,7 +19,7 @@ export interface StorageLocation {
 
 /** Rút gọn từ BloodBagDto, dùng để giải thích vì sao túi không điều chế được. */
 export interface BloodBagLite {
-    bagId: number
+    bagId: string
     barcode: string
     bloodGroup: string
     componentTypeCode: string
@@ -34,11 +34,11 @@ export interface RegisterExternalRequest {
     volumeMl: number
     collectedAt: string // ISO UTC
     receivedTemperature: number
-    storageLocationId: number
+    storageLocationId: string
 }
 
 export interface RegisterExternalResponse {
-    bagId: number
+    bagId: string
     barcode: string
     componentTypeName: string
     bloodGroup: string
@@ -46,18 +46,18 @@ export interface RegisterExternalResponse {
     status: string
     externalUnitName: string
     externalCode: string
-    storageLocationId: number
+    storageLocationId: string
     storageLocationName: string
     receivedTemperature: number
     collectedAt: string
     expiredAt: string
     receivedAt: string
-    receivedBy: number
+    receivedBy: string
     message: string
 }
 
 export interface ProcessingQueueItem {
-    bagId: number
+    bagId: string
     barcode: string
     donorCode?: string | null
     donorName?: string | null
@@ -67,7 +67,7 @@ export interface ProcessingQueueItem {
     bloodType: string
     rhFactor: string
     bloodGroup: string
-    storageLocationId?: number | null
+    storageLocationId?: string | null
     storageLocationName?: string | null
     collectedAt: string
     testedAt?: string | null
@@ -86,7 +86,7 @@ export interface ProcessingQueueQuery {
 }
 
 export interface ComponentTypeOption {
-    componentTypeId: number
+    componentTypeId: string
     typeCode: string
     typeName: string
     lifeDays: number
@@ -95,29 +95,29 @@ export interface ComponentTypeOption {
 
 export interface SeparateRequest {
     parentBarcode: string
-    components: { componentType: ChildCode; volumeMl: number; storageLocationId: number }[]
+    components: { componentType: ChildCode; volumeMl: number; storageLocationId: string }[]
 }
 
 export interface DerivedComponent {
-    bagId: number
+    bagId: string
     barcode: string
     componentTypeCode: string
     componentTypeName: string
     bloodGroup: string
     volumeMl: number
     status: string
-    storageLocationId: number
+    storageLocationId: string
     storageLocationName: string
     collectedAt: string
     expiredAt: string
 }
 
 export interface SeparateResponse {
-    parentBagId: number
+    parentBagId: string
     parentBarcode: string
     parentStatus: string
     processedAt: string
-    technicianId: number
+    technicianId: string
     technicianName: string
     derivedComponents: DerivedComponent[]
     message: string

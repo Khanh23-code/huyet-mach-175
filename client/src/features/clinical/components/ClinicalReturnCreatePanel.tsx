@@ -51,7 +51,7 @@ export function ClinicalReturnCreatePanel() {
     const eligibleBags = useMemo(() => returnBagPools?.eligibleBags ?? [], [returnBagPools])
     const ineligibleBags = useMemo(() => returnBagPools?.ineligibleBags ?? [], [returnBagPools])
 
-    const [selectedAllocationId, setSelectedAllocationId] = useState<number | undefined>()
+    const [selectedAllocationId, setSelectedAllocationId] = useState<string | undefined>()
     const [reasonOption, setReasonOption] = useState<string | undefined>()
     const [customReason, setCustomReason] = useState('')
     const [checklist, setChecklist] = useState({
@@ -172,7 +172,7 @@ export function ClinicalReturnCreatePanel() {
             disabled: false,
         }))
         const ineligibleOpts = ineligibleBags.map((b) => ({
-            value: -b.allocationId,
+            value: `ineligible:${b.allocationId}`,
             label: `[Không đủ điều kiện] ${b.barcode} - ${b.componentName} — ${b.ineligibleReason}`,
             disabled: true,
         }))
@@ -186,7 +186,7 @@ export function ClinicalReturnCreatePanel() {
                 key: 'info',
                 render: (_, r) => (
                     <div>
-                        <strong>Mã phiếu #{r.returnId}</strong>
+                        <strong>{r.returnCode}</strong>
                         <div>
                             <code className="handover-barcode">{r.barcode}</code>
                         </div>
@@ -352,13 +352,13 @@ export function ClinicalReturnCreatePanel() {
                         icon={createdReturn.isEligibleForRestockEvaluation ? <CheckCircleOutlined /> : <WarningOutlined />}
                         message={
                             createdReturn.isEligibleForRestockEvaluation
-                                ? `Đã tạo phiếu hoàn trả #${createdReturn.returnId} thành công`
-                                : `Đã tạo phiếu hoàn trả #${createdReturn.returnId} kèm cảnh báo bắt buộc tiêu hủy`
+                                ? `Đã tạo phiếu hoàn trả ${createdReturn.returnCode} thành công`
+                                : `Đã tạo phiếu hoàn trả ${createdReturn.returnCode} kèm cảnh báo bắt buộc tiêu hủy`
                         }
                         description={
                             <div style={{ display: 'grid', gap: 4, marginTop: 4 }}>
                                 <div>
-                                    Mã phiếu: <strong>#{createdReturn.returnId}</strong> - Túi máu:{' '}
+                                    Mã phiếu: <strong>{createdReturn.returnCode}</strong> - Túi máu:{' '}
                                     <code className="handover-barcode">{createdReturn.barcode}</code> ({createdReturn.componentName} -{' '}
                                     {createdReturn.bloodType})
                                 </div>
@@ -629,7 +629,7 @@ export function ClinicalReturnCreatePanel() {
             <Modal
                 title={
                     cancellingReturn
-                        ? `Hủy phiếu hoàn trả #${cancellingReturn.returnId} (${cancellingReturn.barcode})`
+                        ? `Hủy phiếu hoàn trả ${cancellingReturn.returnCode} (${cancellingReturn.barcode})`
                         : 'Hủy phiếu hoàn trả'
                 }
                 open={Boolean(cancellingReturn)}
@@ -651,7 +651,7 @@ export function ClinicalReturnCreatePanel() {
                             type="warning"
                             showIcon
                             message="Túi máu sẽ được mở khóa và khôi phục về trạng thái đã xuất kho"
-                            description={`Phiếu #${cancellingReturn.returnId} của NB ${cancellingReturn.patientName} (${cancellingReturn.patientCode}) sẽ bị hủy trước khi Ngân hàng máu kiểm định.`}
+                            description={`Phiếu ${cancellingReturn.returnCode} của NB ${cancellingReturn.patientName} (${cancellingReturn.patientCode}) sẽ bị hủy trước khi Ngân hàng máu kiểm định.`}
                         />
                         <div>
                             <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 6 }}>

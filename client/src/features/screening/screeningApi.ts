@@ -15,12 +15,12 @@ export const screeningApi = {
             .get<PagedResult<ScreeningQueueItem>>('/api/surveys/queue', { params })
             .then((r) => r.data),
 
-    detail: (appointmentId: number) =>
+    detail: (appointmentId: string) =>
         axiosClient
             .get<SurveyDetail>(`/api/surveys/appointment/${appointmentId}`)
             .then((r) => r.data),
 
-    saveClinical: (appointmentId: number, body: UpdateClinicalRequest) =>
+    saveClinical: (appointmentId: string, body: UpdateClinicalRequest) =>
         axiosClient
             .put<ClinicalScreeningResponse>(`/api/surveys/appointment/${appointmentId}/clinical`, body)
             .then((r) => r.data),

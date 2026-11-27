@@ -10,8 +10,8 @@ import type { SessionQueueItem, SessionStatus } from '../types'
 interface Props {
     items: SessionQueueItem[]
     loading: boolean
-    selectedId: number | null
-    onSelect: (sessionId: number) => void
+    selectedId: string | null
+    onSelect: (sessionId: string) => void
     filter: SessionStatus
     onFilterChange: (f: SessionStatus) => void
     keyword: string

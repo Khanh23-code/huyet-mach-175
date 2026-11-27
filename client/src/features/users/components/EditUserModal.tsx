@@ -30,9 +30,9 @@ const Field = ({ label, error, children }: { label: string; error?: string; chil
 
 const FORM_FIELDS = Object.keys(editUserSchema.shape)
 
-const sameIds = (a: number[], b: number[]) => {
-    const x = [...a].sort((m, n) => m - n)
-    const y = [...b].sort((m, n) => m - n)
+const sameIds = (a: string[], b: string[]) => {
+    const x = [...a].sort()
+    const y = [...b].sort()
     return x.length === y.length && x.every((v, i) => v === y[i])
 }
 

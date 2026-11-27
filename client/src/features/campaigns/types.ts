@@ -10,14 +10,14 @@ export type CampaignStatus =
     | 'REJECTED'
 
 export interface CampaignSlot {
-    slotId?: number
+    slotId?: string
     startTime: string
     endTime: string
     capacity: number
 }
 
 export interface CampaignListItem {
-    campaignId: number
+    campaignId: string
     campaignName: string
     description?: string | null
     locationName: string
@@ -32,7 +32,7 @@ export interface CampaignListItem {
     cancellationReason?: string | null
     totalRegistered: number
     totalCollected: number
-    createdBy?: number
+    createdBy?: string
     createdByName?: string
     createdAt: string
     slots?: CampaignSlot[]
@@ -42,13 +42,13 @@ export interface CampaignDetail extends CampaignListItem {
     totalCheckedIn: number
     completionRate: number
     remainingDays: number
-    createdBy: number
+    createdBy: string
     createdByName: string
-    approvedBy?: number | null
+    approvedBy?: string | null
     approvedByName?: string | null
     approvedAt?: string | null
     rejectionReason?: string | null
-    cancelledBy?: number | null
+    cancelledBy?: string | null
     cancelledByName?: string | null
     cancelledAt?: string | null
     cancellationReason?: string | null
@@ -109,8 +109,8 @@ export interface CampaignDeferralReasonStat {
 }
 
 export interface CampaignIncident {
-    sessionId: number
-    appointmentId: number
+    sessionId: string
+    appointmentId: string
     donorName: string
     donorCitizenId: string
     targetVolumeMl: string
@@ -139,7 +139,7 @@ export interface CampaignRhStat {
 }
 
 export interface CampaignSlotSummary {
-    slotId: number
+    slotId: string
     startTime: string
     endTime: string
     capacity: number
@@ -150,7 +150,7 @@ export interface CampaignSlotSummary {
 }
 
 export interface CampaignSummary {
-    campaignId: number
+    campaignId: string
     campaignName: string
     description?: string | null
     locationName: string
@@ -206,7 +206,7 @@ export interface DonorImportRowError {
 }
 
 export interface DonorImportResult {
-    campaignId: number
+    campaignId: string
     campaignName: string
     totalRows: number
     successCount: number

@@ -94,13 +94,13 @@ const TIMEOUT_OPTIONS = [
 ]
 
 interface StagedBagItem {
-    bagId: number
+    bagId: string
     barcode: string
     bloodGroup: string
     componentTypeCode: string
     componentTypeName: string
     volumeMl: number
-    requestId?: number
+    requestId?: string
     requestCode?: string | null
 }
 
@@ -131,10 +131,10 @@ export default function HandoverScanPage() {
 
     const [reservedSearch, setReservedSearch] = useState('')
     const [reservedUrgency, setReservedUrgency] = useState('ALL')
-    const [selectedRequestFilterId, setSelectedRequestFilterId] = useState<number | 'ALL'>('ALL')
-    const [mountedExpandedKeys, setMountedExpandedKeys] = useState<number[]>([])
-    const [openExpandedKeys, setOpenExpandedKeys] = useState<number[]>([])
-    const collapseTimersRef = useRef<Record<number, number>>({})
+    const [selectedRequestFilterId, setSelectedRequestFilterId] = useState<string>('ALL')
+    const [mountedExpandedKeys, setMountedExpandedKeys] = useState<string[]>([])
+    const [openExpandedKeys, setOpenExpandedKeys] = useState<string[]>([])
+    const collapseTimersRef = useRef<Record<string, number>>({})
 
     useEffect(() => {
         const timers = collapseTimersRef.current
@@ -144,7 +144,7 @@ export default function HandoverScanPage() {
     }, [])
 
     const toggleRequestRow = useCallback(
-        (requestId: number) => {
+        (requestId: string) => {
             const existingTimer = collapseTimersRef.current[requestId]
             if (existingTimer) {
                 window.clearTimeout(existingTimer)

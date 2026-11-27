@@ -8,13 +8,13 @@ export type HandoverSessionStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'EXP
 export interface PendingHandoverSessionFilter {
     sessionCode?: string
     requestCode?: string
-    doctorId?: number
+    doctorId?: string
     doctorName?: string
 }
 
 export interface CreateHandoverSessionRequest {
     barcodes: string[]
-    requestId?: number
+    requestId?: string
     timeoutMinutes?: number
 }
 
@@ -28,10 +28,10 @@ export interface CancelHandoverSessionRequest {
 }
 
 export interface HandoverSessionItemDto {
-    allocationId: number
-    bagId: number
+    allocationId: string
+    bagId: string
     barcode: string
-    componentTypeId: number
+    componentTypeId: string
     componentCode: HandoverComponentCode | string
     componentName: string
     bloodType: string
@@ -42,7 +42,7 @@ export interface HandoverSessionItemDto {
 }
 
 export interface HandoverSessionDto {
-    handoverSessionId: number
+    handoverSessionId: string
     sessionCode: string
     status: HandoverSessionStatus
     createdAt: string
@@ -51,15 +51,15 @@ export interface HandoverSessionDto {
     confirmedAt?: string | null
     cancelledAt?: string | null
     cancelReason?: string | null
-    initiatedById: number
+    initiatedById: string
     initiatedByName?: string | null
-    confirmedById?: number | null
+    confirmedById?: string | null
     confirmedByName?: string | null
-    cancelledById?: number | null
+    cancelledById?: string | null
     cancelledByName?: string | null
-    requestId: number
+    requestId: string
     requestCode: string
-    doctorId?: number | null
+    doctorId?: string | null
     doctorName?: string | null
     departmentName?: string | null
     isOwnRequest: boolean
@@ -83,10 +83,10 @@ export interface ReservedHandoverFilter {
 }
 
 export interface ReservedHandoverBagDto {
-    allocationId: number
-    bagId: number
+    allocationId: string
+    bagId: string
     barcode: string
-    componentTypeId: number
+    componentTypeId: string
     componentCode: HandoverComponentCode | string
     componentName: string
     bloodType: string
@@ -96,12 +96,12 @@ export interface ReservedHandoverBagDto {
     locationName?: string | null
     reservedAt: string
     reservedByName?: string | null
-    activeSessionId?: number | null
+    activeSessionId?: string | null
     activeSessionCode?: string | null
 }
 
 export interface ReservedHandoverRequestDto {
-    requestId: number
+    requestId: string
     requestCode: string
     requestStatus: HandoverRequestStatus
     urgencyLevel: HandoverUrgencyLevel

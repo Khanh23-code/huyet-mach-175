@@ -26,7 +26,7 @@ export function usePendingReturns(
 export function useProcessBloodReturn() {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: ({ returnId, body }: { returnId: number; body: ProcessBloodReturnRequest }) =>
+        mutationFn: ({ returnId, body }: { returnId: string; body: ProcessBloodReturnRequest }) =>
             returnsApi.process(returnId, body),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['inventory'] })

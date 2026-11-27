@@ -22,14 +22,12 @@ public class BloodComponentTypesController : ControllerBase
     }
 
     [HttpGet]
-    [HasPermission("INVENTORY_VIEW")]
     [EndpointSummary("Lấy danh sách cấu hình các loại chế phẩm máu")]
     [EndpointDescription(
         "Trả về cấu hình quy tắc bảo quản, hạn dùng, tái nhập kho và hòa hợp miễn dịch của từng loại chế phẩm máu.\n\n" +
-        "**Yêu cầu quyền truy cập:** Bearer Token với quyền **INVENTORY_VIEW**.")]
+        "**Yêu cầu quyền truy cập:** Bearer Token hợp lệ.")]
     [ProducesResponseType(typeof(List<BloodComponentTypeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetAll()
     {
         var result = await _bloodComponentTypesService.GetAllAsync();

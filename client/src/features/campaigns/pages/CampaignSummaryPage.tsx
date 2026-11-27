@@ -59,7 +59,7 @@ import './CampaignSummaryPage.css'
 export default function CampaignSummaryPage() {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
-    const campaignId = id ? Number(id) : null
+    const campaignId = id?.trim() || null
 
     const [isImportOpen, setIsImportOpen] = useState(false)
     const { data: summary, isLoading, error, refetch, isFetching } = useCampaignSummary(campaignId)
@@ -147,8 +147,8 @@ export default function CampaignSummaryPage() {
                 title: 'Mã phiên / Hẹn',
                 key: 'id',
                 render: (_, r) => (
-                    <span className="text-mono" style={{ fontWeight: 600 }}>
-                        #{r.sessionId} (Hẹn #{r.appointmentId})
+                    <span className="text-mono" style={{ fontWeight: 600 }} title={`Phiên: ${r.sessionId} / Lịch hẹn: ${r.appointmentId}`}>
+                        #{r.sessionId.slice(0, 8)} (Hẹn #{r.appointmentId.slice(0, 8)})
                     </span>
                 ),
             },
@@ -234,7 +234,7 @@ export default function CampaignSummaryPage() {
             <PageHeader
                 breadcrumb={[
                     { title: 'Điểm hiến máu & Lịch slot', path: '/campaigns/sites' },
-                    { title: `Báo cáo tổng kết đợt #${summary.campaignId}` },
+                    { title: 'Báo cáo tổng kết đợt hiến máu' },
                 ]}
                 backTo={-1}
                 title={summary.campaignName}
@@ -249,7 +249,7 @@ export default function CampaignSummaryPage() {
                         <StatusPill tone={CAMPAIGN_TYPE_TONE[campaignType]} dot={false}>
                             {CAMPAIGN_TYPE_LABEL[campaignType]}
                         </StatusPill>
-                        <span className="ds-code">#{summary.campaignId}</span>
+                        <span className="ds-code" title={summary.campaignId}>#{summary.campaignId.slice(0, 8)}</span>
                     </>
                 }
                 subtitle={

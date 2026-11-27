@@ -2,7 +2,7 @@ import { axiosClient } from '@/services/axiosClient'
 import type { CreateDonorRequest, DonorDetail, DonorEligibility } from './types'
 
 export const donorsApi = {
-    get: (id: number) =>
+    get: (id: string) =>
         axiosClient.get<DonorDetail>(`/api/donors/${id}`).then((r) => r.data),
 
     /** Tra CCCD: chưa có -> donorId = null (BE không trả 404). */

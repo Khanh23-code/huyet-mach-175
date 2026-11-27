@@ -20,8 +20,8 @@ import {
 import './ReviewProposalModal.css'
 
 interface Props {
-    campaignId?: number | null
-    proposalId?: number | null
+    campaignId?: string | null
+    proposalId?: string | null
     onClose: () => void
 }
 

@@ -1,4 +1,4 @@
-﻿import {
+import {
     useMutation,
     useQuery,
     useQueryClient,
@@ -6,11 +6,11 @@
 
 import { permissionsApi } from './permissionsApi'
 
-export const useRolePermissions = (roleId: number | undefined) =>
+export const useRolePermissions = (roleId: string | undefined) =>
     useQuery({
         queryKey: ['role-permissions', roleId],
         queryFn: () => permissionsApi.getByRole(roleId!),
-        enabled: roleId !== undefined,
+        enabled: Boolean(roleId),
     })
 
 export const useUpdateRolePermissions = () => {
@@ -21,8 +21,8 @@ export const useUpdateRolePermissions = () => {
                          roleId,
                          permissionIds,
                      }: {
-            roleId: number
-            permissionIds: number[]
+            roleId: string
+            permissionIds: string[]
         }) => permissionsApi.updateByRole(roleId, { permissionIds }),
 
         onSuccess: async (data, variables) => {

@@ -71,7 +71,7 @@ interface Props {
 
 export default function CampaignForm({ campaign, defaultType = 'EVENT', onSuccess, onCancel }: Props) {
     const { modal, message } = App.useApp()
-    const isEditing = Boolean(campaign && campaign.campaignId > 0)
+    const isEditing = Boolean(campaign && campaign.campaignId)
     const detailQuery = useCampaignDetail(campaign?.campaignId ?? null)
     const activeData = detailQuery.data ?? campaign
 

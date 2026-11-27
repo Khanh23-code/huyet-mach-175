@@ -5,8 +5,8 @@ export type SessionStatus = 'WAITING_COLLECTION' | 'COMPLETED' | 'ABORTED'
 
 /** SessionQueueItemDto */
 export interface SessionQueueItem {
-    sessionId: number
-    appointmentId: number
+    sessionId: string
+    appointmentId: string
     donorCode: string
     donorName: string
     bloodType?: string | null
@@ -26,7 +26,7 @@ export interface SessionQueueQuery {
 }
 
 export interface SessionBloodBag {
-    bagId: number
+    bagId: string
     barcode: string
     bloodGroup: string
     volumeMl: number
@@ -35,7 +35,7 @@ export interface SessionBloodBag {
 }
 
 export interface SessionDonor {
-    donorId: number
+    donorId: string
     donorCode: string
     fullName: string
     citizenId: string
@@ -55,13 +55,13 @@ export interface SessionScreeningSummary {
 }
 
 export interface SessionDetail {
-    sessionId: number
-    appointmentId: number
+    sessionId: string
+    appointmentId: string
     status: SessionStatus
     targetVolumeMl: TargetVolume
     actualVolumeMl?: number | null
     collectionIncident?: string | null
-    phlebotomistId?: number | null
+    phlebotomistId?: string | null
     phlebotomistName?: string | null
     completedAt?: string | null
     bloodBagBarcode?: string | null
@@ -71,8 +71,8 @@ export interface SessionDetail {
 }
 
 export interface StartCollectionResponse {
-    sessionId: number
-    bagId: number
+    sessionId: string
+    bagId: string
     barcode: string
     bloodGroup: string
     volumeMl: number
@@ -89,7 +89,7 @@ export interface UpdateCollectionRequest {
 }
 
 export interface CollectionResponse {
-    sessionId: number
+    sessionId: string
     status: SessionStatus
     actualVolumeMl?: number | null
     completedAt: string

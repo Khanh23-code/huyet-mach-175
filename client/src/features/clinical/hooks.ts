@@ -2,7 +2,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { message } from 'antd'
 import { PERMISSIONS } from '@/config/permissions'
 import { usePermission } from '@/features/auth/usePermission'
-import { clinicalApi, FALLBACK_COMPONENT_TYPES } from './clinicalApi'
+import { clinicalApi } from './clinicalApi'
 import { formatBloodGroup } from '@/shared/formatters/medical'
 import { parseApiError } from '@/services/apiError'
 import type {
@@ -30,16 +30,15 @@ const SESSION_CACHE_OPTIONS = {
 
 export const CLINICAL_QUERY_KEYS = {
     requests: (filter?: ClinicalBloodRequestFilter) => ['clinical', 'requests', filter] as const,
-    detail: (id: number) => ['clinical', 'request', id] as const,
+    detail: (id: string) => ['clinical', 'request', id] as const,
     pendingHandoverSessions: (filter?: PendingHandoverSessionFilter) =>
         ['clinical', 'handoverSessions', 'pending', filter] as const,
-    handoverSessionDetail: (sessionId: number) =>
+    handoverSessionDetail: (sessionId: string) =>
         ['clinical', 'handoverSessions', sessionId] as const,
     transfusionScan: (barcode: string) => ['clinical', 'transfusionScan', barcode] as const,
     pendingReturns: (filter?: PendingBloodReturnFilter) => ['clinical', 'pendingReturns', filter] as const,
     eligibleReturnBags: () => ['clinical', 'eligibleReturnBags'] as const,
-    componentTypes: (canFetchFromProcessing: boolean) =>
-        ['clinical', 'componentTypes', canFetchFromProcessing] as const,
+    componentTypes: () => ['clinical', 'componentTypes'] as const,
 }
 
 /** Hook lấy danh sách phiếu yêu cầu máu phía Lâm sàng */
@@ -60,14 +59,15 @@ export function useClinicalRequests(
 }
 
 /** Hook lấy chi tiết 1 phiếu yêu cầu */
-export function useClinicalRequestDetail(id: number | null) {
+export function useClinicalRequestDetail(id: string | null) {
     const { can } = usePermission()
     const canView = can(PERMISSIONS.BLOOD_REQUEST_VIEW)
+    const validId = id?.trim() || ''
 
     return useQuery({
-        queryKey: CLINICAL_QUERY_KEYS.detail(id ?? 0),
-        queryFn: () => clinicalApi.getRequestById(id!),
-        enabled: canView && typeof id === 'number' && id > 0,
+        queryKey: CLINICAL_QUERY_KEYS.detail(validId),
+        queryFn: () => clinicalApi.getRequestById(validId),
+        enabled: canView && validId.length > 0,
         ...SESSION_CACHE_OPTIONS,
     })
 }
@@ -99,7 +99,7 @@ export function useUpdateDraftRequest() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: ({ id, dto }: { id: number; dto: UpdateBloodRequestDto }) =>
+        mutationFn: ({ id, dto }: { id: string; dto: UpdateBloodRequestDto }) =>
             clinicalApi.updateDraftRequest(id, dto),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['clinical', 'requests'] })
@@ -118,7 +118,7 @@ export function useSubmitDraftRequest() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (id: number) => clinicalApi.submitDraftRequest(id),
+        mutationFn: (id: string) => clinicalApi.submitDraftRequest(id),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['clinical', 'requests'] })
             queryClient.invalidateQueries({ queryKey: CLINICAL_QUERY_KEYS.detail(data.requestId) })
@@ -151,7 +151,7 @@ export function usePendingHandoverSessions(
 
 /** Hook xem chi tiết một phiên bàn giao máu */
 export function useHandoverSessionDetail(
-    sessionId: number | null,
+    sessionId: string | null,
     options?: {
         enabled?: boolean
         refetchInterval?: number | false | ((data?: HandoverSessionDto) => number | false)
@@ -159,13 +159,13 @@ export function useHandoverSessionDetail(
 ) {
     const { can } = usePermission()
     const canView = can(PERMISSIONS.BLOOD_REQUEST_VIEW)
-    const validId = typeof sessionId === 'number' && sessionId > 0 ? sessionId : 0
+    const validId = sessionId?.trim() || ''
     const intervalOption = options?.refetchInterval
 
     return useQuery({
         queryKey: CLINICAL_QUERY_KEYS.handoverSessionDetail(validId),
         queryFn: () => clinicalApi.getHandoverSessionById(validId),
-        enabled: canView && validId > 0 && (options?.enabled ?? true),
+        enabled: canView && validId.length > 0 && (options?.enabled ?? true),
         refetchInterval:
             typeof intervalOption === 'function'
                 ? (query) => intervalOption(query.state.data)
@@ -179,7 +179,7 @@ export function useConfirmHandoverSession() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: ({ sessionId, data }: { sessionId: number; data: ConfirmHandoverSessionRequest }) =>
+        mutationFn: ({ sessionId, data }: { sessionId: string; data: ConfirmHandoverSessionRequest }) =>
             clinicalApi.confirmHandoverSession(sessionId, data),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['clinical'] })
@@ -222,10 +222,10 @@ export function useCreateReturn() {
             queryClient.invalidateQueries({ queryKey: ['coordination'] })
             queryClient.invalidateQueries({ queryKey: ['inventory'] })
             if (data.isEligibleForRestockEvaluation) {
-                message.success(`Đã lập phiếu hoàn trả thành công túi máu ${data.barcode} (Mã phiếu #${data.returnId})`)
+                message.success(`Đã lập phiếu hoàn trả thành công túi máu ${data.barcode} (Mã phiếu ${data.returnCode})`)
             } else {
                 message.warning(
-                    `Đã lập phiếu hoàn trả #${data.returnId} cho túi ${data.barcode} kèm cảnh báo không đạt tái nhập kho (${data.warningFlags.join('; ')}).`,
+                    `Đã lập phiếu hoàn trả ${data.returnCode} cho túi ${data.barcode} kèm cảnh báo không đạt tái nhập kho (${data.warningFlags.join('; ')}).`,
                 )
             }
         },
@@ -240,13 +240,13 @@ export function useCancelReturn() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: ({ returnId, data }: { returnId: number; data?: CancelBloodReturnRequest }) =>
+        mutationFn: ({ returnId, data }: { returnId: string; data?: CancelBloodReturnRequest }) =>
             clinicalApi.cancelReturn(returnId, data),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['clinical'] })
             queryClient.invalidateQueries({ queryKey: ['coordination'] })
             queryClient.invalidateQueries({ queryKey: ['inventory'] })
-            message.success(`Đã hủy phiếu hoàn trả #${data.returnId}; túi ${data.barcode} được khôi phục về trạng thái đã xuất kho.`)
+            message.success(`Đã hủy phiếu hoàn trả ${data.returnCode}; túi ${data.barcode} được khôi phục về trạng thái đã xuất kho.`)
         },
         onError: (err: unknown) => {
             message.error(parseApiError(err).message)
@@ -254,17 +254,11 @@ export function useCancelReturn() {
     })
 }
 
-/** Hook lấy danh sách loại chế phẩm máu (chỉ gọi API processing khi có quyền PROCESSING_VIEW) */
+/** Hook lấy danh sách loại chế phẩm máu */
 export function useComponentTypes() {
-    const { can } = usePermission()
-    const canFetchFromProcessing = can(PERMISSIONS.PROCESSING_VIEW)
-
     return useQuery({
-        queryKey: CLINICAL_QUERY_KEYS.componentTypes(canFetchFromProcessing),
-        queryFn: () =>
-            canFetchFromProcessing
-                ? clinicalApi.getComponentTypes()
-                : Promise.resolve(FALLBACK_COMPONENT_TYPES),
+        queryKey: CLINICAL_QUERY_KEYS.componentTypes(),
+        queryFn: () => clinicalApi.getComponentTypes(),
         ...SESSION_CACHE_OPTIONS,
     })
 }
@@ -327,7 +321,7 @@ export function useEligibleReturnBags(options?: { enabled?: boolean }) {
                     : Promise.resolve({ items: [], totalCount: 0, pageNumber: 1, pageSize: 100, totalPages: 0 }),
             ])
 
-            const pendingReturnAllocIds = new Set<number>(
+            const pendingReturnAllocIds = new Set<string>(
                 (pendingReturnsPage?.items || []).map((r) => r.allocationId),
             )
 
@@ -339,8 +333,8 @@ export function useEligibleReturnBags(options?: { enabled?: boolean }) {
                 requestsWithAllocations.map((r) => clinicalApi.getRequestById(r.requestId).catch(() => null)),
             )
 
-            const eligibleMap = new Map<number, EligibleReturnBag>()
-            const ineligibleMap = new Map<number, IneligibleReturnBag>()
+            const eligibleMap = new Map<string, EligibleReturnBag>()
+            const ineligibleMap = new Map<string, IneligibleReturnBag>()
             const nowMs = Date.now()
 
             for (const req of details) {

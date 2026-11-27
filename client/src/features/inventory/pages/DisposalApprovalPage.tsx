@@ -21,8 +21,8 @@ export default function DisposalApprovalPage() {
 
     const [status, setStatus] = useState<string>('PENDING_APPROVAL')
     const [page, setPage] = useState(1)
-    const [openId, setOpenId] = useState<number | null>(null)
-    const [rejectId, setRejectId] = useState<number | null>(null)
+    const [openId, setOpenId] = useState<string | null>(null)
+    const [rejectId, setRejectId] = useState<string | null>(null)
     const [reason, setReason] = useState('')
 
     const { data, isLoading, isFetching } = useDisposals(
@@ -31,7 +31,7 @@ export default function DisposalApprovalPage() {
     )
     const approve = useApproveDisposal()
 
-    const doApprove = async (id: number) => {
+    const doApprove = async (id: string) => {
         try {
             await approve.mutateAsync({ id, body: { isApproved: true } })
             message.success('Đã phê duyệt biên bản')

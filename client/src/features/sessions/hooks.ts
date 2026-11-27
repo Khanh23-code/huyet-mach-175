@@ -16,17 +16,17 @@ export const useSessionQueue = (filter: SessionQueueQuery, options?: QueueOption
         refetchInterval: options?.refetchInterval ?? false,
     })
 
-export const useSessionDetail = (sessionId: number | null) =>
+export const useSessionDetail = (sessionId: string | null) =>
     useQuery({
         queryKey: ['sessions', 'detail', sessionId],
-        queryFn: () => sessionsApi.detail(sessionId as number),
-        enabled: sessionId !== null,
+        queryFn: () => sessionsApi.detail(sessionId as string),
+        enabled: Boolean(sessionId),
     })
 
 export const useStartCollection = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: (sessionId: number) => sessionsApi.start(sessionId),
+        mutationFn: (sessionId: string) => sessionsApi.start(sessionId),
         onSuccess: () => qc.invalidateQueries({ queryKey: ['sessions'] }),
     })
 }
@@ -34,7 +34,7 @@ export const useStartCollection = () => {
 export const useCompleteCollection = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: ({ sessionId, body }: { sessionId: number; body: UpdateCollectionRequest }) =>
+        mutationFn: ({ sessionId, body }: { sessionId: string; body: UpdateCollectionRequest }) =>
             sessionsApi.complete(sessionId, body),
         onSuccess: () => qc.invalidateQueries({ queryKey: ['sessions'] }),
     })

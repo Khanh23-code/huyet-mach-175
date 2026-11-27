@@ -95,10 +95,10 @@ export default function ReturnDetailPage() {
 
     const [nowMs] = useState(() => Date.now())
     const [checklist, setChecklist] = useState<BloodReturnInspectionChecklistDto>(DEFAULT_CHECKLIST)
-    const [selectedRestockLocationId, setSelectedRestockLocationId] = useState<number | undefined>(
+    const [selectedRestockLocationId, setSelectedRestockLocationId] = useState<string | undefined>(
         undefined,
     )
-    const [selectedDiscardLocationId, setSelectedDiscardLocationId] = useState<number | undefined>(
+    const [selectedDiscardLocationId, setSelectedDiscardLocationId] = useState<string | undefined>(
         undefined,
     )
     const [discardReason, setDiscardReason] = useState<string>('')
@@ -366,7 +366,7 @@ export default function ReturnDetailPage() {
                         <div className="handover-detail-grid">
                             <div className="handover-kv">
                                 <span>Mã phiếu hoàn trả</span>
-                                <strong>#{inspection.returnId}</strong>
+                                <strong>{inspection.returnCode}</strong>
                             </div>
                             <div className="handover-kv">
                                 <span>Trạng thái túi hiện tại</span>

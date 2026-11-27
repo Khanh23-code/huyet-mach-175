@@ -10,11 +10,11 @@ export const useDisposals = (filter: DisposalFilter, options?: { refetchInterval
         refetchInterval: options?.refetchInterval ?? false,
     })
 
-export const useDisposalDetail = (id: number | null) =>
+export const useDisposalDetail = (id: string | null) =>
     useQuery({
         queryKey: ['inventory', 'disposal', id],
-        queryFn: () => disposalsApi.detail(id as number),
-        enabled: id !== null,
+        queryFn: () => disposalsApi.detail(id as string),
+        enabled: Boolean(id),
     })
 
 export const useDisposalCandidates = (filter: CandidateFilter) =>
@@ -35,9 +35,9 @@ const useInvalidating = <TVars, TData>(fn: (v: TVars) => Promise<TData>) => {
 export const useCreateDisposal = () => useInvalidating((b: CreateDisposalRequest) => disposalsApi.create(b))
 
 export const useCancelDisposal = () =>
-    useInvalidating((v: { id: number; reason?: string }) => disposalsApi.cancel(v.id, v.reason))
+    useInvalidating((v: { id: string; reason?: string }) => disposalsApi.cancel(v.id, v.reason))
 
 export const useApproveDisposal = () =>
-    useInvalidating((v: { id: number; body: ApproveDisposalRequest }) => disposalsApi.approve(v.id, v.body))
+    useInvalidating((v: { id: string; body: ApproveDisposalRequest }) => disposalsApi.approve(v.id, v.body))
 
-export const useExecuteDisposal = () => useInvalidating((id: number) => disposalsApi.execute(id))
+export const useExecuteDisposal = () => useInvalidating((id: string) => disposalsApi.execute(id))

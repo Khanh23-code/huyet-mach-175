@@ -16,17 +16,17 @@ export const useScreeningQueue = (filter: ScreeningQueueQuery, options?: QueueOp
         refetchInterval: options?.refetchInterval ?? false,
     })
 
-export const useSurveyDetail = (appointmentId: number | null, enabled = true) =>
+export const useSurveyDetail = (appointmentId: string | null, enabled = true) =>
     useQuery({
         queryKey: ['screening', 'detail', appointmentId],
-        queryFn: () => screeningApi.detail(appointmentId as number),
-        enabled: enabled && appointmentId !== null,
+        queryFn: () => screeningApi.detail(appointmentId as string),
+        enabled: enabled && Boolean(appointmentId),
     })
 
 export const useSaveClinical = () => {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: ({ appointmentId, body }: { appointmentId: number; body: UpdateClinicalRequest }) =>
+        mutationFn: ({ appointmentId, body }: { appointmentId: string; body: UpdateClinicalRequest }) =>
             screeningApi.saveClinical(appointmentId, body),
         onSuccess: async () => {
             await Promise.all([

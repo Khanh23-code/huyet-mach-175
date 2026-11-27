@@ -27,7 +27,7 @@ export default function ReceptionQueuePage() {
     const [keyword, setKeyword] = useState('')
     const [walkInOpen, setWalkInOpen] = useState(false)
     const [scanOpen, setScanOpen] = useState(false)
-    const [detailDonorId, setDetailDonorId] = useState<number | null>(null)
+    const [detailDonorId, setDetailDonorId] = useState<string | null>(null)
 
     // Người có quyền thao tác (APPOINTMENTS_EDIT) bắt buộc làm việc trong 1 đợt hiến máu.
     // Người chỉ có quyền xem (MGT, CLIN) vẫn xem toàn bộ như trước.

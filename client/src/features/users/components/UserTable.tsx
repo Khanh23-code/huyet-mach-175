@@ -57,7 +57,7 @@ export default function UserTable({ selectedRoleCodes, onRoleCodesChange }: User
     })
 
     const toggle = useMutation({
-        mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
+        mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
             usersApi.updateStatus(id, isActive),
         onSuccess: (_, v) => {
             message.success(v.isActive ? 'Đã mở khóa tài khoản' : 'Đã khóa tài khoản')

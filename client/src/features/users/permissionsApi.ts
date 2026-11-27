@@ -1,7 +1,7 @@
-﻿import { axiosClient } from '@/services/axiosClient'
+import { axiosClient } from '@/services/axiosClient'
 
 export interface PermissionDto {
-    permissionId: number
+    permissionId: string
     permissionCode: string
     permissionName: string
     moduleCode: string
@@ -12,18 +12,18 @@ export interface PermissionDto {
 }
 
 export interface RolePermissionsDto {
-    roleId: number
+    roleId: string
     roleCode: string
     roleName: string
     description: string | null
     isActive: boolean
     usersCount: number
-    assignedPermissionIds: number[]
+    assignedPermissionIds: string[]
     permissions: PermissionDto[]
 }
 
 export interface UpdateRolePermissionsRequest {
-    permissionIds: number[]
+    permissionIds: string[]
 }
 
 /** BE tự sinh permissionCode = {MODULE}_{ACTION}. */
@@ -68,7 +68,7 @@ export const permissionsApi = {
     },
 
     getByRole: async (
-        roleId: number,
+        roleId: string,
     ): Promise<RolePermissionsDto> => {
         const { data } = await axiosClient.get(
             `/api/roles/${roleId}/permissions`,
@@ -77,7 +77,7 @@ export const permissionsApi = {
     },
 
     updateByRole: async (
-        roleId: number,
+        roleId: string,
         body: UpdateRolePermissionsRequest,
     ): Promise<RolePermissionsDto> => {
         const { data } = await axiosClient.put(

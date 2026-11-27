@@ -16,10 +16,10 @@ export default function StockCountPanel() {
     const { data, isLoading, isFetching, refetch, dataUpdatedAt } = useManagedLocations({
         isActive: true, pageNumber: 1, pageSize: 100,
     })
-    const [actual, setActual] = useState<Record<number, number | null>>({})
+    const [actual, setActual] = useState<Record<string, number | null>>({})
     const [viewing, setViewing] = useState<StorageLocation | null>(null)
 
-    const rows = data?.items ?? []
+    const rows = useMemo(() => data?.items ?? [], [data])
     const diffs = useMemo(
         () =>
             rows

@@ -2,11 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { donorsApi } from './donorsApi'
 import type { CreateDonorRequest } from './types'
 
-export const useDonorDetail = (id: number | null) =>
+export const useDonorDetail = (id: string | null) =>
     useQuery({
         queryKey: ['donors', 'detail', id],
-        queryFn: () => donorsApi.get(id as number),
-        enabled: id !== null && id > 0,
+        queryFn: () => donorsApi.get(id as string),
+        enabled: Boolean(id),
     })
 
 /** Bấm "Tìm kiếm" mới gọi -> dùng mutation thay vì query. */

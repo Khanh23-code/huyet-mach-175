@@ -7,10 +7,10 @@ export type ScreeningStatus = 'PENDING' | 'QUALIFIED' | 'DEFERRED' | 'UNQUALIFIE
 
 /** DonorHistoryItemDto */
 export interface DonorHistoryItem {
-    appointmentId: number
+    appointmentId: string
     appointmentDate: string // "YYYY-MM-DD"
     timeSlot: string
-    campaignId?: number | null
+    campaignId?: string | null
     campaignName?: string | null // null = hiến tại viện
     status: EnumValue // AppointmentStatus (BE trả số, xem reception/format.ts)
     isWalkIn: boolean
@@ -23,7 +23,7 @@ export interface DonorHistoryItem {
 
 /** GET /api/donors/{id} và response của POST /api/donors (DonorDetailDto) */
 export interface DonorDetail {
-    donorId: number
+    donorId: string
     citizenId: string
     fullName: string
     dateOfBirth: string // "YYYY-MM-DD"
@@ -40,7 +40,7 @@ export interface DonorDetail {
 /** GET /api/donors/check-eligibility?citizenId= (DonorEligibilityDto) */
 export interface DonorEligibility {
     citizenId: string
-    donorId?: number | null // null = CCCD chưa có trong hệ thống
+    donorId?: string | null // null = CCCD chưa có trong hệ thống
     fullName?: string | null
     dateOfBirth?: string | null
     age?: number | null
