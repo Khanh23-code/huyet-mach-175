@@ -24,6 +24,7 @@
     <ProjectReference Include="..\HuyetMach175.Modules.Inventory\HuyetMach175.Modules.Inventory.csproj" />
     <ProjectReference Include="..\HuyetMach175.Modules.Clinical\HuyetMach175.Modules.Clinical.csproj" />
     <ProjectReference Include="..\HuyetMach175.Modules.Audit\HuyetMach175.Modules.Audit.csproj" />
+    <ProjectReference Include="..\HuyetMach175.Modules.Notifications\HuyetMach175.Modules.Notifications.csproj" />
   </ItemGroup>
 
 </Project>

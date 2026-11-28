@@ -9,6 +9,7 @@ using HuyetMach175.Modules.Auth;
 using HuyetMach175.Modules.Clinical;
 using HuyetMach175.Modules.Donation;
 using HuyetMach175.Modules.Inventory;
+using HuyetMach175.Modules.Notifications;
 
 using Scalar.AspNetCore;
 using Microsoft.OpenApi;
@@ -24,6 +25,7 @@ builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddClinicalModule();
 builder.Services.AddDonationModule();
 builder.Services.AddInventoryModule();
+builder.Services.AddNotificationsModule(builder.Configuration);
 builder.Services.AddPermissionAuthorization();
 
 var configuredOrigins = builder.Configuration
