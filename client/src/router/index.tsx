@@ -66,6 +66,7 @@ export const router = createBrowserRouter([
                 children: [
                     { path: '/', ...lazyPage(() => import('@/pages/DashboardPage')) },
                     { path: '/account/profile', ...lazyPage(() => import('@/features/account/pages/ProfilePage')) },
+                    { path: '/account/notifications', ...lazyPage(() => import('@/features/notifications/pages/NotificationsCenterPage')) },
                     guarded(usersRoute, () => import('@/features/users/pages/UserManagementPage')),
                     { path: '/campaigns', element: <Navigate to={siteListRoute.path} replace /> },
                     {

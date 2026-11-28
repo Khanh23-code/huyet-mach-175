@@ -25,7 +25,11 @@ export default function AuthGate() {
             .then((u) => {
                 if (cancelled) return
                 const { setUser, markPermissionsSynced } = useAuthStore.getState()
-                setUser({ ...u, permissions: u.permissions ?? [] })
+                setUser({
+                    ...u,
+                    id: u.userId ?? u.id,
+                    permissions: u.permissions ?? [],
+                })
                 markPermissionsSynced()
             })
             .catch(() => {

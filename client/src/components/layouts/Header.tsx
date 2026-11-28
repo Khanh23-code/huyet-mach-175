@@ -20,6 +20,7 @@ import { useLogout } from '@/features/auth/useLogout'
 import { useCurrentUser } from '@/features/auth/useCurrentUser'
 import { HOME_PATH } from '@/config/routeConfig'
 import { useThemeStore } from '@/config/themeStore'
+import NotificationBell from '@/features/notifications/components/NotificationBell'
 import './Header.css'
 
 interface HeaderProps {
@@ -74,10 +75,9 @@ export default function Header({
         if (q) onSearch?.(q)
     }
 
-    /* ---------------- Trạng thái tích hợp & thông báo ---------------- */
-    // TODO: thay bằng dữ liệu thật (API health-check / API đếm thông báo chưa đọc)
+    /* ---------------- Trạng thái tích hợp ---------------- */
+    // TODO: thay bằng dữ liệu thật (API health-check)
     const hisLisOnline = true
-    const unreadCount = 0
 
     /* ---------------- User menu ---------------- */
     const menuItems: MenuProps['items'] = [
@@ -183,15 +183,7 @@ export default function Header({
                     {theme === 'dark' ? <SunOutlined /> : <MoonOutlined />}
                 </button>
 
-                <button
-                    type="button"
-                    className="app-header__icon-btn app-header__bell"
-                    onClick={() => navigate('/account/notifications')}
-                    aria-label={unreadCount > 0 ? `Thông báo (${unreadCount} chưa đọc)` : 'Thông báo'}
-                >
-                    <BellOutlined />
-                    {unreadCount > 0 && <span className="app-header__bell-dot" aria-hidden />}
-                </button>
+                <NotificationBell />
 
                 <span className="app-header__divider" aria-hidden />
 
