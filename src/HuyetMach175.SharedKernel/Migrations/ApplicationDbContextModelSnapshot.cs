@@ -1142,67 +1142,191 @@ namespace HuyetMach175.SharedKernel.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("notification_id");
 
+                    b.Property<string>("ActionPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("action_path");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<string>("DeduplicationKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("deduplication_key");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
 
                     b.Property<bool>("IsRead")
                         .HasColumnType("boolean")
                         .HasColumnName("is_read");
 
-                    b.Property<string>("Message")
+                    b.Property<string>("NotificationType")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("message");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("notification_type");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Normal")
+                        .HasColumnName("priority");
 
                     b.Property<DateTime?>("ReadAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("read_at");
 
-                    b.Property<Guid?>("RecipientUserId")
+                    b.Property<Guid>("RecipientUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("recipient_user_id");
 
-                    b.Property<Guid?>("ReferenceId")
+                    b.Property<Guid?>("ResourceId")
                         .HasColumnType("uuid")
-                        .HasColumnName("reference_id");
+                        .HasColumnName("resource_id");
 
-                    b.Property<string>("ReferenceType")
-                        .HasColumnType("text")
-                        .HasColumnName("reference_type");
+                    b.Property<string>("ResourceType")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("resource_type");
 
-                    b.Property<Guid?>("TargetDepartmentId")
+                    b.Property<Guid?>("SourceEventId")
                         .HasColumnType("uuid")
-                        .HasColumnName("target_department_id");
+                        .HasColumnName("source_event_id");
 
-                    b.Property<Guid?>("TargetRoleId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("target_role_id");
+                    b.Property<string>("SourceModule")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("source_module");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("title");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("type");
 
                     b.HasKey("NotificationId");
 
-                    b.HasIndex("TargetDepartmentId");
-
-                    b.HasIndex("TargetRoleId")
-                        .HasDatabaseName("idx_notifications_target_role")
-                        .HasFilter("target_role_id IS NOT NULL");
-
-                    b.HasIndex("RecipientUserId", "IsRead")
-                        .HasDatabaseName("idx_notifications_recipient_unread")
+                    b.HasIndex("RecipientUserId", "CreatedAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("idx_notification_recipient_unread")
                         .HasFilter("is_read = FALSE");
 
+                    b.HasIndex("RecipientUserId", "DeduplicationKey")
+                        .IsUnique()
+                        .HasDatabaseName("uq_notification_recipient_dedup")
+                        .HasFilter("deduplication_key IS NOT NULL");
+
+                    b.HasIndex("RecipientUserId", "CreatedAt", "NotificationId")
+                        .IsDescending(false, true, true)
+                        .HasDatabaseName("idx_notification_recipient_inbox");
+
                     b.ToTable("notification");
+                });
+
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.NotificationDelivery", b =>
+                {
+                    b.Property<Guid>("DeliveryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("delivery_id");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("attempt_count");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Email")
+                        .HasColumnName("channel");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DeduplicationKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("deduplication_key");
+
+                    b.Property<string>("Destination")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("destination");
+
+                    b.Property<Guid?>("DonorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("donor_id");
+
+                    b.Property<string>("LastErrorCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("last_error_code");
+
+                    b.Property<string>("LastErrorMessage")
+                        .HasColumnType("text")
+                        .HasColumnName("last_error_message");
+
+                    b.Property<DateTime>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_attempt_at");
+
+                    b.Property<Guid?>("NotificationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("notification_id");
+
+                    b.Property<string>("PayloadJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("payload_json");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sent_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasDefaultValue("Pending")
+                        .HasColumnName("status");
+
+                    b.HasKey("DeliveryId");
+
+                    b.HasIndex("DonorId")
+                        .HasDatabaseName("idx_notification_delivery_donor")
+                        .HasFilter("donor_id IS NOT NULL");
+
+                    b.HasIndex("NextAttemptAt", "DeliveryId")
+                        .HasDatabaseName("idx_notification_delivery_queue")
+                        .HasFilter("status IN ('Pending', 'RetryScheduled', 'Processing')");
+
+                    b.HasIndex("Channel", "Destination", "DeduplicationKey")
+                        .IsUnique()
+                        .HasDatabaseName("uq_notification_delivery_dedup")
+                        .HasFilter("deduplication_key IS NOT NULL");
+
+                    b.HasIndex("NotificationId", "Channel", "Destination")
+                        .IsUnique()
+                        .HasDatabaseName("uq_notification_delivery_notif_dest")
+                        .HasFilter("notification_id IS NOT NULL");
+
+                    b.ToTable("notification_delivery");
                 });
 
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.Permission", b =>
@@ -1939,21 +2063,28 @@ namespace HuyetMach175.SharedKernel.Migrations
                 {
                     b.HasOne("HuyetMach175.Api.Data.Entities.User", "RecipientUser")
                         .WithMany("ReceivedNotifications")
-                        .HasForeignKey("RecipientUserId");
-
-                    b.HasOne("HuyetMach175.Api.Data.Entities.Department", "TargetDepartment")
-                        .WithMany("Notifications")
-                        .HasForeignKey("TargetDepartmentId");
-
-                    b.HasOne("HuyetMach175.Api.Data.Entities.Role", "TargetRole")
-                        .WithMany("Notifications")
-                        .HasForeignKey("TargetRoleId");
+                        .HasForeignKey("RecipientUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("RecipientUser");
+                });
 
-                    b.Navigation("TargetDepartment");
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.NotificationDelivery", b =>
+                {
+                    b.HasOne("HuyetMach175.Api.Data.Entities.Donor", "Donor")
+                        .WithMany("NotificationDeliveries")
+                        .HasForeignKey("DonorId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("TargetRole");
+                    b.HasOne("HuyetMach175.Api.Data.Entities.Notification", "Notification")
+                        .WithMany("Deliveries")
+                        .HasForeignKey("NotificationId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Donor");
+
+                    b.Navigation("Notification");
                 });
 
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.PreScreeningSurvey", b =>
@@ -2080,8 +2211,6 @@ namespace HuyetMach175.SharedKernel.Migrations
 
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.Department", b =>
                 {
-                    b.Navigation("Notifications");
-
                     b.Navigation("Users");
                 });
 
@@ -2110,6 +2239,13 @@ namespace HuyetMach175.SharedKernel.Migrations
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.Donor", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("NotificationDeliveries");
+                });
+
+            modelBuilder.Entity("HuyetMach175.Api.Data.Entities.Notification", b =>
+                {
+                    b.Navigation("Deliveries");
                 });
 
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.Permission", b =>
@@ -2119,8 +2255,6 @@ namespace HuyetMach175.SharedKernel.Migrations
 
             modelBuilder.Entity("HuyetMach175.Api.Data.Entities.Role", b =>
                 {
-                    b.Navigation("Notifications");
-
                     b.Navigation("RolePermissions");
 
                     b.Navigation("UserRoles");

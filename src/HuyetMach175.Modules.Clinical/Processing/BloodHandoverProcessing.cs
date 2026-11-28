@@ -311,24 +311,33 @@ public static class BloodHandoverProcessing
         return (bag, allocation);
     }
 
-    public static Notification BuildHandoverSessionNotification(
+    public static Notification? BuildHandoverSessionNotification(
         BloodHandoverSession session,
         BloodRequest bloodRequest,
         int bagCount,
         int timeoutMinutes,
         DateTime nowUtc)
     {
+        if (bloodRequest.DoctorId is not Guid doctorId || doctorId == Guid.Empty)
+        {
+            return null;
+        }
+
         return new Notification
         {
-            RecipientUserId = bloodRequest.DoctorId,
-            TargetDepartmentId = bloodRequest.Doctor?.DepartmentId,
+            RecipientUserId = doctorId,
             Title = $"Mời quét xác nhận nhận máu tại quầy ({session.SessionCode})",
-            Message = $"Ngân hàng máu đã khởi tạo phiên bàn giao {session.SessionCode} gồm {bagCount} túi máu cho phiếu {bloodRequest.RequestCode} (BN: {bloodRequest.PatientName} - {bloodRequest.PatientCode}). Vui lòng quét xác nhận trong {timeoutMinutes} phút.",
-            Type = bloodRequest.UrgencyLevel is UrgencyLevel.EMERGENCY or UrgencyLevel.URGENT
-                ? NotificationType.URGENT_REQUEST
-                : NotificationType.INFO,
-            ReferenceType = NotificationReferenceType.HANDOVER_SESSION,
-            ReferenceId = session.HandoverSessionId,
+            Content = $"Ngân hàng máu đã mở phiên bàn giao {session.SessionCode} gồm {bagCount} túi máu cho phiếu {bloodRequest.RequestCode}. Vui lòng quét nhận trong {timeoutMinutes} phút.",
+            NotificationType = "HANDOVER_SESSION_CREATED",
+            SourceModule = "Clinical",
+            DeduplicationKey = $"HANDOVER_SESSION_CREATED:{session.HandoverSessionId}",
+            ResourceType = "HANDOVER_SESSION",
+            ResourceId = session.HandoverSessionId,
+            ActionPath = $"/clinical/handovers/{session.HandoverSessionId}",
+            Priority = bloodRequest.UrgencyLevel is UrgencyLevel.EMERGENCY or UrgencyLevel.URGENT
+                ? NotificationPriority.Critical
+                : NotificationPriority.Normal,
+            ExpiresAt = session.ExpiresAt,
             IsRead = false,
             CreatedAt = nowUtc
         };

@@ -11,5 +11,6 @@ public static class DbInitializer
         await DonationSeeder.SeedDonationDataAsync(context);
         await InventorySeeder.SeedInventoryDataAsync(context);
         await ClinicalSeeder.SeedClinicalDataAsync(context);
+        await NotificationSeeder.SeedNotificationDataAsync(context);
     }
 }

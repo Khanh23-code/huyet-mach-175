@@ -51,4 +51,5 @@ public class Donor
     public DateOnly? LastDonationDate { get; set; }
 
     public ICollection<DonationAppointment> Appointments { get; set; } = new List<DonationAppointment>();
+    public ICollection<NotificationDelivery> NotificationDeliveries { get; set; } = new List<NotificationDelivery>();
 }
