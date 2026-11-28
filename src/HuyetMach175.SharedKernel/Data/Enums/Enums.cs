@@ -155,21 +155,27 @@ public enum ActionType
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum NotificationType
+public enum NotificationPriority
 {
-    INFO,
-    WARNING,
-    URGENT_REQUEST,
-    RECALL
+    Normal,
+    Critical
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum NotificationReferenceType
+public enum NotificationChannel
 {
-    BLOOD_REQUEST,
-    BLOOD_BAG,
-    DONATION_SESSION,
-    HANDOVER_SESSION
+    Email
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum NotificationDeliveryStatus
+{
+    Pending,
+    Processing,
+    Accepted,
+    RetryScheduled,
+    FailedPermanent,
+    Skipped
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]

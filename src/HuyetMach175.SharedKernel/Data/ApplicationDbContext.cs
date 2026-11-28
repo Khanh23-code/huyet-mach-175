@@ -42,6 +42,7 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<NotificationDelivery> NotificationDeliveries => Set<NotificationDelivery>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

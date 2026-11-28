@@ -67,12 +67,16 @@ public class BloodHandoversService : IBloodHandoversService
         _context.BloodHandoverSessions.Add(session);
         await _context.SaveChangesAsync();
 
-        _context.Notifications.Add(BloodHandoverProcessing.BuildHandoverSessionNotification(
+        var handoverNotification = BloodHandoverProcessing.BuildHandoverSessionNotification(
             session,
             bloodRequest,
             bags.Count,
             request.TimeoutMinutes,
-            now));
+            now);
+        if (handoverNotification != null)
+        {
+            _context.Notifications.Add(handoverNotification);
+        }
 
         _context.AuditLogs.Add(BloodHandoverProcessing.BuildAuditLog(
             "blood_handover_sessions",

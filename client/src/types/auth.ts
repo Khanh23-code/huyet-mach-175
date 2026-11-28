@@ -10,6 +10,7 @@ export interface RefreshTokenRequest {
 
 export interface AuthUser {
     id: string
+    userId?: string
     username: string
     fullName?: string
     roles: string[]

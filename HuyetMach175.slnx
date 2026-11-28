@@ -6,6 +6,7 @@
     <Project Path="src/HuyetMach175.Modules.Clinical/HuyetMach175.Modules.Clinical.csproj" />
     <Project Path="src/HuyetMach175.Modules.Donation/HuyetMach175.Modules.Donation.csproj" />
     <Project Path="src/HuyetMach175.Modules.Inventory/HuyetMach175.Modules.Inventory.csproj" />
+    <Project Path="src/HuyetMach175.Modules.Notifications/HuyetMach175.Modules.Notifications.csproj" />
     <Project Path="src/HuyetMach175.SharedKernel/HuyetMach175.SharedKernel.csproj" />
   </Folder>
 </Solution>

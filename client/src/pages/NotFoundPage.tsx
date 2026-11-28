@@ -38,11 +38,6 @@ const KNOWN_MODULES: Record<string, KnownModuleInfo> = {
         group: 'Quản trị hệ thống',
         description: 'Giám sát tích hợp kết nối đồng bộ dữ liệu với hệ sinh thái Bệnh viện Quân y 175.',
     },
-    '/account/notifications': {
-        name: 'Trung tâm thông báo',
-        group: 'Tài khoản',
-        description: 'Hộp thư thông báo biến động y lệnh, phân quyền và cảnh báo nội bộ.',
-    },
     '/btd/queue': {
         name: 'Hàng chờ tiếp nhận',
         group: 'Tiếp nhận & Sàng lọc',
